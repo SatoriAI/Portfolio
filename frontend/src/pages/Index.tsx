@@ -65,6 +65,8 @@ const Index = () => {
               <a href="#about" className="hover:text-blue-400 transition-colors">{t.nav.about}</a>
               <a href="#skills" className="hover:text-blue-400 transition-colors">{t.nav.skills}</a>
               <a href="#projects" className="hover:text-blue-400 transition-colors">{t.nav.projects}</a>
+              <a href="/experience" className="hover:text-blue-400 transition-colors">Experience</a>
+              <a href="/academic" className="hover:text-blue-400 transition-colors">Academic</a>
               <a href="#contact" className="hover:text-blue-400 transition-colors">{t.nav.contact}</a>
             </nav>
             <Button
