@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { MessageSquare, Github, Linkedin, Mail, ExternalLink, Code, Database, Brain, Server, Users, Book } from 'lucide-react';
+import { MessageSquare, Github, Linkedin, Mail, ExternalLink, Code, Database, Brain, Server, Users, Book, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
