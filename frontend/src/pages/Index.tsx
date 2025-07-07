@@ -1,14 +1,22 @@
+
 import { useState } from 'react';
-import { MessageSquare, Github, Linkedin, Mail, ExternalLink, Code, Database, Brain, Server, Users, Book, User } from 'lucide-react';
+import { MessageSquare, Github, Linkedin, Mail, ExternalLink, Code, Database, Brain, Server, Users, Book, User, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import ChatWidget from '@/components/ChatWidget';
 import ProjectCard from '@/components/ProjectCard';
 import SkillCard from '@/components/SkillCard';
+import SettingsPanel from '@/components/SettingsPanel';
+import { useSettings } from '@/contexts/SettingsContext';
+import { translations } from '@/utils/translations';
 
 const Index = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { language } = useSettings();
+  
+  const t = translations[language];
 
   const skills = [
     { icon: Code, name: "Python", level: "Expert", description: "Backend development, APIs, automation" },
@@ -45,19 +53,29 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 bg-background text-foreground transition-colors duration-300">
       {/* Header */}
-      <header className="fixed top-0 w-full bg-black/20 backdrop-blur-md z-40 border-b border-white/10">
+      <header className="fixed top-0 w-full bg-black/20 backdrop-blur-md z-40 border-b border-white/10 dark:border-white/10 border-border">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="text-xl font-bold bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
             Your Name
           </div>
-          <nav className="hidden md:flex space-x-8">
-            <a href="#about" className="hover:text-blue-400 transition-colors">About</a>
-            <a href="#skills" className="hover:text-blue-400 transition-colors">Skills</a>
-            <a href="#projects" className="hover:text-blue-400 transition-colors">Projects</a>
-            <a href="#contact" className="hover:text-blue-400 transition-colors">Contact</a>
-          </nav>
+          <div className="flex items-center gap-4">
+            <nav className="hidden md:flex space-x-8">
+              <a href="#about" className="hover:text-blue-400 transition-colors">{t.nav.about}</a>
+              <a href="#skills" className="hover:text-blue-400 transition-colors">{t.nav.skills}</a>
+              <a href="#projects" className="hover:text-blue-400 transition-colors">{t.nav.projects}</a>
+              <a href="#contact" className="hover:text-blue-400 transition-colors">{t.nav.contact}</a>
+            </nav>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsSettingsOpen(true)}
+              className="rounded-full hover:bg-white/10"
+            >
+              <Settings className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -70,11 +88,10 @@ const Index = () => {
             </div>
           </div>
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-teal-400 to-blue-400 bg-clip-text text-transparent animate-fade-in">
-            Python Backend Developer
+            {t.hero.title}
           </h1>
-          <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto animate-fade-in">
-            Specializing in LLM integrations, RAG pipelines, and scalable infrastructure. 
-            Transforming complex data into intelligent solutions.
+          <p className="text-xl md:text-2xl text-gray-300 dark:text-gray-300 text-muted-foreground mb-8 max-w-3xl mx-auto animate-fade-in">
+            {t.hero.subtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in">
             <Button 
@@ -82,7 +99,7 @@ const Index = () => {
               className="bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white px-8 py-3 rounded-full text-lg font-semibold transition-all duration-300 hover:scale-105"
             >
               <MessageSquare className="w-5 h-5 mr-2" />
-              Ask AI About Me
+              {t.hero.askAI}
             </Button>
             <div className="flex gap-4">
               <Button variant="outline" size="icon" className="rounded-full border-gray-600 hover:border-blue-400">
@@ -103,31 +120,24 @@ const Index = () => {
       <section id="about" className="py-20 px-6">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl font-bold mb-12 text-center bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
-            About Me
+            {t.about.title}
           </h2>
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <p className="text-lg text-gray-300 mb-6 leading-relaxed">
-                I'm a passionate Python Backend Developer with extensive experience in building scalable systems 
-                and implementing cutting-edge AI solutions. My journey spans from traditional backend development 
-                to the exciting world of Large Language Models and RAG pipelines.
+              <p className="text-lg text-gray-300 dark:text-gray-300 text-muted-foreground mb-6 leading-relaxed">
+                {t.about.paragraph1}
               </p>
-              <p className="text-lg text-gray-300 mb-6 leading-relaxed">
-                I thrive on solving complex problems and have successfully architected systems that handle 
-                millions of requests while maintaining high performance and reliability. My expertise in 
-                infrastructure and frontend development allows me to see the bigger picture and deliver 
-                comprehensive solutions.
+              <p className="text-lg text-gray-300 dark:text-gray-300 text-muted-foreground mb-6 leading-relaxed">
+                {t.about.paragraph2}
               </p>
             </div>
-            <Card className="bg-white/5 border-white/10">
+            <Card className="bg-white/5 dark:bg-white/5 bg-card border-white/10 dark:border-white/10 border-border">
               <CardHeader>
-                <CardTitle className="text-white">Technical Philosophy</CardTitle>
+                <CardTitle className="text-white dark:text-white text-card-foreground">{t.about.philosophy}</CardTitle>
               </CardHeader>
-              <CardContent className="text-gray-300">
+              <CardContent className="text-gray-300 dark:text-gray-300 text-muted-foreground">
                 <p>
-                  "I believe in building robust, scalable systems that not only solve today's problems 
-                  but are architected to adapt and grow with tomorrow's challenges. Clean code, 
-                  comprehensive testing, and thoughtful architecture are the foundations of lasting solutions."
+                  {t.about.philosophyText}
                 </p>
               </CardContent>
             </Card>
@@ -139,7 +149,7 @@ const Index = () => {
       <section id="skills" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl font-bold mb-12 text-center bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
-            Technical Skills
+            {t.skills.title}
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {skills.map((skill, index) => (
@@ -153,7 +163,7 @@ const Index = () => {
       <section id="projects" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl font-bold mb-12 text-center bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
-            Featured Projects
+            {t.projects.title}
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {projects.map((project, index) => (
@@ -167,15 +177,15 @@ const Index = () => {
       <section id="contact" className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl font-bold mb-12 bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
-            Let's Connect
+            {t.contact.title}
           </h2>
-          <p className="text-xl text-gray-300 mb-8">
-            Interested in collaborating or have questions about my work? I'd love to hear from you.
+          <p className="text-xl text-gray-300 dark:text-gray-300 text-muted-foreground mb-8">
+            {t.contact.subtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button className="bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white px-8 py-3 rounded-full">
               <Mail className="w-5 h-5 mr-2" />
-              Get In Touch
+              {t.hero.getInTouch}
             </Button>
             <Button 
               onClick={() => setIsChatOpen(true)}
@@ -183,7 +193,7 @@ const Index = () => {
               className="border-gray-600 hover:border-blue-400 px-8 py-3 rounded-full"
             >
               <MessageSquare className="w-5 h-5 mr-2" />
-              Chat with AI
+              {t.hero.chatWithAI}
             </Button>
           </div>
         </div>
@@ -191,6 +201,9 @@ const Index = () => {
 
       {/* Chat Widget */}
       <ChatWidget isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+
+      {/* Settings Panel */}
+      <SettingsPanel isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
       {/* Floating Chat Button */}
       {!isChatOpen && (
