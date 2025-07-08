@@ -59,6 +59,14 @@ const Index = () => {
     setIsHomeDropdownOpen(false);
   };
 
+  const handleMouseEnter = () => {
+    setIsHomeDropdownOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHomeDropdownOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 bg-background text-foreground transition-colors duration-300">
       {/* Header */}
@@ -69,20 +77,16 @@ const Index = () => {
           </div>
           <div className="flex items-center gap-4">
             <nav className="hidden md:flex space-x-8">
-              <div className="relative">
-                <button
-                  onMouseEnter={() => setIsHomeDropdownOpen(true)}
-                  onMouseLeave={() => setIsHomeDropdownOpen(false)}
-                  className="text-blue-400 hover:text-blue-300 transition-colors"
-                >
+              <div 
+                className="relative"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+              >
+                <button className="text-blue-400 hover:text-blue-300 transition-colors">
                   Home
                 </button>
                 {isHomeDropdownOpen && (
-                  <div
-                    className="absolute top-full left-0 mt-2 bg-black/90 backdrop-blur-md border border-white/10 rounded-lg shadow-lg py-2 min-w-[120px]"
-                    onMouseEnter={() => setIsHomeDropdownOpen(true)}
-                    onMouseLeave={() => setIsHomeDropdownOpen(false)}
-                  >
+                  <div className="absolute top-full left-0 mt-2 bg-black/90 backdrop-blur-md border border-white/10 rounded-lg shadow-lg py-2 min-w-[120px] z-50">
                     <button
                       onClick={() => scrollToSection('about')}
                       className="block w-full text-left px-4 py-2 text-white hover:text-blue-400 hover:bg-white/10 transition-colors"
