@@ -69,8 +69,12 @@ const Experience = () => {
           <div className="flex items-center gap-4">
             <nav className="hidden md:flex space-x-8">
               <a href="/" className="hover:text-blue-400 transition-colors">Home</a>
+              <a href="/about" className="hover:text-blue-400 transition-colors">About</a>
+              <a href="/skills" className="hover:text-blue-400 transition-colors">Skills</a>
+              <a href="/projects" className="hover:text-blue-400 transition-colors">Projects</a>
               <a href="/experience" className="text-blue-400">Experience</a>
               <a href="/academic" className="hover:text-blue-400 transition-colors">Academic</a>
+              <a href="/contact" className="hover:text-blue-400 transition-colors">Contact</a>
             </nav>
             <Button
               variant="ghost"

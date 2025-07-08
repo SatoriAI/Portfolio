@@ -1,12 +1,8 @@
 
 import { useState } from 'react';
-import { MessageSquare, Github, Linkedin, Mail, ExternalLink, Code, Database, Brain, Server, Users, Book, User, Settings } from 'lucide-react';
+import { MessageSquare, Github, Linkedin, Mail, Settings, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import ChatWidget from '@/components/ChatWidget';
-import ProjectCard from '@/components/ProjectCard';
-import SkillCard from '@/components/SkillCard';
 import SettingsPanel from '@/components/SettingsPanel';
 import { useSettings } from '@/contexts/SettingsContext';
 import { translations } from '@/utils/translations';
@@ -18,40 +14,6 @@ const Index = () => {
   
   const t = translations[language];
 
-  const skills = [
-    { icon: Code, name: "Python", level: "Expert", description: "Backend development, APIs, automation" },
-    { icon: Database, name: "Databases", level: "Advanced", description: "PostgreSQL, MongoDB, Redis" },
-    { icon: Brain, name: "LLMs & RAG", level: "Expert", description: "Pipeline development, vector databases" },
-    { icon: Server, name: "Infrastructure", level: "Advanced", description: "AWS, Docker, Kubernetes" }
-  ];
-
-  const projects = [
-    {
-      title: "Intelligent Document RAG System",
-      description: "Built a sophisticated RAG pipeline for document analysis using vector embeddings and LLMs",
-      technologies: ["Python", "LangChain", "ChromaDB", "OpenAI"],
-      github: "#",
-      demo: "#",
-      image: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?w=400&h=300&fit=crop"
-    },
-    {
-      title: "Scalable Backend Architecture",
-      description: "Designed and implemented microservices architecture handling 1M+ requests daily",
-      technologies: ["Python", "FastAPI", "PostgreSQL", "Redis"],
-      github: "#",
-      demo: "#",
-      image: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=400&h=300&fit=crop"
-    },
-    {
-      title: "Infrastructure Automation Suite",
-      description: "Created comprehensive DevOps pipeline with automated testing and deployment",
-      technologies: ["Python", "Terraform", "AWS", "Docker"],
-      github: "#",
-      demo: "#",
-      image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop"
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 bg-background text-foreground transition-colors duration-300">
       {/* Header */}
@@ -62,12 +24,13 @@ const Index = () => {
           </div>
           <div className="flex items-center gap-4">
             <nav className="hidden md:flex space-x-8">
-              <a href="#about" className="hover:text-blue-400 transition-colors">{t.nav.about}</a>
-              <a href="#skills" className="hover:text-blue-400 transition-colors">{t.nav.skills}</a>
-              <a href="#projects" className="hover:text-blue-400 transition-colors">{t.nav.projects}</a>
+              <a href="/" className="text-blue-400">Home</a>
+              <a href="/about" className="hover:text-blue-400 transition-colors">About</a>
+              <a href="/skills" className="hover:text-blue-400 transition-colors">Skills</a>
+              <a href="/projects" className="hover:text-blue-400 transition-colors">Projects</a>
               <a href="/experience" className="hover:text-blue-400 transition-colors">Experience</a>
               <a href="/academic" className="hover:text-blue-400 transition-colors">Academic</a>
-              <a href="#contact" className="hover:text-blue-400 transition-colors">{t.nav.contact}</a>
+              <a href="/contact" className="hover:text-blue-400 transition-colors">Contact</a>
             </nav>
             <Button
               variant="ghost"
@@ -115,88 +78,33 @@ const Index = () => {
               </Button>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* About Section */}
-      <section id="about" className="py-20 px-6">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl font-bold mb-12 text-center bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
-            {t.about.title}
-          </h2>
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <p className="text-lg text-gray-300 dark:text-gray-300 text-muted-foreground mb-6 leading-relaxed">
-                {t.about.paragraph1}
-              </p>
-              <p className="text-lg text-gray-300 dark:text-gray-300 text-muted-foreground mb-6 leading-relaxed">
-                {t.about.paragraph2}
-              </p>
-            </div>
-            <Card className="bg-white/5 dark:bg-white/5 bg-card border-white/10 dark:border-white/10 border-border">
-              <CardHeader>
-                <CardTitle className="text-white dark:text-white text-card-foreground">{t.about.philosophy}</CardTitle>
-              </CardHeader>
-              <CardContent className="text-gray-300 dark:text-gray-300 text-muted-foreground">
-                <p>
-                  {t.about.philosophyText}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Skills Section */}
-      <section id="skills" className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold mb-12 text-center bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
-            {t.skills.title}
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {skills.map((skill, index) => (
-              <SkillCard key={index} skill={skill} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Projects Section */}
-      <section id="projects" className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold mb-12 text-center bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
-            {t.projects.title}
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {projects.map((project, index) => (
-              <ProjectCard key={index} project={project} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Contact Section */}
-      <section id="contact" className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-12 bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
-            {t.contact.title}
-          </h2>
-          <p className="text-xl text-gray-300 dark:text-gray-300 text-muted-foreground mb-8">
-            {t.contact.subtitle}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button className="bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white px-8 py-3 rounded-full">
-              <Mail className="w-5 h-5 mr-2" />
-              {t.hero.getInTouch}
-            </Button>
-            <Button 
-              onClick={() => setIsChatOpen(true)}
-              variant="outline" 
-              className="border-gray-600 hover:border-blue-400 px-8 py-3 rounded-full"
-            >
-              <MessageSquare className="w-5 h-5 mr-2" />
-              {t.hero.chatWithAI}
-            </Button>
+          {/* Quick Navigation */}
+          <div className="mt-16 grid md:grid-cols-3 lg:grid-cols-6 gap-4 max-w-4xl mx-auto">
+            <a href="/about" className="group bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-6 transition-all duration-300 hover:scale-105">
+              <h3 className="text-white font-semibold mb-2 group-hover:text-blue-400">About</h3>
+              <p className="text-gray-400 text-sm">Learn more about me</p>
+            </a>
+            <a href="/skills" className="group bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-6 transition-all duration-300 hover:scale-105">
+              <h3 className="text-white font-semibold mb-2 group-hover:text-blue-400">Skills</h3>
+              <p className="text-gray-400 text-sm">Technical expertise</p>
+            </a>
+            <a href="/projects" className="group bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-6 transition-all duration-300 hover:scale-105">
+              <h3 className="text-white font-semibold mb-2 group-hover:text-blue-400">Projects</h3>
+              <p className="text-gray-400 text-sm">My latest work</p>
+            </a>
+            <a href="/experience" className="group bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-6 transition-all duration-300 hover:scale-105">
+              <h3 className="text-white font-semibold mb-2 group-hover:text-blue-400">Experience</h3>
+              <p className="text-gray-400 text-sm">Work history</p>
+            </a>
+            <a href="/academic" className="group bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-6 transition-all duration-300 hover:scale-105">
+              <h3 className="text-white font-semibold mb-2 group-hover:text-blue-400">Academic</h3>
+              <p className="text-gray-400 text-sm">PhD & publications</p>
+            </a>
+            <a href="/contact" className="group bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-6 transition-all duration-300 hover:scale-105">
+              <h3 className="text-white font-semibold mb-2 group-hover:text-blue-400">Contact</h3>
+              <p className="text-gray-400 text-sm">Get in touch</p>
+            </a>
           </div>
         </div>
       </section>
