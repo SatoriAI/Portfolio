@@ -29,7 +29,10 @@ export const translations = {
     },
     contact: {
       title: "Let's Connect",
-      subtitle: "Interested in collaborating or have questions about my work? I'd love to hear from you."
+      subtitle: "Interested in collaborating or have questions about my work? I'd love to hear from you.",
+      email: 'Email',
+      quickMessage: 'Send Quick Message',
+      quickMessageDesc: 'Have a quick question? Start a conversation with my AI assistant.'
     }
   },
   es: {
@@ -61,7 +64,10 @@ export const translations = {
     },
     contact: {
       title: 'Conectemos',
-      subtitle: '¿Interesado en colaborar o tienes preguntas sobre mi trabajo? Me encantaría saber de ti.'
+      subtitle: '¿Interesado en colaborar o tienes preguntas sobre mi trabajo? Me encantaría saber de ti.',
+      email: 'Correo',
+      quickMessage: 'Enviar Mensaje Rápido',
+      quickMessageDesc: '¿Tienes una pregunta rápida? Inicia una conversación con mi asistente de IA.'
     }
   },
   fr: {
@@ -93,7 +99,10 @@ export const translations = {
     },
     contact: {
       title: 'Connectons-nous',
-      subtitle: 'Intéressé par une collaboration ou avez-vous des questions sur mon travail? J\'aimerais avoir de vos nouvelles.'
+      subtitle: 'Intéressé par une collaboration ou avez-vous des questions sur mon travail? J\'aimerais avoir de vos nouvelles.',
+      email: 'Email',
+      quickMessage: 'Envoyer un Message Rapide',
+      quickMessageDesc: 'Vous avez une question rapide? Commencez une conversation avec mon assistant IA.'
     }
   },
   de: {
@@ -125,7 +134,10 @@ export const translations = {
     },
     contact: {
       title: 'Lass uns vernetzen',
-      subtitle: 'Interessiert an einer Zusammenarbeit oder haben Sie Fragen zu meiner Arbeit? Ich würde gerne von Ihnen hören.'
+      subtitle: 'Interessiert an einer Zusammenarbeit oder haben Sie Fragen zu meiner Arbeit? Ich würde gerne von Ihnen hören.',
+      email: 'Email',
+      quickMessage: 'Schnelle Nachricht senden',
+      quickMessageDesc: 'Haben Sie eine schnelle Frage? Starten Sie ein Gespräch mit meinem KI-Assistenten.'
     }
   }
 };
