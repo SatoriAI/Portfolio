@@ -4,6 +4,7 @@ import { Building, Calendar, MapPin, ExternalLink, Settings } from 'lucide-react
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
 import SettingsPanel from '@/components/SettingsPanel';
 import { useSettings } from '@/contexts/SettingsContext';
 import { translations } from '@/utils/translations';
@@ -68,13 +69,13 @@ const Experience = () => {
           </div>
           <div className="flex items-center gap-4">
             <nav className="hidden md:flex space-x-8">
-              <a href="/" className="hover:text-blue-400 transition-colors">Home</a>
-              <a href="/about" className="hover:text-blue-400 transition-colors">About</a>
-              <a href="/skills" className="hover:text-blue-400 transition-colors">Skills</a>
-              <a href="/projects" className="hover:text-blue-400 transition-colors">Projects</a>
-              <a href="/experience" className="text-blue-400">Experience</a>
-              <a href="/academic" className="hover:text-blue-400 transition-colors">Academic</a>
-              <a href="/contact" className="hover:text-blue-400 transition-colors">Contact</a>
+              <Link to="/" className="hover:text-blue-400 transition-colors">Home</Link>
+              <Link to="/#about" className="hover:text-blue-400 transition-colors">About</Link>
+              <Link to="/#skills" className="hover:text-blue-400 transition-colors">Skills</Link>
+              <Link to="/#projects" className="hover:text-blue-400 transition-colors">Projects</Link>
+              <Link to="/experience" className="text-blue-400">Experience</Link>
+              <Link to="/academic" className="hover:text-blue-400 transition-colors">Academic</Link>
+              <Link to="/#contact" className="hover:text-blue-400 transition-colors">Contact</Link>
             </nav>
             <Button
               variant="ghost"
