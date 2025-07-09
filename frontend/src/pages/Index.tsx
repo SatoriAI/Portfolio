@@ -59,6 +59,14 @@ const Index = () => {
     setIsHomeDropdownOpen(false);
   };
 
+  const handleHomeMouseEnter = () => {
+    setIsHomeDropdownOpen(true);
+  };
+
+  const handleHomeMouseLeave = () => {
+    setIsHomeDropdownOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 bg-background text-foreground transition-colors duration-300">
       {/* Header */}
@@ -71,8 +79,8 @@ const Index = () => {
             <nav className="hidden md:flex space-x-8">
               <div 
                 className="relative"
-                onMouseEnter={() => setIsHomeDropdownOpen(true)}
-                onMouseLeave={() => setIsHomeDropdownOpen(false)}
+                onMouseEnter={handleHomeMouseEnter}
+                onMouseLeave={handleHomeMouseLeave}
               >
                 <button className="text-blue-400 hover:text-blue-300 transition-colors">
                   Home
