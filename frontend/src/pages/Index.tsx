@@ -59,6 +59,11 @@ const Index = () => {
     setIsHomeDropdownOpen(false);
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsHomeDropdownOpen(false);
+  };
+
   const handleHomeAreaEnter = () => {
     setIsHomeDropdownOpen(true);
   };
@@ -86,7 +91,10 @@ const Index = () => {
                 onMouseEnter={handleHomeAreaEnter}
                 onMouseLeave={handleHomeAreaLeave}
               >
-                <button className="text-blue-400 hover:text-blue-300 transition-colors py-2">
+                <button 
+                  onClick={scrollToTop}
+                  className="text-blue-400 hover:text-blue-300 transition-colors py-2"
+                >
                   Home
                 </button>
                 {isHomeDropdownOpen && (
