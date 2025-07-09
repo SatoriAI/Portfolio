@@ -59,12 +59,16 @@ const Index = () => {
     setIsHomeDropdownOpen(false);
   };
 
-  const handleHomeMouseEnter = () => {
+  const handleHomeAreaEnter = () => {
     setIsHomeDropdownOpen(true);
   };
 
-  const handleHomeMouseLeave = () => {
+  const handleHomeAreaLeave = () => {
     setIsHomeDropdownOpen(false);
+  };
+
+  const handleDropdownItemClick = (sectionId: string) => {
+    scrollToSection(sectionId);
   };
 
   return (
@@ -79,34 +83,34 @@ const Index = () => {
             <nav className="hidden md:flex space-x-8">
               <div 
                 className="relative"
-                onMouseEnter={handleHomeMouseEnter}
-                onMouseLeave={handleHomeMouseLeave}
+                onMouseEnter={handleHomeAreaEnter}
+                onMouseLeave={handleHomeAreaLeave}
               >
-                <button className="text-blue-400 hover:text-blue-300 transition-colors">
+                <button className="text-blue-400 hover:text-blue-300 transition-colors py-2">
                   Home
                 </button>
                 {isHomeDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 bg-black/90 backdrop-blur-md border border-white/10 rounded-lg shadow-lg py-2 min-w-[120px] z-50">
+                  <div className="absolute top-full left-0 mt-0 bg-black/95 backdrop-blur-md border border-white/10 rounded-lg shadow-lg py-2 min-w-[120px] z-50">
                     <button
-                      onClick={() => scrollToSection('about')}
+                      onClick={() => handleDropdownItemClick('about')}
                       className="block w-full text-left px-4 py-2 text-white hover:text-blue-400 hover:bg-white/10 transition-colors"
                     >
                       About
                     </button>
                     <button
-                      onClick={() => scrollToSection('skills')}
+                      onClick={() => handleDropdownItemClick('skills')}
                       className="block w-full text-left px-4 py-2 text-white hover:text-blue-400 hover:bg-white/10 transition-colors"
                     >
                       Skills
                     </button>
                     <button
-                      onClick={() => scrollToSection('projects')}
+                      onClick={() => handleDropdownItemClick('projects')}
                       className="block w-full text-left px-4 py-2 text-white hover:text-blue-400 hover:bg-white/10 transition-colors"
                     >
                       Projects
                     </button>
                     <button
-                      onClick={() => scrollToSection('contact')}
+                      onClick={() => handleDropdownItemClick('contact')}
                       className="block w-full text-left px-4 py-2 text-white hover:text-blue-400 hover:bg-white/10 transition-colors"
                     >
                       Contact
@@ -114,8 +118,8 @@ const Index = () => {
                   </div>
                 )}
               </div>
-              <a href="/experience" className="hover:text-blue-400 transition-colors">Experience</a>
-              <a href="/academic" className="hover:text-blue-400 transition-colors">Academic</a>
+              <a href="/experience" className="hover:text-blue-400 transition-colors py-2">Experience</a>
+              <a href="/academic" className="hover:text-blue-400 transition-colors py-2">Academic</a>
             </nav>
             <Button
               variant="ghost"
