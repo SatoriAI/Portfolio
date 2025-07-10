@@ -69,13 +69,13 @@ const Experience = () => {
           </div>
           <div className="flex items-center gap-4">
             <nav className="hidden md:flex space-x-8">
-              <Link to="/" className="hover:text-blue-400 transition-colors">Home</Link>
-              <Link to="/#about" className="hover:text-blue-400 transition-colors">About</Link>
-              <Link to="/#skills" className="hover:text-blue-400 transition-colors">Skills</Link>
-              <Link to="/#projects" className="hover:text-blue-400 transition-colors">Projects</Link>
-              <Link to="/experience" className="text-blue-400">Experience</Link>
-              <Link to="/academic" className="hover:text-blue-400 transition-colors">Academic</Link>
-              <Link to="/#contact" className="hover:text-blue-400 transition-colors">Contact</Link>
+              <Link to="/" className="hover:text-blue-400 transition-colors py-2">Home</Link>
+              <Link to="/#about" className="hover:text-blue-400 transition-colors py-2">About</Link>
+              <Link to="/#skills" className="hover:text-blue-400 transition-colors py-2">Skills</Link>
+              <Link to="/#projects" className="hover:text-blue-400 transition-colors py-2">Projects</Link>
+              <span className="text-blue-400 py-2">Experience</span>
+              <Link to="/academic" className="hover:text-blue-400 transition-colors py-2">Academic</Link>
+              <Link to="/#contact" className="hover:text-blue-400 transition-colors py-2">Contact</Link>
             </nav>
             <Button
               variant="ghost"
