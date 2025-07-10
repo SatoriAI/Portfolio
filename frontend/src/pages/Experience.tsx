@@ -59,6 +59,12 @@ const Experience = () => {
     }
   ];
 
+  const handleExperienceClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Experience button clicked - preventing default behavior');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 bg-background text-foreground transition-colors duration-300">
       {/* Header */}
@@ -73,7 +79,12 @@ const Experience = () => {
               <Link to="/#about" className="hover:text-blue-400 transition-colors py-2">About</Link>
               <Link to="/#skills" className="hover:text-blue-400 transition-colors py-2">Skills</Link>
               <Link to="/#projects" className="hover:text-blue-400 transition-colors py-2">Projects</Link>
-              <span className="text-blue-400 py-2">Experience</span>
+              <span 
+                className="text-blue-400 py-2 cursor-default" 
+                onClick={handleExperienceClick}
+              >
+                Experience
+              </span>
               <Link to="/academic" className="hover:text-blue-400 transition-colors py-2">Academic</Link>
               <Link to="/#contact" className="hover:text-blue-400 transition-colors py-2">Contact</Link>
             </nav>
