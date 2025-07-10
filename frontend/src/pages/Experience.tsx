@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Building, Calendar, MapPin, ExternalLink, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -70,12 +69,8 @@ const Experience = () => {
           <div className="flex items-center gap-4">
             <nav className="hidden md:flex space-x-8">
               <Link to="/" className="hover:text-blue-400 transition-colors py-2">Home</Link>
-              <Link to="/#about" className="hover:text-blue-400 transition-colors py-2">About</Link>
-              <Link to="/#skills" className="hover:text-blue-400 transition-colors py-2">Skills</Link>
-              <Link to="/#projects" className="hover:text-blue-400 transition-colors py-2">Projects</Link>
               <span className="text-blue-400 py-2 cursor-default">Experience</span>
               <Link to="/academic" className="hover:text-blue-400 transition-colors py-2">Academic</Link>
-              <Link to="/#contact" className="hover:text-blue-400 transition-colors py-2">Contact</Link>
             </nav>
             <Button
               variant="ghost"
