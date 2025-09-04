@@ -1,0 +1,98 @@
+name: Code Quality
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      - staging
+
+jobs:
+  pre-commit:
+    name: pre-commit Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
+
+  pylint:
+    name: Pylint Check
+    runs-on: ubuntu-latest
+    needs: pre-commit
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Python Environment
+        uses: ./.github/actions/setup-python
+
+      - name: Run Pylint
+        run: uv run pylint portfolio
+
+  mypy:
+    name: MyPy Check
+    runs-on: ubuntu-latest
+    needs: pre-commit
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Python Environment
+        uses: ./.github/actions/setup-python
+
+      - name: Run MyPy
+        env:
+          SECRET_KEY: "0m(b5ytsmyyq9al$uulhdvb(hw^jge298(11pm49c!^6se&)ht"
+          DATABASE_URL: ""
+        run: uv run mypy .
+
+  pytest:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: [ pylint, mypy ]
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Python Environment
+        uses: ./.github/actions/setup-python
+
+      - name: Run Pytest
+        env:
+          SECRET_KEY: "0m(b5ytsmyyq9al$uulhdvb(hw^jge298(11pm49c!^6se&)ht"
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
+        run: uv run pytest --cov-report xml  --junitxml=report.xml
+
+      - name: Upload Coverage Reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

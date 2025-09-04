@@ -1,0 +1,115 @@
+[project]
+name = "portfolio"
+version = "0.1.0"
+description = "Backend written in Django for my personal portfolio."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "django>=5.2.5",
+    "django-environ>=0.12.0",
+    "django-health-check>=3.20.0",
+    "django-parler>=2.3",
+    "django-parler-rest>=2.2",
+    "djangorestframework>=3.16.1",
+    "drf-spectacular>=0.28.0",
+    "gunicorn>=23.0.0",
+    "psycopg2-binary>=2.9.10",
+    "whitenoise>=6.9.0",
+]
+
+[dependency-groups]
+dev = [
+    "django-stubs>=5.2.2",
+    "mypy>=1.17.1",
+    "pre-commit>=4.2.0",
+    "factory-boy>=3.3.3",
+    "genbadge[all]>=1.1.2",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "pytest-django>=4.11.1",
+    "ddt>=1.7.2",
+    "pylint>=3.3.8",
+]
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "W",   # pycodestyle warnings
+    "UP",  # pyupgrade
+]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true  # Formats code in docstrings.
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "portfolio",
+    "utils",
+    "work",
+]
+
+[tool.mypy]
+mypy_path = "portfolio/"
+exclude = [
+    "migrations/",
+    "tests/",
+]
+plugins = [
+    "mypy_django_plugin.main"
+]
+ignore_missing_imports = true
+disallow_untyped_defs = true  # Requires annotations on functions
+warn_redundant_casts = true   # Flags unnecessary casts
+warn_unused_ignores = true    # Helps clean up # type: ignor
+
+[tool.django-stubs]
+django_settings_module = "portfolio.settings"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "portfolio.settings"
+addopts = "portfolio --cov --cov-report term-missing --cov-fail-under=75"
+
+[tool.coverage.run]
+source = [
+    "portfolio",
+    "utils",
+    "work",
+]
+omit = [
+    "*/__init__.py",
+    "*/migrations/*",
+    "*/tests/*",
+]
+
+[tool.coverage.report]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+]
+
+[tool.codespell]
+skip = [
+    "*/locale/*"
+]
+ignore-words-list = [
+    "assertIn",
+]
+
+[tool.pylint]
+max-line-length = 120
+disable = [
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "too-few-public-methods",
+]
