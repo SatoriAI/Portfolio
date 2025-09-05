@@ -8,7 +8,6 @@ class ParlerTranslatedFieldsFieldExtension(OpenApiSerializerFieldExtension):
     target_class = "parler_rest.fields.TranslatedFieldsField"
 
     def map_serializer_field(self, auto_schema: Any, direction: str) -> dict[str, Any]:
-        breakpoint()
         shared_model = getattr(self.target, "shared_model", None)
 
         translated_props = {}

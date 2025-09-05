@@ -103,6 +103,7 @@ skip = [
 ]
 ignore-words-list = [
     "assertIn",
+    "astroid",
 ]
 
 [tool.pylint]
