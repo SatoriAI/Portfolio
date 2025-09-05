@@ -18,6 +18,7 @@ import environ
 env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
+    CORS_ALLOWED_ORIGUNG=(list, []),
     CSRF_TRUSTED_ORIGINS=(list, []),
 )
 
@@ -42,6 +43,7 @@ SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS")
 
 

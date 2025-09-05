@@ -11,6 +11,8 @@ import os
 
 from django.core.asgi import get_asgi_application
 
+from utils.drf import ParlerTranslatedFieldsFieldExtension  # noqa: F401 # pylint: disable=unused-import
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "portfolio.settings")
 
 application = get_asgi_application()
