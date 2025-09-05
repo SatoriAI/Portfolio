@@ -21,8 +21,8 @@ RUN uv sync --frozen --no-dev
 COPY portfolio/ ./portfolio/
 
 # Expose port (Railway will set PORT environment variable)
-EXPOSE 8000
+EXPOSE ${PORT:-8000}
 
 # Probe /healtcheck every 30s, time out after 5s, start probing 10s after boot, retry 3x
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-8000}/status || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/healthcheck || exit 1
