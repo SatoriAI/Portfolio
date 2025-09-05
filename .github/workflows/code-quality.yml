@@ -39,6 +39,9 @@ jobs:
         uses: ./.github/actions/setup-python
 
       - name: Run Pylint
+        env:
+          SECRET_KEY: "0m(b5ytsmyyq9al$uulhdvb(hw^jge298(11pm49c!^6se&)ht"
+          DATABASE_URL: ""
         run: uv run pylint portfolio/portfolio portfolio/university portfolio/utils portfolio/work
 
   mypy:
