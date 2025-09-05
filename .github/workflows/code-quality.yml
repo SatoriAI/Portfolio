@@ -39,7 +39,7 @@ jobs:
         uses: ./.github/actions/setup-python
 
       - name: Run Pylint
-        run: uv run pylint portfolio
+        run: uv run pylint portfolio/portfolio portfolio/university portfolio/utils portfolio/work
 
   mypy:
     name: MyPy Check

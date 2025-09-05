@@ -14,7 +14,7 @@ class ParlerTranslatedFieldsFieldExtension(OpenApiSerializerFieldExtension):
 
         if shared_model is not None:
             try:
-                meta = shared_model._parler_meta
+                meta = shared_model._parler_meta  # pylint: disable=protected-access
 
                 if hasattr(meta, "get_translated_fields"):  # 1) Prefer Parler’s own list of translated field names
                     names = list(meta.get_translated_fields())
@@ -29,18 +29,18 @@ class ParlerTranslatedFieldsFieldExtension(OpenApiSerializerFieldExtension):
                 for name in names:
                     translated_props[name] = {"type": "string"}
 
-            except Exception:  # Last resort: keep it open so docs don’t break
+            except Exception:  # pylint: disable=broad-exception-caught
                 pass
 
         per_language_schema = {
             "type": "object",
             "properties": translated_props,
-            "additionalProperties": False if translated_props else True,
+            "additionalProperties": not translated_props,
         }
 
         return {
             "type": "object",
             "additionalProperties": per_language_schema,
             "description": "Dictionary keyed by IETF language code.",
-            "example": {"en": {k: "string" for k in translated_props.keys()} or {}},
+            "example": {"en": {k: "string" for k in translated_props} or {}},
         }

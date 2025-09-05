@@ -29,8 +29,16 @@ dev = [
     "pytest-django>=4.11.1",
     "ddt>=1.7.2",
     "pylint>=3.3.8",
+    "pylint-django>=2.6.1",
 ]
 
+[project.scripts]
+lint = "pylint src tests"
+
+
+########################################################################################################################
+# Ruff
+########################################################################################################################
 [tool.ruff]
 line-length = 120
 indent-width = 4
@@ -44,7 +52,6 @@ select = [
     "W",   # pycodestyle warnings
     "UP",  # pyupgrade
 ]
-ignore = []
 
 [tool.ruff.format]
 quote-style = "double"
@@ -54,10 +61,52 @@ docstring-code-format = true  # Formats code in docstrings.
 [tool.ruff.lint.isort]
 known-first-party = [
     "portfolio",
+    "university",
     "utils",
     "work",
 ]
 
+########################################################################################################################
+# Codespell
+########################################################################################################################
+[tool.codespell]
+skip = [
+    "*/locale/*"
+]
+ignore-words-list = [
+    "assertIn",
+    "astroid",
+]
+
+########################################################################################################################
+# Pylint
+########################################################################################################################
+[tool.pylint.main]
+load-plugins = [
+    "pylint_django"
+]
+django-settings-module = "portfolio.settings"
+
+ignore-paths = [
+    "portfolio/*/migrations",
+]
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.messages_control]
+disable = [
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "too-few-public-methods",
+    "invalid-name",  # Django migration files have non-conforming names
+    "duplicate-code",  # Django migrations often have similar code
+]
+
+########################################################################################################################
+# MyPy
+########################################################################################################################
 [tool.mypy]
 mypy_path = "portfolio/"
 exclude = [
@@ -75,6 +124,9 @@ warn_unused_ignores = true    # Helps clean up # type: ignor
 [tool.django-stubs]
 django_settings_module = "portfolio.settings"
 
+########################################################################################################################
+# Pytest & Coverage
+########################################################################################################################
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "portfolio.settings"
 addopts = "portfolio --cov --cov-report term-missing --cov-fail-under=75"
@@ -82,6 +134,7 @@ addopts = "portfolio --cov --cov-report term-missing --cov-fail-under=75"
 [tool.coverage.run]
 source = [
     "portfolio",
+    "university",
     "utils",
     "work",
 ]
@@ -95,22 +148,4 @@ omit = [
 omit = [
     "*/migrations/*",
     "*/tests/*",
-]
-
-[tool.codespell]
-skip = [
-    "*/locale/*"
-]
-ignore-words-list = [
-    "assertIn",
-    "astroid",
-]
-
-[tool.pylint]
-max-line-length = 120
-disable = [
-    "missing-module-docstring",
-    "missing-class-docstring",
-    "missing-function-docstring",
-    "too-few-public-methods",
 ]
