@@ -77,11 +77,11 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 bg-background text-foreground transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 text-foreground transition-colors duration-300">
       {/* Header */}
-      <header className="fixed top-0 w-full bg-black/20 backdrop-blur-md z-40 border-b border-white/10 dark:border-white/10 border-border">
+      <header className="fixed top-0 w-full bg-orange-100/80 dark:bg-black/20 backdrop-blur-md z-40 border-b border-orange-200/50 dark:border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="text-xl font-bold bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
+          <div className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-500 dark:from-blue-400 dark:to-teal-400 bg-clip-text text-transparent">
             Your Name
           </div>
           <div className="flex items-center gap-4">
@@ -93,47 +93,47 @@ const Index = () => {
               >
                 <button 
                   onClick={scrollToTop}
-                  className="text-blue-400 hover:text-blue-300 transition-colors py-2"
+                  className="text-orange-600 hover:text-orange-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors py-2"
                 >
                   Home
                 </button>
                 {isHomeDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-0 bg-black/95 backdrop-blur-md border border-white/10 rounded-lg shadow-lg py-2 min-w-[120px] z-50">
+                  <div className="absolute top-full left-0 mt-0 bg-orange-50/95 dark:bg-black/95 backdrop-blur-md border border-orange-200/50 dark:border-white/10 rounded-lg shadow-lg py-2 min-w-[120px] z-50">
                     <button
                       onClick={() => handleDropdownItemClick('about')}
-                      className="block w-full text-left px-4 py-2 text-white hover:text-blue-400 hover:bg-white/10 transition-colors"
+                      className="block w-full text-left px-4 py-2 text-orange-800 hover:text-orange-600 hover:bg-orange-100/50 dark:text-white dark:hover:text-blue-400 dark:hover:bg-white/10 transition-colors"
                     >
                       About
                     </button>
                     <button
                       onClick={() => handleDropdownItemClick('skills')}
-                      className="block w-full text-left px-4 py-2 text-white hover:text-blue-400 hover:bg-white/10 transition-colors"
+                      className="block w-full text-left px-4 py-2 text-orange-800 hover:text-orange-600 hover:bg-orange-100/50 dark:text-white dark:hover:text-blue-400 dark:hover:bg-white/10 transition-colors"
                     >
                       Skills
                     </button>
                     <button
                       onClick={() => handleDropdownItemClick('projects')}
-                      className="block w-full text-left px-4 py-2 text-white hover:text-blue-400 hover:bg-white/10 transition-colors"
+                      className="block w-full text-left px-4 py-2 text-orange-800 hover:text-orange-600 hover:bg-orange-100/50 dark:text-white dark:hover:text-blue-400 dark:hover:bg-white/10 transition-colors"
                     >
                       Projects
                     </button>
                     <button
                       onClick={() => handleDropdownItemClick('contact')}
-                      className="block w-full text-left px-4 py-2 text-white hover:text-blue-400 hover:bg-white/10 transition-colors"
+                      className="block w-full text-left px-4 py-2 text-orange-800 hover:text-orange-600 hover:bg-orange-100/50 dark:text-white dark:hover:text-blue-400 dark:hover:bg-white/10 transition-colors"
                     >
                       Contact
                     </button>
                   </div>
                 )}
               </div>
-              <a href="/experience" className="hover:text-blue-400 transition-colors py-2">Experience</a>
-              <a href="/academic" className="hover:text-blue-400 transition-colors py-2">Academic</a>
+              <a href="/experience" className="hover:text-orange-600 dark:hover:text-blue-400 transition-colors py-2">Experience</a>
+              <a href="/academic" className="hover:text-orange-600 dark:hover:text-blue-400 transition-colors py-2">Academic</a>
             </nav>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsSettingsOpen(true)}
-              className="rounded-full hover:bg-white/10"
+              className="rounded-full hover:bg-orange-100/50 dark:hover:bg-white/10"
             >
               <Settings className="w-5 h-5" />
             </Button>
@@ -145,32 +145,32 @@ const Index = () => {
       <section id="hero" className="pt-32 pb-20 px-6">
         <div className="max-w-6xl mx-auto text-center">
           <div className="mb-8">
-            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-400 to-teal-400 mx-auto mb-6 flex items-center justify-center">
+            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-orange-400 to-red-400 dark:from-blue-400 dark:to-teal-400 mx-auto mb-6 flex items-center justify-center">
               <User className="w-16 h-16 text-white" />
             </div>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-teal-400 to-blue-400 bg-clip-text text-transparent animate-fade-in">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-orange-600 via-red-500 to-orange-600 dark:from-blue-400 dark:via-teal-400 dark:to-blue-400 bg-clip-text text-transparent animate-fade-in">
             {t.hero.title}
           </h1>
-          <p className="text-xl md:text-2xl text-gray-300 dark:text-gray-300 text-muted-foreground mb-8 max-w-3xl mx-auto animate-fade-in">
+          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto animate-fade-in">
             {t.hero.subtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in">
             <Button 
               onClick={() => setIsChatOpen(true)}
-              className="bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white px-8 py-3 rounded-full text-lg font-semibold transition-all duration-300 hover:scale-105"
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 dark:from-blue-500 dark:to-teal-500 dark:hover:from-blue-600 dark:hover:to-teal-600 text-white px-8 py-3 rounded-full text-lg font-semibold transition-all duration-300 hover:scale-105"
             >
               <MessageSquare className="w-5 h-5 mr-2" />
               {t.hero.askAI}
             </Button>
             <div className="flex gap-4">
-              <Button variant="outline" size="icon" className="rounded-full border-gray-600 hover:border-blue-400">
+              <Button variant="outline" size="icon" className="rounded-full border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400">
                 <Github className="w-5 h-5" />
               </Button>
-              <Button variant="outline" size="icon" className="rounded-full border-gray-600 hover:border-blue-400">
+              <Button variant="outline" size="icon" className="rounded-full border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400">
                 <Linkedin className="w-5 h-5" />
               </Button>
-              <Button variant="outline" size="icon" className="rounded-full border-gray-600 hover:border-blue-400">
+              <Button variant="outline" size="icon" className="rounded-full border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400">
                 <Mail className="w-5 h-5" />
               </Button>
             </div>
@@ -182,25 +182,25 @@ const Index = () => {
       <section id="about" className="py-20 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
+            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-blue-400 dark:to-teal-400 bg-clip-text text-transparent">
               {t.about.title}
             </h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <p className="text-lg text-gray-300 dark:text-gray-300 text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
                 {t.about.paragraph1}
               </p>
-              <p className="text-lg text-gray-300 dark:text-gray-300 text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
                 {t.about.paragraph2}
               </p>
             </div>
-            <Card className="bg-white/5 dark:bg-white/5 bg-card border-white/10 dark:border-white/10 border-border">
+            <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
               <CardHeader>
-                <CardTitle className="text-white dark:text-white text-card-foreground">{t.about.philosophy}</CardTitle>
+                <CardTitle className="text-card-foreground">{t.about.philosophy}</CardTitle>
               </CardHeader>
-              <CardContent className="text-gray-300 dark:text-gray-300 text-muted-foreground">
+              <CardContent className="text-muted-foreground">
                 <p>
                   {t.about.philosophyText}
                 </p>
@@ -214,27 +214,27 @@ const Index = () => {
       <section id="skills" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
+            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-blue-400 dark:to-teal-400 bg-clip-text text-transparent">
               {t.skills.title}
             </h2>
-            <p className="text-xl text-gray-300 dark:text-gray-300 text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               My technical expertise and core competencies in software development
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {skills.map((skill, index) => (
-              <Card key={index} className="bg-white/5 dark:bg-white/5 bg-card border-white/10 dark:border-white/10 border-border hover:bg-white/10 transition-all duration-300 hover:scale-105">
+              <Card key={index} className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300 hover:scale-105">
                 <CardHeader className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-400 to-teal-400 rounded-full flex items-center justify-center">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-orange-400 to-red-400 dark:from-blue-400 dark:to-teal-400 rounded-full flex items-center justify-center">
                     <skill.icon className="w-8 h-8 text-white" />
                   </div>
-                  <CardTitle className="text-white dark:text-white text-card-foreground">{skill.name}</CardTitle>
-                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-500/30">
+                  <CardTitle className="text-card-foreground">{skill.name}</CardTitle>
+                  <Badge variant="secondary" className="bg-orange-500/20 text-orange-700 border-orange-500/30 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30">
                     {skill.level}
                   </Badge>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-300 dark:text-gray-300 text-muted-foreground text-center">
+                  <p className="text-muted-foreground text-center">
                     {skill.description}
                   </p>
                 </CardContent>
@@ -248,17 +248,17 @@ const Index = () => {
       <section id="projects" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
+            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-blue-400 dark:to-teal-400 bg-clip-text text-transparent">
               {t.projects.title}
             </h2>
-            <p className="text-xl text-gray-300 dark:text-gray-300 text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               A showcase of my latest work in backend development, AI/ML, and infrastructure
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {projects.map((project, index) => (
-              <Card key={index} className="bg-white/5 dark:bg-white/5 bg-card border-white/10 dark:border-white/10 border-border hover:bg-white/10 transition-all duration-300 hover:scale-105 overflow-hidden">
-                <div className="aspect-video bg-gradient-to-br from-blue-400 to-teal-400 relative overflow-hidden">
+              <Card key={index} className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300 hover:scale-105 overflow-hidden">
+                <div className="aspect-video bg-gradient-to-br from-orange-400 to-red-400 dark:from-blue-400 dark:to-teal-400 relative overflow-hidden">
                   <img
                     src={project.image}
                     alt={project.title}
@@ -266,25 +266,25 @@ const Index = () => {
                   />
                 </div>
                 <CardHeader>
-                  <CardTitle className="text-white dark:text-white text-card-foreground">{project.title}</CardTitle>
+                  <CardTitle className="text-card-foreground">{project.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-300 dark:text-gray-300 text-muted-foreground mb-4">
+                  <p className="text-muted-foreground mb-4">
                     {project.description}
                   </p>
                   <div className="flex flex-wrap gap-2 mb-4">
                     {project.technologies.map((tech, techIndex) => (
-                      <Badge key={techIndex} variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-500/30">
+                      <Badge key={techIndex} variant="secondary" className="bg-orange-500/20 text-orange-700 border-orange-500/30 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30">
                         {tech}
                       </Badge>
                     ))}
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1 border-gray-600 hover:border-blue-400">
+                    <Button variant="outline" size="sm" className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400">
                       <Github className="w-4 h-4 mr-2" />
                       Code
                     </Button>
-                    <Button variant="outline" size="sm" className="flex-1 border-gray-600 hover:border-blue-400">
+                    <Button variant="outline" size="sm" className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400">
                       <ExternalLink className="w-4 h-4 mr-2" />
                       Demo
                     </Button>
@@ -300,72 +300,72 @@ const Index = () => {
       <section id="contact" className="py-20 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
+            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-blue-400 dark:to-teal-400 bg-clip-text text-transparent">
               {t.contact.title}
             </h2>
-            <p className="text-xl text-gray-300 dark:text-gray-300 text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Let's connect and discuss how we can work together
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-12">
             <div className="space-y-6">
-              <Card className="bg-white/5 dark:bg-white/5 bg-card border-white/10 dark:border-white/10 border-border">
+              <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
                 <CardHeader>
-                  <CardTitle className="text-white dark:text-white text-card-foreground flex items-center gap-2">
+                  <CardTitle className="text-card-foreground flex items-center gap-2">
                     <Mail className="w-5 h-5" />
                     {t.contact.email}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-300 dark:text-gray-300 text-muted-foreground">
+                  <p className="text-muted-foreground">
                     your.email@example.com
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-white/5 dark:bg-white/5 bg-card border-white/10 dark:border-white/10 border-border">
+              <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
                 <CardHeader>
-                  <CardTitle className="text-white dark:text-white text-card-foreground flex items-center gap-2">
+                  <CardTitle className="text-card-foreground flex items-center gap-2">
                     <Github className="w-5 h-5" />
                     GitHub
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-300 dark:text-gray-300 text-muted-foreground">
+                  <p className="text-muted-foreground">
                     github.com/yourusername
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-white/5 dark:bg-white/5 bg-card border-white/10 dark:border-white/10 border-border">
+              <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
                 <CardHeader>
-                  <CardTitle className="text-white dark:text-white text-card-foreground flex items-center gap-2">
+                  <CardTitle className="text-card-foreground flex items-center gap-2">
                     <Linkedin className="w-5 h-5" />
                     LinkedIn
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-300 dark:text-gray-300 text-muted-foreground">
+                  <p className="text-muted-foreground">
                     linkedin.com/in/yourprofile
                   </p>
                 </CardContent>
               </Card>
             </div>
 
-            <Card className="bg-white/5 dark:bg-white/5 bg-card border-white/10 dark:border-white/10 border-border">
+            <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
               <CardHeader>
-                <CardTitle className="text-white dark:text-white text-card-foreground">
+                <CardTitle className="text-card-foreground">
                   {t.contact.quickMessage}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-300 dark:text-gray-300 text-muted-foreground mb-4">
+                <p className="text-muted-foreground mb-4">
                   {t.contact.quickMessageDesc}
                 </p>
                 <Button 
                   onClick={() => setIsChatOpen(true)}
-                  className="w-full bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white"
+                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 dark:from-blue-500 dark:to-teal-500 dark:hover:from-blue-600 dark:hover:to-teal-600 text-white"
                 >
                   <MessageSquare className="w-4 h-4 mr-2" />
                   {t.hero.askAI}
@@ -386,7 +386,7 @@ const Index = () => {
       {!isChatOpen && (
         <Button
           onClick={() => setIsChatOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 z-50"
+          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 dark:from-blue-500 dark:to-teal-500 dark:hover:from-blue-600 dark:hover:to-teal-600 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 z-50"
         >
           <MessageSquare className="w-6 h-6" />
         </Button>

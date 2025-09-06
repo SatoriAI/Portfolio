@@ -92,18 +92,18 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <Card className="w-full max-w-lg h-[600px] bg-slate-900 border-slate-700 flex flex-col">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-slate-700">
-          <CardTitle className="flex items-center gap-2 text-white">
-            <MessageSquare className="w-5 h-5 text-blue-400" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/50 backdrop-blur-sm">
+      <Card className="w-full max-w-lg h-[600px] bg-orange-50 dark:bg-slate-900 border-orange-200 dark:border-slate-700 flex flex-col">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-orange-200 dark:border-slate-700">
+          <CardTitle className="flex items-center gap-2 text-card-foreground">
+            <MessageSquare className="w-5 h-5 text-orange-600 dark:text-blue-400" />
             AI Assistant
           </CardTitle>
           <Button
             onClick={onClose}
             variant="ghost"
             size="sm"
-            className="text-gray-400 hover:text-white"
+            className="text-muted-foreground hover:text-card-foreground"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -118,21 +118,21 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
                   className={`flex gap-3 ${message.isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   {!message.isUser && (
-                    <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-orange-500 dark:bg-blue-500 flex items-center justify-center flex-shrink-0">
                       <Bot className="w-4 h-4 text-white" />
                     </div>
                   )}
                   <div
                     className={`max-w-[80%] p-3 rounded-lg ${
                       message.isUser
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-slate-800 text-gray-100 border border-slate-700'
+                        ? 'bg-orange-600 dark:bg-blue-600 text-white'
+                        : 'bg-orange-100 dark:bg-slate-800 text-foreground border border-orange-200 dark:border-slate-700'
                     }`}
                   >
                     <p className="text-sm leading-relaxed">{message.text}</p>
                   </div>
                   {message.isUser && (
-                    <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-red-500 dark:bg-teal-500 flex items-center justify-center flex-shrink-0">
                       <User className="w-4 h-4 text-white" />
                     </div>
                   )}
@@ -140,14 +140,14 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
               ))}
               {isLoading && (
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-orange-500 dark:bg-blue-500 flex items-center justify-center">
                     <Bot className="w-4 h-4 text-white" />
                   </div>
-                  <div className="bg-slate-800 p-3 rounded-lg border border-slate-700">
+                  <div className="bg-orange-100 dark:bg-slate-800 p-3 rounded-lg border border-orange-200 dark:border-slate-700">
                     <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-100"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-200"></div>
+                      <div className="w-2 h-2 bg-orange-400 dark:bg-gray-400 rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-orange-400 dark:bg-gray-400 rounded-full animate-pulse delay-100"></div>
+                      <div className="w-2 h-2 bg-orange-400 dark:bg-gray-400 rounded-full animate-pulse delay-200"></div>
                     </div>
                   </div>
                 </div>
@@ -155,20 +155,20 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
             </div>
           </ScrollArea>
           
-          <div className="p-4 border-t border-slate-700">
+          <div className="p-4 border-t border-orange-200 dark:border-slate-700">
             <div className="flex gap-2">
               <Input
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Ask me anything about this developer..."
-                className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-gray-400"
+                className="flex-1 bg-orange-50 dark:bg-slate-800 border-orange-300 dark:border-slate-600 text-foreground placeholder:text-muted-foreground"
                 disabled={isLoading}
               />
               <Button
                 onClick={handleSendMessage}
                 disabled={!inputValue.trim() || isLoading}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-orange-600 hover:bg-orange-700 dark:bg-blue-600 dark:hover:bg-blue-700"
               >
                 <Send className="w-4 h-4" />
               </Button>

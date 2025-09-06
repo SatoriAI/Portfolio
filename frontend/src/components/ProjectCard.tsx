@@ -19,7 +19,7 @@ interface ProjectCardProps {
 
 const ProjectCard = ({ project }: ProjectCardProps) => {
   return (
-    <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105 group">
+    <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300 hover:scale-105 group">
       <div className="relative overflow-hidden rounded-t-lg">
         <img 
           src={project.image} 
@@ -30,8 +30,8 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
       </div>
       
       <CardHeader>
-        <CardTitle className="text-white text-xl">{project.title}</CardTitle>
-        <CardDescription className="text-gray-300">
+        <CardTitle className="text-card-foreground text-xl">{project.title}</CardTitle>
+        <CardDescription className="text-muted-foreground">
           {project.description}
         </CardDescription>
       </CardHeader>
@@ -42,7 +42,7 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
             <Badge 
               key={index} 
               variant="secondary" 
-              className="bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
+              className="bg-orange-500/20 text-orange-700 hover:bg-orange-500/30 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30"
             >
               {tech}
             </Badge>
@@ -53,7 +53,7 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
           <Button 
             variant="outline" 
             size="sm" 
-            className="flex-1 border-gray-600 hover:border-blue-400 text-gray-300 hover:text-white"
+            className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
           >
             <Github className="w-4 h-4 mr-2" />
             Code
@@ -61,7 +61,7 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
           <Button 
             variant="outline" 
             size="sm" 
-            className="flex-1 border-gray-600 hover:border-teal-400 text-gray-300 hover:text-white"
+            className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-teal-400"
           >
             <ExternalLink className="w-4 h-4 mr-2" />
             Demo
