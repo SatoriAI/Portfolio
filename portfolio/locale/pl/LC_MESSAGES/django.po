@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-05 11:58+0000\n"
+"POT-Creation-Date: 2025-09-06 16:41+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -28,11 +28,11 @@ msgstr "Zimowy"
 msgid "Summer"
 msgstr "Letni"
 
-#: university/models.py:12 work/models.py:47
+#: university/models.py:12 work/models.py:49
 msgid "Start"
 msgstr "Rozpoczęcie"
 
-#: university/models.py:13 work/models.py:48
+#: university/models.py:13 work/models.py:50
 msgid "End"
 msgstr "Koniec"
 
@@ -64,7 +64,7 @@ msgstr "Szkoła"
 msgid "Schools"
 msgstr "Szkoły"
 
-#: university/models.py:32 work/models.py:28
+#: university/models.py:32 work/models.py:29
 msgid "Title"
 msgstr "Tytuł"
 
@@ -129,77 +129,90 @@ msgid "Work"
 msgstr "Praca"
 
 #: work/choices.py:6
-msgid "Intermediate"
-msgstr "Średniozaawansowany"
+msgid "3+ years of experience"
+msgstr "3+ lat doświadczenia"
 
 #: work/choices.py:7
-msgid "Advanced"
-msgstr "Zaawansowany"
+msgid "5+ years of experience"
+msgstr "5+ lat doświadczenia"
 
 #: work/choices.py:8
-msgid "Expert"
-msgstr "Ekspert"
+msgid "10+ years of experience"
+msgstr "10+ lat doświadczenia"
 
-#: work/models.py:15
+#: work/models.py:13 work/models.py:30
+msgid "Image URL"
+msgstr "Adres URL obrazu"
+
+#: work/models.py:16
 msgid "Name"
 msgstr "Nazwa"
 
-#: work/models.py:16 work/models.py:34 work/models.py:54
+#: work/models.py:17 work/models.py:36 work/models.py:56
 msgid "Description"
 msgstr "Opis"
 
-#: work/models.py:23
+#: work/models.py:24
 msgid "Skill"
 msgstr "Umiejętność"
 
-#: work/models.py:24
+#: work/models.py:25
 msgid "Skills"
 msgstr "Umiejętności"
 
-#: work/models.py:29
+#: work/models.py:31
 msgid "Tags"
 msgstr "Tagi"
 
-#: work/models.py:30
+#: work/models.py:32
 msgid "Demo"
 msgstr "Demo"
 
-#: work/models.py:31
+#: work/models.py:33
 msgid "Repository"
 msgstr "Repozytorium"
 
-#: work/models.py:41
+#: work/models.py:43
 msgid "Project"
 msgstr "Projekt"
 
-#: work/models.py:42
+#: work/models.py:44
 msgid "Projects"
 msgstr "Projekty"
 
-#: work/models.py:46
+#: work/models.py:48
 msgid "Position"
 msgstr "Stanowisko"
 
-#: work/models.py:49
+#: work/models.py:51
 msgid "Company"
 msgstr "Firma"
 
-#: work/models.py:50
+#: work/models.py:52
 msgid "Technologies"
 msgstr "Technologie"
 
-#: work/models.py:53
+#: work/models.py:55
 msgid "Location"
 msgstr "Lokalizacja"
 
-#: work/models.py:55
+#: work/models.py:57
 msgid "Achievements"
 msgstr "Osiągnięcia"
 
-#: work/models.py:66
+#: work/models.py:68
 msgid "Experience"
 msgstr "Doświadczenie"
 
-#: work/models.py:67
+#: work/models.py:69
 msgid "Experiences"
 msgstr "Doświadczenia"
+
+#~ msgid "Intermediate"
+#~ msgstr "Średniozaawansowany"
+
+#~ msgid "Advanced"
+#~ msgstr "Zaawansowany"
+
+#~ msgid "Expert"
+#~ msgstr "Ekspert"

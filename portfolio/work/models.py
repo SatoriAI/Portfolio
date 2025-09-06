@@ -10,6 +10,7 @@ from work.choices import Levels
 
 class Skill(TranslatableModel, TimestampedModel):
     level = models.CharField(choices=Levels, default=Levels.INTERMEDIATE)
+    image = models.URLField(_("Image URL"), null=True, blank=True)
 
     translations = TranslatedFields(
         name=models.CharField(_("Name"), max_length=128),
@@ -26,6 +27,7 @@ class Skill(TranslatableModel, TimestampedModel):
 
 class Project(TranslatableModel, TimestampedModel):
     title = models.CharField(_("Title"), max_length=128)
+    image = models.URLField(_("Image URL"), null=True, blank=True)
     tags = ArrayField(models.CharField(_("Tags"), max_length=128), null=True, blank=True)
     demo = models.URLField(_("Demo"), null=True, blank=True)
     repository = models.URLField(_("Repository"), null=True, blank=True)
