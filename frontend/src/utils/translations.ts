@@ -8,18 +8,18 @@ export const translations = {
       contact: 'Contact'
     },
     hero: {
-      title: 'Python Backend Developer',
-      subtitle: 'Specializing in LLM integrations, RAG pipelines, and scalable infrastructure. Transforming complex data into intelligent solutions.',
+      title: 'Backend Developer',
+      subtitle: 'Turning complex ideas into clean, scalable systems — from backend logic to DevOps pipelines. Passionate about building reliable products that connect code, data, and people.',
       askAI: 'Ask AI About Me',
       getInTouch: 'Get In Touch',
       chatWithAI: 'Chat with AI'
     },
     about: {
       title: 'About Me',
-      paragraph1: "I'm a passionate Python Backend Developer with extensive experience in building scalable systems and implementing cutting-edge AI solutions. My journey spans from traditional backend development to the exciting world of Large Language Models and RAG pipelines.",
-      paragraph2: "I thrive on solving complex problems and have successfully architected systems that handle millions of requests while maintaining high performance and reliability. My expertise in infrastructure and frontend development allows me to see the bigger picture and deliver comprehensive solutions.",
+      paragraph1: "I’m someone who enjoys combining curiosity with creativity, whether in my professional or personal life. Outside of coding, I have a passion for teaching, exploring new ideas, and sharing knowledge in ways that inspire others. I’m also drawn to challenges that require both analytical thinking and a bit of imagination, whether it’s solving a tough math problem or working on personal side projects that keep me learning and growing.",
+      paragraph2: "On the technical side, I specialize in building robust backend systems and scalable infrastructures, with strong experience in Python, Django, FastAPI, SQLAlchemy, and modern DevOps practices. My work spans from designing clean APIs and crafting reliable data models to setting up CI/CD pipelines, cloud deployments, and containerized environments. I value clean code, automation, and documentation, and I enjoy working at the intersection of backend development, DevOps, and data-driven applications — particularly when it involves cutting-edge topics like LLMs, RAG pipelines, or distributed systems.",
       philosophy: 'Technical Philosophy',
-      philosophyText: '"I believe in building robust, scalable systems that not only solve today\'s problems but are architected to adapt and grow with tomorrow\'s challenges. Clean code, comprehensive testing, and thoughtful architecture are the foundations of lasting solutions."'
+      philosophyText: 'I approach technology with the belief that clean, scalable, and maintainable solutions are the foundation of lasting systems. I see code as more than just a means to an end — it’s a craft that should be tested, well-structured, and supported by clear documentation. I follow SOLID principles and value simplicity, because clarity always outlives shortcuts. In my work, I strive to automate wherever possible and design pipelines that ensure reliability, so that teams can move faster without sacrificing quality. At the same time, I remain curious and pragmatic: I explore new tools and approaches, but I adopt them only when they add real value to the product and the people who use it.'
     },
     skills: {
       title: 'Technical Skills'

@@ -76,7 +76,7 @@ const Academic = () => {
       <header className="fixed top-0 w-full bg-orange-100/80 dark:bg-black/20 backdrop-blur-md z-40 border-b border-orange-200/50 dark:border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-500 dark:from-blue-400 dark:to-teal-400 bg-clip-text text-transparent">
-            Your Name
+            Dawid Hanrahan
           </div>
           <div className="flex items-center gap-4">
             <nav className="hidden md:flex space-x-8">

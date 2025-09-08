@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MessageSquare, Github, Linkedin, Mail, Settings, User, Code, Database, Brain, Server, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,11 @@ import ChatWidget from '@/components/ChatWidget';
 import SettingsPanel from '@/components/SettingsPanel';
 import { useSettings } from '@/contexts/SettingsContext';
 import { translations } from '@/utils/translations';
+import { env } from '@/config/env';
+import { fetchProjects } from '@/lib/projectsService';
+import { fetchSkills } from '@/lib/skillsService';
+import type { UiSkill } from '@/lib/skillsService';
+import type { UiProject } from '@/lib/projectsService';
 
 const Index = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -17,14 +22,14 @@ const Index = () => {
   
   const t = translations[language];
 
-  const skills = [
+  const sampleSkills: UiSkill[] = [
     { icon: Code, name: "Python", level: "Expert", description: "Backend development, APIs, automation" },
     { icon: Database, name: "Databases", level: "Advanced", description: "PostgreSQL, MongoDB, Redis" },
     { icon: Brain, name: "LLMs & RAG", level: "Expert", description: "Pipeline development, vector databases" },
     { icon: Server, name: "Infrastructure", level: "Advanced", description: "AWS, Docker, Kubernetes" }
   ];
 
-  const projects = [
+  const sampleProjects: UiProject[] = [
     {
       title: "Intelligent Document RAG System",
       description: "Built a sophisticated RAG pipeline for document analysis using vector embeddings and LLMs",
@@ -50,6 +55,31 @@ const Index = () => {
       image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop"
     }
   ];
+
+  const [projects, setProjects] = useState<UiProject[]>(sampleProjects);
+  const [skills, setSkills] = useState<UiSkill[]>(sampleSkills);
+
+  useEffect(() => {
+    if (env.mock) return;
+    fetchProjects(language)
+      .then(setProjects)
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error('Failed to fetch projects, falling back to sample data:', err);
+        setProjects(sampleProjects);
+      });
+  }, [language]);
+
+  useEffect(() => {
+    if (env.mock) return;
+    fetchSkills(language)
+      .then(setSkills)
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error('Failed to fetch skills, falling back to sample data:', err);
+        setSkills(sampleSkills);
+      });
+  }, [language]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -82,7 +112,7 @@ const Index = () => {
       <header className="fixed top-0 w-full bg-orange-100/80 dark:bg-black/20 backdrop-blur-md z-40 border-b border-orange-200/50 dark:border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-500 dark:from-blue-400 dark:to-teal-400 bg-clip-text text-transparent">
-            Your Name
+            Dawid Hanrahan
           </div>
           <div className="flex items-center gap-4">
             <nav className="hidden md:flex space-x-8">
@@ -145,9 +175,11 @@ const Index = () => {
       <section id="hero" className="pt-32 pb-20 px-6">
         <div className="max-w-6xl mx-auto text-center">
           <div className="mb-8">
-            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-orange-400 to-red-400 dark:from-blue-400 dark:to-teal-400 mx-auto mb-6 flex items-center justify-center">
-              <User className="w-16 h-16 text-white" />
-            </div>
+            <img
+              src="/profile-picture.jpg"
+              alt="Profile picture"
+              className="w-32 h-32 rounded-full mx-auto mb-6 object-cover"
+            />
           </div>
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-orange-600 via-red-500 to-orange-600 dark:from-blue-400 dark:via-teal-400 dark:to-blue-400 bg-clip-text text-transparent animate-fade-in">
             {t.hero.title}
@@ -164,14 +196,25 @@ const Index = () => {
               {t.hero.askAI}
             </Button>
             <div className="flex gap-4">
-              <Button variant="outline" size="icon" className="rounded-full border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400">
-                <Github className="w-5 h-5" />
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
+                asChild
+              >
+                <a href="https://github.com/SatoriAI" target="_blank" rel="noopener noreferrer">
+                  <Github className="w-5 h-5" />
+                </a>
               </Button>
-              <Button variant="outline" size="icon" className="rounded-full border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400">
-                <Linkedin className="w-5 h-5" />
-              </Button>
-              <Button variant="outline" size="icon" className="rounded-full border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400">
-                <Mail className="w-5 h-5" />
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
+                asChild
+              >
+                <a href="mailto:dawidhanrahan@gmail.com">
+                  <Mail className="w-5 h-5" />
+                </a>
               </Button>
             </div>
           </div>
@@ -189,19 +232,19 @@ const Index = () => {
 
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-lg text-muted-foreground mb-6 leading-relaxed text-justify">
                 {t.about.paragraph1}
               </p>
-              <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-lg text-muted-foreground mb-6 leading-relaxed text-justify">
                 {t.about.paragraph2}
               </p>
             </div>
             <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
               <CardHeader>
-                <CardTitle className="text-card-foreground">{t.about.philosophy}</CardTitle>
+                <CardTitle className="text-card-foreground text-center">{t.about.philosophy}</CardTitle>
               </CardHeader>
               <CardContent className="text-muted-foreground">
-                <p>
+                <p className="text-justify">
                   {t.about.philosophyText}
                 </p>
               </CardContent>
@@ -218,7 +261,7 @@ const Index = () => {
               {t.skills.title}
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              My technical expertise and core competencies in software development
+              Practical engineering rooted in Python, powered by automation, and driven by curiosity.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -229,7 +272,7 @@ const Index = () => {
                     <skill.icon className="w-8 h-8 text-white" />
                   </div>
                   <CardTitle className="text-card-foreground">{skill.name}</CardTitle>
-                  <Badge variant="secondary" className="bg-orange-500/20 text-orange-700 border-orange-500/30 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30">
+                  <Badge variant="secondary" className="bg-orange-500/20 text-orange-700 border-orange-500/30 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30 justify-center">
                     {skill.level}
                   </Badge>
                 </CardHeader>
@@ -252,7 +295,7 @@ const Index = () => {
               {t.projects.title}
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              A showcase of my latest work in backend development, AI/ML, and infrastructure
+              Selected works that reflect my passion for clean engineering and innovation.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -266,10 +309,10 @@ const Index = () => {
                   />
                 </div>
                 <CardHeader>
-                  <CardTitle className="text-card-foreground">{project.title}</CardTitle>
+                  <CardTitle className="text-card-foreground text-center">{project.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground mb-4">
+                  <p className="text-muted-foreground mb-4 text-justify">
                     {project.description}
                   </p>
                   <div className="flex flex-wrap gap-2 mb-4">
@@ -280,14 +323,52 @@ const Index = () => {
                     ))}
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400">
-                      <Github className="w-4 h-4 mr-2" />
-                      Code
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400">
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Demo
-                    </Button>
+                    {project.github ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
+                        asChild
+                      >
+                        <a href={project.github} target="_blank" rel="noopener noreferrer">
+                          <Github className="w-4 h-4 mr-2" />
+                          Code
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 border-orange-300 dark:border-gray-600 opacity-50 cursor-not-allowed"
+                        disabled
+                      >
+                        <Github className="w-4 h-4 mr-2" />
+                        Code
+                      </Button>
+                    )}
+                    {project.demo ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
+                        asChild
+                      >
+                        <a href={project.demo} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Demo
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 border-orange-300 dark:border-gray-600 opacity-50 cursor-not-allowed"
+                        disabled
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Demo
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
