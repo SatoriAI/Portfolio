@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { MessageSquare, Github, Linkedin, Mail, Settings, User, Code, Database, Brain, Server, ExternalLink } from 'lucide-react';
+import { MessageSquare, Github, Linkedin, Mail, Settings, User, Code, Database, Brain, Server, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,7 @@ const Index = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHomeDropdownOpen, setIsHomeDropdownOpen] = useState(false);
+  const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
   const { language } = useSettings();
   
   const t = translations[language];
@@ -104,6 +105,27 @@ const Index = () => {
 
   const handleDropdownItemClick = (sectionId: string) => {
     scrollToSection(sectionId);
+  };
+
+  const nextProject = () => {
+    setCurrentProjectIndex((prevIndex) => 
+      (prevIndex + 1) % projects.length
+    );
+  };
+
+  const prevProject = () => {
+    setCurrentProjectIndex((prevIndex) => 
+      prevIndex === 0 ? projects.length - 1 : prevIndex - 1
+    );
+  };
+
+  const getVisibleProjects = () => {
+    const visibleProjects = [];
+    for (let i = 0; i < 3; i++) {
+      const index = (currentProjectIndex + i) % projects.length;
+      visibleProjects.push(projects[index]);
+    }
+    return visibleProjects;
   };
 
   return (
@@ -298,81 +320,123 @@ const Index = () => {
               Selected works that reflect my passion for clean engineering and innovation.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {projects.map((project, index) => (
-              <Card key={index} className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300 hover:scale-105 overflow-hidden">
-                <div className="aspect-video bg-gradient-to-br from-orange-400 to-red-400 dark:from-blue-400 dark:to-teal-400 relative overflow-hidden">
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-card-foreground text-center">{project.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-4 text-justify">
-                    {project.description}
-                  </p>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {project.technologies.map((tech, techIndex) => (
-                      <Badge key={techIndex} variant="secondary" className="bg-orange-500/20 text-orange-700 border-orange-500/30 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30">
-                        {tech}
-                      </Badge>
-                    ))}
+          <div className="relative">
+            {/* Navigation Buttons */}
+            {projects.length > 3 && (
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 dark:bg-black/90 backdrop-blur-sm border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400 shadow-lg"
+                  onClick={prevProject}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 dark:bg-black/90 backdrop-blur-sm border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400 shadow-lg"
+                  onClick={nextProject}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </Button>
+              </>
+            )}
+            
+            {/* Projects Carousel */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 px-12">
+              {getVisibleProjects().map((project, index) => (
+                <Card key={`${currentProjectIndex}-${index}`} className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300 hover:scale-105 overflow-hidden">
+                  <div className="aspect-video bg-gradient-to-br from-orange-400 to-red-400 dark:from-blue-400 dark:to-teal-400 relative overflow-hidden">
+                    <img
+                      src={project.image}
+                      alt={project.title}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <div className="flex gap-2">
-                    {project.github ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
-                        asChild
-                      >
-                        <a href={project.github} target="_blank" rel="noopener noreferrer">
+                  <CardHeader>
+                    <CardTitle className="text-card-foreground text-center">{project.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground mb-4 text-justify">
+                      {project.description}
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {project.technologies.map((tech, techIndex) => (
+                        <Badge key={techIndex} variant="secondary" className="bg-orange-500/20 text-orange-700 border-orange-500/30 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30">
+                          {tech}
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      {project.github ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
+                          asChild
+                        >
+                          <a href={project.github} target="_blank" rel="noopener noreferrer">
+                            <Github className="w-4 h-4 mr-2" />
+                            Code
+                          </a>
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 border-orange-300 dark:border-gray-600 opacity-50 cursor-not-allowed"
+                          disabled
+                        >
                           <Github className="w-4 h-4 mr-2" />
                           Code
-                        </a>
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 border-orange-300 dark:border-gray-600 opacity-50 cursor-not-allowed"
-                        disabled
-                      >
-                        <Github className="w-4 h-4 mr-2" />
-                        Code
-                      </Button>
-                    )}
-                    {project.demo ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
-                        asChild
-                      >
-                        <a href={project.demo} target="_blank" rel="noopener noreferrer">
+                        </Button>
+                      )}
+                      {project.demo ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
+                          asChild
+                        >
+                          <a href={project.demo} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Demo
+                          </a>
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 border-orange-300 dark:border-gray-600 opacity-50 cursor-not-allowed"
+                          disabled
+                        >
                           <ExternalLink className="w-4 h-4 mr-2" />
                           Demo
-                        </a>
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 border-orange-300 dark:border-gray-600 opacity-50 cursor-not-allowed"
-                        disabled
-                      >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Demo
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            
+            {/* Carousel Indicators */}
+            {projects.length > 3 && (
+              <div className="flex justify-center mt-6 gap-2">
+                {Array.from({ length: projects.length }, (_, index) => (
+                  <button
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      index === currentProjectIndex 
+                        ? 'bg-orange-500 dark:bg-blue-400 w-6' 
+                        : 'bg-orange-300 dark:bg-gray-600 hover:bg-orange-400 dark:hover:bg-gray-500'
+                    }`}
+                    onClick={() => setCurrentProjectIndex(index)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -385,7 +449,7 @@ const Index = () => {
               {t.contact.title}
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Let's connect and discuss how we can work together
+              Let's build something great together — reach out anytime.
             </p>
           </div>
 
@@ -400,7 +464,9 @@ const Index = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    your.email@example.com
+                    <a href="mailto:dawidhanrahan@gmail.com" className="hover:text-orange-600 dark:hover:text-blue-400 transition-colors">
+                      dawidhanrahan@gmail.com
+                    </a>
                   </p>
                 </CardContent>
               </Card>
@@ -414,21 +480,9 @@ const Index = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    github.com/yourusername
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-card-foreground flex items-center gap-2">
-                    <Linkedin className="w-5 h-5" />
-                    LinkedIn
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    linkedin.com/in/yourprofile
+                    <a href="https://github.com/SatoriAI" target="_blank" rel="noopener noreferrer" className="hover:text-orange-600 dark:hover:text-blue-400 transition-colors">
+                      github.com/SatoriAI
+                    </a>
                   </p>
                 </CardContent>
               </Card>
@@ -436,12 +490,12 @@ const Index = () => {
 
             <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
               <CardHeader>
-                <CardTitle className="text-card-foreground">
+                <CardTitle className="text-card-foreground text-center">
                   {t.contact.quickMessage}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-muted-foreground mb-4 text-center">
                   {t.contact.quickMessageDesc}
                 </p>
                 <Button 

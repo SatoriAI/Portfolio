@@ -31,7 +31,7 @@ export const translations = {
       title: "Let's Connect",
       subtitle: "Interested in collaborating or have questions about my work? I'd love to hear from you.",
       email: 'Email',
-      quickMessage: 'Send Quick Message',
+      quickMessage: 'Have a Chat with Vex!',
       quickMessageDesc: 'Have a quick question? Start a conversation with my AI assistant.'
     }
   },
