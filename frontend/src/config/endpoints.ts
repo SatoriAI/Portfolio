@@ -20,7 +20,21 @@ export const endpoints = {
         skills: {
             list: "/api/work/skills/",
         },
+        experiences: {
+            list: "/api/work/experiences/",
+        }
     },
+    education: {
+        schools: {
+            list: "/api/university/schools/",
+        },
+        publications: {
+            list: "/api/university/publications/",
+        },
+        testimonials: {
+            list: "/api/university/testimonials/",
+        }
+    }
 } as const
 
 export function buildUrl(path: string, query?: QueryParams): string {

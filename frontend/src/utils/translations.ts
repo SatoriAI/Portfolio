@@ -33,6 +33,32 @@ export const translations = {
       email: 'Email',
       quickMessage: 'Have a Chat with Vex!',
       quickMessageDesc: 'Have a quick question? Start a conversation with my AI assistant.'
+    },
+    experience: {
+      title: 'Work Experience',
+      subtitle: 'A journey through the companies, projects, and teams that shaped my expertise.',
+      keyAchievements: 'Key Achievements:',
+      technologies: 'Technologies:',
+      loading: 'Loading work experience...',
+      error: 'Failed to load work experience data',
+      tryAgain: 'Try Again',
+      noData: 'No work experience data available.'
+    },
+    academic: {
+      title: 'Academic Journey',
+      subtitle: 'Alongside my professional career, I am pursuing a PhD in Theoretical Mathematics, where I combine my passion for research, teaching, and problem-solving. I have had the opportunity to guide students through mathematics and programming, earning excellent feedback for making complex topics accessible and engaging. My academic path in theoretical work not only sharpens my analytical skills but also fuels my curiosity — whether in exploring algorithms or cutting-edge applications of AI.',
+      researchFocus: 'Research Focus:',
+      advisor: 'Advisor:',
+      researchAreas: 'Research Areas:',
+      publications: 'Publications',
+      studentTestimonials: 'Student Testimonials',
+      loading: 'Loading academic data...',
+      error: 'Failed to load academic data',
+      tryAgain: 'Try Again',
+      noData: 'No academic data available.',
+      view: 'View',
+      noPublications: 'No publications available.',
+      noTestimonials: 'No testimonials available.'
     }
   },
   es: {
@@ -68,6 +94,32 @@ export const translations = {
       email: 'Correo',
       quickMessage: 'Enviar Mensaje Rápido',
       quickMessageDesc: '¿Tienes una pregunta rápida? Inicia una conversación con mi asistente de IA.'
+    },
+    experience: {
+      title: 'Experiencia Laboral',
+      subtitle: 'Un viaje a través de las empresas, proyectos y equipos que formaron mi experiencia.',
+      keyAchievements: 'Logros Clave:',
+      technologies: 'Tecnologías:',
+      loading: 'Cargando experiencia laboral...',
+      error: 'Error al cargar datos de experiencia laboral',
+      tryAgain: 'Intentar de nuevo',
+      noData: 'No hay datos de experiencia laboral disponibles.'
+    },
+    academic: {
+      title: 'Trayectoria Académica',
+      subtitle: 'Junto a mi carrera profesional, estoy cursando un Doctorado en Matemáticas Teóricas, donde combino mi pasión por la investigación, la enseñanza y la resolución de problemas.',
+      researchFocus: 'Enfoque de Investigación:',
+      advisor: 'Asesor:',
+      researchAreas: 'Áreas de Investigación:',
+      publications: 'Publicaciones',
+      studentTestimonials: 'Testimonios de Estudiantes',
+      loading: 'Cargando datos académicos...',
+      error: 'Error al cargar datos académicos',
+      tryAgain: 'Intentar de nuevo',
+      noData: 'No hay datos académicos disponibles.',
+      view: 'Ver',
+      noPublications: 'No hay publicaciones disponibles.',
+      noTestimonials: 'No hay testimonios disponibles.'
     }
   },
   fr: {
@@ -103,6 +155,32 @@ export const translations = {
       email: 'Email',
       quickMessage: 'Envoyer un Message Rapide',
       quickMessageDesc: 'Vous avez une question rapide? Commencez une conversation avec mon assistant IA.'
+    },
+    experience: {
+      title: 'Expérience Professionnelle',
+      subtitle: 'Un parcours à travers les entreprises, projets et équipes qui ont façonné mon expertise.',
+      keyAchievements: 'Réalisations Clés:',
+      technologies: 'Technologies:',
+      loading: 'Chargement de l\'expérience professionnelle...',
+      error: 'Échec du chargement des données d\'expérience professionnelle',
+      tryAgain: 'Réessayer',
+      noData: 'Aucune donnée d\'expérience professionnelle disponible.'
+    },
+    academic: {
+      title: 'Parcours Académique',
+      subtitle: 'Parallèlement à ma carrière professionnelle, je poursuis un Doctorat en Mathématiques Théoriques, où je combine ma passion pour la recherche, l\'enseignement et la résolution de problèmes.',
+      researchFocus: 'Domaine de Recherche:',
+      advisor: 'Directeur:',
+      researchAreas: 'Domaines de Recherche:',
+      publications: 'Publications',
+      studentTestimonials: 'Témoignages d\'Étudiants',
+      loading: 'Chargement des données académiques...',
+      error: 'Échec du chargement des données académiques',
+      tryAgain: 'Réessayer',
+      noData: 'Aucune donnée académique disponible.',
+      view: 'Voir',
+      noPublications: 'Aucune publication disponible.',
+      noTestimonials: 'Aucun témoignage disponible.'
     }
   },
   de: {
@@ -138,6 +216,32 @@ export const translations = {
       email: 'Email',
       quickMessage: 'Schnelle Nachricht senden',
       quickMessageDesc: 'Haben Sie eine schnelle Frage? Starten Sie ein Gespräch mit meinem KI-Assistenten.'
+    },
+    experience: {
+      title: 'Berufserfahrung',
+      subtitle: 'Eine Reise durch die Unternehmen, Projekte und Teams, die meine Expertise geprägt haben.',
+      keyAchievements: 'Wichtige Erfolge:',
+      technologies: 'Technologien:',
+      loading: 'Lade Berufserfahrung...',
+      error: 'Fehler beim Laden der Berufserfahrungsdaten',
+      tryAgain: 'Erneut versuchen',
+      noData: 'Keine Berufserfahrungsdaten verfügbar.'
+    },
+    academic: {
+      title: 'Akademischer Werdegang',
+      subtitle: 'Neben meiner beruflichen Laufbahn promoviere ich in Theoretischer Mathematik, wo ich meine Leidenschaft für Forschung, Lehre und Problemlösung kombiniere.',
+      researchFocus: 'Forschungsschwerpunkt:',
+      advisor: 'Betreuer:',
+      researchAreas: 'Forschungsgebiete:',
+      publications: 'Veröffentlichungen',
+      studentTestimonials: 'Studentenbewertungen',
+      loading: 'Lade akademische Daten...',
+      error: 'Fehler beim Laden der akademischen Daten',
+      tryAgain: 'Erneut versuchen',
+      noData: 'Keine akademischen Daten verfügbar.',
+      view: 'Ansehen',
+      noPublications: 'Keine Veröffentlichungen verfügbar.',
+      noTestimonials: 'Keine Bewertungen verfügbar.'
     }
   }
 };
