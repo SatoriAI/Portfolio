@@ -206,7 +206,7 @@ const Index = () => {
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-orange-600 via-red-500 to-orange-600 dark:from-blue-400 dark:via-teal-400 dark:to-blue-400 bg-clip-text text-transparent animate-fade-in">
             {t.hero.title}
           </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto animate-fade-in">
+          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-5xl mx-auto animate-fade-in">
             {t.hero.subtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in">
@@ -282,7 +282,7 @@ const Index = () => {
             <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-blue-400 dark:to-teal-400 bg-clip-text text-transparent">
               {t.skills.title}
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               Practical engineering rooted in Python, powered by automation, and driven by curiosity.
             </p>
           </div>
