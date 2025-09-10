@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import Reveal from '@/components/Reveal';
+import { useScrollGradient } from '@/hooks/use-scroll-gradient';
 import SettingsPanel from '@/components/SettingsPanel';
 import { useSettings } from '@/contexts/SettingsContext';
 import { translations } from '@/utils/translations';
@@ -15,7 +16,7 @@ const Experience = () => {
   const [experiences, setExperiences] = useState<UiExperience[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { language } = useSettings();
+  const { language, theme } = useSettings();
   const t = translations[language];
   const experiencesService = useExperiences();
 
@@ -37,8 +38,20 @@ const Experience = () => {
     loadExperiences();
   }, [language]);
 
+  const gradients = useScrollGradient(
+    { from: 'hsla(30,40%,99%,1)', via: 'hsla(40,90%,96%,1)', to: 'hsla(35,70%,90%,1)' },
+    { from: 'hsla(222,84%,5%,1)', via: 'hsla(220,70%,18%,1)', to: 'hsla(222,60%,12%,1)' }
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 text-foreground transition-colors duration-300">
+    <div
+      className="relative min-h-screen text-foreground transition-colors duration-300"
+      style={
+        theme === 'dark'
+          ? { backgroundImage: `${gradients.darkBase}, ${gradients.darkOverlay}` }
+          : { backgroundImage: gradients.lightGradient }
+      }
+    >
       {/* Header */}
       <header className="fixed top-0 w-full bg-orange-100/80 dark:bg-black/20 backdrop-blur-md z-40 border-b border-orange-200/50 dark:border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
