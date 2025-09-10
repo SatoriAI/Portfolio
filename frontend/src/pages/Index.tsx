@@ -14,6 +14,7 @@ import { fetchSkills } from '@/lib/skillsService';
 import type { UiSkill } from '@/lib/skillsService';
 import type { UiProject } from '@/lib/projectsService';
 import { Link } from 'react-router-dom';
+import Reveal from '@/components/Reveal';
 
 const Index = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -23,6 +24,12 @@ const Index = () => {
   const { language } = useSettings();
   
   const t = translations[language];
+
+  // Build About title halves for side-to-center reveal
+  const aboutTitleWords = t.about.title.split(' ');
+  const aboutTitleMidIndex = Math.ceil(aboutTitleWords.length / 2);
+  const aboutTitleLeft = aboutTitleWords.slice(0, aboutTitleMidIndex).join(' ');
+  const aboutTitleRight = aboutTitleWords.slice(aboutTitleMidIndex).join(' ');
 
   const sampleSkills: UiSkill[] = [
     { icon: Code, name: "Python", level: "Expert", description: "Backend development, APIs, automation" },
@@ -200,50 +207,54 @@ const Index = () => {
       {/* Hero Section */}
       <section id="hero" className="pt-32 pb-20 px-6">
         <div className="max-w-6xl mx-auto text-center">
-          <div className="mb-8">
-            <img
-              src="/profile-picture.jpg"
-              alt="Profile picture"
-              className="w-32 h-32 rounded-full mx-auto mb-6 object-cover"
-            />
-          </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-orange-600 via-red-500 to-orange-600 dark:from-purple-400 dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent animate-fade-in">
-            {t.hero.title}
-          </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-5xl mx-auto animate-fade-in">
-            {t.hero.subtitle}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in">
-            <Button 
-              onClick={() => setIsChatOpen(true)}
-              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 dark:from-purple-500 dark:to-blue-500 dark:hover:from-purple-600 dark:hover:to-blue-600 text-white px-8 py-3 rounded-full text-lg font-semibold transition-all duration-300 hover:scale-105"
-            >
-              <MessageSquare className="w-5 h-5 mr-2" />
-              {t.hero.askAI}
-            </Button>
-            <div className="flex gap-4">
-              <Button
-                variant="outline"
-                size="icon"
-                className="rounded-full border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
-                asChild
-              >
-                <a href="https://github.com/SatoriAI" target="_blank" rel="noopener noreferrer">
-                  <Github className="w-5 h-5" />
-                </a>
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="rounded-full border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
-                asChild
-              >
-                <a href="mailto:dawidhanrahan@gmail.com">
-                  <Mail className="w-5 h-5" />
-                </a>
-              </Button>
+          <Reveal direction="up" delayMs={50}>
+            <div className="mb-8">
+              <img
+                src="/profile-picture.jpg"
+                alt="Profile picture"
+                className="w-32 h-32 rounded-full mx-auto mb-6 object-cover"
+              />
             </div>
-          </div>
+          </Reveal>
+          <Reveal as="h1" direction="up" delayMs={100} className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-orange-600 via-red-500 to-orange-600 dark:from-purple-400 dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+            {t.hero.title}
+          </Reveal>
+          <Reveal as="p" direction="up" delayMs={150} className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-5xl mx-auto">
+            {t.hero.subtitle}
+          </Reveal>
+          <Reveal direction="up" delayMs={200}>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button 
+                onClick={() => setIsChatOpen(true)}
+                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 dark:from-purple-500 dark:to-blue-500 dark:hover:from-purple-600 dark:hover:to-blue-600 text-white px-8 py-3 rounded-full text-lg font-semibold transition-all duration-300 hover:scale-105"
+              >
+                <MessageSquare className="w-5 h-5 mr-2" />
+                {t.hero.askAI}
+              </Button>
+              <div className="flex gap-4">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
+                  asChild
+                >
+                  <a href="https://github.com/SatoriAI" target="_blank" rel="noopener noreferrer">
+                    <Github className="w-5 h-5" />
+                  </a>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
+                  asChild
+                >
+                  <a href="mailto:dawidhanrahan@gmail.com">
+                    <Mail className="w-5 h-5" />
+                  </a>
+                </Button>
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -251,30 +262,43 @@ const Index = () => {
       <section id="about" className="py-20 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-              {t.about.title}
+            <h2 className="text-5xl font-bold mb-6">
+              <Reveal as="span" direction="right" delayMs={0} offset={48} className="inline-block mr-2 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
+                {aboutTitleLeft}
+              </Reveal>
+              {aboutTitleRight && (
+                <Reveal as="span" direction="left" delayMs={80} offset={48} className="inline-block bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
+                  {aboutTitleRight}
+                </Reveal>
+              )}
             </h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <p className="text-lg text-muted-foreground mb-6 leading-relaxed text-justify">
-                {t.about.paragraph1}
-              </p>
-              <p className="text-lg text-muted-foreground mb-6 leading-relaxed text-justify">
-                {t.about.paragraph2}
-              </p>
-            </div>
-            <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
-              <CardHeader>
-                <CardTitle className="text-card-foreground text-center">{t.about.philosophy}</CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground">
-                <p className="text-justify">
-                  {t.about.philosophyText}
+              <Reveal direction="right" delayMs={0} offset={48}>
+                <p className="text-lg text-muted-foreground mb-6 leading-relaxed text-justify">
+                  {t.about.paragraph1}
                 </p>
-              </CardContent>
-            </Card>
+              </Reveal>
+              <Reveal direction="right" delayMs={140} offset={48}>
+                <p className="text-lg text-muted-foreground mb-6 leading-relaxed text-justify">
+                  {t.about.paragraph2}
+                </p>
+              </Reveal>
+            </div>
+            <Reveal direction="left" delayMs={100} offset={48}>
+              <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
+                <CardHeader>
+                  <CardTitle className="text-card-foreground text-center">{t.about.philosophy}</CardTitle>
+                </CardHeader>
+                <CardContent className="text-muted-foreground">
+                  <p className="text-justify">
+                    {t.about.philosophyText}
+                  </p>
+                </CardContent>
+              </Card>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -282,32 +306,40 @@ const Index = () => {
       {/* Skills Section */}
       <section id="skills" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-              {t.skills.title}
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-4xl mx-auto">
-              {t.skills.subtitle}
-            </p>
-          </div>
+          <Reveal direction="up">
+            <div className="text-center mb-16">
+              <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
+                {t.skills.title}
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-4xl mx-auto">
+                {t.skills.subtitle}
+              </p>
+            </div>
+          </Reveal>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {skills.map((skill, index) => (
-              <Card key={index} className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300 hover:scale-105">
-                <CardHeader className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400 rounded-full flex items-center justify-center">
-                    <skill.icon className="w-8 h-8 text-white" />
-                  </div>
-                  <CardTitle className="text-card-foreground">{skill.name}</CardTitle>
-                  <Badge variant="secondary" className="bg-orange-500/20 text-orange-700 border-orange-500/30 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30 justify-center">
-                    {skill.level}
-                  </Badge>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground text-center">
-                    {skill.description}
-                  </p>
-                </CardContent>
-              </Card>
+              <Reveal
+                key={index}
+                direction={index % 2 === 0 ? 'left' : 'right'}
+                delayMs={index * 60}
+              >
+                <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300 hover:scale-105">
+                  <CardHeader className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400 rounded-full flex items-center justify-center">
+                      <skill.icon className="w-8 h-8 text-white" />
+                    </div>
+                    <CardTitle className="text-card-foreground">{skill.name}</CardTitle>
+                    <Badge variant="secondary" className="bg-orange-500/20 text-orange-700 border-orange-500/30 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30 justify-center">
+                      {skill.level}
+                    </Badge>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-center">
+                      {skill.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -316,14 +348,16 @@ const Index = () => {
       {/* Projects Section */}
       <section id="projects" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-              {t.projects.title}
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-4xl mx-auto">
-              {t.projects.subtitle}
-            </p>
-          </div>
+          <Reveal direction="up">
+            <div className="text-center mb-16">
+              <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
+                {t.projects.title}
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-4xl mx-auto">
+                {t.projects.subtitle}
+              </p>
+            </div>
+          </Reveal>
           <div className="relative">
             {/* Navigation Buttons */}
             {projects.length > 3 && (
@@ -350,96 +384,104 @@ const Index = () => {
             {/* Projects Carousel */}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 px-12">
               {getVisibleProjects().map((project, index) => (
-                <Card key={`${currentProjectIndex}-${index}`} className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300 hover:scale-105 overflow-hidden">
-                  <div className="aspect-video bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400 relative overflow-hidden">
-                    <img
-                      src={project.image}
-                      alt={project.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <CardHeader>
-                    <CardTitle className="text-card-foreground text-center">{project.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground mb-4 text-justify">
-                      {project.description}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {project.technologies.map((tech, techIndex) => (
-                        <Badge key={techIndex} variant="secondary" className="bg-orange-500/20 text-orange-700 border-orange-500/30 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30">
-                          {tech}
-                        </Badge>
-                      ))}
+                <Reveal
+                  key={`${currentProjectIndex}-${index}`}
+                  direction={index % 2 === 0 ? 'left' : 'right'}
+                  delayMs={index * 90}
+                >
+                  <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300 hover:scale-105 overflow-hidden">
+                    <div className="aspect-video bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400 relative overflow-hidden">
+                      <img
+                        src={project.image}
+                        alt={project.title}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    <div className="flex gap-2">
-                      {project.github ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
-                          asChild
-                        >
-                          <a href={project.github} target="_blank" rel="noopener noreferrer">
+                    <CardHeader>
+                      <CardTitle className="text-card-foreground text-center">{project.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground mb-4 text-justify">
+                        {project.description}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {project.technologies.map((tech, techIndex) => (
+                          <Badge key={techIndex} variant="secondary" className="bg-orange-500/20 text-orange-700 border-orange-500/30 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30">
+                            {tech}
+                          </Badge>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        {project.github ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
+                            asChild
+                          >
+                            <a href={project.github} target="_blank" rel="noopener noreferrer">
+                              <Github className="w-4 h-4 mr-2" />
+                              Code
+                            </a>
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 border-orange-300 dark:border-gray-600 opacity-50 cursor-not-allowed"
+                            disabled
+                          >
                             <Github className="w-4 h-4 mr-2" />
                             Code
-                          </a>
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 border-orange-300 dark:border-gray-600 opacity-50 cursor-not-allowed"
-                          disabled
-                        >
-                          <Github className="w-4 h-4 mr-2" />
-                          Code
-                        </Button>
-                      )}
-                      {project.demo ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
-                          asChild
-                        >
-                          <a href={project.demo} target="_blank" rel="noopener noreferrer">
+                          </Button>
+                        )}
+                        {project.demo ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
+                            asChild
+                          >
+                            <a href={project.demo} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="w-4 h-4 mr-2" />
+                              Demo
+                            </a>
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 border-orange-300 dark:border-gray-600 opacity-50 cursor-not-allowed"
+                            disabled
+                          >
                             <ExternalLink className="w-4 h-4 mr-2" />
                             Demo
-                          </a>
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 border-orange-300 dark:border-gray-600 opacity-50 cursor-not-allowed"
-                          disabled
-                        >
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Demo
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Reveal>
               ))}
             </div>
             
             {/* Carousel Indicators */}
             {projects.length > 3 && (
-              <div className="flex justify-center mt-6 gap-2">
-                {Array.from({ length: projects.length }, (_, index) => (
-                  <button
-                    key={index}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      index === currentProjectIndex 
-                        ? 'bg-orange-500 dark:bg-blue-400 w-6' 
-                        : 'bg-orange-300 dark:bg-gray-600 hover:bg-orange-400 dark:hover:bg-gray-500'
-                    }`}
-                    onClick={() => setCurrentProjectIndex(index)}
-                  />
-                ))}
-              </div>
+              <Reveal direction="up" delayMs={150}>
+                <div className="flex justify-center mt-6 gap-2">
+                  {Array.from({ length: projects.length }, (_, index) => (
+                    <button
+                      key={index}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        index === currentProjectIndex 
+                          ? 'bg-orange-500 dark:bg-blue-400 w-6' 
+                          : 'bg-orange-300 dark:bg-gray-600 hover:bg-orange-400 dark:hover:bg-gray-500'
+                      }`}
+                      onClick={() => setCurrentProjectIndex(index)}
+                    />
+                  ))}
+                </div>
+              </Reveal>
             )}
           </div>
         </div>
@@ -448,69 +490,75 @@ const Index = () => {
       {/* Contact Section */}
       <section id="contact" className="py-20 px-6">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-              {t.contact.title}
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              {t.contact.subtitle2}
-            </p>
-          </div>
+          <Reveal direction="up">
+            <div className="text-center mb-16">
+              <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
+                {t.contact.title}
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                {t.contact.subtitle2}
+              </p>
+            </div>
+          </Reveal>
 
           <div className="grid md:grid-cols-2 gap-12">
-            <div className="space-y-6">
-              <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-card-foreground flex items-center gap-2">
-                    <Mail className="w-5 h-5" />
-                    {t.contact.email}
+            <Reveal direction="left">
+              <div className="space-y-6">
+                <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
+                  <CardHeader>
+                    <CardTitle className="text-card-foreground flex items-center gap-2">
+                      <Mail className="w-5 h-5" />
+                      {t.contact.email}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">
+                      <a href="mailto:dawidhanrahan@gmail.com" className="hover:text-orange-600 dark:hover:text-purple-400 transition-colors">
+                        dawidhanrahan@gmail.com
+                      </a>
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
+                  <CardHeader>
+                    <CardTitle className="text-card-foreground flex items-center gap-2">
+                      <Github className="w-5 h-5" />
+                      GitHub
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">
+                      <a href="https://github.com/SatoriAI" target="_blank" rel="noopener noreferrer" className="hover:text-orange-600 dark:hover:text-purple-400 transition-colors">
+                        github.com/SatoriAI
+                      </a>
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </Reveal>
+
+            <Reveal direction="right">
+              <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 h-full flex flex-col items-center justify-center text-center">
+                <CardHeader className="items-center">
+                  <CardTitle className="text-card-foreground">
+                    {t.contact.quickMessage}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    <a href="mailto:dawidhanrahan@gmail.com" className="hover:text-orange-600 dark:hover:text-purple-400 transition-colors">
-                      dawidhanrahan@gmail.com
-                    </a>
+                <CardContent className="flex flex-col items-center justify-center text-center w-full">
+                  <p className="text-muted-foreground mb-4">
+                    {t.contact.quickMessageDesc}
                   </p>
+                  <Button 
+                    onClick={() => setIsChatOpen(true)}
+                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 dark:from-purple-500 dark:to-blue-500 dark:hover:from-purple-600 dark:hover:to-blue-600 text-white"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    {t.hero.askAI}
+                  </Button>
                 </CardContent>
               </Card>
-
-              <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-card-foreground flex items-center gap-2">
-                    <Github className="w-5 h-5" />
-                    GitHub
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    <a href="https://github.com/SatoriAI" target="_blank" rel="noopener noreferrer" className="hover:text-orange-600 dark:hover:text-purple-400 transition-colors">
-                      github.com/SatoriAI
-                    </a>
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 h-full flex flex-col items-center justify-center text-center">
-              <CardHeader className="items-center">
-                <CardTitle className="text-card-foreground">
-                  {t.contact.quickMessage}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center justify-center text-center w-full">
-                <p className="text-muted-foreground mb-4">
-                  {t.contact.quickMessageDesc}
-                </p>
-                <Button 
-                  onClick={() => setIsChatOpen(true)}
-                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 dark:from-purple-500 dark:to-blue-500 dark:hover:from-purple-600 dark:hover:to-blue-600 text-white"
-                >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  {t.hero.askAI}
-                </Button>
-              </CardContent>
-            </Card>
+            </Reveal>
           </div>
         </div>
       </section>

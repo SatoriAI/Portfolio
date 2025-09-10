@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
+import Reveal from '@/components/Reveal';
 import SettingsPanel from '@/components/SettingsPanel';
 import { useSettings } from '@/contexts/SettingsContext';
 import { translations } from '@/utils/translations';
@@ -69,12 +70,19 @@ const Experience = () => {
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400 mx-auto mb-6 flex items-center justify-center">
               <Briefcase className="w-12 h-12 text-white" />
             </div>
-            <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-              {t.experience.title}
+            <h1 className="text-5xl font-bold mb-6">
+              <Reveal as="span" direction="right" offset={48} className="inline-block mr-2 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
+                {t.experience.title.split(' ').slice(0, Math.ceil(t.experience.title.split(' ').length/2)).join(' ')}
+              </Reveal>
+              <Reveal as="span" direction="left" delayMs={80} offset={48} className="inline-block bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
+                {t.experience.title.split(' ').slice(Math.ceil(t.experience.title.split(' ').length/2)).join(' ')}
+              </Reveal>
             </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              {t.experience.subtitle}
-            </p>
+            <Reveal direction="up" delayMs={120}>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                {t.experience.subtitle}
+              </p>
+            </Reveal>
           </div>
 
           {loading ? (
@@ -98,60 +106,68 @@ const Experience = () => {
                   <p className="text-muted-foreground text-lg">{t.experience.noData}</p>
                 </div>
               ) : (
-                experiences.map((exp) => (
-                  <Card key={exp.id} className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300">
-                <CardHeader>
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                      <CardTitle className="text-card-foreground text-2xl mb-2">
-                        {exp.position}
-                      </CardTitle>
-                      <div className="flex items-center gap-2 text-orange-600 dark:text-purple-400 mb-2">
-                        <Building className="w-5 h-5" />
-                        <span className="text-lg font-semibold">{exp.company}</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-2 md:text-right">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Calendar className="w-4 h-4" />
-                        <span>{exp.period}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <MapPin className="w-4 h-4" />
-                        <span>{exp.location}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <CardDescription className="text-muted-foreground text-base leading-relaxed">
-                    {exp.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div>
-                      <h4 className="text-card-foreground font-semibold mb-3">{t.experience.keyAchievements}</h4>
-                      <ul className="space-y-2">
-                        {exp.achievements.map((achievement, i) => (
-                          <li key={i} className="text-muted-foreground flex items-start gap-2">
-                            <span className="text-orange-600 dark:text-purple-400 mt-1">•</span>
-                            <span>{achievement}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <h4 className="text-card-foreground font-semibold mb-3">{t.experience.technologies}</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {exp.technologies.map((tech, i) => (
-                          <Badge key={i} variant="secondary" className="bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-700 border-orange-400/30 dark:from-purple-500/20 dark:to-blue-500/20 dark:text-purple-300 dark:border-purple-400/30 text-center">
-                            {tech}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                  </Card>
+                experiences.map((exp, idx) => (
+                  <Reveal key={exp.id} direction={idx % 2 === 0 ? 'right' : 'left'} delayMs={idx * 60}>
+                    <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300">
+                      <CardHeader>
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                          <Reveal direction="right" delayMs={0}>
+                            <div>
+                              <CardTitle className="text-card-foreground text-2xl mb-2">
+                                {exp.position}
+                              </CardTitle>
+                              <div className="flex items-center gap-2 text-orange-600 dark:text-purple-400 mb-2">
+                                <Building className="w-5 h-5" />
+                                <span className="text-lg font-semibold">{exp.company}</span>
+                              </div>
+                            </div>
+                          </Reveal>
+                          <Reveal direction="left" delayMs={60}>
+                            <div className="flex flex-col gap-2 md:text-right">
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Calendar className="w-4 h-4" />
+                                <span>{exp.period}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <MapPin className="w-4 h-4" />
+                                <span>{exp.location}</span>
+                              </div>
+                            </div>
+                          </Reveal>
+                        </div>
+                        <Reveal direction="up" delayMs={120}>
+                          <CardDescription className="text-muted-foreground text-base leading-relaxed">
+                            {exp.description}
+                          </CardDescription>
+                        </Reveal>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-6">
+                          <div>
+                            <h4 className="text-card-foreground font-semibold mb-3">{t.experience.keyAchievements}</h4>
+                            <ul className="space-y-2">
+                              {exp.achievements.map((achievement, i) => (
+                                <li key={i} className="text-muted-foreground flex items-start gap-2">
+                                  <span className="text-orange-600 dark:text-purple-400 mt-1">•</span>
+                                  <span>{achievement}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div>
+                            <h4 className="text-card-foreground font-semibold mb-3">{t.experience.technologies}</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {exp.technologies.map((tech, i) => (
+                                <Badge key={i} variant="secondary" className="bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-700 border-orange-400/30 dark:from-purple-500/20 dark:to-blue-500/20 dark:text-purple-300 dark:border-purple-400/30 text-center">
+                                  {tech}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Reveal>
                 ))
               )}
             </div>
