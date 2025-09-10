@@ -1,9 +1,10 @@
 
 import { useState, useEffect } from 'react';
-import { GraduationCap, BookOpen, Quote, ExternalLink, Settings, Star } from 'lucide-react';
+import { GraduationCap, BookOpen, Quote, ExternalLink, Settings, Star, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
 import SettingsPanel from '@/components/SettingsPanel';
 import { useSettings } from '@/contexts/SettingsContext';
 import { translations } from '@/utils/translations';
@@ -64,14 +65,14 @@ const Academic = () => {
       {/* Header */}
       <header className="fixed top-0 w-full bg-orange-100/80 dark:bg-black/20 backdrop-blur-md z-40 border-b border-orange-200/50 dark:border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-500 dark:from-blue-400 dark:to-teal-400 bg-clip-text text-transparent">
+          <div className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
             Dawid Hanrahan
           </div>
           <div className="flex items-center gap-4">
             <nav className="hidden md:flex space-x-8">
-              <a href="/" className="hover:text-orange-600 dark:hover:text-blue-400 transition-colors">Home</a>
-              <a href="/experience" className="hover:text-orange-600 dark:hover:text-blue-400 transition-colors">Experience</a>
-              <a href="/academic" className="text-orange-600 dark:text-blue-400">Academic</a>
+              <Link to="/" className="hover:text-orange-600 dark:hover:text-purple-400 transition-colors py-2">{t.nav.home}</Link>
+              <Link to="/experience" className="hover:text-orange-600 dark:hover:text-purple-400 transition-colors py-2">{t.nav.experience}</Link>
+              <span className="text-orange-600 dark:text-purple-400 py-2 cursor-default">{t.nav.academic}</span>
             </nav>
             <Button
               variant="ghost"
@@ -87,7 +88,7 @@ const Academic = () => {
 
       {/* Main Content */}
       <main className="pt-32 pb-20 px-6">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-16">
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400 mx-auto mb-6 flex items-center justify-center">
@@ -124,21 +125,31 @@ const Academic = () => {
             ) : (
               <div className="space-y-8">
                 {schools.map((school) => (
-                  <Card key={school.id} className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
+                  <Card key={school.id} className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300">
                     <CardHeader>
-                      <CardTitle className="text-card-foreground text-3xl flex items-center gap-3">
-                        <GraduationCap className="w-8 h-8 text-orange-600 dark:text-purple-400" />
-                        {school.study}
-                      </CardTitle>
-                      <CardDescription className="text-muted-foreground text-lg">
-                        {school.university} • {school.period}
-                      </CardDescription>
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                          <CardTitle className="text-card-foreground text-2xl mb-2">
+                            {school.study}
+                          </CardTitle>
+                          <div className="flex items-center gap-2 text-orange-600 dark:text-purple-400 mb-2">
+                            <GraduationCap className="w-5 h-5" />
+                            <span className="text-lg font-semibold">{school.university}</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2 md:text-right">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Calendar className="w-4 h-4" />
+                            <span>{school.period}</span>
+                          </div>
+                        </div>
+                      </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         {school.research && (
                           <div>
-                            <h4 className="text-card-foreground font-semibold mb-2">{t.academic.researchFocus}</h4>
+                            <h4 className="text-card-foreground font-semibold mb-3">{t.academic.researchFocus}</h4>
                             <p className="text-muted-foreground">
                               {school.research}
                             </p>
@@ -146,13 +157,13 @@ const Academic = () => {
                         )}
                         {school.advisor && (
                           <div>
-                            <h4 className="text-card-foreground font-semibold mb-2">{t.academic.advisor}</h4>
+                            <h4 className="text-card-foreground font-semibold mb-3">{t.academic.advisor}</h4>
                             <p className="text-muted-foreground">{school.advisor}</p>
                           </div>
                         )}
                         {school.areas.length > 0 && (
                           <div>
-                            <h4 className="text-card-foreground font-semibold mb-2">{t.academic.researchAreas}</h4>
+                            <h4 className="text-card-foreground font-semibold mb-3">{t.academic.researchAreas}</h4>
                             <div className="flex flex-wrap gap-2">
                               {school.areas.map((area, i) => (
                                 <Badge key={i} variant="secondary" className="bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-700 border-orange-400/30 dark:from-purple-500/20 dark:to-blue-500/20 dark:text-purple-300 dark:border-purple-400/30">

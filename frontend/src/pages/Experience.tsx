@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building, Calendar, MapPin, Settings } from 'lucide-react';
+import { Building, Calendar, MapPin, Settings, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -41,14 +41,14 @@ const Experience = () => {
       {/* Header */}
       <header className="fixed top-0 w-full bg-orange-100/80 dark:bg-black/20 backdrop-blur-md z-40 border-b border-orange-200/50 dark:border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-500 dark:from-blue-400 dark:to-teal-400 bg-clip-text text-transparent">
+          <div className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
             Dawid Hanrahan
           </div>
           <div className="flex items-center gap-4">
             <nav className="hidden md:flex space-x-8">
-              <Link to="/" className="hover:text-orange-600 dark:hover:text-blue-400 transition-colors py-2">Home</Link>
-              <span className="text-orange-600 dark:text-blue-400 py-2 cursor-default">Experience</span>
-              <Link to="/academic" className="hover:text-orange-600 dark:hover:text-blue-400 transition-colors py-2">Academic</Link>
+              <Link to="/" className="hover:text-orange-600 dark:hover:text-purple-400 transition-colors py-2">{t.nav.home}</Link>
+              <span className="text-orange-600 dark:text-purple-400 py-2 cursor-default">{t.nav.experience}</span>
+              <Link to="/academic" className="hover:text-orange-600 dark:hover:text-purple-400 transition-colors py-2">{t.nav.academic}</Link>
             </nav>
             <Button
               variant="ghost"
@@ -66,7 +66,10 @@ const Experience = () => {
       <main className="pt-32 pb-20 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
-            <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-blue-400 dark:to-teal-400 bg-clip-text text-transparent">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400 mx-auto mb-6 flex items-center justify-center">
+              <Briefcase className="w-12 h-12 text-white" />
+            </div>
+            <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
               {t.experience.title}
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -76,14 +79,14 @@ const Experience = () => {
 
           {loading ? (
             <div className="flex justify-center items-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 dark:border-blue-400"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 dark:border-purple-400"></div>
             </div>
           ) : error ? (
             <div className="text-center py-20">
               <p className="text-red-500 dark:text-red-400 text-lg">{t.experience.error}</p>
               <Button 
                 onClick={() => window.location.reload()} 
-                className="mt-4 bg-orange-600 hover:bg-orange-700 dark:bg-blue-600 dark:hover:bg-blue-700"
+                className="mt-4 bg-orange-600 hover:bg-orange-700 dark:bg-purple-600 dark:hover:bg-purple-700"
               >
                 {t.experience.tryAgain}
               </Button>
@@ -103,7 +106,7 @@ const Experience = () => {
                       <CardTitle className="text-card-foreground text-2xl mb-2">
                         {exp.position}
                       </CardTitle>
-                      <div className="flex items-center gap-2 text-orange-600 dark:text-blue-400 mb-2">
+                      <div className="flex items-center gap-2 text-orange-600 dark:text-purple-400 mb-2">
                         <Building className="w-5 h-5" />
                         <span className="text-lg font-semibold">{exp.company}</span>
                       </div>
@@ -130,7 +133,7 @@ const Experience = () => {
                       <ul className="space-y-2">
                         {exp.achievements.map((achievement, i) => (
                           <li key={i} className="text-muted-foreground flex items-start gap-2">
-                            <span className="text-orange-600 dark:text-blue-400 mt-1">•</span>
+                            <span className="text-orange-600 dark:text-purple-400 mt-1">•</span>
                             <span>{achievement}</span>
                           </li>
                         ))}
@@ -140,7 +143,7 @@ const Experience = () => {
                       <h4 className="text-card-foreground font-semibold mb-3">{t.experience.technologies}</h4>
                       <div className="flex flex-wrap gap-2">
                         {exp.technologies.map((tech, i) => (
-                          <Badge key={i} variant="secondary" className="bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-700 border-orange-400/30 dark:from-blue-500/20 dark:to-teal-500/20 dark:text-blue-300 dark:border-blue-400/30 text-center">
+                          <Badge key={i} variant="secondary" className="bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-700 border-orange-400/30 dark:from-purple-500/20 dark:to-blue-500/20 dark:text-purple-300 dark:border-purple-400/30 text-center">
                             {tech}
                           </Badge>
                         ))}

@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type Theme = 'light' | 'dark';
-type Language = 'en' | 'es' | 'fr' | 'de';
+type Language = 'en' | 'pl';
 
 interface SettingsContextType {
   theme: Theme;

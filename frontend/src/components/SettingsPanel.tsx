@@ -18,9 +18,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
 
   const languages = {
     en: 'English',
-    es: 'Español',
-    fr: 'Français',
-    de: 'Deutsch'
+    pl: 'Polski'
   };
 
   return (
