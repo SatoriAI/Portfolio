@@ -31,6 +31,23 @@ const Index = () => {
   const aboutTitleLeft = aboutTitleWords.slice(0, aboutTitleMidIndex).join(' ');
   const aboutTitleRight = aboutTitleWords.slice(aboutTitleMidIndex).join(' ');
 
+  const renderTwoWordAnimatedTitle = (title: string, gradientClass: string) => {
+    const words = title.trim().split(/\s+/);
+    if (words.length === 2) {
+      return (
+        <>
+          <Reveal as="span" direction="right" offset={48} className={`inline-block mr-2 ${gradientClass} bg-clip-text text-transparent`}>
+            {words[0]}
+          </Reveal>
+          <Reveal as="span" direction="left" delayMs={80} offset={48} className={`inline-block ${gradientClass} bg-clip-text text-transparent`}>
+            {words[1]}
+          </Reveal>
+        </>
+      );
+    }
+    return <span className={`${gradientClass} bg-clip-text text-transparent`}>{title}</span>;
+  };
+
   const sampleSkills: UiSkill[] = [
     { icon: Code, name: "Python", level: "Expert", description: "Backend development, APIs, automation" },
     { icon: Database, name: "Databases", level: "Advanced", description: "PostgreSQL, MongoDB, Redis" },
@@ -141,12 +158,12 @@ const Index = () => {
       {/* Header */}
       <header className="fixed top-0 w-full bg-orange-100/80 dark:bg-black/20 backdrop-blur-md z-40 border-b border-orange-200/50 dark:border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <button
-            onClick={scrollToTop}
+          <Link
+            to="/"
             className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent hover:opacity-80 transition-opacity cursor-pointer"
           >
             Dawid Hanrahan
-          </button>
+          </Link>
           <div className="flex items-center gap-4">
             <nav className="hidden md:flex space-x-8">
               <div 
@@ -308,8 +325,8 @@ const Index = () => {
         <div className="max-w-6xl mx-auto">
           <Reveal direction="up">
             <div className="text-center mb-16">
-              <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-                {t.skills.title}
+              <h2 className="text-5xl font-bold mb-6">
+                {renderTwoWordAnimatedTitle(t.skills.title, 'bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400')}
               </h2>
               <p className="text-xl text-muted-foreground max-w-4xl mx-auto">
                 {t.skills.subtitle}
@@ -350,8 +367,8 @@ const Index = () => {
         <div className="max-w-6xl mx-auto">
           <Reveal direction="up">
             <div className="text-center mb-16">
-              <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-                {t.projects.title}
+              <h2 className="text-5xl font-bold mb-6">
+                {renderTwoWordAnimatedTitle(t.projects.title, 'bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400')}
               </h2>
               <p className="text-xl text-muted-foreground max-w-4xl mx-auto">
                 {t.projects.subtitle}
@@ -492,8 +509,8 @@ const Index = () => {
         <div className="max-w-4xl mx-auto">
           <Reveal direction="up">
             <div className="text-center mb-16">
-              <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-                {t.contact.title}
+              <h2 className="text-5xl font-bold mb-6">
+                {renderTwoWordAnimatedTitle(t.contact.title, 'bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400')}
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 {t.contact.subtitle2}
