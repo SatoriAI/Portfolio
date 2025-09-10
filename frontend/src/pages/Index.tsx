@@ -354,18 +354,18 @@ const Index = () => {
                 direction={index % 2 === 0 ? 'left' : 'right'}
                 delayMs={index * 60}
               >
-                <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300 hover:scale-105">
-                  <CardHeader className="text-center">
+                <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300 hover:scale-105 min-h-[280px] max-h-[320px] flex flex-col">
+                  <CardHeader className="text-center flex flex-col items-center justify-center flex-shrink-0">
                     <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400 rounded-full flex items-center justify-center">
                       <skill.icon className="w-8 h-8 text-white" />
                     </div>
-                    <CardTitle className="text-card-foreground">{skill.name}</CardTitle>
-                    <Badge variant="secondary" className="bg-orange-500/20 text-orange-700 border-orange-500/30 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30 justify-center">
+                    <CardTitle className="text-card-foreground text-lg min-h-[1.5rem] flex items-center justify-center">{skill.name}</CardTitle>
+                    <Badge variant="secondary" className="bg-orange-500/20 text-orange-700 border-orange-500/30 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30 justify-center mt-2">
                       {skill.level}
                     </Badge>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground text-center">
+                  <CardContent className="flex-grow flex items-start justify-center pt-0 px-4">
+                    <p className="text-muted-foreground text-center text-sm leading-relaxed">
                       {skill.description}
                     </p>
                   </CardContent>
@@ -452,7 +452,7 @@ const Index = () => {
                           >
                             <a href={project.github} target="_blank" rel="noopener noreferrer">
                               <Github className="w-4 h-4 mr-2" />
-                              Code
+                              {t.projects.code}
                             </a>
                           </Button>
                         ) : (
@@ -463,7 +463,7 @@ const Index = () => {
                             disabled
                           >
                             <Github className="w-4 h-4 mr-2" />
-                            Code
+                            {t.projects.code}
                           </Button>
                         )}
                         {project.demo ? (

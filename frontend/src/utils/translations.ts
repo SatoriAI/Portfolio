@@ -28,7 +28,8 @@ export const translations = {
     },
     projects: {
       title: 'Featured Projects',
-      subtitle: 'From concept to system in action. Turning my passion for innovation into real solutions.'
+      subtitle: 'From concept to system in action. Turning my passion for innovation into real solutions.',
+      code: 'Code'
     },
     contact: {
       title: "Let's Talk",
@@ -90,7 +91,8 @@ export const translations = {
     },
     projects: {
       title: 'Wybrane projekty',
-      subtitle: 'Od pomysłu do działającego systemu. Moja pasja do innowacji przełożona na realne rozwiązania.'
+      subtitle: 'Od pomysłu do działającego systemu. Moja pasja do innowacji przełożona na realne rozwiązania.',
+      code: 'Kod'
     },
     contact: {
       title: 'Porozmawiajmy',

@@ -3,6 +3,8 @@ import { ExternalLink, Github } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { translations } from '@/utils/translations';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface Project {
   title: string;
@@ -18,6 +20,9 @@ interface ProjectCardProps {
 }
 
 const ProjectCard = ({ project }: ProjectCardProps) => {
+  const { language } = useSettings();
+  const t = translations[language];
+
   return (
     <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300 hover:scale-105 group">
       <div className="relative overflow-hidden rounded-t-lg">
@@ -50,13 +55,13 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
         </div>
         
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
           >
             <Github className="w-4 h-4 mr-2" />
-            Code
+            {t.projects.code}
           </Button>
           <Button 
             variant="outline" 
