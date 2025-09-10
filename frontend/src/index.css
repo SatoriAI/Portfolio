@@ -103,3 +103,44 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Subtle shimmering effect for gradient-clipped text */
+@keyframes text-shine {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-shine {
+    background-size: 200% 100% !important;
+    animation: text-shine 6s ease-in-out infinite alternate;
+  }
+}
+
+/* Stronger sheen that passes over the text while preserving the base gradient */
+@keyframes shine-sweep {
+  0% { background-position: -150% 0; }
+  100% { background-position: 150% 0; }
+}
+
+.shine-title {
+  position: relative;
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shine-title::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.9) 50%, rgba(255,255,255,0) 60%, transparent 100%);
+    background-size: 220% 100%;
+    background-position: -150% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: shine-sweep 6s linear infinite;
+    pointer-events: none;
+  }
+}

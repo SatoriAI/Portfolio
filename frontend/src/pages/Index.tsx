@@ -233,8 +233,10 @@ const Index = () => {
               />
             </div>
           </Reveal>
-          <Reveal as="h1" direction="up" delayMs={100} className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-orange-600 via-red-500 to-orange-600 dark:from-purple-400 dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
-            {t.hero.title}
+          <Reveal as="h1" direction="up" delayMs={100} className="text-5xl md:text-7xl font-bold mb-6">
+            <span className="bg-gradient-to-r from-orange-600 via-red-500 to-orange-600 dark:from-purple-400 dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent shine-title" data-text={t.hero.title}>
+              {t.hero.title}
+            </span>
           </Reveal>
           <Reveal as="p" direction="up" delayMs={150} className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-5xl mx-auto">
             {t.hero.subtitle}
