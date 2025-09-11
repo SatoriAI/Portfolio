@@ -5,12 +5,12 @@ from parler.managers import TranslatableManager
 from parler.models import TranslatableModel, TranslatedFields
 
 from utils.models import TimestampedModel
-from work.choices import Levels
+from work.choices import Icons, Levels
 
 
 class Skill(TranslatableModel, TimestampedModel):
     level = models.CharField(choices=Levels, default=Levels.INTERMEDIATE)
-    image = models.URLField(_("Image URL"), null=True, blank=True)
+    icon = models.CharField(choices=Icons, default=Icons.CODE, max_length=8)
 
     translations = TranslatedFields(
         name=models.CharField(_("Name"), max_length=128),
@@ -62,7 +62,7 @@ class Experience(TranslatableModel, TimestampedModel):
 
     @property
     def period(self) -> str:
-        return f"{self.start.year} - {self.end if self.end is not None else ''}"
+        return f"{self.start.year} - {self.end.year if self.end is not None else ''}"
 
     class Meta:
         verbose_name = _("Experience")

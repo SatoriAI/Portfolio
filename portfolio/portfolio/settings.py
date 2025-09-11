@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "health_check.contrib.db_heartbeat",
     "parler",
     # RESTFUL API
+    "corsheaders",
     "drf_spectacular",
     "rest_framework",
     # Own Apps
@@ -73,6 +74,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
