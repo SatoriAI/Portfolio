@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     # Own Apps
     "university",
     "utils",
+    "vex",
     "work",
 ]
 
@@ -112,6 +113,7 @@ DATABASES = {
     "default": env.db(),
 }
 
+VECTOR_DB_COLLECTION = env("VECTOR_DB_COLLECTION")
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -179,3 +181,6 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.AllowAny",
     ],
 }
+
+# Own Variables
+OPENAI_API_KEY = env("OPENAI_API_KEY")

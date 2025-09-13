@@ -14,6 +14,11 @@ dependencies = [
     "djangorestframework>=3.16.1",
     "drf-spectacular>=0.28.0",
     "gunicorn>=23.0.0",
+    "langchain>=0.3.27",
+    "langchain-community>=0.3.29",
+    "langchain-openai>=0.3.33",
+    "langchain-text-splitters>=0.3.11",
+    "pgvector>=0.4.1",
     "psycopg2-binary>=2.9.10",
     "whitenoise>=6.9.0",
 ]
@@ -64,6 +69,7 @@ known-first-party = [
     "portfolio",
     "university",
     "utils",
+    "vex",
     "work",
 ]
 
@@ -138,6 +144,7 @@ source = [
     "portfolio",
     "university",
     "utils",
+    "vex",
     "work",
 ]
 omit = [
