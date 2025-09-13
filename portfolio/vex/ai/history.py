@@ -7,7 +7,7 @@ from vex.models import Conversation, Message
 
 class MessageHistory(BaseChatMessageHistory):
     def __init__(self, session_key: str) -> None:
-        self.conversation, _ = Conversation.objects.get_or_create(session_key=session_key)
+        self.conversation, _ = Conversation.objects.get_or_create(session=session_key)
 
     @property
     def messages(self) -> list[BaseMessage]:

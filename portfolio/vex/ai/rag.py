@@ -29,10 +29,23 @@ def build_rag_chain():
     core = {"question": RunnablePassthrough(), "context": retriever | _format_docs} | prompt | llm | StrOutputParser()
 
     def history_factory(cfg):
-        return MessageHistory(cfg["configurable"]["session_id"])
+        if isinstance(cfg, str):
+            session_id = cfg
+        else:
+            session_id = (
+                    cfg.get("configurable", {}).get("session_id")
+                    or cfg.get("session_id")
+            )
+        if not session_id:
+            raise ValueError("session_id not provided to history factory")
+        return MessageHistory(session_id)
 
     return RunnableWithMessageHistory(
-        core, history_factory, input_messages_key="question", history_messages_key="history"
+        core,
+        history_factory,
+        input_messages_key="question",
+        history_messages_key="history",
+        history_factory_configurable_fields=["session_id"],
     )
 
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-06 16:41+0000\n"
+"POT-Creation-Date: 2025-09-13 14:52+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -64,7 +64,7 @@ msgstr "Szkoła"
 msgid "Schools"
 msgstr "Szkoły"
 
-#: university/models.py:32 work/models.py:29
+#: university/models.py:32 vex/models.py:10 work/models.py:29
 msgid "Title"
 msgstr "Tytuł"
 
@@ -104,7 +104,7 @@ msgstr "Sezon"
 msgid "Course"
 msgstr "Kurs"
 
-#: university/models.py:55
+#: university/models.py:55 vex/models.py:23
 msgid "Content"
 msgstr "Treść"
 
@@ -124,6 +124,30 @@ msgstr "Stworzono"
 msgid "Updated At"
 msgstr "Zaktualizowano"
 
+#: vex/models.py:9
+msgid "Session Key"
+msgstr "Klucz Sesji"
+
+#: vex/models.py:16
+msgid "Conversation"
+msgstr "Rozmowa"
+
+#: vex/models.py:17
+msgid "Conversations"
+msgstr "Rozmowy"
+
+#: vex/models.py:22
+msgid "Role"
+msgstr "Rola"
+
+#: vex/models.py:26
+msgid "Message"
+msgstr "Wiadomość"
+
+#: vex/models.py:27
+msgid "Messages"
+msgstr "Wiadomomści"
+
 #: work/apps.py:9
 msgid "Work"
 msgstr "Praca"
@@ -140,10 +164,6 @@ msgstr "5+ lat doświadczenia"
 msgid "10+ years of experience"
 msgstr "10+ lat doświadczenia"
 
-#: work/models.py:13 work/models.py:30
-msgid "Image URL"
-msgstr "Adres URL obrazu"
-
 #: work/models.py:16
 msgid "Name"
 msgstr "Nazwa"
@@ -159,6 +179,10 @@ msgstr "Umiejętność"
 #: work/models.py:25
 msgid "Skills"
 msgstr "Umiejętności"
+
+#: work/models.py:30
+msgid "Image URL"
+msgstr "Adres URL obrazu"
 
 #: work/models.py:31
 msgid "Tags"

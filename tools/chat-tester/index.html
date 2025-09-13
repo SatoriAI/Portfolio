@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vex Chat Tester</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="chat-container">
+        <header class="chat-header">
+            <div class="header-content">
+                <h1><i class="fas fa-robot"></i> Vex Chat Tester</h1>
+                <div class="api-status">
+                    <span id="connection-status" class="status-indicator">
+                        <i class="fas fa-circle"></i> Disconnected
+                    </span>
+                </div>
+            </div>
+            <div class="controls">
+                <button id="clear-chat" class="btn btn-secondary">
+                    <i class="fas fa-trash"></i> Clear Chat
+                </button>
+            </div>
+        </header>
+
+        <div class="chat-messages" id="chat-messages">
+            <div class="welcome-message">
+                <i class="fas fa-info-circle"></i>
+                <p>Welcome to Vex Chat Tester! This tool tests the integrated chat system.</p>
+                <p><strong>Architecture:</strong> POST to send message + SSE to receive streaming response</p>
+                <p><strong>Base URL:</strong> <span id="base-url">http://localhost:8000</span></p>
+                <p>Type a message and watch the real-time streaming response!</p>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <form id="chat-form">
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="message-input" 
+                        placeholder="Type your message here..." 
+                        autocomplete="off"
+                        maxlength="1000"
+                    >
+                    <button type="submit" id="send-button" class="btn btn-send">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="settings-panel" id="settings-panel">
+            <div class="settings-content">
+                <h3><i class="fas fa-cog"></i> Settings</h3>
+                <div class="setting-group">
+                    <label for="api-base-url">API Base URL:</label>
+                    <input type="text" id="api-base-url" value="http://localhost:8000">
+                </div>
+                <div class="setting-group">
+                    <label for="csrf-token">CSRF Token:</label>
+                    <input type="text" id="csrf-token" placeholder="Auto-generated">
+                </div>
+                <div class="setting-group">
+                    <label for="session-id">Session ID:</label>
+                    <input type="text" id="session-id" placeholder="Auto-generated" readonly>
+                </div>
+                <button id="save-settings" class="btn btn-primary">Save Settings</button>
+            </div>
+        </div>
+
+        <button id="settings-toggle" class="settings-btn">
+            <i class="fas fa-cog"></i>
+        </button>
+
+        <div class="error-toast" id="error-toast">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span id="error-message"></span>
+            <button id="close-error" class="close-btn">&times;</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
