@@ -22,7 +22,7 @@ class WorkModelsTestCase(TestCase):
         self.assertEqual(Skill.objects.count(), 1)
         self.assertEqual(obj.level, Levels.INTERMEDIATE)
         # choice label (UI, relies on gettext; default 'en')
-        self.assertEqual(obj.get_level_display(), "Intermediate")
+        self.assertEqual(obj.get_level_display(), "3+ years of experience")
         # translated fields (current language)
         self.assertEqual(obj.name, "Python")
         self.assertEqual(obj.description, "General-purpose programming language.")
@@ -129,7 +129,7 @@ class WorkModelsTestCase(TestCase):
         self.assertEqual(obj.description, "Building backend services")
         self.assertListEqual(obj.achievements, ["Introduced CI/CD", "Optimized SQL queries"])
         # period property matches implementation
-        self.assertEqual(obj.period, f"{start.year} - {end}")
+        self.assertEqual(obj.period, f"{start.year} - {end.year}")
 
     def test_experience_open_ended_period(self) -> None:
         start = fake.date_object()
