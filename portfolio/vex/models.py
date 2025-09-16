@@ -7,10 +7,9 @@ from vex.choices import Roles
 
 class Conversation(TimestampedModel):
     session = models.CharField(_("Session Key"), max_length=64, db_index=True)
-    title = models.CharField(_("Title"), max_length=256, null=True, blank=True)
 
     def __str__(self) -> str:
-        return f"Conversation: {self.title or self.session}"
+        return f"{_("Conversation")}: {self.session}"
 
     class Meta:
         verbose_name = _("Conversation")
@@ -25,3 +24,24 @@ class Message(TimestampedModel):
     class Meta:
         verbose_name = _("Message")
         verbose_name_plural = _("Messages")
+
+
+class Document(TimestampedModel):
+    title = models.CharField(_("Title"), max_length=256)
+    description = models.TextField(_("Description"), null=True, blank=True)
+
+    file = models.FileField(_("File"), upload_to="vex_docs/", null=True, blank=True)
+    url = models.URLField(_("Source URL"), null=True, blank=True)
+
+    injected = models.BooleanField(_("Injected"), default=False)
+
+    def mark_as_injected(self) -> None:
+        self.injected = True
+        self.save()
+
+    def __str__(self) -> str:
+        return f"Document: {self.title}"
+
+    class Meta:
+        verbose_name = _("Document")
+        verbose_name_plural = _("Documents")

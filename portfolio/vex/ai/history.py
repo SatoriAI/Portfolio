@@ -10,10 +10,11 @@ class MessageHistory(BaseChatMessageHistory):
         self.conversation, _ = Conversation.objects.get_or_create(session=session_key)
 
     @property
-    def messages(self) -> list[BaseMessage]:
-        out = []
+    def messages(self) -> list[BaseMessage]:  # type: ignore
+        out: list[BaseMessage] = []
 
         for message in self.conversation.messages.order_by("created_at").iterator():
+            method: type[BaseMessage]
             match message.role:
                 case Roles.USER:
                     method = HumanMessage
@@ -25,7 +26,7 @@ class MessageHistory(BaseChatMessageHistory):
 
         return out
 
-    def add_message(self, message) -> None:
+    def add_message(self, message: BaseMessage) -> None:
         match message.type:
             case "ai":
                 role = Roles.ASSISTANT
@@ -33,7 +34,7 @@ class MessageHistory(BaseChatMessageHistory):
                 role = Roles.USER
             case _:
                 role = Roles.SYSTEM
-        Message.objects.create(conversation=self.conversation, role=role, content=message.content)
+        Message.objects.create(conversation=self.conversation, role=role, content=str(message.content))
 
     def clear(self) -> None:
         self.conversation.messages.all().delete()

@@ -153,6 +153,7 @@ body {
 }
 
 .welcome-message p {
+    color: #3498db;
     margin-bottom: 0.5rem;
     line-height: 1.5;
 }
@@ -361,6 +362,13 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+.settings-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
 }
 
 .setting-group {

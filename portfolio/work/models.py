@@ -4,11 +4,11 @@ from django.utils.translation import gettext_lazy as _
 from parler.managers import TranslatableManager
 from parler.models import TranslatableModel, TranslatedFields
 
-from utils.models import TimestampedModel
+from utils.models import DescriptiveModel, TimestampedModel
 from work.choices import Icons, Levels
 
 
-class Skill(TranslatableModel, TimestampedModel):
+class Skill(TranslatableModel, TimestampedModel, DescriptiveModel):
     level = models.CharField(choices=Levels, default=Levels.INTERMEDIATE)
     icon = models.CharField(choices=Icons, default=Icons.CODE, max_length=8)
 
@@ -20,12 +20,20 @@ class Skill(TranslatableModel, TimestampedModel):
     # Managers
     objects: TranslatableManager = TranslatableManager()
 
+    @property
+    def representation(self) -> str:
+        return (
+            f"Skill: {self.safe_translation_getter("name", any_language=True) or ""}"
+            f"\nLevel: {self.level}"
+            f"\nDescription: {self.safe_translation_getter("description", any_language=True) or ""}"
+        )
+
     class Meta:
         verbose_name = _("Skill")
         verbose_name_plural = _("Skills")
 
 
-class Project(TranslatableModel, TimestampedModel):
+class Project(TranslatableModel, TimestampedModel, DescriptiveModel):
     title = models.CharField(_("Title"), max_length=128)
     image = models.URLField(_("Image URL"), null=True, blank=True)
     tags = ArrayField(models.CharField(_("Tags"), max_length=128), null=True, blank=True)
@@ -39,12 +47,22 @@ class Project(TranslatableModel, TimestampedModel):
     # Managers
     objects: TranslatableManager = TranslatableManager()
 
+    @property
+    def representation(self) -> str:
+        return (
+            f"Project: {self.title}"
+            f"\nTags: {", ".join(self.tags or [])}"
+            f"\nDescription: {self.safe_translation_getter("description", any_language=True) or ""}"
+            f"\nDemo: {self.demo or ""}"
+            f"\nRepository: {self.repository or ""}"
+        )
+
     class Meta:
         verbose_name = _("Project")
         verbose_name_plural = _("Projects")
 
 
-class Experience(TranslatableModel, TimestampedModel):
+class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
     position = models.CharField(_("Position"), max_length=128)
     start = models.DateField(_("Start"))
     end = models.DateField(_("End"), null=True, blank=True)
@@ -63,6 +81,17 @@ class Experience(TranslatableModel, TimestampedModel):
     @property
     def period(self) -> str:
         return f"{self.start.year} - {self.end.year if self.end is not None else ''}"
+
+    @property
+    def representation(self) -> str:
+        return (
+            f"Experience: {self.position} at {self.company}"
+            f"\nPeriod: {self.period}"
+            f"\nLocation: {self.safe_translation_getter("location", any_language=True) or ""}"
+            f"\nTechnologies: {", ".join(self.technologies or [])}"
+            f"\nDescription: {self.safe_translation_getter("description", any_language=True) or ""}"
+            f"\nAchievements: {"; ".join(self.safe_translation_getter("achievements", any_language=True) or [])}"
+        )
 
     class Meta:
         verbose_name = _("Experience")

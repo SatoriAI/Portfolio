@@ -29,19 +29,17 @@
             <div class="welcome-message">
                 <i class="fas fa-info-circle"></i>
                 <p>Welcome to Vex Chat Tester! This tool tests the integrated chat system.</p>
-                <p><strong>Architecture:</strong> POST to send message + SSE to receive streaming response</p>
-                <p><strong>Base URL:</strong> <span id="base-url">http://localhost:8000</span></p>
-                <p>Type a message and watch the real-time streaming response!</p>
+                <p><strong>Architecture:</strong> POST to receive session key + SSE to receive streaming response</p>
             </div>
         </div>
 
         <div class="chat-input-container">
             <form id="chat-form">
                 <div class="input-group">
-                    <input 
-                        type="text" 
-                        id="message-input" 
-                        placeholder="Type your message here..." 
+                    <input
+                        type="text"
+                        id="message-input"
+                        placeholder="Type your message here..."
                         autocomplete="off"
                         maxlength="1000"
                     >
@@ -67,7 +65,10 @@
                     <label for="session-id">Session ID:</label>
                     <input type="text" id="session-id" placeholder="Auto-generated" readonly>
                 </div>
-                <button id="save-settings" class="btn btn-primary">Save Settings</button>
+                <div class="settings-actions">
+                    <button id="close-settings" type="button" class="btn btn-secondary">Close</button>
+                    <button id="save-settings" type="button" class="btn btn-primary">Save Settings</button>
+                </div>
             </div>
         </div>
 

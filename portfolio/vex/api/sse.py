@@ -1,30 +1,31 @@
-from django.http import HttpRequest, JsonResponse, StreamingHttpResponse
-from rest_framework import status
+from collections.abc import Iterator
+
+from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpResponseBadRequest, StreamingHttpResponse
 
 from utils.functions import ensure_session
 from vex.ai.rag import rag_chain
 
 
-def chat(request: HttpRequest):
-    question = (request.GET.get(key="question") or "").strip()
+def chat(request: WSGIRequest) -> StreamingHttpResponse | HttpResponseBadRequest:
+    if not (question := (request.GET.get(key="question") or "").strip()):
+        return HttpResponseBadRequest(content="You request must contain a question.")
 
-    if not question:
-        return JsonResponse({"error": "Empty question"}, status=status.HTTP_400_BAD_REQUEST)
+    session_key = request.GET.get(key="session_key") or ensure_session(request=request)
 
-    session_id = ensure_session(request)
-
-    def event_stream():
-        yield "event: received"
+    def event_stream() -> Iterator[str]:
+        yield "event: received\ndata: ok\n\n"
         try:
-            for chunk in rag_chain.stream(question, config={"configurable": {"session_id": session_id}}):
+            for chunk in rag_chain.stream({"question": question}, config={"configurable": {"session_id": session_key}}):
                 if not chunk:
                     continue
                 yield f"data: {chunk}\n\n"
-            yield "event: finished"
-        except Exception as e:
-            yield f"event: error\nDetail: {str(e)}"
+            yield "event: finished\ndata: done\n\n"
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            yield f"event: error\ndata: {str(e)}\n\n"
 
-    resp = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
-    resp["Cache-Control"] = "no-cache"
-    resp["X-Accel-Buffering"] = "no"
-    return resp
+    response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+    response["Cache-Control"] = "no-cache"
+    response["X-Accel-Buffering"] = "no"
+
+    return response

@@ -40,7 +40,7 @@ Body:
 Response:
 {
   "answer": "AI response",
-  "session_id": "session_identifier", 
+  "session_id": "session_identifier",
   "csrftoken": "csrf_token"
 }
 ```

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-13 14:52+0000\n"
+"POT-Creation-Date: 2025-09-16 19:44+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -28,11 +28,11 @@ msgstr "Zimowy"
 msgid "Summer"
 msgstr "Letni"
 
-#: university/models.py:12 work/models.py:49
+#: university/models.py:12 work/models.py:67
 msgid "Start"
 msgstr "Rozpoczęcie"
 
-#: university/models.py:13 work/models.py:50
+#: university/models.py:13 work/models.py:68
 msgid "End"
 msgstr "Koniec"
 
@@ -64,7 +64,7 @@ msgstr "Szkoła"
 msgid "Schools"
 msgstr "Szkoły"
 
-#: university/models.py:32 vex/models.py:10 work/models.py:29
+#: university/models.py:32 vex/models.py:30 work/models.py:37
 msgid "Title"
 msgstr "Tytuł"
 
@@ -104,7 +104,7 @@ msgstr "Sezon"
 msgid "Course"
 msgstr "Kurs"
 
-#: university/models.py:55 vex/models.py:23
+#: university/models.py:55 vex/models.py:22
 msgid "Content"
 msgstr "Treść"
 
@@ -124,29 +124,65 @@ msgstr "Stworzono"
 msgid "Updated At"
 msgstr "Zaktualizowano"
 
+#: vex/actions/inject_documents.py:18
+msgid "Inject Document(s) to Vector Database"
+msgstr "Wstrzyknij Dokument(y) do Wektorowej Bazy Danych"
+
+#: vex/actions/inject_documents.py:24
+msgid "Document(s) injected successfully."
+msgstr "Dokumenty wstrzyknięto pomyślnie."
+
+#: vex/admin.py:42
+msgid "Number of Messages"
+msgstr "Liczba Wiadomości"
+
 #: vex/models.py:9
 msgid "Session Key"
 msgstr "Klucz Sesji"
 
-#: vex/models.py:16
+#: vex/models.py:12 vex/models.py:15
 msgid "Conversation"
 msgstr "Rozmowa"
 
-#: vex/models.py:17
+#: vex/models.py:16
 msgid "Conversations"
 msgstr "Rozmowy"
 
-#: vex/models.py:22
+#: vex/models.py:21
 msgid "Role"
 msgstr "Rola"
 
-#: vex/models.py:26
+#: vex/models.py:25
 msgid "Message"
 msgstr "Wiadomość"
 
-#: vex/models.py:27
+#: vex/models.py:26
 msgid "Messages"
 msgstr "Wiadomomści"
+
+#: vex/models.py:31 work/models.py:17 work/models.py:44 work/models.py:74
+msgid "Description"
+msgstr "Opis"
+
+#: vex/models.py:33
+msgid "File"
+msgstr "Plik"
+
+#: vex/models.py:34
+msgid "Source URL"
+msgstr "Adres URL"
+
+#: vex/models.py:36
+msgid "Injected"
+msgstr "Wstrzyknięto"
+
+#: vex/models.py:46
+msgid "Document"
+msgstr "Dokument"
+
+#: vex/models.py:47
+msgid "Documents"
+msgstr "Dokumenty"
 
 #: work/apps.py:9
 msgid "Work"
@@ -168,75 +204,62 @@ msgstr "10+ lat doświadczenia"
 msgid "Name"
 msgstr "Nazwa"
 
-#: work/models.py:17 work/models.py:36 work/models.py:56
-msgid "Description"
-msgstr "Opis"
-
-#: work/models.py:24
+#: work/models.py:32
 msgid "Skill"
 msgstr "Umiejętność"
 
-#: work/models.py:25
+#: work/models.py:33
 msgid "Skills"
 msgstr "Umiejętności"
 
-#: work/models.py:30
+#: work/models.py:38
 msgid "Image URL"
 msgstr "Adres URL obrazu"
 
-#: work/models.py:31
+#: work/models.py:39
 msgid "Tags"
 msgstr "Tagi"
 
-#: work/models.py:32
+#: work/models.py:40
 msgid "Demo"
 msgstr "Demo"
 
-#: work/models.py:33
+#: work/models.py:41
 msgid "Repository"
 msgstr "Repozytorium"
 
-#: work/models.py:43
+#: work/models.py:61
 msgid "Project"
 msgstr "Projekt"
 
-#: work/models.py:44
+#: work/models.py:62
 msgid "Projects"
 msgstr "Projekty"
 
-#: work/models.py:48
+#: work/models.py:66
 msgid "Position"
 msgstr "Stanowisko"
 
-#: work/models.py:51
+#: work/models.py:69
 msgid "Company"
 msgstr "Firma"
 
-#: work/models.py:52
+#: work/models.py:70
 msgid "Technologies"
 msgstr "Technologie"
 
-#: work/models.py:55
+#: work/models.py:73
 msgid "Location"
 msgstr "Lokalizacja"
 
-#: work/models.py:57
+#: work/models.py:75
 msgid "Achievements"
 msgstr "Osiągnięcia"
 
-#: work/models.py:68
+#: work/models.py:97
 msgid "Experience"
 msgstr "Doświadczenie"
 
-#: work/models.py:69
+#: work/models.py:98
 msgid "Experiences"
 msgstr "Doświadczenia"
-
-#~ msgid "Intermediate"
-#~ msgstr "Średniozaawansowany"
-
-#~ msgid "Advanced"
-#~ msgstr "Zaawansowany"
-
-#~ msgid "Expert"
-#~ msgstr "Ekspert"

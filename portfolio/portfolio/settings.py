@@ -46,8 +46,7 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS")
 
-# For development: Allow local file and HTTP server access
-if DEBUG:
+if DEBUG:  # For development: Allow local file and HTTP server access
     CORS_ALLOW_ALL_ORIGINS = True
     CORS_ALLOW_CREDENTIALS = True
 
@@ -71,6 +70,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "rest_framework",
+    "django_filters",
     # Own Apps
     "university",
     "utils",
@@ -117,8 +117,13 @@ WSGI_APPLICATION = "portfolio.wsgi.application"
 DATABASES = {
     "default": env.db(),
 }
+DATABASE_URL = env("DATABASE_URL")
 
+# Vector Database
 VECTOR_DB_COLLECTION = env("VECTOR_DB_COLLECTION")
+VECTOR_TEXT_EMBEDDING_MODEL = env("VECTOR_TEXT_EMBEDDING_MODEL", default="text-embedding-3-small")
+VECTOR_USE_JSONB = env("USE_JSONB", default=True)
+VECTOR_RETRIEVE_K = env("RETRIEVE_K", default=6)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -164,6 +169,10 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Media uploads
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 if not DEBUG:
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -189,3 +198,19 @@ REST_FRAMEWORK = {
 
 # Own Variables
 OPENAI_API_KEY = env("OPENAI_API_KEY")
+
+# RAG Pipeline
+SYSTEM_PROMPT = """
+You are Vex, Dawid Hanrahan's personal AI assistant.
+Tone: warm, concise, and lightly witty; add a small dash of humor from time to time.
+Introduce yourself as Vex when appropriate (first reply may include a brief friendly one-liner).
+You know Dawid's background, projects, skills, academic life and other details, based on the retrieved context.
+Answer strictly using the retrieved context; if unsure, say you don't know. Do not invent sources.
+Refer to Dawid in the third person (e.g., 'Dawid', 'he'), not 'I'.
+Prefer skimmable structure (short paragraphs or bullets) when listing items.
+Be grammatically correct, pay close attention to punctuation.
+"""
+OPENAI_MODEL = env(
+    "OPENAI_MODEL",
+)
+TEMPERATURE = env("TEMPERATURE", default=0.5)
