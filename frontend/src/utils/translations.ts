@@ -2,7 +2,8 @@
 export const translations = {
   en: {
     chat: {
-      prompt: 'What would you like to know?'
+      prompt: 'What would you like to know?',
+      inputPlaceholder: 'Ask me anything about Dawid...'
     },
     nav: {
       home: 'Home',
@@ -68,7 +69,8 @@ export const translations = {
   },
   pl: {
     chat: {
-      prompt: 'O co chcesz zapytać?'
+      prompt: 'O co chcesz zapytać?',
+      inputPlaceholder: 'Zapytaj o cokolwiek o Dawidzie...'
     },
     nav: {
       home: 'Strona główna',

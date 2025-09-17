@@ -31,11 +31,13 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isMultilineInput, setIsMultilineInput] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const sessionKeyRef = useRef<string | null>(null);
   const csrfTokenRef = useRef<string | null>(null);
   const hasReceivedFirstChunkRef = useRef(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   // Sample responses for demonstration - in production, this would connect to your RAG system
   const sampleResponses: { [key: string]: string } = {
@@ -151,6 +153,7 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
+    setIsMultilineInput(false);
 
     if (env.mock) {
       setIsLoading(true);
@@ -379,29 +382,98 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
           </ScrollArea>
           
           <div className="p-4 border-t border-orange-200 dark:border-slate-700">
-            <div className="flex gap-2 items-end">
+            <div className={`relative rounded-md border border-orange-300 dark:border-slate-600 bg-orange-50 dark:bg-slate-800 px-3 py-2 min-h-[44px] overflow-hidden ${isMultilineInput ? 'flex flex-col gap-2' : ''}`}
+            >
               <Textarea
+                ref={textareaRef}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder="Ask me anything about this developer..."
+                placeholder={t.chat?.inputPlaceholder}
                 rows={1}
-                className="flex-1 bg-orange-50 dark:bg-slate-800 border-orange-300 dark:border-slate-600 text-foreground placeholder:text-muted-foreground resize-none max-h-40"
+                className={`w-full bg-transparent border-0 focus-visible:ring-0 ring-0 focus-visible:ring-offset-0 ring-offset-0 outline-none focus:outline-none shadow-none focus:shadow-none resize-none p-0 leading-6 text-foreground placeholder:text-muted-foreground max-h-40 ${!isMultilineInput ? 'pr-12' : ''}`}
                 disabled={isLoading || isStreaming}
                 style={{ height: 'auto' }}
                 onInput={(e) => {
                   const el = e.currentTarget;
                   el.style.height = 'auto';
-                  el.style.height = `${el.scrollHeight}px`;
+                  const nextHeight = Math.min(el.scrollHeight, 160);
+                  el.style.height = `${nextHeight}px`;
+                  try {
+                    const cs = window.getComputedStyle(el);
+                    const lineHeight = parseFloat(cs.lineHeight || '24');
+                    const valueNow = el.value;
+                    const lines = Math.max(1, Math.round(nextHeight / lineHeight));
+                    const shouldBecomeMulti = lines >= 2;
+                    const shouldBecomeSingle = valueNow.trim().length === 0;
+
+                    if (shouldBecomeMulti && !isMultilineInput) {
+                      setIsMultilineInput(true);
+                      requestAnimationFrame(() => {
+                        const rEl = textareaRef.current;
+                        if (!rEl) return;
+                        rEl.style.height = 'auto';
+                        const updated = Math.min(rEl.scrollHeight, 160);
+                        rEl.style.height = `${updated}px`;
+                      });
+                    } else if (shouldBecomeSingle && isMultilineInput) {
+                      setIsMultilineInput(false);
+                      requestAnimationFrame(() => {
+                        const rEl = textareaRef.current;
+                        if (!rEl) return;
+                        rEl.style.height = 'auto';
+                        const updated = Math.min(rEl.scrollHeight, 160);
+                        rEl.style.height = `${updated}px`;
+                      });
+                    }
+                  } catch {
+                    const valueNow = el.value;
+                    const shouldBecomeMulti = nextHeight > 36; // approx >= 2 lines
+                    const shouldBecomeSingle = valueNow.trim().length === 0;
+                    if (shouldBecomeMulti && !isMultilineInput) {
+                      setIsMultilineInput(true);
+                      requestAnimationFrame(() => {
+                        const rEl = textareaRef.current;
+                        if (!rEl) return;
+                        rEl.style.height = 'auto';
+                        const updated = Math.min(rEl.scrollHeight, 160);
+                        rEl.style.height = `${updated}px`;
+                      });
+                    } else if (shouldBecomeSingle && isMultilineInput) {
+                      setIsMultilineInput(false);
+                      requestAnimationFrame(() => {
+                        const rEl = textareaRef.current;
+                        if (!rEl) return;
+                        rEl.style.height = 'auto';
+                        const updated = Math.min(rEl.scrollHeight, 160);
+                        rEl.style.height = `${updated}px`;
+                      });
+                    }
+                  }
                 }}
               />
-              <Button
-                onClick={handleSendMessage}
-                disabled={!inputValue.trim() || isLoading || isStreaming}
-                className="bg-orange-600 hover:bg-orange-700 dark:bg-blue-600 dark:hover:bg-blue-700"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
+              {!isMultilineInput && (
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!inputValue.trim() || isLoading || isStreaming}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 p-0 bg-orange-600 hover:bg-orange-700 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-full text-white flex items-center justify-center"
+                  aria-label="Send"
+                >
+                  <Send className="w-4 h-4 text-white" />
+                </Button>
+              )}
+              {isMultilineInput && (
+                <div className="flex items-center justify-end">
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={!inputValue.trim() || isLoading || isStreaming}
+                    className="h-9 w-9 p-0 bg-orange-600 hover:bg-orange-700 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-full text-white flex items-center justify-center"
+                    aria-label="Send"
+                  >
+                    <Send className="w-4 h-4 text-white" />
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
