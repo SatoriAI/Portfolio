@@ -3,9 +3,15 @@
 @tailwind utilities;
 
 /* Markdown (prose) tweaks for chat */
-.prose {
-  @apply max-w-none;
-}
+.prose { @apply max-w-none leading-7; }
+.prose :where(h1,h2,h3,h4){ @apply mt-3 mb-2; }
+.prose :where(p,ul,ol,pre,table,blockquote){ @apply my-2; }
+.prose :where(ul){ @apply list-disc pl-5; }
+.prose :where(ol){ @apply list-decimal pl-5; }
+.prose :where(li){ @apply my-1; }
+.prose :where(hr){ @apply my-3; }
+.dark .prose code { @apply text-slate-100; }
+.dark .prose pre { @apply bg-slate-900; }
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.

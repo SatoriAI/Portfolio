@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X, Send, MessageSquare, User, Bot, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -21,10 +21,49 @@ interface Message {
   timestamp: Date;
 }
 
+const normalizeMarkdown = (input: string): string => {
+  let s = String(input ?? '');
+  s = s.replace(/\r\n?/g, '\n');
+  // Convert en/em/• bullets at line start to markdown hyphen bullets
+  s = s.replace(/^\s*[–—•]\s+/gm, '- ');
+  s = s.replace(/^(\s{2,})[–—•]\s+/gm, '$1- ');
+  // Ensure a blank line before headings and top-level list items so Markdown parses in-flight
+  s = s.replace(/(^|[^\n])\n(#{1,6}\s)/g, (m, p1, p2) => `${p1}\n\n${p2}`);
+  s = s.replace(/(^|[^\n])\n(-\s)/g, (m, p1, p2) => `${p1}\n\n${p2}`);
+  if (!s.endsWith('\n')) s += '\n';
+  return s;
+};
+
 interface ChatWidgetProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+class MarkdownBoundary extends React.Component<{ fallback: React.ReactNode; resetKey: string; children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(err: any) {
+    // eslint-disable-next-line no-console
+    console.error('Markdown render error', err);
+  }
+  componentDidUpdate(prevProps: Readonly<{ fallback: React.ReactNode; resetKey: string; children: React.ReactNode }>): void {
+    if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
+      // eslint-disable-next-line react/no-did-update-set-state
+      this.setState({ hasError: false });
+    }
+  }
+  render() {
+    if (this.state.hasError) return this.props.fallback as any;
+    return this.props.children as any;
+  }
+}
+
+// Note: We previously used an error boundary fallback for markdown.
+// Rendering errors are unlikely with react-markdown, and the fallback could mask formatting.
+// We render markdown directly to ensure live formatting.
 
 const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
   const { language } = useSettings();
@@ -356,7 +395,7 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
                       </div>
                     )}
                     <div
-                      className={`max-w-[80%] p-3 rounded-lg prose prose-sm dark:prose-invert prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-pre:p-3 prose-pre:rounded-md prose-code:before:content-[''] prose-code:after:content-[''] ${
+                      className={`max-w-[80%] p-3 rounded-lg prose prose-sm dark:prose-invert prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-pre:p-3 prose-pre:rounded-md prose-code:before:content-[''] prose-code:after:content-[''] prose-headings:font-semibold prose-headings:leading-tight prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-ul:list-disc prose-ol:list-decimal prose-ul:ml-5 prose-ol:ml-5 prose-a:underline prose-a:decoration-1 prose-a:underline-offset-2 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-hr:my-3 ${
                         message.isUser
                           ? 'bg-orange-600 dark:bg-blue-600 text-white prose-invert'
                           : 'bg-orange-100 dark:bg-slate-800 text-foreground border border-orange-200 dark:border-slate-700'
@@ -365,12 +404,23 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
                       {message.isUser ? (
                         <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.text}</p>
                       ) : (
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          className="text-sm leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                        <MarkdownBoundary
+                          fallback={<p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.text}</p>}
+                          resetKey={`${message.id}:${message.text.length}`}
                         >
-                          {message.text}
-                        </ReactMarkdown>
+                          <ReactMarkdown
+                            key={`md-${message.id}-${message.text.length}`}
+                            remarkPlugins={[remarkGfm]}
+                            className="text-sm leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                            components={{
+                              a: ({ node, ...props }) => (
+                                <a {...props} target="_blank" rel="noopener noreferrer" />
+                              )
+                            }}
+                          >
+                            {normalizeMarkdown(message.text)}
+                          </ReactMarkdown>
+                        </MarkdownBoundary>
                       )}
                     </div>
                     {message.isUser && (
