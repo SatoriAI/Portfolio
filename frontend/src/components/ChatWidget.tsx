@@ -1,10 +1,14 @@
 
-import { useState } from 'react';
-import { X, Send, MessageSquare, User, Bot } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { X, Send, MessageSquare, User, Bot, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { env } from '@/config/env';
+import { endpoints, buildUrl } from '@/config/endpoints';
+import { apiClient, apiFetch } from '@/lib/apiClient';
+import { toast as notify } from '@/components/ui/sonner';
 
 interface Message {
   id: string;
@@ -19,16 +23,20 @@ interface ChatWidgetProps {
 }
 
 const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: "Hi! I'm an AI assistant that knows all about this developer's background, skills, and projects. Feel free to ask me anything about their experience with Python, LLMs, RAG pipelines, or any of their projects!",
-      isUser: false,
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([{
+    id: 'intro',
+    text: "Hi! I'm an AI assistant that knows all about this developer's background, skills, and projects. Feel free to ask me anything about their experience with Python, LLMs, RAG pipelines, or any of their projects!",
+    isUser: false,
+    timestamp: new Date()
+  }]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const sessionKeyRef = useRef<string | null>(null);
+  const csrfTokenRef = useRef<string | null>(null);
+  const hasReceivedFirstChunkRef = useRef(false);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
 
   // Sample responses for demonstration - in production, this would connect to your RAG system
   const sampleResponses: { [key: string]: string } = {
@@ -55,31 +63,222 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
     }
   };
 
+  const closeExistingStream = () => {
+    if (eventSourceRef.current) {
+      try { eventSourceRef.current.close(); } catch { /* noop */ }
+      eventSourceRef.current = null;
+    }
+  };
+
+  const hydrateMessagesIfNeeded = async () => {
+    const storedKey = localStorage.getItem('vex_chat_session_key');
+    sessionKeyRef.current = storedKey;
+    if (!storedKey || env.mock) return;
+    try {
+      const data = await apiClient.get<any>(endpoints.vex.messages.list, {
+        session: storedKey,
+        ordering: 'created_at',
+      });
+      const items: any[] = Array.isArray(data?.results) ? data.results : Array.isArray(data) ? data : [];
+      if (items.length) {
+        const mapped: Message[] = items.map((m, idx) => {
+          const isUser = (m.role === 'user') || (m.is_user === true) || (m.sender === 'user');
+          const text = m.text || m.content || m.message || '';
+          const ts = m.created_at || m.timestamp || new Date().toISOString();
+          return {
+            id: String(m.id ?? idx),
+            text: String(text),
+            isUser,
+            timestamp: new Date(ts),
+          };
+        });
+        setMessages(mapped);
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to hydrate chat history', err);
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = 'hidden';
+    if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
+
+    hydrateMessagesIfNeeded();
+    return () => {
+      // Restore body scroll
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
+      // Close stream when widget closes
+      closeExistingStream();
+      setIsStreaming(false);
+      setIsLoading(false);
+      hasReceivedFirstChunkRef.current = false;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    return () => {
+      // Cleanup on unmount
+      closeExistingStream();
+    };
+  }, []);
+
+  // Scroll to bottom on open and on any message or loading change
+  useEffect(() => {
+    if (!isOpen) return;
+    // Defer to let DOM render
+    const id = requestAnimationFrame(() => {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [isOpen, messages, isLoading, isStreaming]);
+
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    if (!inputValue.trim() || isStreaming) return;
+
+    const question = inputValue;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: inputValue,
+      text: question,
       isUser: true,
       timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
-    setIsLoading(true);
 
-    // Simulate AI response delay
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: getResponse(inputValue),
-        isUser: false,
-        timestamp: new Date()
+    if (env.mock) {
+      setIsLoading(true);
+      setTimeout(() => {
+        const aiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          text: getResponse(question),
+          isUser: false,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, aiResponse]);
+        setIsLoading(false);
+      }, 800);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setIsStreaming(true);
+      hasReceivedFirstChunkRef.current = false;
+      // Step 1-3: POST to obtain/confirm session_key (multipart/form-data)
+      const form = new FormData();
+      form.append('question', question);
+      const existingKey = localStorage.getItem('vex_chat_session_key');
+      if (existingKey) form.append('session_key', existingKey);
+
+      const postResp = await apiFetch<{ session_key: string; csrftoken: string }>(
+        endpoints.vex.chat.post,
+        {
+          method: 'POST',
+          // Include CSRF token if we have one from previous round
+          headers: csrfTokenRef.current ? { 'X-CSRFToken': csrfTokenRef.current } : undefined,
+          body: form as unknown as any,
+        }
+      );
+
+      const newSessionKey = postResp?.session_key;
+      const newCsrf = postResp?.csrftoken;
+      if (newSessionKey) {
+        sessionKeyRef.current = newSessionKey;
+        localStorage.setItem('vex_chat_session_key', newSessionKey);
+      }
+      if (newCsrf) {
+        csrfTokenRef.current = newCsrf;
+      }
+
+      const sessionKey = sessionKeyRef.current || existingKey;
+      if (!sessionKey) {
+        throw new Error('No session key provided by server');
+      }
+
+      // Step 4: Open SSE stream
+      closeExistingStream();
+      const streamUrl = buildUrl(endpoints.vex.chat.stream, {
+        question: question,
+        session_key: sessionKey,
+      });
+      const es = new EventSource(streamUrl);
+      eventSourceRef.current = es;
+
+      es.addEventListener('received', () => {
+        // Keep typing indicator until first data chunk arrives
+      });
+
+      es.addEventListener('finished', () => {
+        setIsStreaming(false);
+        try { es.close(); } catch { /* noop */ }
+        if (eventSourceRef.current === es) eventSourceRef.current = null;
+      });
+
+      es.addEventListener('error', (ev: any) => {
+        const dataMsg = typeof ev?.data === 'string' ? ev.data : undefined;
+        if (!hasReceivedFirstChunkRef.current) setIsLoading(false);
+        setIsStreaming(false);
+        try { es.close(); } catch { /* noop */ }
+        if (eventSourceRef.current === es) eventSourceRef.current = null;
+        notify.error(dataMsg || 'Streaming error');
+      });
+
+      es.onmessage = (e: MessageEvent) => {
+        // Streamed text chunks come as default messages without an event name
+        const chunk = e.data as string;
+        if (!hasReceivedFirstChunkRef.current) {
+          hasReceivedFirstChunkRef.current = true;
+          setIsLoading(false); // remove typing indicator once streaming starts
+          // Create an assistant message to append chunks to
+          const assistantMsg: Message = {
+            id: `assistant-${Date.now()}`,
+            text: chunk,
+            isUser: false,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, assistantMsg]);
+        } else {
+          // Append to last assistant message
+          setMessages(prev => {
+            const next = [...prev];
+            for (let i = next.length - 1; i >= 0; i--) {
+              if (!next[i].isUser) {
+                next[i] = { ...next[i], text: next[i].text + chunk };
+                break;
+              }
+            }
+            return next;
+          });
+        }
       };
-      setMessages(prev => [...prev, aiResponse]);
+    } catch (err: any) {
+      // eslint-disable-next-line no-console
+      console.error('Chat send failed', err);
       setIsLoading(false);
-    }, 1000);
+      setIsStreaming(false);
+      closeExistingStream();
+      notify.error(err?.message || 'Failed to send message');
+    }
+  };
+
+  const handleClearChat = () => {
+    try { closeExistingStream(); } catch { /* noop */ }
+    sessionKeyRef.current = null;
+    csrfTokenRef.current = null;
+    localStorage.removeItem('vex_chat_session_key');
+    setMessages([]);
+    setIsLoading(false);
+    setIsStreaming(false);
+    hasReceivedFirstChunkRef.current = false;
+    notify.success('Chat cleared');
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -93,23 +292,34 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/50 backdrop-blur-sm">
-      <Card className="w-full max-w-lg h-[600px] bg-orange-50 dark:bg-slate-900 border-orange-200 dark:border-slate-700 flex flex-col">
+      <Card className="w-full max-w-6xl h-[800px] bg-orange-50 dark:bg-slate-900 border-orange-200 dark:border-slate-700 flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-orange-200 dark:border-slate-700">
           <CardTitle className="flex items-center gap-2 text-card-foreground">
             <MessageSquare className="w-5 h-5 text-orange-600 dark:text-blue-400" />
-            AI Assistant
+            Vex
           </CardTitle>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-card-foreground"
-          >
-            <X className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleClearChat}
+              variant="outline"
+              size="sm"
+              className="border-orange-300 hover:border-orange-500 dark:border-slate-600 dark:hover:border-blue-400 text-muted-foreground"
+            >
+              <Trash2 className="w-4 h-4 mr-1" />
+              Clear
+            </Button>
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-card-foreground"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
         </CardHeader>
         
-        <CardContent className="flex-1 flex flex-col p-0">
+        <CardContent className="flex-1 flex flex-col p-0 min-h-0">
           <ScrollArea className="flex-1 p-4">
             <div className="space-y-4">
               {messages.map((message) => (
@@ -153,21 +363,29 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
                 </div>
               )}
             </div>
+            <div ref={bottomRef} />
           </ScrollArea>
           
           <div className="p-4 border-t border-orange-200 dark:border-slate-700">
-            <div className="flex gap-2">
-              <Input
+            <div className="flex gap-2 items-end">
+              <Textarea
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyPress}
                 placeholder="Ask me anything about this developer..."
-                className="flex-1 bg-orange-50 dark:bg-slate-800 border-orange-300 dark:border-slate-600 text-foreground placeholder:text-muted-foreground"
-                disabled={isLoading}
+                rows={1}
+                className="flex-1 bg-orange-50 dark:bg-slate-800 border-orange-300 dark:border-slate-600 text-foreground placeholder:text-muted-foreground resize-none max-h-40"
+                disabled={isLoading || isStreaming}
+                style={{ height: 'auto' }}
+                onInput={(e) => {
+                  const el = e.currentTarget;
+                  el.style.height = 'auto';
+                  el.style.height = `${el.scrollHeight}px`;
+                }}
               />
               <Button
                 onClick={handleSendMessage}
-                disabled={!inputValue.trim() || isLoading}
+                disabled={!inputValue.trim() || isLoading || isStreaming}
                 className="bg-orange-600 hover:bg-orange-700 dark:bg-blue-600 dark:hover:bg-blue-700"
               >
                 <Send className="w-4 h-4" />

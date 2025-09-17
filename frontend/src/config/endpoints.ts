@@ -34,6 +34,15 @@ export const endpoints = {
         testimonials: {
             list: "/api/university/testimonials/",
         }
+    },
+    vex: {
+        chat: {
+            post: "/api/vex/chat/",
+            stream: "/api/vex/chat/stream/",
+        },
+        messages: {
+            list: "/api/vex/messages/",
+        },
     }
 } as const
 

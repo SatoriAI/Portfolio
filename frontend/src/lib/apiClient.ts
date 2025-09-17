@@ -26,16 +26,20 @@ export async function apiFetch<TResponse extends JsonValue, TBody extends JsonVa
 
     const { method = "GET", body, headers, query } = options
     const url = buildUrl(path, query)
+    const isFormData = typeof FormData !== "undefined" && body instanceof FormData
+    const computedHeaders: Record<string, string> = {
+        ...(headers || {}),
+    }
+    if (!isFormData) {
+        computedHeaders["Content-Type"] = computedHeaders["Content-Type"] || "application/json"
+    }
     const init: RequestInit = {
         method,
-        headers: {
-            "Content-Type": "application/json",
-            ...headers,
-        },
+        headers: computedHeaders,
     }
 
     if (body !== undefined) {
-        init.body = JSON.stringify(body)
+        init.body = isFormData ? (body as unknown as FormData) : JSON.stringify(body)
     }
 
     const response = await fetch(url, init)
