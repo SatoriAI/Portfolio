@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from "react";
 
 type GradientStops = {
   from: string;
@@ -16,8 +16,8 @@ export function useScrollGradient(light: GradientStops, dark: GradientStops) {
       setProgress(clamp(max > 0 ? window.scrollY / max : 0, 0, 1));
     };
     onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const style = useMemo(() => {
@@ -48,5 +48,3 @@ export function useScrollGradient(light: GradientStops, dark: GradientStops) {
 
   return style;
 }
-
-

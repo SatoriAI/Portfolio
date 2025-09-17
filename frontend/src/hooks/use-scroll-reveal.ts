@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export type ScrollRevealOptions = {
   root?: Element | null;
@@ -10,15 +10,22 @@ export type ScrollRevealOptions = {
   once?: boolean;
 };
 
-export function useScrollReveal<T extends HTMLElement = HTMLElement>(options?: ScrollRevealOptions) {
-  const { root = null, rootMargin = '0px 0px -10% 0px', threshold = 0.1, once = true } = options || {};
+export function useScrollReveal<T extends HTMLElement = HTMLElement>(
+  options?: ScrollRevealOptions,
+) {
+  const {
+    root = null,
+    rootMargin = "0px 0px -10% 0px",
+    threshold = 0.1,
+    once = true,
+  } = options || {};
 
   const elementRef = useRef<T | null>(null);
   const [isRevealed, setIsRevealed] = useState(false);
 
   const prefersReducedMotion = useMemo(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia === 'undefined') return false;
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (typeof window === "undefined" || typeof window.matchMedia === "undefined") return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }, []);
 
   const setRef = useCallback((node: T | null) => {
@@ -45,7 +52,7 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>(options?: S
           }
         });
       },
-      { root, rootMargin, threshold }
+      { root, rootMargin, threshold },
     );
 
     observer.observe(node);
@@ -54,5 +61,3 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>(options?: S
 
   return { ref: setRef, isRevealed, prefersReducedMotion } as const;
 }
-
-

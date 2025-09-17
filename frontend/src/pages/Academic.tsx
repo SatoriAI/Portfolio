@@ -1,18 +1,26 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  BookOpen,
+  Calendar,
+  ExternalLink,
+  GraduationCap,
+  Quote,
+  Settings,
+  Star,
+} from "lucide-react";
 
-import { useState, useEffect } from 'react';
-import { GraduationCap, BookOpen, Quote, ExternalLink, Settings, Star, Calendar } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Link } from 'react-router-dom';
-import Reveal from '@/components/Reveal';
-import { useScrollGradient } from '@/hooks/use-scroll-gradient';
-import SettingsPanel from '@/components/SettingsPanel';
-import { useSettings } from '@/contexts/SettingsContext';
-import { translations } from '@/utils/translations';
-import { UiSchool, useSchools } from '@/lib/schoolsService';
-import { UiPublication, usePublications } from '@/lib/publicationsService';
-import { UiTestimonial, useTestimonials } from '@/lib/testimonialsService';
+import Reveal from "@/components/Reveal";
+import SettingsPanel from "@/components/SettingsPanel";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSettings } from "@/contexts/SettingsContext";
+import { useScrollGradient } from "@/hooks/use-scroll-gradient";
+import { UiPublication, usePublications } from "@/lib/publicationsService";
+import { UiSchool, useSchools } from "@/lib/schoolsService";
+import { UiTestimonial, useTestimonials } from "@/lib/testimonialsService";
+import { translations } from "@/utils/translations";
 
 const Academic = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -32,20 +40,20 @@ const Academic = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Load schools, publications, and testimonials in parallel
         const [schoolsData, publicationsData, testimonialsData] = await Promise.all([
           schoolsService.fetch(),
           publicationsService.fetch(),
-          testimonialsService.fetch()
+          testimonialsService.fetch(),
         ]);
-        
+
         setSchools(schoolsData);
         setPublications(publicationsData);
         setTestimonials(testimonialsData);
       } catch (err) {
-        console.error('Failed to fetch academic data:', err);
-        setError('Failed to load academic data');
+        console.error("Failed to fetch academic data:", err);
+        setError("Failed to load academic data");
       } finally {
         setLoading(false);
       }
@@ -54,39 +62,55 @@ const Academic = () => {
     loadAcademicData();
   }, [language]);
 
-
-
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <Star key={i} className={`w-4 h-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-400'}`} />
+      <Star
+        key={i}
+        className={`h-4 w-4 ${i < rating ? "fill-current text-yellow-400" : "text-gray-400"}`}
+      />
     ));
   };
 
   const gradients = useScrollGradient(
-    { from: 'hsla(30,40%,99%,1)', via: 'hsla(40,90%,96%,1)', to: 'hsla(35,70%,90%,1)' },
-    { from: 'hsla(222,84%,5%,1)', via: 'hsla(220,70%,18%,1)', to: 'hsla(222,60%,12%,1)' }
+    { from: "hsla(30,40%,99%,1)", via: "hsla(40,90%,96%,1)", to: "hsla(35,70%,90%,1)" },
+    { from: "hsla(222,84%,5%,1)", via: "hsla(220,70%,18%,1)", to: "hsla(222,60%,12%,1)" },
   );
 
   return (
     <div
       className="relative min-h-screen text-foreground transition-colors duration-300"
       style={
-        theme === 'dark'
+        theme === "dark"
           ? { backgroundImage: `${gradients.darkBase}, ${gradients.darkOverlay}` }
           : { backgroundImage: gradients.lightGradient }
       }
     >
       {/* Header */}
-      <header className="fixed top-0 w-full bg-orange-100/80 dark:bg-black/20 backdrop-blur-md z-40 border-b border-orange-200/50 dark:border-white/10">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link to="/" className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent hover:opacity-80 transition-opacity cursor-pointer">
+      <header className="fixed top-0 z-40 w-full border-b border-orange-200/50 bg-orange-100/80 backdrop-blur-md dark:border-white/10 dark:bg-black/20">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <Link
+            to="/"
+            className="cursor-pointer bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-xl font-bold text-transparent transition-opacity hover:opacity-80 dark:from-purple-400 dark:to-blue-400"
+          >
             Dawid Hanrahan
           </Link>
           <div className="flex items-center gap-4">
-            <nav className="hidden md:flex space-x-8">
-              <Link to="/" className="hover:text-orange-600 dark:hover:text-purple-400 transition-colors py-2">{t.nav.home}</Link>
-              <Link to="/experience" className="hover:text-orange-600 dark:hover:text-purple-400 transition-colors py-2">{t.nav.experience}</Link>
-              <span className="text-orange-600 dark:text-purple-400 py-2 cursor-default">{t.nav.academic}</span>
+            <nav className="hidden space-x-8 md:flex">
+              <Link
+                to="/"
+                className="py-2 transition-colors hover:text-orange-600 dark:hover:text-purple-400"
+              >
+                {t.nav.home}
+              </Link>
+              <Link
+                to="/experience"
+                className="py-2 transition-colors hover:text-orange-600 dark:hover:text-purple-400"
+              >
+                {t.nav.experience}
+              </Link>
+              <span className="cursor-default py-2 text-orange-600 dark:text-purple-400">
+                {t.nav.academic}
+              </span>
             </nav>
             <Button
               variant="ghost"
@@ -94,30 +118,47 @@ const Academic = () => {
               onClick={() => setIsSettingsOpen(true)}
               className="rounded-full hover:bg-orange-100/50 dark:hover:bg-white/10"
             >
-              <Settings className="w-5 h-5" />
+              <Settings className="h-5 w-5" />
             </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="pt-32 pb-20 px-6">
-        <div className="max-w-4xl mx-auto">
+      <main className="px-6 pb-20 pt-32">
+        <div className="mx-auto max-w-4xl">
           {/* Hero Section */}
-          <div className="text-center mb-16">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400 mx-auto mb-6 flex items-center justify-center">
-              <GraduationCap className="w-12 h-12 text-white" />
+          <div className="mb-16 text-center">
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400">
+              <GraduationCap className="h-12 w-12 text-white" />
             </div>
-            <h1 className="text-5xl font-bold mb-6">
-              <Reveal as="span" direction="right" offset={48} className="inline-block mr-2 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-                {t.academic.title.split(' ').slice(0, Math.ceil(t.academic.title.split(' ').length/2)).join(' ')}
+            <h1 className="mb-6 text-5xl font-bold">
+              <Reveal
+                as="span"
+                direction="right"
+                offset={48}
+                className="mr-2 inline-block bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400"
+              >
+                {t.academic.title
+                  .split(" ")
+                  .slice(0, Math.ceil(t.academic.title.split(" ").length / 2))
+                  .join(" ")}
               </Reveal>
-              <Reveal as="span" direction="left" delayMs={80} offset={48} className="inline-block bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-                {t.academic.title.split(' ').slice(Math.ceil(t.academic.title.split(' ').length/2)).join(' ')}
+              <Reveal
+                as="span"
+                direction="left"
+                delayMs={80}
+                offset={48}
+                className="inline-block bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400"
+              >
+                {t.academic.title
+                  .split(" ")
+                  .slice(Math.ceil(t.academic.title.split(" ").length / 2))
+                  .join(" ")}
               </Reveal>
             </h1>
             <Reveal direction="up" delayMs={120}>
-              <p className="text-xl text-muted-foreground max-w-4xl mx-auto">
+              <p className="mx-auto max-w-4xl text-xl text-muted-foreground">
                 {t.academic.subtitle}
               </p>
             </Reveal>
@@ -126,37 +167,41 @@ const Academic = () => {
           {/* Academic Information */}
           <section className="mb-20">
             {loading ? (
-              <div className="flex justify-center items-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 dark:border-purple-400"></div>
+              <div className="flex items-center justify-center py-20">
+                <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-orange-600 dark:border-purple-400"></div>
               </div>
             ) : error ? (
-              <div className="text-center py-20">
-                <p className="text-red-500 dark:text-red-400 text-lg">{t.academic.error}</p>
-                <Button 
-                  onClick={() => window.location.reload()} 
+              <div className="py-20 text-center">
+                <p className="text-lg text-red-500 dark:text-red-400">{t.academic.error}</p>
+                <Button
+                  onClick={() => window.location.reload()}
                   className="mt-4 bg-orange-600 hover:bg-orange-700 dark:bg-purple-600 dark:hover:bg-purple-700"
                 >
                   {t.academic.tryAgain}
                 </Button>
               </div>
             ) : schools.length === 0 ? (
-              <div className="text-center py-20">
-                <p className="text-muted-foreground text-lg">{t.academic.noData}</p>
+              <div className="py-20 text-center">
+                <p className="text-lg text-muted-foreground">{t.academic.noData}</p>
               </div>
             ) : (
               <div className="space-y-8">
                 {schools.map((school, idx) => (
-                  <Reveal key={school.id} direction={idx % 2 === 0 ? 'right' : 'left'} delayMs={idx * 60}>
-                    <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300">
+                  <Reveal
+                    key={school.id}
+                    direction={idx % 2 === 0 ? "right" : "left"}
+                    delayMs={idx * 60}
+                  >
+                    <Card className="border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
                       <CardHeader>
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                           <Reveal direction="right" delayMs={0}>
                             <div>
-                              <CardTitle className="text-card-foreground text-2xl mb-2">
+                              <CardTitle className="mb-2 text-2xl text-card-foreground">
                                 {school.study}
                               </CardTitle>
-                              <div className="flex items-center gap-2 text-orange-600 dark:text-purple-400 mb-2">
-                                <GraduationCap className="w-5 h-5" />
+                              <div className="mb-2 flex items-center gap-2 text-orange-600 dark:text-purple-400">
+                                <GraduationCap className="h-5 w-5" />
                                 <span className="text-lg font-semibold">{school.university}</span>
                               </div>
                             </div>
@@ -164,7 +209,7 @@ const Academic = () => {
                           <Reveal direction="left" delayMs={60}>
                             <div className="flex flex-col gap-2 md:text-right">
                               <div className="flex items-center gap-2 text-muted-foreground">
-                                <Calendar className="w-4 h-4" />
+                                <Calendar className="h-4 w-4" />
                                 <span>{school.period}</span>
                               </div>
                             </div>
@@ -175,24 +220,32 @@ const Academic = () => {
                         <div className="space-y-6">
                           {school.research && (
                             <div>
-                              <h4 className="text-card-foreground font-semibold mb-3">{t.academic.researchFocus}</h4>
-                              <p className="text-muted-foreground">
-                                {school.research}
-                              </p>
+                              <h4 className="mb-3 font-semibold text-card-foreground">
+                                {t.academic.researchFocus}
+                              </h4>
+                              <p className="text-muted-foreground">{school.research}</p>
                             </div>
                           )}
                           {school.advisor && (
                             <div>
-                              <h4 className="text-card-foreground font-semibold mb-3">{t.academic.advisor}</h4>
+                              <h4 className="mb-3 font-semibold text-card-foreground">
+                                {t.academic.advisor}
+                              </h4>
                               <p className="text-muted-foreground">{school.advisor}</p>
                             </div>
                           )}
                           {school.areas.length > 0 && (
                             <div>
-                              <h4 className="text-card-foreground font-semibold mb-3">{t.academic.researchAreas}</h4>
+                              <h4 className="mb-3 font-semibold text-card-foreground">
+                                {t.academic.researchAreas}
+                              </h4>
                               <div className="flex flex-wrap gap-2">
                                 {school.areas.map((area, i) => (
-                                  <Badge key={i} variant="secondary" className="bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-700 border-orange-400/30 dark:from-purple-500/20 dark:to-blue-500/20 dark:text-purple-300 dark:border-purple-400/30">
+                                  <Badge
+                                    key={i}
+                                    variant="secondary"
+                                    className="border-orange-400/30 bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-700 dark:border-purple-400/30 dark:from-purple-500/20 dark:to-blue-500/20 dark:text-purple-300"
+                                  >
                                     {area}
                                   </Badge>
                                 ))}
@@ -210,46 +263,67 @@ const Academic = () => {
 
           {/* Publications */}
           <section className="mb-20">
-            <h2 className="text-4xl font-bold mb-12 text-center">
-              <Reveal as="span" direction="right" offset={40} className="inline-block mr-2 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-                {t.academic.publications.split(' ').slice(0, Math.ceil(t.academic.publications.split(' ').length/2)).join(' ')}
+            <h2 className="mb-12 text-center text-4xl font-bold">
+              <Reveal
+                as="span"
+                direction="right"
+                offset={40}
+                className="mr-2 inline-block bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400"
+              >
+                {t.academic.publications
+                  .split(" ")
+                  .slice(0, Math.ceil(t.academic.publications.split(" ").length / 2))
+                  .join(" ")}
               </Reveal>
-              <Reveal as="span" direction="left" delayMs={80} offset={40} className="inline-block bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-                {t.academic.publications.split(' ').slice(Math.ceil(t.academic.publications.split(' ').length/2)).join(' ')}
+              <Reveal
+                as="span"
+                direction="left"
+                delayMs={80}
+                offset={40}
+                className="inline-block bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400"
+              >
+                {t.academic.publications
+                  .split(" ")
+                  .slice(Math.ceil(t.academic.publications.split(" ").length / 2))
+                  .join(" ")}
               </Reveal>
             </h2>
             {loading ? (
-              <div className="flex justify-center items-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 dark:border-purple-400"></div>
+              <div className="flex items-center justify-center py-20">
+                <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-orange-600 dark:border-purple-400"></div>
               </div>
             ) : error ? (
-              <div className="text-center py-20">
-                <p className="text-red-500 dark:text-red-400 text-lg">{t.academic.error}</p>
-                <Button 
-                  onClick={() => window.location.reload()} 
+              <div className="py-20 text-center">
+                <p className="text-lg text-red-500 dark:text-red-400">{t.academic.error}</p>
+                <Button
+                  onClick={() => window.location.reload()}
                   className="mt-4 bg-orange-600 hover:bg-orange-700 dark:bg-purple-600 dark:hover:bg-purple-700"
                 >
                   {t.academic.tryAgain}
                 </Button>
               </div>
             ) : publications.length === 0 ? (
-              <div className="text-center py-20">
-                <p className="text-muted-foreground text-lg">{t.academic.noPublications}</p>
+              <div className="py-20 text-center">
+                <p className="text-lg text-muted-foreground">{t.academic.noPublications}</p>
               </div>
             ) : (
               <div className="space-y-6">
                 {publications.map((pub, idx) => (
-                  <Reveal key={pub.id} direction={idx % 2 === 0 ? 'right' : 'left'} delayMs={idx * 60}>
-                    <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300">
+                  <Reveal
+                    key={pub.id}
+                    direction={idx % 2 === 0 ? "right" : "left"}
+                    delayMs={idx * 60}
+                  >
+                    <Card className="border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
                       <CardHeader>
-                        <div className="flex justify-between items-start gap-4">
+                        <div className="flex items-start justify-between gap-4">
                           <Reveal direction="right">
                             <div className="flex-1">
-                              <CardTitle className="text-card-foreground text-xl mb-2 flex items-start gap-3">
-                                <BookOpen className="w-6 h-6 text-orange-600 dark:text-purple-400 mt-1 flex-shrink-0" />
+                              <CardTitle className="mb-2 flex items-start gap-3 text-xl text-card-foreground">
+                                <BookOpen className="mt-1 h-6 w-6 flex-shrink-0 text-orange-600 dark:text-purple-400" />
                                 {pub.title}
                               </CardTitle>
-                              <div className="flex flex-wrap items-center gap-4 text-muted-foreground mb-3">
+                              <div className="mb-3 flex flex-wrap items-center gap-4 text-muted-foreground">
                                 <span className="font-medium">{pub.journal}</span>
                                 <span>•</span>
                                 <span>{pub.year}</span>
@@ -258,13 +332,13 @@ const Academic = () => {
                           </Reveal>
                           {pub.link && (
                             <Reveal direction="left" delayMs={60}>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 className="border-orange-400/30 hover:border-orange-500 dark:border-purple-400/30 dark:hover:border-purple-400"
-                                onClick={() => window.open(pub.link, '_blank')}
+                                onClick={() => window.open(pub.link, "_blank")}
                               >
-                                <ExternalLink className="w-4 h-4 mr-2" />
+                                <ExternalLink className="mr-2 h-4 w-4" />
                                 {t.academic.view}
                               </Button>
                             </Reveal>
@@ -285,42 +359,62 @@ const Academic = () => {
 
           {/* Student Testimonials */}
           <section>
-            <h2 className="text-4xl font-bold mb-12 text-center">
-              <Reveal as="span" direction="right" offset={40} className="inline-block mr-2 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-                {t.academic.studentTestimonials.split(' ').slice(0, Math.ceil(t.academic.studentTestimonials.split(' ').length/2)).join(' ')}
+            <h2 className="mb-12 text-center text-4xl font-bold">
+              <Reveal
+                as="span"
+                direction="right"
+                offset={40}
+                className="mr-2 inline-block bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400"
+              >
+                {t.academic.studentTestimonials
+                  .split(" ")
+                  .slice(0, Math.ceil(t.academic.studentTestimonials.split(" ").length / 2))
+                  .join(" ")}
               </Reveal>
-              <Reveal as="span" direction="left" delayMs={80} offset={40} className="inline-block bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-                {t.academic.studentTestimonials.split(' ').slice(Math.ceil(t.academic.studentTestimonials.split(' ').length/2)).join(' ')}
+              <Reveal
+                as="span"
+                direction="left"
+                delayMs={80}
+                offset={40}
+                className="inline-block bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400"
+              >
+                {t.academic.studentTestimonials
+                  .split(" ")
+                  .slice(Math.ceil(t.academic.studentTestimonials.split(" ").length / 2))
+                  .join(" ")}
               </Reveal>
             </h2>
             {loading ? (
-              <div className="flex justify-center items-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 dark:border-purple-400"></div>
+              <div className="flex items-center justify-center py-20">
+                <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-orange-600 dark:border-purple-400"></div>
               </div>
             ) : error ? (
-              <div className="text-center py-20">
-                <p className="text-red-500 dark:text-red-400 text-lg">{t.academic.error}</p>
-                <Button 
-                  onClick={() => window.location.reload()} 
+              <div className="py-20 text-center">
+                <p className="text-lg text-red-500 dark:text-red-400">{t.academic.error}</p>
+                <Button
+                  onClick={() => window.location.reload()}
                   className="mt-4 bg-orange-600 hover:bg-orange-700 dark:bg-purple-600 dark:hover:bg-purple-700"
                 >
                   {t.academic.tryAgain}
                 </Button>
               </div>
             ) : testimonials.length === 0 ? (
-              <div className="text-center py-20">
-                <p className="text-muted-foreground text-lg">{t.academic.noTestimonials}</p>
+              <div className="py-20 text-center">
+                <p className="text-lg text-muted-foreground">{t.academic.noTestimonials}</p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {testimonials.map((testimonial) => (
-                  <Card key={testimonial.id} className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300">
+                  <Card
+                    key={testimonial.id}
+                    className="border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                  >
                     <CardHeader>
-                      <div className="flex items-center gap-3 mb-3">
-                        <Quote className="w-6 h-6 text-orange-600 dark:text-purple-400" />
+                      <div className="mb-3 flex items-center gap-3">
+                        <Quote className="h-6 w-6 text-orange-600 dark:text-purple-400" />
                         <div className="flex">{renderStars(testimonial.rating)}</div>
                       </div>
-                      <CardTitle className="text-card-foreground text-lg">
+                      <CardTitle className="text-lg text-card-foreground">
                         {testimonial.name}
                       </CardTitle>
                       <CardDescription className="text-muted-foreground">
@@ -328,7 +422,7 @@ const Academic = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-muted-foreground italic leading-relaxed">
+                      <p className="italic leading-relaxed text-muted-foreground">
                         "{testimonial.text}"
                       </p>
                     </CardContent>

@@ -1,21 +1,35 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  Brain,
+  ChevronLeft,
+  ChevronRight,
+  Code,
+  Database,
+  ExternalLink,
+  Github,
+  Linkedin,
+  Mail,
+  MessageSquare,
+  Server,
+  Settings,
+  User,
+} from "lucide-react";
 
-import { useEffect, useState } from 'react';
-import { MessageSquare, Github, Linkedin, Mail, Settings, User, Code, Database, Brain, Server, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import ChatWidget from '@/components/ChatWidget';
-import SettingsPanel from '@/components/SettingsPanel';
-import { useSettings } from '@/contexts/SettingsContext';
-import { translations } from '@/utils/translations';
-import { env } from '@/config/env';
-import { fetchProjects } from '@/lib/projectsService';
-import { fetchSkills } from '@/lib/skillsService';
-import type { UiSkill } from '@/lib/skillsService';
-import type { UiProject } from '@/lib/projectsService';
-import { Link } from 'react-router-dom';
-import Reveal from '@/components/Reveal';
-import { useScrollGradient } from '@/hooks/use-scroll-gradient';
+import ChatWidget from "@/components/ChatWidget";
+import Reveal from "@/components/Reveal";
+import SettingsPanel from "@/components/SettingsPanel";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { env } from "@/config/env";
+import { useSettings } from "@/contexts/SettingsContext";
+import { useScrollGradient } from "@/hooks/use-scroll-gradient";
+import type { UiProject } from "@/lib/projectsService";
+import { fetchProjects } from "@/lib/projectsService";
+import type { UiSkill } from "@/lib/skillsService";
+import { fetchSkills } from "@/lib/skillsService";
+import { translations } from "@/utils/translations";
 
 const Index = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -23,28 +37,39 @@ const Index = () => {
   const [isHomeDropdownOpen, setIsHomeDropdownOpen] = useState(false);
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
   const { language, theme } = useSettings();
-  
+
   const t = translations[language];
   const gradients = useScrollGradient(
-    { from: 'hsla(30,40%,99%,1)', via: 'hsla(40,90%,96%,1)', to: 'hsla(35,70%,90%,1)' },
-    { from: 'hsla(222,84%,5%,1)', via: 'hsla(220,70%,18%,1)', to: 'hsla(222,60%,12%,1)' }
+    { from: "hsla(30,40%,99%,1)", via: "hsla(40,90%,96%,1)", to: "hsla(35,70%,90%,1)" },
+    { from: "hsla(222,84%,5%,1)", via: "hsla(220,70%,18%,1)", to: "hsla(222,60%,12%,1)" },
   );
 
   // Build About title halves for side-to-center reveal
-  const aboutTitleWords = t.about.title.split(' ');
+  const aboutTitleWords = t.about.title.split(" ");
   const aboutTitleMidIndex = Math.ceil(aboutTitleWords.length / 2);
-  const aboutTitleLeft = aboutTitleWords.slice(0, aboutTitleMidIndex).join(' ');
-  const aboutTitleRight = aboutTitleWords.slice(aboutTitleMidIndex).join(' ');
+  const aboutTitleLeft = aboutTitleWords.slice(0, aboutTitleMidIndex).join(" ");
+  const aboutTitleRight = aboutTitleWords.slice(aboutTitleMidIndex).join(" ");
 
   const renderTwoWordAnimatedTitle = (title: string, gradientClass: string) => {
     const words = title.trim().split(/\s+/);
     if (words.length === 2) {
       return (
         <>
-          <Reveal as="span" direction="right" offset={48} className={`inline-block mr-2 ${gradientClass} bg-clip-text text-transparent`}>
+          <Reveal
+            as="span"
+            direction="right"
+            offset={48}
+            className={`mr-2 inline-block ${gradientClass} bg-clip-text text-transparent`}
+          >
             {words[0]}
           </Reveal>
-          <Reveal as="span" direction="left" delayMs={80} offset={48} className={`inline-block ${gradientClass} bg-clip-text text-transparent`}>
+          <Reveal
+            as="span"
+            direction="left"
+            delayMs={80}
+            offset={48}
+            className={`inline-block ${gradientClass} bg-clip-text text-transparent`}
+          >
             {words[1]}
           </Reveal>
         </>
@@ -54,28 +79,50 @@ const Index = () => {
   };
 
   const sampleSkills: UiSkill[] = [
-    { icon: Code, name: "Python", level: "Expert", description: "Backend development, APIs, automation" },
-    { icon: Database, name: "Databases", level: "Advanced", description: "PostgreSQL, MongoDB, Redis" },
-    { icon: Brain, name: "LLMs & RAG", level: "Expert", description: "Pipeline development, vector databases" },
-    { icon: Server, name: "Infrastructure", level: "Advanced", description: "AWS, Docker, Kubernetes" }
+    {
+      icon: Code,
+      name: "Python",
+      level: "Expert",
+      description: "Backend development, APIs, automation",
+    },
+    {
+      icon: Database,
+      name: "Databases",
+      level: "Advanced",
+      description: "PostgreSQL, MongoDB, Redis",
+    },
+    {
+      icon: Brain,
+      name: "LLMs & RAG",
+      level: "Expert",
+      description: "Pipeline development, vector databases",
+    },
+    {
+      icon: Server,
+      name: "Infrastructure",
+      level: "Advanced",
+      description: "AWS, Docker, Kubernetes",
+    },
   ];
 
   const sampleProjects: UiProject[] = [
     {
       title: "Intelligent Document RAG System",
-      description: "Built a sophisticated RAG pipeline for document analysis using vector embeddings and LLMs",
+      description:
+        "Built a sophisticated RAG pipeline for document analysis using vector embeddings and LLMs",
       technologies: ["Python", "LangChain", "ChromaDB", "OpenAI"],
       github: "#",
       demo: "#",
-      image: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?w=400&h=300&fit=crop"
+      image: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?w=400&h=300&fit=crop",
     },
     {
       title: "Scalable Backend Architecture",
-      description: "Designed and implemented microservices architecture handling 1M+ requests daily",
+      description:
+        "Designed and implemented microservices architecture handling 1M+ requests daily",
       technologies: ["Python", "FastAPI", "PostgreSQL", "Redis"],
       github: "#",
       demo: "#",
-      image: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=400&h=300&fit=crop"
+      image: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=400&h=300&fit=crop",
     },
     {
       title: "Infrastructure Automation Suite",
@@ -83,8 +130,8 @@ const Index = () => {
       technologies: ["Python", "Terraform", "AWS", "Docker"],
       github: "#",
       demo: "#",
-      image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop"
-    }
+      image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop",
+    },
   ];
 
   const [projects, setProjects] = useState<UiProject[]>(sampleProjects);
@@ -95,8 +142,7 @@ const Index = () => {
     fetchProjects(language)
       .then(setProjects)
       .catch((err) => {
-        // eslint-disable-next-line no-console
-        console.error('Failed to fetch projects, falling back to sample data:', err);
+        console.error("Failed to fetch projects, falling back to sample data:", err);
         setProjects(sampleProjects);
       });
   }, [language]);
@@ -106,8 +152,7 @@ const Index = () => {
     fetchSkills(language)
       .then(setSkills)
       .catch((err) => {
-        // eslint-disable-next-line no-console
-        console.error('Failed to fetch skills, falling back to sample data:', err);
+        console.error("Failed to fetch skills, falling back to sample data:", err);
         setSkills(sampleSkills);
       });
   }, [language]);
@@ -115,13 +160,13 @@ const Index = () => {
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      element.scrollIntoView({ behavior: "smooth" });
     }
     setIsHomeDropdownOpen(false);
   };
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
     setIsHomeDropdownOpen(false);
   };
 
@@ -138,15 +183,11 @@ const Index = () => {
   };
 
   const nextProject = () => {
-    setCurrentProjectIndex((prevIndex) => 
-      (prevIndex + 1) % projects.length
-    );
+    setCurrentProjectIndex((prevIndex) => (prevIndex + 1) % projects.length);
   };
 
   const prevProject = () => {
-    setCurrentProjectIndex((prevIndex) => 
-      prevIndex === 0 ? projects.length - 1 : prevIndex - 1
-    );
+    setCurrentProjectIndex((prevIndex) => (prevIndex === 0 ? projects.length - 1 : prevIndex - 1));
   };
 
   const getVisibleProjects = () => {
@@ -162,64 +203,74 @@ const Index = () => {
     <div
       className="relative min-h-screen text-foreground transition-colors duration-300"
       style={
-        theme === 'dark'
+        theme === "dark"
           ? { backgroundImage: `${gradients.darkBase}, ${gradients.darkOverlay}` }
           : { backgroundImage: gradients.lightGradient }
       }
     >
       {/* Header */}
-      <header className="fixed top-0 w-full bg-orange-100/80 dark:bg-black/20 backdrop-blur-md z-40 border-b border-orange-200/50 dark:border-white/10">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+      <header className="fixed top-0 z-40 w-full border-b border-orange-200/50 bg-orange-100/80 backdrop-blur-md dark:border-white/10 dark:bg-black/20">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link
             to="/"
-            className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent hover:opacity-80 transition-opacity cursor-pointer"
+            className="cursor-pointer bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-xl font-bold text-transparent transition-opacity hover:opacity-80 dark:from-purple-400 dark:to-blue-400"
           >
             Dawid Hanrahan
           </Link>
           <div className="flex items-center gap-4">
-            <nav className="hidden md:flex space-x-8">
-              <div 
+            <nav className="hidden space-x-8 md:flex">
+              <div
                 className="relative"
                 onMouseEnter={handleHomeAreaEnter}
                 onMouseLeave={handleHomeAreaLeave}
               >
-                <button 
+                <button
                   onClick={scrollToTop}
-                  className="text-orange-600 hover:text-orange-500 dark:text-purple-400 dark:hover:text-purple-300 transition-colors py-2"
+                  className="py-2 text-orange-600 transition-colors hover:text-orange-500 dark:text-purple-400 dark:hover:text-purple-300"
                 >
                   {t.nav.home}
                 </button>
                 {isHomeDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-0 bg-orange-50/95 dark:bg-black/95 backdrop-blur-md border border-orange-200/50 dark:border-white/10 rounded-lg shadow-lg py-2 min-w-[120px] z-50">
+                  <div className="absolute left-0 top-full z-50 mt-0 min-w-[120px] rounded-lg border border-orange-200/50 bg-orange-50/95 py-2 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-black/95">
                     <button
-                      onClick={() => handleDropdownItemClick('about')}
-                      className="block w-full text-left px-4 py-2 text-orange-800 hover:text-orange-600 hover:bg-orange-100/50 dark:text-white dark:hover:text-purple-400 dark:hover:bg-white/10 transition-colors"
+                      onClick={() => handleDropdownItemClick("about")}
+                      className="block w-full px-4 py-2 text-left text-orange-800 transition-colors hover:bg-orange-100/50 hover:text-orange-600 dark:text-white dark:hover:bg-white/10 dark:hover:text-purple-400"
                     >
                       {t.nav.about}
                     </button>
                     <button
-                      onClick={() => handleDropdownItemClick('skills')}
-                      className="block w-full text-left px-4 py-2 text-orange-800 hover:text-orange-600 hover:bg-orange-100/50 dark:text-white dark:hover:text-purple-400 dark:hover:bg-white/10 transition-colors"
+                      onClick={() => handleDropdownItemClick("skills")}
+                      className="block w-full px-4 py-2 text-left text-orange-800 transition-colors hover:bg-orange-100/50 hover:text-orange-600 dark:text-white dark:hover:bg-white/10 dark:hover:text-purple-400"
                     >
                       {t.nav.skills}
                     </button>
                     <button
-                      onClick={() => handleDropdownItemClick('projects')}
-                      className="block w-full text-left px-4 py-2 text-orange-800 hover:text-orange-600 hover:bg-orange-100/50 dark:text-white dark:hover:text-purple-400 dark:hover:bg-white/10 transition-colors"
+                      onClick={() => handleDropdownItemClick("projects")}
+                      className="block w-full px-4 py-2 text-left text-orange-800 transition-colors hover:bg-orange-100/50 hover:text-orange-600 dark:text-white dark:hover:bg-white/10 dark:hover:text-purple-400"
                     >
                       {t.nav.projects}
                     </button>
                     <button
-                      onClick={() => handleDropdownItemClick('contact')}
-                      className="block w-full text-left px-4 py-2 text-orange-800 hover:text-orange-600 hover:bg-orange-100/50 dark:text-white dark:hover:text-purple-400 dark:hover:bg-white/10 transition-colors"
+                      onClick={() => handleDropdownItemClick("contact")}
+                      className="block w-full px-4 py-2 text-left text-orange-800 transition-colors hover:bg-orange-100/50 hover:text-orange-600 dark:text-white dark:hover:bg-white/10 dark:hover:text-purple-400"
                     >
                       {t.nav.contact}
                     </button>
                   </div>
                 )}
               </div>
-              <Link to="/experience" className="hover:text-orange-600 dark:hover:text-purple-400 transition-colors py-2">{t.nav.experience}</Link>
-              <Link to="/academic" className="hover:text-orange-600 dark:hover:text-purple-400 transition-colors py-2">{t.nav.academic}</Link>
+              <Link
+                to="/experience"
+                className="py-2 transition-colors hover:text-orange-600 dark:hover:text-purple-400"
+              >
+                {t.nav.experience}
+              </Link>
+              <Link
+                to="/academic"
+                className="py-2 transition-colors hover:text-orange-600 dark:hover:text-purple-400"
+              >
+                {t.nav.academic}
+              </Link>
             </nav>
             <Button
               variant="ghost"
@@ -227,39 +278,52 @@ const Index = () => {
               onClick={() => setIsSettingsOpen(true)}
               className="rounded-full hover:bg-orange-100/50 dark:hover:bg-white/10"
             >
-              <Settings className="w-5 h-5" />
+              <Settings className="h-5 w-5" />
             </Button>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section id="hero" className="pt-32 pb-20 px-6">
-        <div className="max-w-6xl mx-auto text-center">
+      <section id="hero" className="px-6 pb-20 pt-32">
+        <div className="mx-auto max-w-6xl text-center">
           <Reveal direction="up" delayMs={50}>
             <div className="mb-8">
               <img
                 src="/profile-picture.jpg"
                 alt="Profile picture"
-                className="w-32 h-32 rounded-full mx-auto mb-6 object-cover"
+                className="mx-auto mb-6 h-32 w-32 rounded-full object-cover"
               />
             </div>
           </Reveal>
-          <Reveal as="h1" direction="up" delayMs={100} className="text-5xl md:text-7xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-orange-600 via-red-500 to-orange-600 dark:from-purple-400 dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent shine-title" data-text={t.hero.title}>
+          <Reveal
+            as="h1"
+            direction="up"
+            delayMs={100}
+            className="mb-6 text-5xl font-bold md:text-7xl"
+          >
+            <span
+              className="shine-title bg-gradient-to-r from-orange-600 via-red-500 to-orange-600 bg-clip-text text-transparent dark:from-purple-400 dark:via-blue-400 dark:to-purple-400"
+              data-text={t.hero.title}
+            >
               {t.hero.title}
             </span>
           </Reveal>
-          <Reveal as="p" direction="up" delayMs={150} className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-5xl mx-auto">
+          <Reveal
+            as="p"
+            direction="up"
+            delayMs={150}
+            className="mx-auto mb-8 max-w-5xl text-xl text-muted-foreground md:text-2xl"
+          >
             {t.hero.subtitle}
           </Reveal>
           <Reveal direction="up" delayMs={200}>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button 
+            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Button
                 onClick={() => setIsChatOpen(true)}
-                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 dark:from-purple-500 dark:to-blue-500 dark:hover:from-purple-600 dark:hover:to-blue-600 text-white px-8 py-3 rounded-full text-lg font-semibold transition-all duration-300 hover:scale-105"
+                className="rounded-full bg-gradient-to-r from-orange-500 to-red-500 px-8 py-3 text-lg font-semibold text-white transition-all duration-300 hover:scale-105 hover:from-orange-600 hover:to-red-600 dark:from-purple-500 dark:to-blue-500 dark:hover:from-purple-600 dark:hover:to-blue-600"
               >
-                <MessageSquare className="w-5 h-5 mr-2" />
+                <MessageSquare className="mr-2 h-5 w-5" />
                 {t.hero.askAI}
               </Button>
               <div className="flex gap-4">
@@ -270,7 +334,7 @@ const Index = () => {
                   asChild
                 >
                   <a href="https://github.com/SatoriAI" target="_blank" rel="noopener noreferrer">
-                    <Github className="w-5 h-5" />
+                    <Github className="h-5 w-5" />
                   </a>
                 </Button>
                 <Button
@@ -280,7 +344,7 @@ const Index = () => {
                   asChild
                 >
                   <a href="mailto:dawidhanrahan@gmail.com">
-                    <Mail className="w-5 h-5" />
+                    <Mail className="h-5 w-5" />
                   </a>
                 </Button>
               </div>
@@ -290,43 +354,55 @@ const Index = () => {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-20 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold mb-6">
-              <Reveal as="span" direction="right" delayMs={0} offset={48} className="inline-block mr-2 bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
+      <section id="about" className="px-6 py-20">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-16 text-center">
+            <h2 className="mb-6 text-5xl font-bold">
+              <Reveal
+                as="span"
+                direction="right"
+                delayMs={0}
+                offset={48}
+                className="mr-2 inline-block bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400"
+              >
                 {aboutTitleLeft}
               </Reveal>
               {aboutTitleRight && (
-                <Reveal as="span" direction="left" delayMs={80} offset={48} className="inline-block bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
+                <Reveal
+                  as="span"
+                  direction="left"
+                  delayMs={80}
+                  offset={48}
+                  className="inline-block bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400"
+                >
                   {aboutTitleRight}
                 </Reveal>
               )}
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid items-center gap-12 md:grid-cols-2">
             <div>
               <Reveal direction="right" delayMs={0} offset={48}>
-                <p className="text-lg text-muted-foreground mb-6 leading-relaxed text-justify">
+                <p className="mb-6 text-justify text-lg leading-relaxed text-muted-foreground">
                   {t.about.paragraph1}
                 </p>
               </Reveal>
               <Reveal direction="right" delayMs={140} offset={48}>
-                <p className="text-lg text-muted-foreground mb-6 leading-relaxed text-justify">
+                <p className="mb-6 text-justify text-lg leading-relaxed text-muted-foreground">
                   {t.about.paragraph2}
                 </p>
               </Reveal>
             </div>
             <Reveal direction="left" delayMs={100} offset={48}>
-              <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
+              <Card className="border-orange-200/50 bg-orange-50/50 dark:border-white/10 dark:bg-white/5">
                 <CardHeader>
-                  <CardTitle className="text-card-foreground text-center">{t.about.philosophy}</CardTitle>
+                  <CardTitle className="text-center text-card-foreground">
+                    {t.about.philosophy}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="text-muted-foreground">
-                  <p className="text-justify">
-                    {t.about.philosophyText}
-                  </p>
+                  <p className="text-justify">{t.about.philosophyText}</p>
                 </CardContent>
               </Card>
             </Reveal>
@@ -335,37 +411,43 @@ const Index = () => {
       </section>
 
       {/* Skills Section */}
-      <section id="skills" className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
+      <section id="skills" className="px-6 py-20">
+        <div className="mx-auto max-w-6xl">
           <Reveal direction="up">
-            <div className="text-center mb-16">
-              <h2 className="text-5xl font-bold mb-6">
-                {renderTwoWordAnimatedTitle(t.skills.title, 'bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400')}
+            <div className="mb-16 text-center">
+              <h2 className="mb-6 text-5xl font-bold">
+                {renderTwoWordAnimatedTitle(
+                  t.skills.title,
+                  "bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400",
+                )}
               </h2>
-              <p className="text-xl text-muted-foreground max-w-4xl mx-auto">
-                {t.skills.subtitle}
-              </p>
+              <p className="mx-auto max-w-4xl text-xl text-muted-foreground">{t.skills.subtitle}</p>
             </div>
           </Reveal>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {skills.map((skill, index) => (
               <Reveal
                 key={index}
-                direction={index % 2 === 0 ? 'left' : 'right'}
+                direction={index % 2 === 0 ? "left" : "right"}
                 delayMs={index * 60}
               >
-                <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300 hover:scale-105 min-h-[280px] max-h-[320px] flex flex-col">
-                  <CardHeader className="text-center flex flex-col items-center justify-center flex-shrink-0">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400 rounded-full flex items-center justify-center">
-                      <skill.icon className="w-8 h-8 text-white" />
+                <Card className="flex max-h-[320px] min-h-[280px] flex-col border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:scale-105 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
+                  <CardHeader className="flex flex-shrink-0 flex-col items-center justify-center text-center">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400">
+                      <skill.icon className="h-8 w-8 text-white" />
                     </div>
-                    <CardTitle className="text-card-foreground text-lg min-h-[1.5rem] flex items-center justify-center">{skill.name}</CardTitle>
-                    <Badge variant="secondary" className="bg-orange-500/20 text-orange-700 border-orange-500/30 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30 justify-center mt-2">
+                    <CardTitle className="flex min-h-[1.5rem] items-center justify-center text-lg text-card-foreground">
+                      {skill.name}
+                    </CardTitle>
+                    <Badge
+                      variant="secondary"
+                      className="mt-2 justify-center border-orange-500/30 bg-orange-500/20 text-orange-700 dark:border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-300"
+                    >
                       {skill.level}
                     </Badge>
                   </CardHeader>
-                  <CardContent className="flex-grow flex items-start justify-center pt-0 px-4">
-                    <p className="text-muted-foreground text-center text-sm leading-relaxed">
+                  <CardContent className="flex flex-grow items-start justify-center px-4 pt-0">
+                    <p className="text-center text-sm leading-relaxed text-muted-foreground">
                       {skill.description}
                     </p>
                   </CardContent>
@@ -377,14 +459,17 @@ const Index = () => {
       </section>
 
       {/* Projects Section */}
-      <section id="projects" className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
+      <section id="projects" className="px-6 py-20">
+        <div className="mx-auto max-w-6xl">
           <Reveal direction="up">
-            <div className="text-center mb-16">
-              <h2 className="text-5xl font-bold mb-6">
-                {renderTwoWordAnimatedTitle(t.projects.title, 'bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400')}
+            <div className="mb-16 text-center">
+              <h2 className="mb-6 text-5xl font-bold">
+                {renderTwoWordAnimatedTitle(
+                  t.projects.title,
+                  "bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400",
+                )}
               </h2>
-              <p className="text-xl text-muted-foreground max-w-4xl mx-auto">
+              <p className="mx-auto max-w-4xl text-xl text-muted-foreground">
                 {t.projects.subtitle}
               </p>
             </div>
@@ -396,48 +481,54 @@ const Index = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 dark:bg-black/90 backdrop-blur-sm border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400 shadow-lg"
+                  className="absolute left-0 top-1/2 z-10 -translate-y-1/2 border-orange-300 bg-white/90 shadow-lg backdrop-blur-sm hover:border-orange-500 dark:border-gray-600 dark:bg-black/90 dark:hover:border-blue-400"
                   onClick={prevProject}
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="h-5 w-5" />
                 </Button>
                 <Button
                   variant="outline"
                   size="icon"
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 dark:bg-black/90 backdrop-blur-sm border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400 shadow-lg"
+                  className="absolute right-0 top-1/2 z-10 -translate-y-1/2 border-orange-300 bg-white/90 shadow-lg backdrop-blur-sm hover:border-orange-500 dark:border-gray-600 dark:bg-black/90 dark:hover:border-blue-400"
                   onClick={nextProject}
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="h-5 w-5" />
                 </Button>
               </>
             )}
-            
+
             {/* Projects Carousel */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 px-12">
+            <div className="grid gap-8 px-12 md:grid-cols-2 lg:grid-cols-3">
               {getVisibleProjects().map((project, index) => (
                 <Reveal
                   key={`${currentProjectIndex}-${index}`}
-                  direction={index % 2 === 0 ? 'left' : 'right'}
+                  direction={index % 2 === 0 ? "left" : "right"}
                   delayMs={index * 90}
                 >
-                  <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 hover:bg-orange-100/50 dark:hover:bg-white/10 transition-all duration-300 hover:scale-105 overflow-hidden">
-                    <div className="aspect-video bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400 relative overflow-hidden">
+                  <Card className="overflow-hidden border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:scale-105 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
+                    <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400">
                       <img
                         src={project.image}
                         alt={project.title}
-                        className="w-full h-full object-cover"
+                        className="h-full w-full object-cover"
                       />
                     </div>
                     <CardHeader>
-                      <CardTitle className="text-card-foreground text-center">{project.title}</CardTitle>
+                      <CardTitle className="text-center text-card-foreground">
+                        {project.title}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-muted-foreground mb-4 text-justify">
+                      <p className="mb-4 text-justify text-muted-foreground">
                         {project.description}
                       </p>
-                      <div className="flex flex-wrap gap-2 mb-4">
+                      <div className="mb-4 flex flex-wrap gap-2">
                         {project.technologies.map((tech, techIndex) => (
-                          <Badge key={techIndex} variant="secondary" className="bg-orange-500/20 text-orange-700 border-orange-500/30 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30">
+                          <Badge
+                            key={techIndex}
+                            variant="secondary"
+                            className="border-orange-500/30 bg-orange-500/20 text-orange-700 dark:border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-300"
+                          >
                             {tech}
                           </Badge>
                         ))}
@@ -451,7 +542,7 @@ const Index = () => {
                             asChild
                           >
                             <a href={project.github} target="_blank" rel="noopener noreferrer">
-                              <Github className="w-4 h-4 mr-2" />
+                              <Github className="mr-2 h-4 w-4" />
                               {t.projects.code}
                             </a>
                           </Button>
@@ -459,10 +550,10 @@ const Index = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex-1 border-orange-300 dark:border-gray-600 opacity-50 cursor-not-allowed"
+                            className="flex-1 cursor-not-allowed border-orange-300 opacity-50 dark:border-gray-600"
                             disabled
                           >
-                            <Github className="w-4 h-4 mr-2" />
+                            <Github className="mr-2 h-4 w-4" />
                             {t.projects.code}
                           </Button>
                         )}
@@ -474,7 +565,7 @@ const Index = () => {
                             asChild
                           >
                             <a href={project.demo} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="w-4 h-4 mr-2" />
+                              <ExternalLink className="mr-2 h-4 w-4" />
                               Demo
                             </a>
                           </Button>
@@ -482,10 +573,10 @@ const Index = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex-1 border-orange-300 dark:border-gray-600 opacity-50 cursor-not-allowed"
+                            className="flex-1 cursor-not-allowed border-orange-300 opacity-50 dark:border-gray-600"
                             disabled
                           >
-                            <ExternalLink className="w-4 h-4 mr-2" />
+                            <ExternalLink className="mr-2 h-4 w-4" />
                             Demo
                           </Button>
                         )}
@@ -495,18 +586,18 @@ const Index = () => {
                 </Reveal>
               ))}
             </div>
-            
+
             {/* Carousel Indicators */}
             {projects.length > 3 && (
               <Reveal direction="up" delayMs={150}>
-                <div className="flex justify-center mt-6 gap-2">
+                <div className="mt-6 flex justify-center gap-2">
                   {Array.from({ length: projects.length }, (_, index) => (
                     <button
                       key={index}
-                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                        index === currentProjectIndex 
-                          ? 'bg-orange-500 dark:bg-blue-400 w-6' 
-                          : 'bg-orange-300 dark:bg-gray-600 hover:bg-orange-400 dark:hover:bg-gray-500'
+                      className={`h-2 w-2 rounded-full transition-all duration-300 ${
+                        index === currentProjectIndex
+                          ? "w-6 bg-orange-500 dark:bg-blue-400"
+                          : "bg-orange-300 hover:bg-orange-400 dark:bg-gray-600 dark:hover:bg-gray-500"
                       }`}
                       onClick={() => setCurrentProjectIndex(index)}
                     />
@@ -519,48 +610,59 @@ const Index = () => {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-20 px-6">
-        <div className="max-w-4xl mx-auto">
+      <section id="contact" className="px-6 py-20">
+        <div className="mx-auto max-w-4xl">
           <Reveal direction="up">
-            <div className="text-center mb-16">
-              <h2 className="text-5xl font-bold mb-6">
-                {renderTwoWordAnimatedTitle(t.contact.title, 'bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400')}
+            <div className="mb-16 text-center">
+              <h2 className="mb-6 text-5xl font-bold">
+                {renderTwoWordAnimatedTitle(
+                  t.contact.title,
+                  "bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400",
+                )}
               </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              <p className="mx-auto max-w-2xl text-xl text-muted-foreground">
                 {t.contact.subtitle2}
               </p>
             </div>
           </Reveal>
 
-          <div className="grid md:grid-cols-2 gap-12">
+          <div className="grid gap-12 md:grid-cols-2">
             <Reveal direction="left">
               <div className="space-y-6">
-                <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
+                <Card className="border-orange-200/50 bg-orange-50/50 dark:border-white/10 dark:bg-white/5">
                   <CardHeader>
-                    <CardTitle className="text-card-foreground flex items-center gap-2">
-                      <Mail className="w-5 h-5" />
+                    <CardTitle className="flex items-center gap-2 text-card-foreground">
+                      <Mail className="h-5 w-5" />
                       {t.contact.email}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground">
-                      <a href="mailto:dawidhanrahan@gmail.com" className="hover:text-orange-600 dark:hover:text-purple-400 transition-colors">
+                      <a
+                        href="mailto:dawidhanrahan@gmail.com"
+                        className="transition-colors hover:text-orange-600 dark:hover:text-purple-400"
+                      >
                         dawidhanrahan@gmail.com
                       </a>
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10">
+                <Card className="border-orange-200/50 bg-orange-50/50 dark:border-white/10 dark:bg-white/5">
                   <CardHeader>
-                    <CardTitle className="text-card-foreground flex items-center gap-2">
-                      <Github className="w-5 h-5" />
+                    <CardTitle className="flex items-center gap-2 text-card-foreground">
+                      <Github className="h-5 w-5" />
                       GitHub
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground">
-                      <a href="https://github.com/SatoriAI" target="_blank" rel="noopener noreferrer" className="hover:text-orange-600 dark:hover:text-purple-400 transition-colors">
+                      <a
+                        href="https://github.com/SatoriAI"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="transition-colors hover:text-orange-600 dark:hover:text-purple-400"
+                      >
                         github.com/SatoriAI
                       </a>
                     </p>
@@ -570,21 +672,17 @@ const Index = () => {
             </Reveal>
 
             <Reveal direction="right">
-              <Card className="bg-orange-50/50 dark:bg-white/5 border-orange-200/50 dark:border-white/10 h-full flex flex-col items-center justify-center text-center">
+              <Card className="flex h-full flex-col items-center justify-center border-orange-200/50 bg-orange-50/50 text-center dark:border-white/10 dark:bg-white/5">
                 <CardHeader className="items-center">
-                  <CardTitle className="text-card-foreground">
-                    {t.contact.quickMessage}
-                  </CardTitle>
+                  <CardTitle className="text-card-foreground">{t.contact.quickMessage}</CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col items-center justify-center text-center w-full">
-                  <p className="text-muted-foreground mb-4">
-                    {t.contact.quickMessageDesc}
-                  </p>
-                  <Button 
+                <CardContent className="flex w-full flex-col items-center justify-center text-center">
+                  <p className="mb-4 text-muted-foreground">{t.contact.quickMessageDesc}</p>
+                  <Button
                     onClick={() => setIsChatOpen(true)}
-                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 dark:from-purple-500 dark:to-blue-500 dark:hover:from-purple-600 dark:hover:to-blue-600 text-white"
+                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 dark:from-purple-500 dark:to-blue-500 dark:hover:from-purple-600 dark:hover:to-blue-600"
                   >
-                    <MessageSquare className="w-4 h-4 mr-2" />
+                    <MessageSquare className="mr-2 h-4 w-4" />
                     {t.hero.askAI}
                   </Button>
                 </CardContent>
@@ -604,9 +702,9 @@ const Index = () => {
       {!isChatOpen && (
         <Button
           onClick={() => setIsChatOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 dark:from-purple-500 dark:to-blue-500 dark:hover:from-purple-600 dark:hover:to-blue-600 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 z-50"
+          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-r from-orange-500 to-red-500 shadow-lg transition-all duration-300 hover:scale-110 hover:from-orange-600 hover:to-red-600 hover:shadow-xl dark:from-purple-500 dark:to-blue-500 dark:hover:from-purple-600 dark:hover:to-blue-600"
         >
-          <MessageSquare className="w-6 h-6" />
+          <MessageSquare className="h-6 w-6" />
         </Button>
       )}
     </div>

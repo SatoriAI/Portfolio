@@ -3,15 +3,33 @@
 @tailwind utilities;
 
 /* Markdown (prose) tweaks for chat */
-.prose { @apply max-w-none leading-7; }
-.prose :where(h1,h2,h3,h4){ @apply mt-3 mb-2; }
-.prose :where(p,ul,ol,pre,table,blockquote){ @apply my-2; }
-.prose :where(ul){ @apply list-disc pl-5; }
-.prose :where(ol){ @apply list-decimal pl-5; }
-.prose :where(li){ @apply my-1; }
-.prose :where(hr){ @apply my-3; }
-.dark .prose code { @apply text-slate-100; }
-.dark .prose pre { @apply bg-slate-900; }
+.prose {
+  @apply max-w-none leading-7;
+}
+.prose :where(h1, h2, h3, h4) {
+  @apply mb-2 mt-3;
+}
+.prose :where(p, ul, ol, pre, table, blockquote) {
+  @apply my-2;
+}
+.prose :where(ul) {
+  @apply list-disc pl-5;
+}
+.prose :where(ol) {
+  @apply list-decimal pl-5;
+}
+.prose :where(li) {
+  @apply my-1;
+}
+.prose :where(hr) {
+  @apply my-3;
+}
+.dark .prose code {
+  @apply text-slate-100;
+}
+.dark .prose pre {
+  @apply bg-slate-900;
+}
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
@@ -117,8 +135,12 @@ All colors MUST be HSL.
 
 /* Subtle shimmering effect for gradient-clipped text */
 @keyframes text-shine {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -130,8 +152,12 @@ All colors MUST be HSL.
 
 /* Stronger sheen that passes over the text while preserving the base gradient */
 @keyframes shine-sweep {
-  0% { background-position: -150% 0; }
-  100% { background-position: 150% 0; }
+  0% {
+    background-position: -150% 0;
+  }
+  100% {
+    background-position: 150% 0;
+  }
 }
 
 /* Ambient background */
@@ -153,29 +179,44 @@ All colors MUST be HSL.
 .aurora-layer {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg,
-    hsla(15,85%,55%,0.12) 0%,
-    hsla(260,70%,60%,0.12) 40%,
-    hsla(200,85%,55%,0.12) 80%
+  background: linear-gradient(
+    90deg,
+    hsla(15, 85%, 55%, 0.12) 0%,
+    hsla(260, 70%, 60%, 0.12) 40%,
+    hsla(200, 85%, 55%, 0.12) 80%
   );
   mix-blend-mode: screen;
 }
 
 @keyframes aurora-sweep {
-  0% { transform: translate3d(-20%, 0, 0); }
-  100% { transform: translate3d(20%, 0, 0); }
+  0% {
+    transform: translate3d(-20%, 0, 0);
+  }
+  100% {
+    transform: translate3d(20%, 0, 0);
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .aurora-1 { animation: aurora-sweep 24s linear infinite alternate; }
-  .aurora-2 { animation: aurora-sweep 32s linear infinite alternate-reverse; }
-  .aurora-3 { animation: aurora-sweep 40s linear infinite alternate; }
+  .aurora-1 {
+    animation: aurora-sweep 24s linear infinite alternate;
+  }
+  .aurora-2 {
+    animation: aurora-sweep 32s linear infinite alternate-reverse;
+  }
+  .aurora-3 {
+    animation: aurora-sweep 40s linear infinite alternate;
+  }
 }
 
 .ambient-grid {
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.06) 1px, transparent 0);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(255, 255, 255, 0.06) 1px,
+    transparent 0
+  );
   background-size: 28px 28px;
   opacity: 0.25;
   mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
@@ -184,7 +225,12 @@ All colors MUST be HSL.
 .ambient-vignette {
   position: absolute;
   inset: -20%;
-  background: radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.08) 75%, rgba(0,0,0,0.18) 100%);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0) 40%,
+    rgba(0, 0, 0, 0.08) 75%,
+    rgba(0, 0, 0, 0.18) 100%
+  );
   mix-blend-mode: multiply;
 }
 
@@ -200,7 +246,14 @@ All colors MUST be HSL.
     content: attr(data-text);
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.9) 50%, rgba(255,255,255,0) 60%, transparent 100%);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0) 40%,
+      rgba(255, 255, 255, 0.9) 50%,
+      rgba(255, 255, 255, 0) 60%,
+      transparent 100%
+    );
     background-size: 220% 100%;
     background-position: -150% 0;
     -webkit-background-clip: text;

@@ -1,8 +1,9 @@
-import { cn } from '@/lib/utils';
-import { useScrollReveal } from '@/hooks/use-scroll-reveal';
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren } from "react";
 
-type Direction = 'up' | 'down' | 'left' | 'right' | 'fade';
+import { useScrollReveal } from "@/hooks/use-scroll-reveal";
+import { cn } from "@/lib/utils";
+
+type Direction = "up" | "down" | "left" | "right" | "fade";
 
 type RevealProps = PropsWithChildren<{
   as?: keyof JSX.IntrinsicElements;
@@ -26,9 +27,9 @@ type RevealProps = PropsWithChildren<{
 }>;
 
 export default function Reveal({
-  as = 'div',
+  as = "div",
   className,
-  direction = 'up',
+  direction = "up",
   delayMs = 0,
   offset = 24,
   once = true,
@@ -38,27 +39,27 @@ export default function Reveal({
   const { ref, isRevealed, prefersReducedMotion } = useScrollReveal<HTMLDivElement>({
     once,
     root: null,
-    rootMargin: '0px 0px -10% 0px',
+    rootMargin: "0px 0px -10% 0px",
     threshold: 0.1,
   });
 
-  const baseHidden = 'opacity-0 will-change-[transform,opacity]';
-  const baseVisible = 'opacity-100';
+  const baseHidden = "opacity-0 will-change-[transform,opacity]";
+  const baseVisible = "opacity-100";
 
   // Inline transform ensures JIT doesn't purge required classes
   const hiddenTransform: React.CSSProperties = (() => {
     if (prefersReducedMotion) return {};
     const distance = `${offset}px`;
     switch (direction) {
-      case 'up':
+      case "up":
         return { transform: `translate3d(0, ${distance}, 0)` };
-      case 'down':
+      case "down":
         return { transform: `translate3d(0, -${distance}, 0)` };
-      case 'left':
+      case "left":
         return { transform: `translate3d(${distance}, 0, 0)` };
-      case 'right':
+      case "right":
         return { transform: `translate3d(-${distance}, 0, 0)` };
-      case 'fade':
+      case "fade":
       default:
         return {};
     }
@@ -69,7 +70,7 @@ export default function Reveal({
     ? undefined
     : ({
         transitionDelay: `${isNaN(delayMs) ? 0 : delayMs}ms`,
-        ...(isRevealed ? { transform: 'translate3d(0,0,0)' } : hiddenTransform),
+        ...(isRevealed ? { transform: "translate3d(0,0,0)" } : hiddenTransform),
       } as React.CSSProperties);
 
   return (
@@ -77,7 +78,7 @@ export default function Reveal({
       ref={ref}
       style={style}
       className={cn(
-        'transform-gpu transition-all duration-700 ease-out',
+        "transform-gpu transition-all duration-700 ease-out",
         !prefersReducedMotion && !isRevealed && baseHidden,
         (prefersReducedMotion || isRevealed) && baseVisible,
         className,
@@ -87,5 +88,3 @@ export default function Reveal({
     </Tag>
   );
 }
-
-
