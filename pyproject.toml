@@ -143,6 +143,8 @@ django_settings_module = "portfolio.settings"
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "portfolio.settings"
 addopts = "portfolio --cov --cov-report term-missing --cov-fail-under=85"
+python_files = "test_*.py"
+python_classes = "*TestCase"
 
 [tool.coverage.run]
 source = [

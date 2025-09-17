@@ -19,7 +19,7 @@ class RelationalContextGetter:
         documents = []
 
         for model in self._get_requirements():
-            for obj in model.objects.all().limit(self._limit_per_model):  # type: ignore
+            for obj in model.objects.all()[: self._limit_per_model]:  # type: ignore
                 documents.append(Document(page_content=obj.representation))
 
         return documents
