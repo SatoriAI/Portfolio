@@ -30,6 +30,62 @@ const normalizeMarkdown = (input: string): string => {
   // Ensure a blank line before headings and top-level list items so Markdown parses in-flight
   s = s.replace(/(^|[^\n])\n(#{1,6}\s)/g, (m, p1, p2) => `${p1}\n\n${p2}`);
   s = s.replace(/(^|[^\n])\n(-\s)/g, (m, p1, p2) => `${p1}\n\n${p2}`);
+  // If headings or lists appear mid-sentence (chunk boundary artifacts), insert needed newlines
+  s = s.replace(/([^\n])\s*(#{1,6}\s)/g, '$1\n\n$2');
+  s = s.replace(/([^\n])\s*(-\s)/g, '$1\n$2');
+  s = s.replace(/([^\n])\s*((?:\d+\.|\d+\))\s)/g, '$1\n$2');
+  // If inside an unclosed fenced code block while streaming, temporarily close it
+  const fenceCountBackticks = (s.match(/```/g) || []).length;
+  const fenceCountTildes = (s.match(/~~~?/g) || []).length; // support ~~~
+  const endsWithFenceStart = /```[a-zA-Z0-9_-]*\s*$/.test(s) || /~~~[a-zA-Z0-9_-]*\s*$/.test(s);
+  if (fenceCountBackticks % 2 === 1 || fenceCountTildes % 2 === 1 || endsWithFenceStart) {
+    // Add a closing fence just for rendering; does not mutate stored message
+    s = s + (s.endsWith('\n') ? '' : '\n') + '```\n';
+  }
+  if (!s.endsWith('\n')) s += '\n';
+  return s;
+};
+
+// Decode various possible SSE payload formats to a plain text chunk
+const decodeStreamData = (raw: string): string => {
+  let data = String(raw ?? '');
+  if (!data) return '';
+  // Common cases: JSON string token, JSON object with token/text/content/delta, or plain text
+  try {
+    const parsed = JSON.parse(data);
+    if (typeof parsed === 'string') return parsed;
+    if (parsed && typeof parsed === 'object') {
+      const candidate = (parsed as any).token ?? (parsed as any).delta ?? (parsed as any).content ?? (parsed as any).text ?? (parsed as any).message;
+      if (typeof candidate === 'string') return candidate;
+    }
+  } catch {
+    // not JSON, continue
+  }
+  // Sometimes servers double-stringify: "Hello" or escape newlines
+  if ((data.startsWith('"') && data.endsWith('"')) || (data.startsWith("'") && data.endsWith("'"))) {
+    try {
+      const dequoted = JSON.parse(data);
+      if (typeof dequoted === 'string') data = dequoted;
+    } catch {
+      data = data.slice(1, -1);
+    }
+  }
+  data = data.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '');
+  // Ignore common done markers
+  if (data === '[DONE]' || data === 'DONE' || data === '<|eot_id|>') return '';
+  return data;
+};
+
+// Perform a final cleanup after streaming ends to guarantee good Markdown structure
+const finalizeMarkdown = (input: string): string => {
+  let s = String(input ?? '');
+  s = s.replace(/\r\n?/g, '\n');
+  // Headings and list items: ensure they start on their own line with a blank line before
+  s = s.replace(/([^\n])\s*(#{1,6}\s)/g, '$1\n\n$2');
+  s = s.replace(/([^\n])\s*(-\s)/g, '$1\n$2');
+  s = s.replace(/([^\n])\s*((?:\d+\.|\d+\))\s)/g, '$1\n$2');
+  // Collapse excessive blank lines to at most two
+  s = s.replace(/\n{3,}/g, '\n\n');
   if (!s.endsWith('\n')) s += '\n';
   return s;
 };
@@ -268,6 +324,17 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
 
       es.addEventListener('finished', () => {
         setIsStreaming(false);
+        // Finalize the last assistant message markdown once stream completes
+        setMessages(prev => {
+          const next = [...prev];
+          for (let i = next.length - 1; i >= 0; i--) {
+            if (!next[i].isUser) {
+              next[i] = { ...next[i], text: finalizeMarkdown(next[i].text) };
+              break;
+            }
+          }
+          return next;
+        });
         try { es.close(); } catch { /* noop */ }
         if (eventSourceRef.current === es) eventSourceRef.current = null;
       });
@@ -283,7 +350,8 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
 
       es.onmessage = (e: MessageEvent) => {
         // Streamed text chunks come as default messages without an event name
-        const chunk = e.data as string;
+        const chunk = decodeStreamData(String(e.data ?? ''));
+        if (!chunk) return;
         if (!hasReceivedFirstChunkRef.current) {
           hasReceivedFirstChunkRef.current = true;
           setIsLoading(false); // remove typing indicator once streaming starts
