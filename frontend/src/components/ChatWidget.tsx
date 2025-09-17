@@ -154,6 +154,13 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsMultilineInput(false);
+    // Reset textarea height back to a single line
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (el) {
+        el.style.height = 'auto';
+      }
+    });
 
     if (env.mock) {
       setIsLoading(true);
@@ -353,7 +360,7 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
                           : 'bg-orange-100 dark:bg-slate-800 text-foreground border border-orange-200 dark:border-slate-700'
                       }`}
                     >
-                      <p className="text-sm leading-relaxed">{message.text}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.text}</p>
                     </div>
                     {message.isUser && (
                       <div className="w-8 h-8 rounded-full bg-red-500 dark:bg-teal-500 flex items-center justify-center flex-shrink-0">
@@ -391,7 +398,7 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
                 onKeyDown={handleKeyPress}
                 placeholder={t.chat?.inputPlaceholder}
                 rows={1}
-                className={`w-full bg-transparent border-0 focus-visible:ring-0 ring-0 focus-visible:ring-offset-0 ring-offset-0 outline-none focus:outline-none shadow-none focus:shadow-none resize-none p-0 leading-6 text-foreground placeholder:text-muted-foreground max-h-40 ${!isMultilineInput ? 'pr-12' : ''}`}
+                className={`w-full bg-transparent border-0 focus-visible:ring-0 ring-0 focus-visible:ring-offset-0 ring-offset-0 outline-none focus:outline-none shadow-none focus:shadow-none resize-none p-0 leading-6 text-foreground placeholder:text-muted-foreground max-h-40 break-all ${!isMultilineInput ? 'pr-12' : ''}`}
                 disabled={isLoading || isStreaming}
                 style={{ height: 'auto' }}
                 onInput={(e) => {
