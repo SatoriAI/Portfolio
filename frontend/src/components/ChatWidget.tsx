@@ -1,6 +1,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { X, Send, MessageSquare, User, Bot, Trash2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -354,13 +356,22 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
                       </div>
                     )}
                     <div
-                      className={`max-w-[80%] p-3 rounded-lg ${
+                      className={`max-w-[80%] p-3 rounded-lg prose prose-sm dark:prose-invert prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-pre:p-3 prose-pre:rounded-md prose-code:before:content-[''] prose-code:after:content-[''] ${
                         message.isUser
-                          ? 'bg-orange-600 dark:bg-blue-600 text-white'
+                          ? 'bg-orange-600 dark:bg-blue-600 text-white prose-invert'
                           : 'bg-orange-100 dark:bg-slate-800 text-foreground border border-orange-200 dark:border-slate-700'
                       }`}
                     >
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.text}</p>
+                      {message.isUser ? (
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.text}</p>
+                      ) : (
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          className="text-sm leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                        >
+                          {message.text}
+                        </ReactMarkdown>
+                      )}
                     </div>
                     {message.isUser && (
                       <div className="w-8 h-8 rounded-full bg-red-500 dark:bg-teal-500 flex items-center justify-center flex-shrink-0">
