@@ -9,6 +9,8 @@ import { env } from '@/config/env';
 import { endpoints, buildUrl } from '@/config/endpoints';
 import { apiClient, apiFetch } from '@/lib/apiClient';
 import { toast as notify } from '@/components/ui/sonner';
+import { useSettings } from '@/contexts/SettingsContext';
+import { translations } from '@/utils/translations';
 
 interface Message {
   id: string;
@@ -23,12 +25,9 @@ interface ChatWidgetProps {
 }
 
 const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
-  const [messages, setMessages] = useState<Message[]>([{
-    id: 'intro',
-    text: "Hi! I'm an AI assistant that knows all about this developer's background, skills, and projects. Feel free to ask me anything about their experience with Python, LLMs, RAG pipelines, or any of their projects!",
-    isUser: false,
-    timestamp: new Date()
-  }]);
+  const { language } = useSettings();
+  const t = translations[language];
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -321,48 +320,61 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
         
         <CardContent className="flex-1 flex flex-col p-0 min-h-0">
           <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 ${message.isUser ? 'justify-end' : 'justify-start'}`}
-                >
-                  {!message.isUser && (
-                    <div className="w-8 h-8 rounded-full bg-orange-500 dark:bg-blue-500 flex items-center justify-center flex-shrink-0">
+            {messages.length === 0 && !isLoading && !isStreaming ? (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400 flex items-center justify-center shadow-sm">
+                    <MessageSquare className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-semibold bg-gradient-to-r from-orange-600 to-red-500 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
+                    {t.chat?.prompt}
+                  </h3>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex gap-3 ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {!message.isUser && (
+                      <div className="w-8 h-8 rounded-full bg-orange-500 dark:bg-blue-500 flex items-center justify-center flex-shrink-0">
+                        <Bot className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                    <div
+                      className={`max-w-[80%] p-3 rounded-lg ${
+                        message.isUser
+                          ? 'bg-orange-600 dark:bg-blue-600 text-white'
+                          : 'bg-orange-100 dark:bg-slate-800 text-foreground border border-orange-200 dark:border-slate-700'
+                      }`}
+                    >
+                      <p className="text-sm leading-relaxed">{message.text}</p>
+                    </div>
+                    {message.isUser && (
+                      <div className="w-8 h-8 rounded-full bg-red-500 dark:bg-teal-500 flex items-center justify-center flex-shrink-0">
+                        <User className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {isLoading && (
+                  <div className="flex gap-3">
+                    <div className="w-8 h-8 rounded-full bg-orange-500 dark:bg-blue-500 flex items-center justify-center">
                       <Bot className="w-4 h-4 text-white" />
                     </div>
-                  )}
-                  <div
-                    className={`max-w-[80%] p-3 rounded-lg ${
-                      message.isUser
-                        ? 'bg-orange-600 dark:bg-blue-600 text-white'
-                        : 'bg-orange-100 dark:bg-slate-800 text-foreground border border-orange-200 dark:border-slate-700'
-                    }`}
-                  >
-                    <p className="text-sm leading-relaxed">{message.text}</p>
-                  </div>
-                  {message.isUser && (
-                    <div className="w-8 h-8 rounded-full bg-red-500 dark:bg-teal-500 flex items-center justify-center flex-shrink-0">
-                      <User className="w-4 h-4 text-white" />
-                    </div>
-                  )}
-                </div>
-              ))}
-              {isLoading && (
-                <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-orange-500 dark:bg-blue-500 flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="bg-orange-100 dark:bg-slate-800 p-3 rounded-lg border border-orange-200 dark:border-slate-700">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-orange-400 dark:bg-gray-400 rounded-full animate-pulse"></div>
-                      <div className="w-2 h-2 bg-orange-400 dark:bg-gray-400 rounded-full animate-pulse delay-100"></div>
-                      <div className="w-2 h-2 bg-orange-400 dark:bg-gray-400 rounded-full animate-pulse delay-200"></div>
+                    <div className="bg-orange-100 dark:bg-slate-800 p-3 rounded-lg border border-orange-200 dark:border-slate-700">
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-orange-400 dark:bg-gray-400 rounded-full animate-pulse"></div>
+                        <div className="w-2 h-2 bg-orange-400 dark:bg-gray-400 rounded-full animate-pulse delay-100"></div>
+                        <div className="w-2 h-2 bg-orange-400 dark:bg-gray-400 rounded-full animate-pulse delay-200"></div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
             <div ref={bottomRef} />
           </ScrollArea>
           

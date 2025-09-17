@@ -1,6 +1,9 @@
 
 export const translations = {
   en: {
+    chat: {
+      prompt: 'What would you like to know?'
+    },
     nav: {
       home: 'Home',
       about: 'About',
@@ -64,6 +67,9 @@ export const translations = {
     }
   },
   pl: {
+    chat: {
+      prompt: 'O co chcesz zapytać?'
+    },
     nav: {
       home: 'Strona główna',
       about: 'O mnie',
