@@ -27,8 +27,27 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
 
   const [language, setLanguageState] = useState<Language>(() => {
-    const saved = localStorage.getItem("language") as Language;
-    return saved || "en";
+    try {
+      const saved = localStorage.getItem("language") as Language | null;
+      if (saved === "en" || saved === "pl") return saved;
+    } catch (_error) {
+      console.error(_error);
+    }
+
+    if (typeof navigator !== "undefined") {
+      const raw =
+        Array.isArray(navigator.languages) && navigator.languages.length > 0
+          ? navigator.languages
+          : navigator.language
+            ? [navigator.language]
+            : [];
+      const browserLanguages = raw.filter(Boolean);
+      const primary = (browserLanguages[0] || "en").toLowerCase();
+      const suggested: Language = primary.startsWith("pl") ? "pl" : "en";
+      return suggested;
+    }
+
+    return "en";
   });
 
   useEffect(() => {

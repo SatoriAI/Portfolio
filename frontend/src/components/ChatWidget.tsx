@@ -276,6 +276,7 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
     if (!inputValue.trim() || isStreaming) return;
 
     const question = inputValue;
+    const locale = localStorage.getItem("language") || "en";
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -349,6 +350,7 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
       closeExistingStream();
       const streamUrl = buildUrl(endpoints.vex.chat.stream, {
         question: question,
+        locale: locale,
         session_key: sessionKey,
       });
       const es = new EventSource(streamUrl);
