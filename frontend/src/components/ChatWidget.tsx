@@ -148,6 +148,7 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
   const hasReceivedFirstChunkRef = useRef(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const initialScrollDoneRef = useRef(false);
 
   // Sample responses for demonstration - in production, this would connect to your RAG system
   const sampleResponses: { [key: string]: string } = {
@@ -234,6 +235,9 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
     document.body.style.overflow = "hidden";
     if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
 
+    // Ensure the first scroll after opening is instant (no animation)
+    initialScrollDoneRef.current = false;
+
     hydrateMessagesIfNeeded();
     return () => {
       // Restore body scroll
@@ -259,7 +263,11 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
     if (!isOpen) return;
     // Defer to let DOM render
     const id = requestAnimationFrame(() => {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      bottomRef.current?.scrollIntoView({
+        behavior: initialScrollDoneRef.current ? "smooth" : "auto",
+        block: "end",
+      });
+      if (!initialScrollDoneRef.current) initialScrollDoneRef.current = true;
     });
     return () => cancelAnimationFrame(id);
   }, [isOpen, messages, isLoading, isStreaming]);
@@ -502,14 +510,14 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
                       </div>
                     )}
                     <div
-                      className={`prose prose-sm max-w-[80%] rounded-lg p-3 dark:prose-invert prose-headings:font-semibold prose-headings:leading-tight prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-p:my-2 prose-a:text-blue-600 prose-a:underline prose-a:decoration-1 prose-a:underline-offset-2 prose-code:before:content-[''] prose-code:after:content-[''] prose-pre:rounded-md prose-pre:bg-slate-900 prose-pre:p-3 prose-pre:text-slate-100 prose-ol:my-2 prose-ol:ml-5 prose-ol:list-decimal prose-ul:my-2 prose-ul:ml-5 prose-ul:list-disc prose-li:my-1 prose-hr:my-3 dark:prose-a:text-blue-400 ${
+                      className={`prose prose-sm max-w-[80%] rounded-lg px-3 dark:prose-invert prose-headings:font-semibold prose-headings:leading-tight prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-p:my-2 prose-a:text-blue-600 prose-a:underline prose-a:decoration-1 prose-a:underline-offset-2 prose-code:before:content-[''] prose-code:after:content-[''] prose-pre:rounded-md prose-pre:bg-slate-900 prose-pre:p-3 prose-pre:text-slate-100 prose-ol:my-2 prose-ol:ml-5 prose-ol:list-decimal prose-ul:my-2 prose-ul:ml-5 prose-ul:list-disc prose-li:my-1 prose-hr:my-3 dark:prose-a:text-blue-400 ${
                         message.isUser
-                          ? "prose-invert bg-orange-600 text-white dark:bg-blue-600"
-                          : "border border-orange-200 bg-orange-100 text-foreground dark:border-slate-700 dark:bg-slate-800"
+                          ? "prose-invert bg-orange-600 py-1 text-white dark:bg-blue-600"
+                          : "border border-orange-200 bg-orange-100 py-2 text-foreground dark:border-slate-700 dark:bg-slate-800"
                       }`}
                     >
                       {message.isUser ? (
-                        <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                        <p className="not-prose m-0 whitespace-pre-wrap break-words text-sm leading-4">
                           {message.text}
                         </p>
                       ) : (
@@ -548,7 +556,7 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 dark:bg-blue-500">
                       <Bot className="h-4 w-4 text-white" />
                     </div>
-                    <div className="rounded-lg border border-orange-200 bg-orange-100 p-3 dark:border-slate-700 dark:bg-slate-800">
+                    <div className="rounded-lg border border-orange-200 bg-orange-100 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
                       <div className="flex gap-1">
                         <div className="h-2 w-2 animate-pulse rounded-full bg-orange-400 dark:bg-gray-400"></div>
                         <div className="h-2 w-2 animate-pulse rounded-full bg-orange-400 delay-100 dark:bg-gray-400"></div>
