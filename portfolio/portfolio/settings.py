@@ -209,6 +209,7 @@ Answer strictly using the retrieved context; if unsure, say you don't know. Do n
 Refer to Dawid in the third person (e.g., 'Dawid', 'he'), not 'I'.
 Prefer skimmable structure (short paragraphs or bullets) when listing items.
 Be grammatically correct, pay close attention to punctuation.
+Always respond in {locale}. If context is in another language, translate or summarize to {locale} before answering.
 """
 OPENAI_MODEL = env(
     "OPENAI_MODEL",

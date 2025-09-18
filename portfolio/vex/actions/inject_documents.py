@@ -67,6 +67,9 @@ class InjectDocument:
         if not chunks:
             return
 
+        for c in chunks:
+            c.metadata = {**(c.metadata or {}), "locale": self.document.language}
+
         vector_store = store()
         vector_store.add_documents(chunks)
 

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -29,6 +30,7 @@ class Message(TimestampedModel):
 class Document(TimestampedModel):
     title = models.CharField(_("Title"), max_length=256)
     description = models.TextField(_("Description"), null=True, blank=True)
+    language = models.CharField(_("Language"), choices=settings.LANGUAGES, default=settings.LANGUAGE_CODE, max_length=2)
 
     file = models.FileField(_("File"), upload_to="vex_docs/", null=True, blank=True)
     url = models.URLField(_("Source URL"), null=True, blank=True)

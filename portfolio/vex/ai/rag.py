@@ -19,7 +19,7 @@ class RagChain:
 
     def __init__(self) -> None:
         self.llm = ChatOpenAI(model=settings.OPENAI_MODEL, temperature=settings.TEMPERATURE)
-        self.retriever = retriever_topk()
+        self.retriever = retriever_topk
 
     @property
     def prompt(self) -> ChatPromptTemplate:
@@ -42,11 +42,13 @@ class RagChain:
     def _get_core(self) -> RunnableSerializable[dict[str, Any], str]:
         return RunnablePassthrough.assign(context=self._merge_context) | self.prompt | self.llm | StrOutputParser()
 
-    def _merge_context(self, ctx: dict) -> str:
-        question = ctx.get("question", "")
+    def _merge_context(self, context: dict) -> str:
+        question = context["question"]
+        locale = context["locale"]
 
         # Extract documents from Vector DB
-        vector_docs = (itemgetter("question") | self.retriever).invoke(ctx)
+        active_retriever = self.retriever(_filter={"locale": locale})
+        vector_docs = (itemgetter("question") | active_retriever).invoke(context)
 
         # Extract documents from PostgreSQL
         relational_getter = self.RELATIONAL_CONTEXT_GETTER(question=question)

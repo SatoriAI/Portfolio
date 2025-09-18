@@ -1,5 +1,6 @@
 from collections.abc import Iterator
 
+from django.conf import settings
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseBadRequest, StreamingHttpResponse
 
@@ -12,11 +13,15 @@ def chat(request: WSGIRequest) -> StreamingHttpResponse | HttpResponseBadRequest
         return HttpResponseBadRequest(content="You request must contain a question.")
 
     session_key = request.GET.get(key="session_key") or ensure_session(request=request)
+    locale = request.GET.get(key="locale") or settings.LANGUAGE_CODE
 
     def event_stream() -> Iterator[str]:
         yield "event: received\ndata: ok\n\n"
         try:
-            for chunk in rag_chain.stream({"question": question}, config={"configurable": {"session_id": session_key}}):
+            for chunk in rag_chain.stream(
+                {"question": question, "locale": locale},
+                config={"configurable": {"session_id": session_key}},
+            ):
                 if not chunk:
                     continue
                 yield f"data: {chunk}\n\n"

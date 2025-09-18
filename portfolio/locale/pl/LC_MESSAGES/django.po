@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-16 19:44+0000\n"
+"POT-Creation-Date: 2025-09-17 20:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,246 +20,248 @@ msgstr ""
 "(n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && "
 "n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
 
-#: university/choices.py:6
-msgid "Winter"
-msgstr "Zimowy"
-
-#: university/choices.py:7
-msgid "Summer"
-msgstr "Letni"
-
-#: university/models.py:12 work/models.py:67
-msgid "Start"
-msgstr "Rozpoczęcie"
-
-#: university/models.py:13 work/models.py:68
-msgid "End"
-msgstr "Koniec"
-
-#: university/models.py:16
-msgid "Study"
-msgstr "Kierunek"
-
-#: university/models.py:17
+#: portfolio/university/apps.py:9 portfolio/university/models.py:17
 msgid "University"
 msgstr "Uczelnia"
 
-#: university/models.py:18
+#: portfolio/university/choices.py:6
+msgid "Winter"
+msgstr "Zimowy"
+
+#: portfolio/university/choices.py:7
+msgid "Summer"
+msgstr "Letni"
+
+#: portfolio/university/models.py:12 portfolio/work/models.py:67
+msgid "Start"
+msgstr "Rozpoczęcie"
+
+#: portfolio/university/models.py:13 portfolio/work/models.py:68
+msgid "End"
+msgstr "Koniec"
+
+#: portfolio/university/models.py:16
+msgid "Study"
+msgstr "Kierunek"
+
+#: portfolio/university/models.py:18
 msgid "Research"
 msgstr "Badania"
 
-#: university/models.py:19
+#: portfolio/university/models.py:19
 msgid "Advisor"
 msgstr "Promotor"
 
-#: university/models.py:20
+#: portfolio/university/models.py:20
 msgid "Areas"
 msgstr "Zainteresowania"
 
-#: university/models.py:27
+#: portfolio/university/models.py:27
 msgid "School"
 msgstr "Szkoła"
 
-#: university/models.py:28
+#: portfolio/university/models.py:28
 msgid "Schools"
 msgstr "Szkoły"
 
-#: university/models.py:32 vex/models.py:30 work/models.py:37
+#: portfolio/university/models.py:32 portfolio/vex/models.py:30
+#: portfolio/work/models.py:37
 msgid "Title"
 msgstr "Tytuł"
 
-#: university/models.py:33
+#: portfolio/university/models.py:33
 msgid "Journal"
 msgstr "Czasopismo"
 
-#: university/models.py:34
+#: portfolio/university/models.py:34
 msgid "Link"
 msgstr "Link"
 
-#: university/models.py:35
+#: portfolio/university/models.py:35
 msgid "Year"
 msgstr "Rok"
 
-#: university/models.py:38
+#: portfolio/university/models.py:38
 msgid "Summary"
 msgstr "Podsumowanie"
 
-#: university/models.py:45
+#: portfolio/university/models.py:45
 msgid "Publication"
 msgstr "Publikacja"
 
-#: university/models.py:46
+#: portfolio/university/models.py:46
 msgid "Publications"
 msgstr "Publikacje"
 
-#: university/models.py:50
+#: portfolio/university/models.py:50
 msgid "Semester"
 msgstr "Semestr"
 
-#: university/models.py:51
+#: portfolio/university/models.py:51
 msgid "Season"
 msgstr "Sezon"
 
-#: university/models.py:54
+#: portfolio/university/models.py:54
 msgid "Course"
 msgstr "Kurs"
 
-#: university/models.py:55 vex/models.py:22
+#: portfolio/university/models.py:55 portfolio/vex/models.py:22
 msgid "Content"
 msgstr "Treść"
 
-#: university/models.py:62
+#: portfolio/university/models.py:62
 msgid "Testimonial"
 msgstr "Referancja"
 
-#: university/models.py:63
+#: portfolio/university/models.py:63
 msgid "Testimonials"
 msgstr "Referencje"
 
-#: utils/models.py:6
+#: portfolio/utils/models.py:6
 msgid "Created At"
 msgstr "Stworzono"
 
-#: utils/models.py:7
+#: portfolio/utils/models.py:7
 msgid "Updated At"
 msgstr "Zaktualizowano"
 
-#: vex/actions/inject_documents.py:18
+#: portfolio/vex/actions/inject_documents.py:18
 msgid "Inject Document(s) to Vector Database"
 msgstr "Wstrzyknij Dokument(y) do Wektorowej Bazy Danych"
 
-#: vex/actions/inject_documents.py:24
+#: portfolio/vex/actions/inject_documents.py:24
 msgid "Document(s) injected successfully."
 msgstr "Dokumenty wstrzyknięto pomyślnie."
 
-#: vex/admin.py:42
+#: portfolio/vex/admin.py:40
 msgid "Number of Messages"
 msgstr "Liczba Wiadomości"
 
-#: vex/models.py:9
+#: portfolio/vex/models.py:9
 msgid "Session Key"
 msgstr "Klucz Sesji"
 
-#: vex/models.py:12 vex/models.py:15
+#: portfolio/vex/models.py:12 portfolio/vex/models.py:15
 msgid "Conversation"
 msgstr "Rozmowa"
 
-#: vex/models.py:16
+#: portfolio/vex/models.py:16
 msgid "Conversations"
 msgstr "Rozmowy"
 
-#: vex/models.py:21
+#: portfolio/vex/models.py:21
 msgid "Role"
 msgstr "Rola"
 
-#: vex/models.py:25
+#: portfolio/vex/models.py:25
 msgid "Message"
 msgstr "Wiadomość"
 
-#: vex/models.py:26
+#: portfolio/vex/models.py:26
 msgid "Messages"
 msgstr "Wiadomomści"
 
-#: vex/models.py:31 work/models.py:17 work/models.py:44 work/models.py:74
+#: portfolio/vex/models.py:31 portfolio/work/models.py:17
+#: portfolio/work/models.py:44 portfolio/work/models.py:74
 msgid "Description"
 msgstr "Opis"
 
-#: vex/models.py:33
+#: portfolio/vex/models.py:33
 msgid "File"
 msgstr "Plik"
 
-#: vex/models.py:34
+#: portfolio/vex/models.py:34
 msgid "Source URL"
 msgstr "Adres URL"
 
-#: vex/models.py:36
+#: portfolio/vex/models.py:36
 msgid "Injected"
 msgstr "Wstrzyknięto"
 
-#: vex/models.py:46
+#: portfolio/vex/models.py:46
 msgid "Document"
 msgstr "Dokument"
 
-#: vex/models.py:47
+#: portfolio/vex/models.py:47
 msgid "Documents"
 msgstr "Dokumenty"
 
-#: work/apps.py:9
+#: portfolio/work/apps.py:9
 msgid "Work"
 msgstr "Praca"
 
-#: work/choices.py:6
+#: portfolio/work/choices.py:6
 msgid "3+ years of experience"
 msgstr "3+ lat doświadczenia"
 
-#: work/choices.py:7
+#: portfolio/work/choices.py:7
 msgid "5+ years of experience"
 msgstr "5+ lat doświadczenia"
 
-#: work/choices.py:8
+#: portfolio/work/choices.py:8
 msgid "10+ years of experience"
 msgstr "10+ lat doświadczenia"
 
-#: work/models.py:16
+#: portfolio/work/models.py:16
 msgid "Name"
 msgstr "Nazwa"
 
-#: work/models.py:32
+#: portfolio/work/models.py:32
 msgid "Skill"
 msgstr "Umiejętność"
 
-#: work/models.py:33
+#: portfolio/work/models.py:33
 msgid "Skills"
 msgstr "Umiejętności"
 
-#: work/models.py:38
+#: portfolio/work/models.py:38
 msgid "Image URL"
 msgstr "Adres URL obrazu"
 
-#: work/models.py:39
+#: portfolio/work/models.py:39
 msgid "Tags"
 msgstr "Tagi"
 
-#: work/models.py:40
+#: portfolio/work/models.py:40
 msgid "Demo"
 msgstr "Demo"
 
-#: work/models.py:41
+#: portfolio/work/models.py:41
 msgid "Repository"
 msgstr "Repozytorium"
 
-#: work/models.py:61
+#: portfolio/work/models.py:61
 msgid "Project"
 msgstr "Projekt"
 
-#: work/models.py:62
+#: portfolio/work/models.py:62
 msgid "Projects"
 msgstr "Projekty"
 
-#: work/models.py:66
+#: portfolio/work/models.py:66
 msgid "Position"
 msgstr "Stanowisko"
 
-#: work/models.py:69
+#: portfolio/work/models.py:69
 msgid "Company"
 msgstr "Firma"
 
-#: work/models.py:70
+#: portfolio/work/models.py:70
 msgid "Technologies"
 msgstr "Technologie"
 
-#: work/models.py:73
+#: portfolio/work/models.py:73
 msgid "Location"
 msgstr "Lokalizacja"
 
-#: work/models.py:75
+#: portfolio/work/models.py:75
 msgid "Achievements"
 msgstr "Osiągnięcia"
 
-#: work/models.py:97
+#: portfolio/work/models.py:97
 msgid "Experience"
 msgstr "Doświadczenie"
 
-#: work/models.py:98
+#: portfolio/work/models.py:98
 msgid "Experiences"
 msgstr "Doświadczenia"
