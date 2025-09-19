@@ -1,5 +1,6 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from parler.managers import TranslatableManager
 from parler.models import TranslatableModel, TranslatedFields
@@ -20,13 +21,11 @@ class Skill(TranslatableModel, TimestampedModel, DescriptiveModel):
     # Managers
     objects: TranslatableManager = TranslatableManager()
 
-    @property
-    def representation(self) -> str:
-        return (
-            f"Skill: {self.safe_translation_getter("name", any_language=True) or ""}"
-            f"\nLevel: {self.level}"
-            f"\nDescription: {self.safe_translation_getter("description", any_language=True) or ""}"
-        )
+    def representation_for(self, locale: str | None) -> str:
+        lang = (locale or get_language() or "").split("-")[0][:2]
+        name = self.safe_translation_getter("name", language_code=lang, any_language=True) or ""
+        description = self.safe_translation_getter("description", language_code=lang, any_language=True) or ""
+        return f"Skill: {name}\nLevel: {self.level}\nDescription: {description}"
 
     class Meta:
         verbose_name = _("Skill")
@@ -47,14 +46,13 @@ class Project(TranslatableModel, TimestampedModel, DescriptiveModel):
     # Managers
     objects: TranslatableManager = TranslatableManager()
 
-    @property
-    def representation(self) -> str:
+    def representation_for(self, locale: str | None) -> str:
+        lang = (locale or get_language() or "").split("-")[0][:2]
+        description = self.safe_translation_getter("description", language_code=lang, any_language=True) or ""
+        tags = ", ".join(self.tags or [])
         return (
-            f"Project: {self.title}"
-            f"\nTags: {", ".join(self.tags or [])}"
-            f"\nDescription: {self.safe_translation_getter("description", any_language=True) or ""}"
-            f"\nDemo: {self.demo or ""}"
-            f"\nRepository: {self.repository or ""}"
+            f"Project: {self.title}\nTags: {tags}\nDescription: {description}\n"
+            f"Demo: {self.demo or ''}\nRepository: {self.repository or ''}"
         )
 
     class Meta:
@@ -82,15 +80,17 @@ class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
     def period(self) -> str:
         return f"{self.start.year} - {self.end.year if self.end is not None else ''}"
 
-    @property
-    def representation(self) -> str:
+    def representation_for(self, locale: str | None) -> str:
+        lang = (locale or get_language() or "").split("-")[0][:2]
+        location = self.safe_translation_getter("location", language_code=lang, any_language=True) or ""
+        description = self.safe_translation_getter("description", language_code=lang, any_language=True) or ""
+        achievements = "; ".join(
+            self.safe_translation_getter("achievements", language_code=lang, any_language=True) or []
+        )
+        technologies = ", ".join(self.technologies or [])
         return (
-            f"Experience: {self.position} at {self.company}"
-            f"\nPeriod: {self.period}"
-            f"\nLocation: {self.safe_translation_getter("location", any_language=True) or ""}"
-            f"\nTechnologies: {", ".join(self.technologies or [])}"
-            f"\nDescription: {self.safe_translation_getter("description", any_language=True) or ""}"
-            f"\nAchievements: {"; ".join(self.safe_translation_getter("achievements", any_language=True) or [])}"
+            f"Experience: {self.position} at {self.company}\nPeriod: {self.period}\nLocation: {location}\n"
+            f"Technologies: {technologies}\nDescription: {description}\nAchievements: {achievements}"
         )
 
     class Meta:

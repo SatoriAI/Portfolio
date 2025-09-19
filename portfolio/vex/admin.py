@@ -46,6 +46,7 @@ class ConversationAdmin(admin.ModelAdmin):
 class DocumentAdmin(admin.ModelAdmin):
     list_display = (
         "title",
+        "language",
         "injected",
         "created_at",
     )

@@ -215,3 +215,7 @@ OPENAI_MODEL = env(
     "OPENAI_MODEL",
 )
 TEMPERATURE = env("TEMPERATURE", default=0.5)
+
+# RAG Debugging
+RAG_DUMP_CONTEXTS = env.bool("RAG_DUMP_CONTEXTS", default=True)
+RAG_CONTEXT_DUMP_DIR = env("RAG_CONTEXT_DUMP_DIR", default=str(BASE_DIR / "media" / "rag_contexts"))

@@ -1,5 +1,7 @@
 from collections.abc import Callable
+from datetime import datetime
 from operator import itemgetter
+from pathlib import Path
 from typing import Any
 
 from django.conf import settings
@@ -19,7 +21,6 @@ class RagChain:
 
     def __init__(self) -> None:
         self.llm = ChatOpenAI(model=settings.OPENAI_MODEL, temperature=settings.TEMPERATURE)
-        self.retriever = retriever_topk
 
     @property
     def prompt(self) -> ChatPromptTemplate:
@@ -47,16 +48,21 @@ class RagChain:
         locale = context["locale"]
 
         # Extract documents from Vector DB
-        active_retriever = self.retriever(_filter={"locale": locale})
+        active_retriever = retriever_topk(_filter={"locale": locale})
         vector_docs = (itemgetter("question") | active_retriever).invoke(context)
 
         # Extract documents from PostgreSQL
-        relational_getter = self.RELATIONAL_CONTEXT_GETTER(question=question)
+        relational_getter = self.RELATIONAL_CONTEXT_GETTER(question=question, locale=locale)
         structured_docs = relational_getter.get_context()
 
-        return "\n\n".join(
+        merged = "\n\n".join(
             f"[{i+1}] {d.page_content}" for i, d in enumerate((vector_docs or []) + (structured_docs or []))
         )
+
+        if getattr(settings, "RAG_DUMP_CONTEXTS", False):
+            self._save_context_to_file(question=question, locale=locale, merged=merged)
+
+        return merged
 
     @staticmethod
     def _get_history_factory() -> Callable[[str | None], MessageHistory]:
@@ -66,6 +72,19 @@ class RagChain:
             return MessageHistory(session_key)
 
         return history_factory
+
+    @staticmethod
+    def _save_context_to_file(question: str, locale: str, merged: str) -> None:
+        try:
+            dump_dir = Path(settings.RAG_CONTEXT_DUMP_DIR)
+            if not dump_dir.exists():
+                dump_dir.mkdir(parents=True, exist_ok=True)
+            filename = dump_dir / f"{datetime.now().strftime("%Y/%m/%dT%H:%M%:%S")}.txt"
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(f"Locale: {locale}\nQuestion: {question}\n\n")
+                f.write(merged)
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
 
 
 def build_rag_chain() -> RunnableWithMessageHistory:
