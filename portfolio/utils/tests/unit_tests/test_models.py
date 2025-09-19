@@ -11,4 +11,4 @@ class UtilsModelsTestCase(TestCase):
     def test_descriptive_model_representation_raises_error(self) -> None:
         model = DescriptiveModel()
         with self.assertRaises(NotImplementedError):
-            _ = model.representation
+            _ = model.representation_for(locale=None)

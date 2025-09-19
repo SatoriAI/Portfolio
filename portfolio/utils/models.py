@@ -11,6 +11,5 @@ class TimestampedModel(models.Model):
 
 
 class DescriptiveModel:
-    @property
-    def representation(self) -> str:
+    def representation_for(self, locale: str | None) -> str:
         raise NotImplementedError
