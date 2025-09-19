@@ -46,6 +46,7 @@ jobs:
           CSRF_TRUSTED_ORIGINS: ""
           VECTOR_DB_COLLECTION: ""
           OPENAI_API_KEY: ""
+          OPENAI_MODEL: ""
         run: uv run pylint portfolio/portfolio portfolio/university portfolio/utils portfolio/work
 
   mypy:
@@ -68,6 +69,7 @@ jobs:
           CSRF_TRUSTED_ORIGINS: ""
           VECTOR_DB_COLLECTION: ""
           OPENAI_API_KEY: ""
+          OPENAI_MODEL: ""
         run: uv run mypy .
 
   pytest:
@@ -103,6 +105,7 @@ jobs:
           DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
           VECTOR_DB_COLLECTION: ""
           OPENAI_API_KEY: ""
+          OPENAI_MODEL: ""
         run: uv run pytest --cov-report xml  --junitxml=report.xml
 
       - name: Upload Coverage Reports to Codecov
