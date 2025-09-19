@@ -211,9 +211,7 @@ Prefer skimmable structure (short paragraphs or bullets) when listing items.
 Be grammatically correct, pay close attention to punctuation.
 Always respond in {locale}. If context is in another language, translate or summarize to {locale} before answering.
 """
-OPENAI_MODEL = env(
-    "OPENAI_MODEL",
-)
+OPENAI_MODEL = env("OPENAI_MODEL")
 TEMPERATURE = env("TEMPERATURE", default=0.5)
 
 # RAG Debugging
