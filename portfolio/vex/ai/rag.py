@@ -59,7 +59,7 @@ class RagChain:
             f"[{i+1}] {d.page_content}" for i, d in enumerate((vector_docs or []) + (structured_docs or []))
         )
 
-        if getattr(settings, "RAG_DUMP_CONTEXTS", False):
+        if settings.RAG_DUMP_CONTEXTS:
             self._save_context_to_file(question=question, locale=locale, merged=merged)
 
         return merged
@@ -79,7 +79,7 @@ class RagChain:
             dump_dir = Path(settings.RAG_CONTEXT_DUMP_DIR)
             if not dump_dir.exists():
                 dump_dir.mkdir(parents=True, exist_ok=True)
-            filename = dump_dir / f"{datetime.now().strftime("%Y/%m/%dT%H:%M%:%S")}.txt"
+            filename = dump_dir / f"{datetime.now().strftime("%Y-%m-%dT%H:%M%:%S")}.txt"
             with open(filename, "w", encoding="utf-8") as f:
                 f.write(f"Locale: {locale}\nQuestion: {question}\n\n")
                 f.write(merged)
