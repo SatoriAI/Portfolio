@@ -5,17 +5,10 @@ from django.db import migrations
 
 def create_pgvector_extension(apps, schema_editor) -> None:
     with schema_editor.connection.cursor() as cursor:
-        cursor.execute(
-            """
-            DO $$
-            BEGIN
-                CREATE EXTENSION IF NOT EXISTS vector;
-            EXCEPTION WHEN undefined_file THEN
-                RAISE NOTICE 'pgvector extension not installed on server; skipping';
-            END;
-            $$;
-            """
-        )
+        cursor.execute("SELECT 1 FROM pg_available_extensions WHERE name = 'vector'")
+        if not cursor.fetchone():
+            return
+        cursor.execute("CREATE EXTENSION IF NOT EXISTS vector;")
 
 
 class Migration(migrations.Migration):
