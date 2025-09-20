@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Briefcase, Building, Calendar, MapPin, Settings } from "lucide-react";
+import { Briefcase, Building, Calendar, MapPin, Menu, Settings } from "lucide-react";
 
 import Reveal from "@/components/Reveal";
 import SettingsPanel from "@/components/SettingsPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useScrollGradient } from "@/hooks/use-scroll-gradient";
 import { UiExperience, useExperiences } from "@/lib/experiencesService";
@@ -14,6 +15,7 @@ import { translations } from "@/utils/translations";
 
 const Experience = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [experiences, setExperiences] = useState<UiExperience[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +57,7 @@ const Experience = () => {
     >
       {/* Header */}
       <header className="fixed top-0 z-40 w-full border-b border-orange-200/50 bg-orange-100/80 backdrop-blur-md dark:border-white/10 dark:bg-black/20">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 pt-[env(safe-area-inset-top)]">
           <Link
             to="/"
             className="cursor-pointer bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-xl font-bold text-transparent transition-opacity hover:opacity-80 dark:from-purple-400 dark:to-blue-400"
@@ -80,6 +82,74 @@ const Experience = () => {
                 {t.nav.academic}
               </Link>
             </nav>
+            {/* Mobile Nav */}
+            <div className="md:hidden">
+              <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full hover:bg-orange-100/50 dark:hover:bg-white/10"
+                    aria-label="Open navigation menu"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="w-[85vw] max-w-sm">
+                  <div className="mt-6 flex flex-col gap-1">
+                    <SheetClose asChild>
+                      <Link to="/">
+                        <Button variant="ghost" className="w-full justify-start text-base">
+                          {t.nav.home}
+                        </Button>
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <a href="/#about">
+                        <Button variant="ghost" className="w-full justify-start text-base">
+                          {t.nav.about}
+                        </Button>
+                      </a>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <a href="/#skills">
+                        <Button variant="ghost" className="w-full justify-start text-base">
+                          {t.nav.skills}
+                        </Button>
+                      </a>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <a href="/#projects">
+                        <Button variant="ghost" className="w-full justify-start text-base">
+                          {t.nav.projects}
+                        </Button>
+                      </a>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <a href="/#contact">
+                        <Button variant="ghost" className="w-full justify-start text-base">
+                          {t.nav.contact}
+                        </Button>
+                      </a>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link to="/experience">
+                        <Button variant="ghost" className="mt-2 w-full justify-start text-base">
+                          {t.nav.experience}
+                        </Button>
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link to="/academic">
+                        <Button variant="ghost" className="w-full justify-start text-base">
+                          {t.nav.academic}
+                        </Button>
+                      </Link>
+                    </SheetClose>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
             <Button
               variant="ghost"
               size="icon"

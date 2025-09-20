@@ -10,6 +10,7 @@ import {
   Github,
   Linkedin,
   Mail,
+  Menu,
   MessageSquare,
   Server,
   Settings,
@@ -22,6 +23,7 @@ import SettingsPanel from "@/components/SettingsPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { env } from "@/config/env";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useScrollGradient } from "@/hooks/use-scroll-gradient";
@@ -36,6 +38,7 @@ const Index = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHomeDropdownOpen, setIsHomeDropdownOpen] = useState(false);
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const { language, theme } = useSettings();
 
   const t = translations[language];
@@ -272,6 +275,89 @@ const Index = () => {
                 {t.nav.academic}
               </Link>
             </nav>
+            {/* Mobile Nav */}
+            <div className="md:hidden">
+              <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full hover:bg-orange-100/50 dark:hover:bg-white/10"
+                    aria-label="Open navigation menu"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="w-[85vw] max-w-sm pb-[env(safe-area-inset-bottom)]">
+                  <div className="mt-6 flex flex-col gap-1">
+                    <Button
+                      variant="ghost"
+                      className="justify-start text-base"
+                      onClick={() => {
+                        scrollToTop();
+                        setIsMobileNavOpen(false);
+                      }}
+                    >
+                      {t.nav.home}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="justify-start text-base"
+                      onClick={() => {
+                        handleDropdownItemClick("about");
+                        setIsMobileNavOpen(false);
+                      }}
+                    >
+                      {t.nav.about}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="justify-start text-base"
+                      onClick={() => {
+                        handleDropdownItemClick("skills");
+                        setIsMobileNavOpen(false);
+                      }}
+                    >
+                      {t.nav.skills}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="justify-start text-base"
+                      onClick={() => {
+                        handleDropdownItemClick("projects");
+                        setIsMobileNavOpen(false);
+                      }}
+                    >
+                      {t.nav.projects}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="justify-start text-base"
+                      onClick={() => {
+                        handleDropdownItemClick("contact");
+                        setIsMobileNavOpen(false);
+                      }}
+                    >
+                      {t.nav.contact}
+                    </Button>
+                    <SheetClose asChild>
+                      <Link to="/experience">
+                        <Button variant="ghost" className="mt-2 w-full justify-start text-base">
+                          {t.nav.experience}
+                        </Button>
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link to="/academic">
+                        <Button variant="ghost" className="w-full justify-start text-base">
+                          {t.nav.academic}
+                        </Button>
+                      </Link>
+                    </SheetClose>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
             <Button
               variant="ghost"
               size="icon"
@@ -702,7 +788,8 @@ const Index = () => {
       {!isChatOpen && (
         <Button
           onClick={() => setIsChatOpen(true)}
-          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-r from-orange-500 to-red-500 shadow-lg transition-all duration-300 hover:scale-110 hover:from-orange-600 hover:to-red-600 hover:shadow-xl dark:from-purple-500 dark:to-blue-500 dark:hover:from-purple-600 dark:hover:to-blue-600"
+          className="fixed right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-r from-orange-500 to-red-500 shadow-lg transition-all duration-300 hover:scale-110 hover:from-orange-600 hover:to-red-600 hover:shadow-xl dark:from-purple-500 dark:to-blue-500 dark:hover:from-purple-600 dark:hover:to-blue-600"
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 1.5rem)" }}
         >
           <MessageSquare className="h-6 w-6" />
         </Button>

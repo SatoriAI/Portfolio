@@ -124,6 +124,17 @@ All colors MUST be HSL.
 }
 
 @layer base {
+  html {
+    /* Prevent layout shift when scrollbars appear/disappear */
+    scrollbar-gutter: stable both-edges;
+  }
+
+  html,
+  body {
+    /* Ensure the app fits the screen width and avoids accidental horizontal scroll */
+    overflow-x: hidden;
+  }
+
   * {
     @apply border-border;
   }

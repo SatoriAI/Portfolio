@@ -458,8 +458,8 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm dark:bg-black/50">
-      <Card className="flex h-[800px] w-full max-w-6xl flex-col border-orange-200 bg-orange-50 dark:border-slate-700 dark:bg-slate-900">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] backdrop-blur-sm dark:bg-black/50">
+      <Card className="flex h-[80vh] w-full max-w-6xl flex-col border-orange-200 bg-orange-50 dark:border-slate-700 dark:bg-slate-900 md:h-[800px]">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-orange-200 pb-4 dark:border-slate-700">
           <CardTitle className="flex items-center gap-2 text-card-foreground">
             <MessageSquare className="h-5 w-5 text-orange-600 dark:text-blue-400" />
@@ -572,7 +572,7 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
             <div ref={bottomRef} />
           </ScrollArea>
 
-          <div className="border-t border-orange-200 p-4 dark:border-slate-700">
+          <div className="border-t border-orange-200 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] dark:border-slate-700">
             <div
               className={`relative min-h-[44px] overflow-hidden rounded-md border border-orange-300 bg-orange-50 px-3 py-2 dark:border-slate-600 dark:bg-slate-800 ${isMultilineInput ? "flex flex-col gap-2" : ""}`}
             >
