@@ -16,6 +16,7 @@ import SettingsPanel from "@/components/SettingsPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useScrollGradient } from "@/hooks/use-scroll-gradient";
@@ -92,7 +93,7 @@ const Academic = () => {
       <header className="fixed top-0 z-40 w-full border-b border-orange-200/50 bg-orange-100/80 backdrop-blur-md dark:border-white/10 dark:bg-black/20">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link
-            to="/"
+            to="/#hero"
             className="cursor-pointer bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-xl font-bold text-transparent transition-opacity hover:opacity-80 dark:from-purple-400 dark:to-blue-400"
           >
             Dawid Hanrahan
@@ -130,41 +131,43 @@ const Academic = () => {
                 </SheetTrigger>
                 <SheetContent className="w-[85vw] max-w-sm">
                   <div className="mt-6 flex flex-col gap-1">
-                    <SheetClose asChild>
-                      <Link to="/">
-                        <Button variant="ghost" className="w-full justify-start text-base">
-                          {t.nav.home}
-                        </Button>
-                      </Link>
-                    </SheetClose>
-                    <SheetClose asChild>
-                      <a href="/#about">
-                        <Button variant="ghost" className="w-full justify-start text-base">
-                          {t.nav.about}
-                        </Button>
-                      </a>
-                    </SheetClose>
-                    <SheetClose asChild>
-                      <a href="/#skills">
-                        <Button variant="ghost" className="w-full justify-start text-base">
-                          {t.nav.skills}
-                        </Button>
-                      </a>
-                    </SheetClose>
-                    <SheetClose asChild>
-                      <a href="/#projects">
-                        <Button variant="ghost" className="w-full justify-start text-base">
-                          {t.nav.projects}
-                        </Button>
-                      </a>
-                    </SheetClose>
-                    <SheetClose asChild>
-                      <a href="/#contact">
-                        <Button variant="ghost" className="w-full justify-start text-base">
-                          {t.nav.contact}
-                        </Button>
-                      </a>
-                    </SheetClose>
+                    <div className="px-1 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      {t.nav.mainPage}
+                    </div>
+                    <div className="flex flex-col">
+                      <SheetClose asChild>
+                        <a href="/#about">
+                          <Button variant="ghost" className="justify-start pl-4 text-base">
+                            {t.nav.about}
+                          </Button>
+                        </a>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <a href="/#skills">
+                          <Button variant="ghost" className="justify-start pl-4 text-base">
+                            {t.nav.skills}
+                          </Button>
+                        </a>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <a href="/#projects">
+                          <Button variant="ghost" className="justify-start pl-4 text-base">
+                            {t.nav.projects}
+                          </Button>
+                        </a>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <a href="/#contact">
+                          <Button variant="ghost" className="justify-start pl-4 text-base">
+                            {t.nav.contact}
+                          </Button>
+                        </a>
+                      </SheetClose>
+                    </div>
+                    <Separator className="my-3" />
+                    <div className="px-1 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      {t.nav.pages}
+                    </div>
                     <SheetClose asChild>
                       <Link to="/experience">
                         <Button variant="ghost" className="mt-2 w-full justify-start text-base">
