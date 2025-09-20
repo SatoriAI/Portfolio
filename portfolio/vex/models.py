@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from parler.managers import TranslatableManager
+from parler.models import TranslatableModel, TranslatedFields
 
 from utils.models import TimestampedModel
 from vex.choices import Roles
@@ -47,3 +49,20 @@ class Document(TimestampedModel):
     class Meta:
         verbose_name = _("Document")
         verbose_name_plural = _("Documents")
+
+
+class Configuration(TranslatableModel, TimestampedModel):
+    translations = TranslatedFields(
+        title=models.CharField(_("Title"), max_length=256),
+        system_prompt=models.TextField(_("System Prompt")),
+        user_prompt=models.TextField(_("User Prompt")),
+    )
+    model = models.CharField(_("Model"), max_length=256)
+    temperature = models.FloatField(_("Temperature"), default=0.5)
+
+    # Managers
+    objects: TranslatableManager = TranslatableManager()
+
+    class Meta:
+        verbose_name = _("Configuration")
+        verbose_name_plural = _("Configurations")

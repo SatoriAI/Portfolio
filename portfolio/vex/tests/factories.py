@@ -2,8 +2,9 @@ import factory
 import faker
 from factory.django import DjangoModelFactory
 
+from utils.factories import i18nMixin
 from vex.choices import Roles
-from vex.models import Conversation, Document, Message
+from vex.models import Configuration, Conversation, Document, Message
 
 fake = faker.Faker()
 
@@ -32,3 +33,17 @@ class DocumentFactory(DjangoModelFactory):
     description = factory.Faker("paragraph")
     url = factory.Faker("url")
     injected = False
+
+
+class ConfigurationFactory(DjangoModelFactory, i18nMixin):
+    class Meta:
+        model = Configuration
+        skip_postgeneration_save = True
+
+    model = "gpt-4o-mini"
+    temperature = 0.5
+
+    # Translated fields (current language)
+    title = factory.Faker("sentence", nb_words=3)
+    system_prompt = factory.Faker("sentence", nb_words=3)
+    user_prompt = factory.LazyFunction(lambda: "Question: {question}\nContext: {context}")

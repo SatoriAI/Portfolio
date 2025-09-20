@@ -1,8 +1,9 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
+from parler.admin import TranslatableAdmin
 
 from vex.actions.inject_documents import run_inject_documents
-from vex.models import Conversation, Document, Message
+from vex.models import Configuration, Conversation, Document, Message
 
 
 class MessageInline(admin.TabularInline):
@@ -63,3 +64,17 @@ class DocumentAdmin(admin.ModelAdmin):
     actions = [
         run_inject_documents,
     ]
+
+
+@admin.register(Configuration)
+class ConfigurationAdmin(TranslatableAdmin):
+    list_display = (
+        "title",
+        "model",
+        "temperature",
+        "updated_at",
+    )
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )

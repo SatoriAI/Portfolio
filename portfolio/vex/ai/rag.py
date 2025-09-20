@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 from operator import itemgetter
 from pathlib import Path
@@ -14,22 +15,41 @@ from langchain_openai import ChatOpenAI
 from vex.ai.database.relational import RelationalContextGetter
 from vex.ai.database.vector import retriever_topk
 from vex.ai.history import MessageHistory
+from vex.models import Configuration
+
+
+@dataclass
+class RagConfig:
+    model: str
+    temperature: float
+    system_prompt: str
+    user_prompt: str
+
+    def safe_translation_getter(self, field: str, **kwargs) -> str:
+        if field == "system_prompt":
+            return self.system_prompt
+        if field == "user_prompt":
+            return self.user_prompt
+        raise AttributeError(f"Unknown translatable field: {field}")
 
 
 class RagChain:
     RELATIONAL_CONTEXT_GETTER = RelationalContextGetter
 
     def __init__(self) -> None:
-        self.llm = ChatOpenAI(model=settings.OPENAI_MODEL, temperature=settings.TEMPERATURE)
+        self.config = self._get_config()
+        self.llm = ChatOpenAI(model=self.config.model, temperature=self.config.temperature)
 
-    @property
-    def prompt(self) -> ChatPromptTemplate:
-        return ChatPromptTemplate.from_messages(
-            [
-                ("system", settings.SYSTEM_PROMPT.strip()),
-                MessagesPlaceholder("history"),
-                ("user", "Question: {question}\nContext: {context}"),
-            ]
+    @staticmethod
+    def _get_config() -> RagConfig | Configuration:
+        if db_config := Configuration.objects.first():
+            return db_config
+
+        return RagConfig(
+            model="gpt-4o-mini",
+            temperature=0.5,
+            system_prompt="You are a helpful assistant.",
+            user_prompt="Question: {question}\nContext: {context}",
         )
 
     def build(self) -> RunnableWithMessageHistory:
@@ -42,6 +62,20 @@ class RagChain:
 
     def _get_core(self) -> RunnableSerializable[dict[str, Any], str]:
         return RunnablePassthrough.assign(context=self._merge_context) | self.prompt | self.llm | StrOutputParser()
+
+    def prompt(self, values: dict[str, Any]) -> ChatPromptTemplate:
+        locale = values.get("locale") or settings.LANGUAGE_CODE
+
+        system_prompt = self.config.safe_translation_getter("system_prompt", language_code=locale).strip()
+        user_prompt = self.config.safe_translation_getter("user_prompt", language_code=locale).strip()
+
+        return ChatPromptTemplate.from_messages(
+            [
+                ("system", system_prompt),
+                MessagesPlaceholder("history"),
+                ("user", user_prompt),
+            ]
+        )
 
     def _merge_context(self, context: dict) -> str:
         question = context["question"]
@@ -79,7 +113,7 @@ class RagChain:
             dump_dir = Path(settings.RAG_CONTEXT_DUMP_DIR)
             if not dump_dir.exists():
                 dump_dir.mkdir(parents=True, exist_ok=True)
-            filename = dump_dir / f"{datetime.now().strftime("%Y-%m-%dT%H:%M%:%S")}.txt"
+            filename = dump_dir / f"{datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}.txt"
             with open(filename, "w", encoding="utf-8") as f:
                 f.write(f"Locale: {locale}\nQuestion: {question}\n\n")
                 f.write(merged)

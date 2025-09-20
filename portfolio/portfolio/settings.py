@@ -14,13 +14,8 @@ from pathlib import Path
 
 import environ
 
-# Define types and defaults
-env = environ.Env(
-    DEBUG=(bool, False),
-    ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
-    CORS_ALLOWED_ORIGINS=(list, []),
-    CSRF_TRUSTED_ORIGINS=(list, []),
-)
+# Environment
+env = environ.Env()
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,11 +35,11 @@ if env_file.exists():
 SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env("DEBUG")
+DEBUG = env.bool("DEBUG", default=False)
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
-CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
-CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS")
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
 if DEBUG:  # For development: Allow local file and HTTP server access
     CORS_ALLOW_ALL_ORIGINS = True
@@ -80,8 +75,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -122,8 +117,8 @@ DATABASE_URL = env("DATABASE_URL")
 # Vector Database
 VECTOR_DB_COLLECTION = env("VECTOR_DB_COLLECTION")
 VECTOR_TEXT_EMBEDDING_MODEL = env("VECTOR_TEXT_EMBEDDING_MODEL", default="text-embedding-3-small")
-VECTOR_USE_JSONB = env("USE_JSONB", default=True)
-VECTOR_RETRIEVE_K = env("RETRIEVE_K", default=6)
+VECTOR_USE_JSONB = env.bool("USE_JSONB", default=True)
+VECTOR_RETRIEVE_K = env.int("RETRIEVE_K", default=6)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -199,21 +194,6 @@ REST_FRAMEWORK = {
 # Own Variables
 OPENAI_API_KEY = env("OPENAI_API_KEY")
 
-# RAG Pipeline
-SYSTEM_PROMPT = """
-You are Vex, Dawid Hanrahan's personal AI assistant.
-Tone: warm, concise, and lightly witty; add a small dash of humor from time to time.
-Introduce yourself as Vex when appropriate (first reply may include a brief friendly one-liner).
-You know Dawid's background, projects, skills, academic life and other details, based on the retrieved context.
-Answer strictly using the retrieved context; if unsure, say you don't know. Do not invent sources.
-Refer to Dawid in the third person (e.g., 'Dawid', 'he'), not 'I'.
-Prefer skimmable structure (short paragraphs or bullets) when listing items.
-Be grammatically correct, pay close attention to punctuation.
-Always respond in {locale}. If context is in another language, translate or summarize to {locale} before answering.
-"""
-OPENAI_MODEL = env("OPENAI_MODEL")
-TEMPERATURE = env("TEMPERATURE", default=0.5)
-
 # RAG Debugging
-RAG_DUMP_CONTEXTS = env.bool("RAG_DUMP_CONTEXTS", default=True)
+RAG_DUMP_CONTEXTS = env.bool("RAG_DUMP_CONTEXTS", default=DEBUG)
 RAG_CONTEXT_DUMP_DIR = env("RAG_CONTEXT_DUMP_DIR", default=str(BASE_DIR / "media" / "rag_contexts"))
