@@ -570,13 +570,13 @@ const Index = () => {
                     </CardTitle>
                     <Badge
                       variant="secondary"
-                      className="mt-2 justify-center border-orange-500/30 bg-orange-500/20 text-orange-700 dark:border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-300"
+                      className="mt-3 justify-center rounded-full border-orange-500/40 bg-orange-500/25 px-3 py-1.5 text-sm font-semibold text-orange-700 shadow-sm ring-1 ring-orange-500/30 dark:border-blue-500/40 dark:bg-blue-500/25 dark:text-blue-300 dark:ring-blue-500/30 md:text-xs"
                     >
                       {skill.level}
                     </Badge>
                   </CardHeader>
                   <CardContent className="flex flex-grow items-start justify-center px-4 pt-0">
-                    <p className="text-center text-sm leading-relaxed text-muted-foreground">
+                    <p className="text-center text-base leading-relaxed text-muted-foreground md:text-sm">
                       {skill.description}
                     </p>
                   </CardContent>
