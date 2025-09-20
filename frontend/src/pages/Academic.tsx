@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   BookOpen,
@@ -39,6 +39,14 @@ const Academic = () => {
   const publicationsService = usePublications();
   const testimonialsService = useTestimonials();
 
+  // Mobile testimonials slider state
+  const testimonialsSliderRef = useRef<HTMLDivElement>(null);
+  const [testimonialsTouchStartX, setTestimonialsTouchStartX] = useState<number | null>(null);
+  const [testimonialsTouchDeltaX, setTestimonialsTouchDeltaX] = useState(0);
+  const [testimonialsIsDragging, setTestimonialsIsDragging] = useState(false);
+  const [testimonialsMobileIndex, setTestimonialsMobileIndex] = useState(1); // 1..n, with clones
+  const [testimonialsAllowTransition, setTestimonialsAllowTransition] = useState(true);
+
   useEffect(() => {
     const loadAcademicData = async () => {
       try {
@@ -65,6 +73,34 @@ const Academic = () => {
 
     loadAcademicData();
   }, [language]);
+
+  // Reset testimonials mobile index when data changes
+  useEffect(() => {
+    setTestimonialsMobileIndex(1);
+  }, [testimonials.length]);
+
+  const handleTestimonialsTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    setTestimonialsTouchStartX(e.touches[0].clientX);
+    setTestimonialsIsDragging(true);
+  };
+
+  const handleTestimonialsTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (testimonialsTouchStartX === null) return;
+    const delta = e.touches[0].clientX - testimonialsTouchStartX;
+    setTestimonialsTouchDeltaX(delta);
+  };
+
+  const handleTestimonialsTouchEnd = () => {
+    if (!testimonialsIsDragging) return;
+    const threshold = 50;
+    if (Math.abs(testimonialsTouchDeltaX) > threshold) {
+      if (testimonialsTouchDeltaX < 0) setTestimonialsMobileIndex((i) => i + 1);
+      else setTestimonialsMobileIndex((i) => i - 1);
+    }
+    setTestimonialsTouchStartX(null);
+    setTestimonialsTouchDeltaX(0);
+    setTestimonialsIsDragging(false);
+  };
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -490,32 +526,107 @@ const Academic = () => {
                 <p className="text-lg text-muted-foreground">{t.academic.noTestimonials}</p>
               </div>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {testimonials.map((testimonial) => (
-                  <Card
-                    key={testimonial.id}
-                    className="border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-                  >
-                    <CardHeader>
-                      <div className="mb-3 flex items-center gap-3">
-                        <Quote className="h-6 w-6 text-orange-600 dark:text-purple-400" />
-                        <div className="flex">{renderStars(testimonial.rating)}</div>
+              <>
+                {/* Mobile: single-card swipe carousel */}
+                <div
+                  className="-mx-6 overflow-hidden md:hidden"
+                  ref={testimonialsSliderRef}
+                  onTouchStart={handleTestimonialsTouchStart}
+                  onTouchMove={handleTestimonialsTouchMove}
+                  onTouchEnd={handleTestimonialsTouchEnd}
+                >
+                  {(() => {
+                    const containerWidth = testimonialsSliderRef.current?.clientWidth || 1;
+                    const slides =
+                      testimonials.length > 0
+                        ? [testimonials[testimonials.length - 1], ...testimonials, testimonials[0]]
+                        : [];
+                    const translatePx =
+                      -(testimonialsMobileIndex * containerWidth) +
+                      (testimonialsIsDragging ? testimonialsTouchDeltaX : 0);
+                    return (
+                      <div
+                        className="flex"
+                        style={{
+                          transform: `translateX(${translatePx}px)`,
+                          transition:
+                            testimonialsIsDragging || !testimonialsAllowTransition
+                              ? "none"
+                              : "transform 320ms ease",
+                        }}
+                        onTransitionEnd={() => {
+                          if (testimonials.length === 0) return;
+                          if (testimonialsMobileIndex === 0) {
+                            setTestimonialsAllowTransition(false);
+                            requestAnimationFrame(() => {
+                              setTestimonialsMobileIndex(testimonials.length);
+                              requestAnimationFrame(() => setTestimonialsAllowTransition(true));
+                            });
+                          } else if (testimonialsMobileIndex === testimonials.length + 1) {
+                            setTestimonialsAllowTransition(false);
+                            requestAnimationFrame(() => {
+                              setTestimonialsMobileIndex(1);
+                              requestAnimationFrame(() => setTestimonialsAllowTransition(true));
+                            });
+                          }
+                        }}
+                      >
+                        {slides.map((testimonial, index) => (
+                          <div key={index} className="w-full flex-none px-6">
+                            <Card className="border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
+                              <CardHeader>
+                                <div className="mb-3 flex items-center gap-3">
+                                  <Quote className="h-6 w-6 text-orange-600 dark:text-purple-400" />
+                                  <div className="flex">{renderStars(testimonial.rating)}</div>
+                                </div>
+                                <CardTitle className="text-lg text-card-foreground">
+                                  {testimonial.name}
+                                </CardTitle>
+                                <CardDescription className="text-muted-foreground">
+                                  {testimonial.course} • {testimonial.semester}
+                                </CardDescription>
+                              </CardHeader>
+                              <CardContent>
+                                <p className="italic leading-relaxed text-muted-foreground">
+                                  "{testimonial.text}"
+                                </p>
+                              </CardContent>
+                            </Card>
+                          </div>
+                        ))}
                       </div>
-                      <CardTitle className="text-lg text-card-foreground">
-                        {testimonial.name}
-                      </CardTitle>
-                      <CardDescription className="text-muted-foreground">
-                        {testimonial.course} • {testimonial.semester}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="italic leading-relaxed text-muted-foreground">
-                        "{testimonial.text}"
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Tablet/Desktop: original grid */}
+                <div className="hidden gap-6 md:grid md:grid-cols-2 lg:grid-cols-3">
+                  {testimonials.map((testimonial) => (
+                    <Card
+                      key={testimonial.id}
+                      className="border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                    >
+                      <CardHeader>
+                        <div className="mb-3 flex items-center gap-3">
+                          <Quote className="h-6 w-6 text-orange-600 dark:text-purple-400" />
+                          <div className="flex">{renderStars(testimonial.rating)}</div>
+                        </div>
+                        <CardTitle className="text-lg text-card-foreground">
+                          {testimonial.name}
+                        </CardTitle>
+                        <CardDescription className="text-muted-foreground">
+                          {testimonial.course} • {testimonial.semester}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="italic leading-relaxed text-muted-foreground">
+                          "{testimonial.text}"
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </>
             )}
           </section>
         </div>
