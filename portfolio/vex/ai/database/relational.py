@@ -3,6 +3,7 @@ from django.conf import settings
 from django.db import models
 from langchain_core.documents import Document
 
+from university.models import Publication, School, Testimonial
 from work.models import Experience, Project, Skill
 
 STANZA_PIPELINES: dict[str, stanza.Pipeline] = {}
@@ -42,6 +43,9 @@ class RelationalContextGetter:
             Skill: ["skill", "skills", "stack", "tech", "technologies"],
             Project: ["project", "projects", "portfolio", "repo", "repositories"],
             Experience: ["experience", "work", "employment", "career", "job", "jobs"],
+            School: ["school", "university", "research", "study", "advisor", "areas"],
+            Publication: ["publication", "paper", "journal", "article", "summary"],
+            Testimonial: ["testimonial", "course", "semester", "season", "opinion", "review"],
         },
         "pl": {
             Skill: ["umiejętność", "umiejętności", "stack", "technologie", "tech"],
@@ -54,6 +58,9 @@ class RelationalContextGetter:
                 "stanowisko",
                 "firma",
             ],
+            School: ["szkoła", "uczelnia", "uniwersytet", "badania", "studia", "promotor", "obszary"],
+            Publication: ["publikacja", "artykuł", "czasopismo", "periodyk", "streszczenie"],
+            Testimonial: ["referencja", "opinia", "kurs", "semestr", "pora roku"],
         },
     }
 
