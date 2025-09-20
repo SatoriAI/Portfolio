@@ -25,7 +25,7 @@ class RagConfig:
     system_prompt: str
     user_prompt: str
 
-    def safe_translation_getter(self, field: str, **kwargs) -> str:
+    def safe_translation_getter(self, field: str, **kwargs: str) -> str:
         if field == "system_prompt":
             return self.system_prompt
         if field == "user_prompt":
