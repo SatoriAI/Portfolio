@@ -42,8 +42,11 @@ class RagChain:
 
     @staticmethod
     def _get_config() -> RagConfig | Configuration:
-        if db_config := Configuration.objects.first():
-            return db_config
+        try:
+            if db_config := Configuration.objects.first():
+                return db_config
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
 
         return RagConfig(
             model="gpt-4o-mini",
