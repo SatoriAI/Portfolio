@@ -409,7 +409,7 @@ const Academic = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-orange-400/30 hover:border-orange-500 dark:border-purple-400/30 dark:hover:border-purple-400"
+                                className="hidden border-orange-400/30 hover:border-orange-500 dark:border-purple-400/30 dark:hover:border-purple-400 md:inline-flex"
                                 onClick={() => window.open(pub.link, "_blank")}
                               >
                                 <ExternalLink className="mr-2 h-4 w-4" />
@@ -424,6 +424,19 @@ const Academic = () => {
                           </CardDescription>
                         )}
                       </CardHeader>
+                      {pub.link && (
+                        <CardContent className="md:hidden">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-2 w-full border-orange-400/30 hover:border-orange-500 dark:border-purple-400/30 dark:hover:border-purple-400"
+                            onClick={() => window.open(pub.link, "_blank")}
+                          >
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                            {t.academic.view}
+                          </Button>
+                        </CardContent>
+                      )}
                     </Card>
                   </Reveal>
                 ))}
