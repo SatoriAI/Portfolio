@@ -455,7 +455,7 @@ const Academic = () => {
                           )}
                         </div>
                         {pub.summary && (
-                          <CardDescription className="text-muted-foreground">
+                          <CardDescription className="text-justify text-muted-foreground">
                             {pub.summary}
                           </CardDescription>
                         )}
