@@ -609,17 +609,16 @@ const Academic = () => {
                       <CardHeader>
                         <div className="mb-3 flex items-center gap-3">
                           <Quote className="h-6 w-6 text-orange-600 dark:text-purple-400" />
-                          <div className="flex">{renderStars(testimonial.rating)}</div>
                         </div>
                         <CardTitle className="text-lg text-card-foreground">
-                          {testimonial.name}
+                          {testimonial.course}
                         </CardTitle>
                         <CardDescription className="text-muted-foreground">
-                          {testimonial.course} • {testimonial.semester}
+                          {testimonial.semester}
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <p className="italic leading-relaxed text-muted-foreground">
+                        <p className="text-justify italic leading-relaxed text-muted-foreground">
                           {testimonial.text}
                         </p>
                       </CardContent>
