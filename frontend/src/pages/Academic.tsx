@@ -16,6 +16,13 @@ import SettingsPanel from "@/components/SettingsPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -599,31 +606,36 @@ const Academic = () => {
                   })()}
                 </div>
 
-                {/* Tablet/Desktop: original grid */}
-                <div className="hidden gap-6 md:grid md:grid-cols-2 lg:grid-cols-3">
-                  {testimonials.map((testimonial) => (
-                    <Card
-                      key={testimonial.id}
-                      className="border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-                    >
-                      <CardHeader>
-                        <div className="mb-3 flex items-center gap-3">
-                          <Quote className="h-6 w-6 text-orange-600 dark:text-purple-400" />
-                        </div>
-                        <CardTitle className="text-lg text-card-foreground">
-                          {testimonial.course}
-                        </CardTitle>
-                        <CardDescription className="text-muted-foreground">
-                          {testimonial.semester}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-justify italic leading-relaxed text-muted-foreground">
-                          {testimonial.text}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))}
+                {/* Tablet/Desktop: infinite carousel */}
+                <div className="hidden md:block">
+                  <Carousel opts={{ loop: true, align: "start" }} className="w-full">
+                    <CarouselContent>
+                      {testimonials.map((testimonial) => (
+                        <CarouselItem key={testimonial.id} className="md:basis-1/2 lg:basis-1/3">
+                          <Card className="border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
+                            <CardHeader>
+                              <div className="mb-3 flex items-center gap-3">
+                                <Quote className="h-6 w-6 text-orange-600 dark:text-purple-400" />
+                              </div>
+                              <CardTitle className="text-lg text-card-foreground">
+                                {testimonial.course}
+                              </CardTitle>
+                              <CardDescription className="text-muted-foreground">
+                                {testimonial.semester}
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-justify italic leading-relaxed text-muted-foreground">
+                                {testimonial.text}
+                              </p>
+                            </CardContent>
+                          </Card>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious />
+                    <CarouselNext />
+                  </Carousel>
                 </div>
               </>
             )}

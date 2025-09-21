@@ -23,6 +23,13 @@ import SettingsPanel from "@/components/SettingsPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { env } from "@/config/env";
@@ -38,7 +45,6 @@ const Index = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHomeDropdownOpen, setIsHomeDropdownOpen] = useState(false);
-  const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const { language, theme } = useSettings();
   const mobileSliderRef = useRef<HTMLDivElement>(null);
@@ -192,13 +198,7 @@ const Index = () => {
     scrollToSection(sectionId);
   };
 
-  const nextProject = () => {
-    setCurrentProjectIndex((prevIndex) => (prevIndex + 1) % projects.length);
-  };
-
-  const prevProject = () => {
-    setCurrentProjectIndex((prevIndex) => (prevIndex === 0 ? projects.length - 1 : prevIndex - 1));
-  };
+  // Desktop carousel uses Embla via Carousel component; mobile uses custom touch slider below
 
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     setTouchStartX(e.touches[0].clientX);
@@ -228,22 +228,15 @@ const Index = () => {
     setMobileIndex(1);
   }, [projects.length]);
 
-  // Sync desktop index for consistency (dots/arrows/state)
-  useEffect(() => {
-    if (projects.length === 0) return;
-    setCurrentProjectIndex(
-      (((mobileIndex - 1) % projects.length) + projects.length) % projects.length,
-    );
-  }, [mobileIndex, projects.length]);
+  // No desktop index sync needed when using Embla-based Carousel
 
-  const getVisibleProjects = () => {
-    const visibleProjects = [];
-    for (let i = 0; i < 3; i++) {
-      const index = (currentProjectIndex + i) % projects.length;
-      visibleProjects.push(projects[index]);
-    }
-    return visibleProjects;
-  };
+  // Ensure desktop carousel can loop even with few projects by duplicating items
+  const projectsForDesktopCarousel =
+    projects.length > 0
+      ? Array.from({ length: projects.length >= 6 ? 1 : Math.ceil(6 / projects.length) }).flatMap(
+          () => projects,
+        )
+      : [];
 
   return (
     <div
@@ -604,28 +597,6 @@ const Index = () => {
             </div>
           </Reveal>
           <div className="relative">
-            {/* Navigation Buttons */}
-            {projects.length > 3 && (
-              <>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="absolute left-0 top-1/2 z-10 hidden -translate-y-1/2 border-orange-300 bg-white/90 shadow-lg backdrop-blur-sm hover:border-orange-500 dark:border-gray-600 dark:bg-black/90 dark:hover:border-blue-400 md:inline-flex"
-                  onClick={prevProject}
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 border-orange-300 bg-white/90 shadow-lg backdrop-blur-sm hover:border-orange-500 dark:border-gray-600 dark:bg-black/90 dark:hover:border-blue-400 md:inline-flex"
-                  onClick={nextProject}
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </Button>
-              </>
-            )}
-
             {/* Mobile: Single-card swipe carousel */}
             <div
               className="-mx-6 overflow-hidden md:hidden"
@@ -759,114 +730,99 @@ const Index = () => {
               })()}
             </div>
 
-            {/* Tablet/Desktop: Grid carousel */}
-            <div className="hidden md:grid md:grid-cols-2 md:gap-8 md:px-12 lg:grid-cols-3">
-              {getVisibleProjects().map((project, index) => (
-                <Reveal
-                  key={`${currentProjectIndex}-${index}`}
-                  direction={index % 2 === 0 ? "left" : "right"}
-                  delayMs={index * 90}
-                >
-                  <Card className="overflow-hidden border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:scale-105 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
-                    <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400">
-                      <img
-                        src={project.image}
-                        alt={project.title}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <CardHeader>
-                      <CardTitle className="text-center text-card-foreground">
-                        {project.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="mb-4 text-justify text-muted-foreground">
-                        {project.description}
-                      </p>
-                      <div className="mb-4 flex flex-wrap gap-2">
-                        {project.technologies.map((tech, techIndex) => (
-                          <Badge
-                            key={techIndex}
-                            variant="secondary"
-                            className="border-orange-500/30 bg-orange-500/20 text-orange-700 dark:border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-300"
-                          >
-                            {tech}
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="flex gap-2">
-                        {project.github ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
-                            asChild
-                          >
-                            <a href={project.github} target="_blank" rel="noopener noreferrer">
-                              <Github className="mr-2 h-4 w-4" />
-                              {t.projects.code}
-                            </a>
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 cursor-not-allowed border-orange-300 opacity-50 dark:border-gray-600"
-                            disabled
-                          >
-                            <Github className="mr-2 h-4 w-4" />
-                            {t.projects.code}
-                          </Button>
-                        )}
-                        {project.demo ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
-                            asChild
-                          >
-                            <a href={project.demo} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="mr-2 h-4 w-4" />
-                              Demo
-                            </a>
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 cursor-not-allowed border-orange-300 opacity-50 dark:border-gray-600"
-                            disabled
-                          >
-                            <ExternalLink className="mr-2 h-4 w-4" />
-                            Demo
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Reveal>
-              ))}
+            {/* Tablet/Desktop: infinite carousel like testimonials */}
+            <div className="hidden md:block md:px-12">
+              <Carousel opts={{ loop: true, align: "start" }} className="w-full">
+                <CarouselContent>
+                  {projectsForDesktopCarousel.map((project, index) => (
+                    <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                      <Card className="overflow-hidden border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
+                        <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400">
+                          <img
+                            src={project.image}
+                            alt={project.title}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <CardHeader>
+                          <CardTitle className="text-center text-card-foreground">
+                            {project.title}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="mb-4 text-justify text-muted-foreground">
+                            {project.description}
+                          </p>
+                          <div className="mb-4 flex flex-wrap gap-2">
+                            {project.technologies.map((tech, techIndex) => (
+                              <Badge
+                                key={techIndex}
+                                variant="secondary"
+                                className="border-orange-500/30 bg-orange-500/20 text-orange-700 dark:border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-300"
+                              >
+                                {tech}
+                              </Badge>
+                            ))}
+                          </div>
+                          <div className="flex gap-2">
+                            {project.github ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
+                                asChild
+                              >
+                                <a href={project.github} target="_blank" rel="noopener noreferrer">
+                                  <Github className="mr-2 h-4 w-4" />
+                                  {t.projects.code}
+                                </a>
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 cursor-not-allowed border-orange-300 opacity-50 dark:border-gray-600"
+                                disabled
+                              >
+                                <Github className="mr-2 h-4 w-4" />
+                                {t.projects.code}
+                              </Button>
+                            )}
+                            {project.demo ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 border-orange-300 hover:border-orange-500 dark:border-gray-600 dark:hover:border-blue-400"
+                                asChild
+                              >
+                                <a href={project.demo} target="_blank" rel="noopener noreferrer">
+                                  <ExternalLink className="mr-2 h-4 w-4" />
+                                  Demo
+                                </a>
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 cursor-not-allowed border-orange-300 opacity-50 dark:border-gray-600"
+                                disabled
+                              >
+                                <ExternalLink className="mr-2 h-4 w-4" />
+                                Demo
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+              </Carousel>
             </div>
 
-            {/* Carousel Indicators */}
-            {projects.length > 3 && (
-              <Reveal direction="up" delayMs={150}>
-                <div className="mt-6 hidden justify-center gap-2 md:flex">
-                  {Array.from({ length: projects.length }, (_, index) => (
-                    <button
-                      key={index}
-                      className={`h-2 w-2 rounded-full transition-all duration-300 ${
-                        index === currentProjectIndex
-                          ? "w-6 bg-orange-500 dark:bg-blue-400"
-                          : "bg-orange-300 hover:bg-orange-400 dark:bg-gray-600 dark:hover:bg-gray-500"
-                      }`}
-                      onClick={() => setCurrentProjectIndex(index)}
-                    />
-                  ))}
-                </div>
-              </Reveal>
-            )}
+            {/* No desktop indicators to match testimonials */}
           </div>
         </div>
       </section>
