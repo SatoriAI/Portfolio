@@ -534,7 +534,7 @@ const Academic = () => {
               </div>
             ) : (
               <>
-                {/* Mobile: single-card swipe carousel */}
+                {/* Mobile: single-card swipe carousel, i.e. Tinder like feature */}
                 <div
                   className="-mx-6 overflow-hidden md:hidden"
                   ref={testimonialsSliderRef}
