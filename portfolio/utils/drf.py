@@ -29,7 +29,7 @@ class ParlerTranslatedFieldsFieldExtension(OpenApiSerializerFieldExtension):
                 for name in names:
                     translated_props[name] = {"type": "string"}
 
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:  # pylint: disable=broad-exception-caught  # nosec
                 pass
 
         per_language_schema = {
