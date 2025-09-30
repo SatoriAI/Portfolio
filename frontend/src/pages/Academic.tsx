@@ -625,7 +625,7 @@ const Academic = () => {
                               </CardDescription>
                             </CardHeader>
                             <CardContent>
-                              <p className="text-justify italic leading-relaxed text-muted-foreground">
+                              <p className="italic leading-relaxed text-muted-foreground">
                                 {testimonial.text}
                               </p>
                             </CardContent>
