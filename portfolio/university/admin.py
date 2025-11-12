@@ -8,6 +8,7 @@ from university.models import Publication, School, Testimonial
 class SchoolAdmin(TranslatableAdmin):
     list_display = (
         "study",
+        "degree",
         "university",
         "advisor",
     )
@@ -26,4 +27,5 @@ class TestimonialAdmin(TranslatableAdmin):
     list_display = (
         "course",
         "semester",
+        "season",
     )

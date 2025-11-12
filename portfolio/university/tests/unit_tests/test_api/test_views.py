@@ -106,12 +106,15 @@ class PublicationListViewTestCase(TestCase):
         item = data[0]
 
         self.assertEqual(item["id"], obj.id)
-        self.assertEqual(item["title"], "Deep Learning for Natural Language Processing: A Comprehensive Survey")
         self.assertEqual(item["journal"], "Journal of Machine Learning Research")
         self.assertEqual(item["link"], "https://example.com/publications/deep-learning-nlp")
         self.assertEqual(item["year"], 2023)
 
         self.assertIn("translations", item)
+        self.assertEqual(
+            item["translations"]["en"]["title"],
+            "Deep Learning for Natural Language Processing: A Comprehensive Survey",
+        )
         self.assertEqual(
             item["translations"]["en"]["summary"],
             "This paper provides a comprehensive survey of deep learning techniques.",

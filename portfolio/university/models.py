@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from parler.managers import TranslatableManager
 from parler.models import TranslatableModel, TranslatedFields
 
-from university.choices import Seasons
+from university.choices import Degrees, Seasons
 from utils.models import TimestampedModel
 
 
@@ -14,6 +14,7 @@ class School(TranslatableModel, TimestampedModel):
 
     translations = TranslatedFields(
         study=models.CharField(_("Study"), max_length=128),
+        degree=models.CharField(_("Degree"), choices=Degrees, default=Degrees.BACHELOR, max_length=64),
         university=models.CharField(_("University"), max_length=128),
         research=models.TextField(_("Research")),
         advisor=models.CharField(_("Advisor"), null=True, blank=True, max_length=256),
@@ -29,12 +30,12 @@ class School(TranslatableModel, TimestampedModel):
 
 
 class Publication(TranslatableModel, TimestampedModel):
-    title = models.CharField(_("Title"), max_length=256)
     journal = models.CharField(_("Journal"), max_length=256)
     link = models.URLField(_("Link"), null=True, blank=True)
     year = models.PositiveSmallIntegerField(_("Year"))
 
     translations = TranslatedFields(
+        title=models.CharField(_("Title"), max_length=256),
         summary=models.TextField(_("Summary")),
     )
 

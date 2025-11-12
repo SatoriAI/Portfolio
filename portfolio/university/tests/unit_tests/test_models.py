@@ -145,13 +145,16 @@ class UniversityModelsTestCase(TestCase):
 
         # Add PL translation
         obj.set_current_language("pl")
+        obj.title = "Zastosowania uczenia maszynowego"
         obj.summary = "Polskie streszczenie badań"
         obj.save()
 
         pl = Publication.objects.language("pl").get(pk=obj.pk)
+        self.assertEqual(pl.title, "Zastosowania uczenia maszynowego")
         self.assertEqual(pl.summary, "Polskie streszczenie badań")
 
         en = Publication.objects.language("en").get(pk=obj.pk)
+        self.assertEqual(en.title, "Machine Learning Applications")
         self.assertEqual(en.summary, "English summary of the research")
 
     # -------------------------

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-06 16:41+0000\n"
+"POT-Creation-Date: 2025-11-12 12:43+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -28,6 +28,18 @@ msgstr "Zimowy"
 msgid "Summer"
 msgstr "Letni"
 
+#: university/choices.py:11
+msgid "Bachelor Degree"
+msgstr "Studia licencjackie"
+
+#: university/choices.py:12
+msgid "Master Degree"
+msgstr "Studia magisterskie"
+
+#: university/choices.py:13
+msgid "Doctorate Degree"
+msgstr "Studia doktoranckie"
+
 #: university/models.py:12 work/models.py:49
 msgid "Start"
 msgstr "Rozpoczęcie"
@@ -41,32 +53,32 @@ msgid "Study"
 msgstr "Kierunek"
 
 #: university/models.py:17
+msgid "Degree"
+msgstr "Stopień"
+
+#: university/models.py:18
 msgid "University"
 msgstr "Uczelnia"
 
-#: university/models.py:18
+#: university/models.py:19
 msgid "Research"
 msgstr "Badania"
 
-#: university/models.py:19
+#: university/models.py:20
 msgid "Advisor"
 msgstr "Promotor"
 
-#: university/models.py:20
+#: university/models.py:21
 msgid "Areas"
 msgstr "Zainteresowania"
 
-#: university/models.py:27
+#: university/models.py:28
 msgid "School"
 msgstr "Szkoła"
 
-#: university/models.py:28
+#: university/models.py:29
 msgid "Schools"
 msgstr "Szkoły"
-
-#: university/models.py:32 work/models.py:29
-msgid "Title"
-msgstr "Tytuł"
 
 #: university/models.py:33
 msgid "Journal"
@@ -80,39 +92,43 @@ msgstr "Link"
 msgid "Year"
 msgstr "Rok"
 
-#: university/models.py:38
+#: university/models.py:38 work/models.py:29
+msgid "Title"
+msgstr "Tytuł"
+
+#: university/models.py:39
 msgid "Summary"
 msgstr "Podsumowanie"
 
-#: university/models.py:45
+#: university/models.py:46
 msgid "Publication"
 msgstr "Publikacja"
 
-#: university/models.py:46
+#: university/models.py:47
 msgid "Publications"
 msgstr "Publikacje"
 
-#: university/models.py:50
+#: university/models.py:51
 msgid "Semester"
 msgstr "Semestr"
 
-#: university/models.py:51
+#: university/models.py:52
 msgid "Season"
 msgstr "Sezon"
 
-#: university/models.py:54
+#: university/models.py:55
 msgid "Course"
 msgstr "Kurs"
 
-#: university/models.py:55
+#: university/models.py:56
 msgid "Content"
 msgstr "Treść"
 
-#: university/models.py:62
+#: university/models.py:63
 msgid "Testimonial"
 msgstr "Referancja"
 
-#: university/models.py:63
+#: university/models.py:64
 msgid "Testimonials"
 msgstr "Referencje"
 
@@ -140,10 +156,6 @@ msgstr "5+ lat doświadczenia"
 msgid "10+ years of experience"
 msgstr "10+ lat doświadczenia"
 
-#: work/models.py:13 work/models.py:30
-msgid "Image URL"
-msgstr "Adres URL obrazu"
-
 #: work/models.py:16
 msgid "Name"
 msgstr "Nazwa"
@@ -159,6 +171,10 @@ msgstr "Umiejętność"
 #: work/models.py:25
 msgid "Skills"
 msgstr "Umiejętności"
+
+#: work/models.py:30
+msgid "Image URL"
+msgstr "Adres URL obrazu"
 
 #: work/models.py:31
 msgid "Tags"
