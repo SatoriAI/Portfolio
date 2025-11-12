@@ -11,10 +11,10 @@ from utils.models import TimestampedModel
 class School(TranslatableModel, TimestampedModel):
     start = models.DateField(_("Start"))
     end = models.DateField(_("End"), null=True, blank=True)
+    degree = models.CharField(_("Degree"), choices=Degrees, default=Degrees.BACHELOR, max_length=64)
 
     translations = TranslatedFields(
         study=models.CharField(_("Study"), max_length=128),
-        degree=models.CharField(_("Degree"), choices=Degrees, default=Degrees.BACHELOR, max_length=64),
         university=models.CharField(_("University"), max_length=128),
         research=models.TextField(_("Research")),
         advisor=models.CharField(_("Advisor"), null=True, blank=True, max_length=256),

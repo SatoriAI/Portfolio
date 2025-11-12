@@ -101,7 +101,8 @@ class UniversityModelsTestCase(TestCase):
         self.assertEqual(en.research, "AI research")
         self.assertEqual(en.advisor, "Prof. Smith")
         self.assertListEqual(en.areas, ["AI", "ML"])
-        self.assertEqual(en.degree, Degrees.BACHELOR)
+        # degree is a shared field (non-translated); remains MASTER after PL update
+        self.assertEqual(en.degree, Degrees.MASTER)
 
     # -------------------------
     # Publication

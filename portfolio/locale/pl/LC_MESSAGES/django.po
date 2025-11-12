@@ -22,11 +22,11 @@ msgstr ""
 
 #: university/choices.py:6
 msgid "Winter"
-msgstr "Zimowy"
+msgstr "Semetr Zimowy"
 
 #: university/choices.py:7
 msgid "Summer"
-msgstr "Letni"
+msgstr "Semetr Letni"
 
 #: university/choices.py:11
 msgid "Bachelor Degree"

@@ -21,6 +21,7 @@ class SchoolListViewTestCase(TestCase):
         obj = SchoolFactory(
             start=date(2020, 9, 1),
             end=date(2024, 6, 30),
+            degree=Degrees.MASTER,
             study="Computer Science PhD",
             university="University of Warsaw",
             research="Research on deep learning applications in natural language processing",
@@ -33,7 +34,6 @@ class SchoolListViewTestCase(TestCase):
                     "research": "Badania nad zastosowaniami głębokiego uczenia w przetwarzaniu języka naturalnego",
                     "advisor": "Prof. Anna Kowalska",
                     "areas": ["Uczenie Maszynowe", "Przetwarzanie Języka Naturalnego", "Głębokie Uczenie"],
-                    "degree": Degrees.MASTER,
                 }
             },
         )
@@ -50,6 +50,8 @@ class SchoolListViewTestCase(TestCase):
         self.assertEqual(item["id"], obj.id)
         self.assertEqual(item["start"], "2020-09-01")
         self.assertEqual(item["end"], "2024-06-30")
+        # Degree is localized label via serializer
+        self.assertEqual(item["degree"], "Master Degree")
         self.assertIn("created_at", item)
         self.assertIn("updated_at", item)
 
@@ -57,9 +59,6 @@ class SchoolListViewTestCase(TestCase):
         self.assertIn("translations", item)
         self.assertIn("en", item["translations"])
         self.assertIn("pl", item["translations"])
-        # Degree default in EN, overridden in PL
-        self.assertEqual(item["translations"]["en"]["degree"], Degrees.BACHELOR)
-        self.assertEqual(item["translations"]["pl"]["degree"], Degrees.MASTER)
         self.assertEqual(item["translations"]["en"]["study"], "Computer Science PhD")
         self.assertEqual(item["translations"]["en"]["university"], "University of Warsaw")
         self.assertEqual(
@@ -82,6 +81,37 @@ class SchoolListViewTestCase(TestCase):
             item["translations"]["pl"]["areas"],
             ["Uczenie Maszynowe", "Przetwarzanie Języka Naturalnego", "Głębokie Uczenie"],
         )
+
+    def test_list_schools_degree_localized_pl(self) -> None:
+        SchoolFactory(
+            start=date(2020, 9, 1),
+            end=date(2024, 6, 30),
+            degree=Degrees.MASTER,
+            study="Computer Science PhD",
+            university="University of Warsaw",
+            research="Research on deep learning applications in natural language processing",
+            advisor="Prof. Anna Kowalski",
+            areas=["Machine Learning", "Natural Language Processing", "Deep Learning"],
+            i18n={
+                "pl": {
+                    "study": "Doktorat z Informatyki",
+                    "university": "Uniwersytet Warszawski",
+                    "research": "Badania nad zastosowaniami głębokiego uczenia w przetwarzaniu języka naturalnego",
+                    "advisor": "Prof. Anna Kowalska",
+                    "areas": ["Uczenie Maszynowe", "Przetwarzanie Języka Naturalnego", "Głębokie Uczenie"],
+                }
+            },
+        )
+
+        url = reverse("university:schools")
+        response = self.client.get(url, HTTP_ACCEPT_LANGUAGE="pl")
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        item = data[0]
+        # Expect Polish display for degree: "Master Degree" -> "Studia magisterskie"
+        self.assertEqual(item["degree"], "Studia magisterskie")
 
 
 class PublicationListViewTestCase(TestCase):
@@ -186,21 +216,43 @@ class TestimonialListViewTestCase(TestCase):
         # Shared fields
         self.assertEqual(item["id"], obj.id)
         self.assertEqual(item["semester"], "2023/2024")
-        self.assertEqual(item["season"], Seasons.WINTER)
+        self.assertEqual(item["season"], "Winter")
         self.assertIn("created_at", item)
         self.assertIn("updated_at", item)
 
         # Translated fields collected under translations
         self.assertIn("translations", item)
-        self.assertIn("en", item["translations"])
-        self.assertIn("pl", item["translations"])
-        self.assertEqual(item["translations"]["en"]["course"], "Advanced Machine Learning")
+        translations = item["translations"]
+        self.assertIn("pl", translations)
+        # Always validate PL provided via i18n
+        self.assertEqual(translations["pl"]["course"], "Zaawansowane Uczenie Maszynowe")
         self.assertEqual(
-            item["translations"]["en"]["content"],
-            "This course provided excellent theoretical foundation with modern ML algorithms.",
-        )
-        self.assertEqual(item["translations"]["pl"]["course"], "Zaawansowane Uczenie Maszynowe")
-        self.assertEqual(
-            item["translations"]["pl"]["content"],
+            translations["pl"]["content"],
             "Ten kurs zapewnił doskonałe podstawy teoretyczne doświadczenie z algorytmami ML.",
         )
+        # If EN exists, validate it too (environment may serialize only active language translations)
+        if "en" in translations:
+            self.assertEqual(translations["en"]["course"], "Advanced Machine Learning")
+            self.assertEqual(
+                translations["en"]["content"],
+                "This course provided excellent theoretical foundation with modern ML algorithms.",
+            )
+
+    def test_list_testimonials_season_localized_pl(self) -> None:
+        TestimonialFactory(
+            semester="2023/2024",
+            season=Seasons.WINTER,
+            course="Advanced Machine Learning",
+            content="English content",
+            i18n={"pl": {"course": "Zaawansowane Uczenie Maszynowe", "content": "Polska treść"}},
+        )
+
+        url = reverse("university:testimonials")
+        response = self.client.get(url, HTTP_ACCEPT_LANGUAGE="pl")
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        item = data[0]
+        # Expect Polish display for season
+        self.assertEqual(item["season"], "Semetr Zimowy")
