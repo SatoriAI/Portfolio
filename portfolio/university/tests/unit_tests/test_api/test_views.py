@@ -4,7 +4,7 @@ import faker
 from django.test import TestCase
 from django.urls import reverse
 
-from university.choices import Seasons
+from university.choices import Degrees, Seasons
 from university.tests.factories import PublicationFactory, SchoolFactory, TestimonialFactory
 
 fake = faker.Faker()
@@ -33,6 +33,7 @@ class SchoolListViewTestCase(TestCase):
                     "research": "Badania nad zastosowaniami głębokiego uczenia w przetwarzaniu języka naturalnego",
                     "advisor": "Prof. Anna Kowalska",
                     "areas": ["Uczenie Maszynowe", "Przetwarzanie Języka Naturalnego", "Głębokie Uczenie"],
+                    "degree": Degrees.MASTER,
                 }
             },
         )
@@ -56,6 +57,9 @@ class SchoolListViewTestCase(TestCase):
         self.assertIn("translations", item)
         self.assertIn("en", item["translations"])
         self.assertIn("pl", item["translations"])
+        # Degree default in EN, overridden in PL
+        self.assertEqual(item["translations"]["en"]["degree"], Degrees.BACHELOR)
+        self.assertEqual(item["translations"]["pl"]["degree"], Degrees.MASTER)
         self.assertEqual(item["translations"]["en"]["study"], "Computer Science PhD")
         self.assertEqual(item["translations"]["en"]["university"], "University of Warsaw")
         self.assertEqual(
