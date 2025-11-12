@@ -2,7 +2,7 @@ import { endpoints } from "../config/endpoints";
 import { env } from "../config/env";
 import { useSettings } from "../contexts/SettingsContext";
 
-import { apiClient } from "./apiClient";
+import { apiFetch } from "./apiClient";
 
 export type ApiSchool = {
   id: number;
@@ -20,12 +20,14 @@ export type ApiSchool = {
   updated_at: string;
   start: string;
   end: string;
+  degree?: string;
 };
 
 export type UiSchool = {
   id: number;
   study: string;
   university: string;
+  degree: string;
   research: string;
   advisor: string;
   areas: string[];
@@ -46,7 +48,8 @@ export function mapApiSchoolToUi(school: ApiSchool, language: string): UiSchool 
   };
 
   const startYear = formatDate(school.start);
-  const endYear = school.end ? formatDate(school.end) : "Present";
+  const presentLabel = lang === "pl" ? "Obecnie" : "Present";
+  const endYear = school.end ? formatDate(school.end) : presentLabel;
   const period = `${startYear} - ${endYear}`;
 
   // Handle areas - can be string or array
@@ -66,6 +69,7 @@ export function mapApiSchoolToUi(school: ApiSchool, language: string): UiSchool 
     id: school.id,
     study: localized.study || "",
     university: localized.university || "",
+    degree: school.degree || "",
     research: localized.research || "",
     advisor: localized.advisor || "",
     areas,
@@ -113,6 +117,7 @@ const mockSchools: ApiSchool[] = [
     updated_at: "2024-01-01T00:00:00Z",
     start: "2021-10-01",
     end: "",
+    degree: "PhD",
   },
   {
     id: 2,
@@ -143,6 +148,7 @@ const mockSchools: ApiSchool[] = [
     updated_at: "2021-06-30T00:00:00Z",
     start: "2016-10-01",
     end: "2021-06-30",
+    degree: "MSc",
   },
 ];
 
@@ -152,7 +158,10 @@ export async function fetchSchools(language: string): Promise<UiSchool[]> {
     return mockSchools.map((s) => mapApiSchoolToUi(s, language));
   }
 
-  const data = await apiClient.get<ApiSchool[]>(endpoints.education.schools.list);
+  const data = await apiFetch<ApiSchool[]>(endpoints.education.schools.list, {
+    method: "GET",
+    headers: { "Accept-Language": language },
+  });
   return data.map((s) => mapApiSchoolToUi(s, language));
 }
 

@@ -2,7 +2,7 @@ import { endpoints } from "../config/endpoints";
 import { env } from "../config/env";
 import { useSettings } from "../contexts/SettingsContext";
 
-import { apiClient } from "./apiClient";
+import { apiFetch } from "./apiClient";
 
 export type ApiTestimonial = {
   id: number;
@@ -151,7 +151,10 @@ export async function fetchTestimonials(language: string): Promise<UiTestimonial
     return mockTestimonials.map((t) => mapApiTestimonialToUi(t, language));
   }
 
-  const data = await apiClient.get<ApiTestimonial[]>(endpoints.education.testimonials.list);
+  const data = await apiFetch<ApiTestimonial[]>(endpoints.education.testimonials.list, {
+    method: "GET",
+    headers: { "Accept-Language": language },
+  });
   return data.map((t) => mapApiTestimonialToUi(t, language));
 }
 

@@ -2,7 +2,7 @@ import { endpoints } from "../config/endpoints";
 import { env } from "../config/env";
 import { useSettings } from "../contexts/SettingsContext";
 
-import { apiClient } from "./apiClient";
+import { apiFetch } from "./apiClient";
 
 export type ApiPublication = {
   id: number;
@@ -10,11 +10,12 @@ export type ApiPublication = {
     string,
     {
       summary?: string;
+      title?: string;
     }
   >;
   created_at: string;
   updated_at: string;
-  title: string;
+  title?: string;
   journal: string;
   link: string;
   year: number;
@@ -38,7 +39,7 @@ export function mapApiPublicationToUi(
 
   return {
     id: publication.id,
-    title: publication.title || "",
+    title: localized.title || publication.title || "",
     journal: publication.journal || "",
     year: publication.year || new Date().getFullYear(),
     link: publication.link || "",
@@ -52,10 +53,12 @@ const mockPublications: ApiPublication[] = [
     id: 1,
     translations: {
       en: {
+        title: "Advanced Techniques in Algebraic Topology: Applications to Data Analysis",
         summary:
           "This paper explores novel applications of algebraic topology methods in high-dimensional data analysis, providing new insights into persistent homology algorithms and their computational efficiency in modern machine learning workflows.",
       },
       pl: {
+        title: "Zaawansowane techniki topologii algebraicznej: Zastosowania w analizie danych",
         summary:
           "Ten artykuł bada nowatorskie zastosowania metod topologii algebraicznej w analizie danych wielowymiarowych, dostarczając nowych spostrzeżeń na temat algorytmów homologii trwałej i ich wydajności obliczeniowej w nowoczesnych przepływach pracy uczenia maszynowego.",
       },
@@ -71,10 +74,12 @@ const mockPublications: ApiPublication[] = [
     id: 2,
     translations: {
       en: {
+        title: "Machine Learning Approaches to Topological Data Analysis",
         summary:
           "We present a comprehensive framework that combines traditional topological methods with modern machine learning techniques, enabling enhanced pattern recognition capabilities in complex datasets through innovative algorithmic approaches.",
       },
       pl: {
+        title: "Podejścia uczenia maszynowego do topologicznej analizy danych",
         summary:
           "Prezentujemy kompleksowy framework łączący tradycyjne metody topologiczne z nowoczesnymi technikami uczenia maszynowego, umożliwiając zwiększone możliwości rozpoznawania wzorców w złożonych zbiorach danych poprzez innowacyjne podejścia algorytmiczne.",
       },
@@ -90,10 +95,12 @@ const mockPublications: ApiPublication[] = [
     id: 3,
     translations: {
       en: {
+        title: "Computational Methods in Modern Algebra",
         summary:
           "A comprehensive review of computational approaches to solving complex algebraic problems, with particular emphasis on algorithmic efficiency, scalability, and practical implementation considerations in modern computing environments.",
       },
       pl: {
+        title: "Metody obliczeniowe we współczesnej algebrze",
         summary:
           "Kompleksowy przegląd podejść obliczeniowych do rozwiązywania złożonych problemów algebraicznych, ze szczególnym naciskiem na wydajność algorytmiczną, skalowalność i praktyczne aspekty implementacji w nowoczesnych środowiskach obliczeniowych.",
       },
@@ -113,7 +120,10 @@ export async function fetchPublications(language: string): Promise<UiPublication
     return mockPublications.map((p) => mapApiPublicationToUi(p, language));
   }
 
-  const data = await apiClient.get<ApiPublication[]>(endpoints.education.publications.list);
+  const data = await apiFetch<ApiPublication[]>(endpoints.education.publications.list, {
+    method: "GET",
+    headers: { "Accept-Language": language },
+  });
   return data.map((p) => mapApiPublicationToUi(p, language));
 }
 

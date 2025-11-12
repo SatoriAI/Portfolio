@@ -70,7 +70,7 @@ export const translations = {
     academic: {
       title: "Academic Career",
       subtitle:
-        "Alongside my professional career, I am pursuing a PhD in Theoretical Mathematics, where I combine my passion for research, teaching, and problem-solving. I have taught courses in mathematics and programming, receiving excellent feedback for my ability to present complex topics in an accessible and engaging way. Academic work not only sharpens my analytical skills but also fuels my curiosity — from exploring algorithms to the latest applications of artificial intelligence.",
+        "Alongside my professional career, I am pursuing a PhD in Theoretical Mathematics, where I combine my passion for research, teaching, and problem-solving. I have taught courses in mathematics and programming, receiving excellent feedback for my ability to present complex topics in an accessible and engaging way. Academic work not only sharpens my analytical skills but also fuels my curiosity; from exploring algorithms to the latest applications of artificial intelligence.",
       researchFocus: "Research Focus",
       advisor: "Advisor",
       researchAreas: "Research Areas",
@@ -155,7 +155,7 @@ export const translations = {
     academic: {
       title: "Kariera Akademicka",
       subtitle:
-        "Obok kariery zawodowej realizuję doktorat z matematyki teoretycznej, gdzie łączę pasję do badań, nauczania i rozwiązywania problemów. Prowadziłem zajęcia z matematyki i programowania, otrzymując doskonałe opinie za umiejętność przystępnego i angażującego przedstawiania złożonych tematów. Praca naukowa nie tylko wyostrza moje umiejętności analityczne, ale także podsyca ciekawość od eksploracji algorytmów po najnowsze zastosowania sztucznej inteligencji.",
+        "Obok kariery zawodowej realizuję doktorat z matematyki teoretycznej, gdzie łączę pasję do badań, nauczania i rozwiązywania problemów. Prowadziłem zajęcia z matematyki i programowania, otrzymując doskonałe opinie za umiejętność przystępnego i angażującego przedstawiania złożonych tematów. Praca naukowa nie tylko wyostrza moje umiejętności analityczne, ale także podsyca ciekawość; od eksploracji algorytmów po najnowsze zastosowania sztucznej inteligencji.",
       researchFocus: "Obszar badań",
       advisor: "Promotor",
       researchAreas: "Obszary badawcze",

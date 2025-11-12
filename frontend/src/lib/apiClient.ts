@@ -3,6 +3,28 @@ import { env } from "../config/env";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
+function resolvePreferredLanguage(): string {
+  try {
+    if (typeof localStorage !== "undefined") {
+      const saved = localStorage.getItem("language");
+      if (saved === "en" || saved === "pl") return saved;
+    }
+  } catch (_error) {
+    // ignore
+  }
+  if (typeof navigator !== "undefined") {
+    const raw =
+      Array.isArray(navigator.languages) && navigator.languages.length > 0
+        ? navigator.languages
+        : navigator.language
+          ? [navigator.language]
+          : [];
+    const primary = (raw[0] || "en").toLowerCase();
+    return primary.startsWith("pl") ? "pl" : "en";
+  }
+  return "en";
+}
+
 type FetchOptions<TBody> = {
   method?: HttpMethod;
   body?: TBody;
@@ -30,6 +52,9 @@ export async function apiFetch<TResponse extends JsonValue, TBody extends JsonVa
   const computedHeaders: Record<string, string> = {
     ...(headers || {}),
   };
+  if (!("Accept-Language" in computedHeaders)) {
+    computedHeaders["Accept-Language"] = resolvePreferredLanguage();
+  }
   if (!isFormData) {
     computedHeaders["Content-Type"] = computedHeaders["Content-Type"] || "application/json";
   }

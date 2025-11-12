@@ -2,7 +2,7 @@ import { endpoints } from "../config/endpoints";
 import { env } from "../config/env";
 import { useSettings } from "../contexts/SettingsContext";
 
-import { apiClient } from "./apiClient";
+import { apiFetch } from "./apiClient";
 
 export type ApiExperience = {
   id: number;
@@ -46,7 +46,8 @@ export function mapApiExperienceToUi(experience: ApiExperience, language: string
   };
 
   const startYear = formatDate(experience.start);
-  const endYear = experience.end ? formatDate(experience.end) : "Present";
+  const presentLabel = lang === "pl" ? "Obecnie" : "Present";
+  const endYear = experience.end ? formatDate(experience.end) : presentLabel;
   const period = `${startYear} - ${endYear}`;
 
   return {
@@ -173,7 +174,10 @@ export async function fetchExperiences(language: string): Promise<UiExperience[]
     return mockExperiences.map((e) => mapApiExperienceToUi(e, language));
   }
 
-  const data = await apiClient.get<ApiExperience[]>(endpoints.work.experiences.list);
+  const data = await apiFetch<ApiExperience[]>(endpoints.work.experiences.list, {
+    method: "GET",
+    headers: { "Accept-Language": language },
+  });
   return data.map((e) => mapApiExperienceToUi(e, language));
 }
 

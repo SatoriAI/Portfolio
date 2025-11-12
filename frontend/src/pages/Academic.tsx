@@ -320,6 +320,12 @@ const Academic = () => {
                               <div className="mb-2 flex items-center gap-2 text-orange-600 dark:text-purple-400">
                                 <GraduationCap className="h-5 w-5" />
                                 <span className="text-lg font-semibold">{school.university}</span>
+                                {school.degree && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="text-lg font-semibold">{school.degree}</span>
+                                  </>
+                                )}
                               </div>
                             </div>
                           </Reveal>
@@ -340,7 +346,9 @@ const Academic = () => {
                               <h4 className="mb-3 font-semibold text-card-foreground">
                                 {t.academic.researchFocus}
                               </h4>
-                              <p className="text-muted-foreground">{school.research}</p>
+                              <p className="text-justify text-muted-foreground">
+                                {school.research}
+                              </p>
                             </div>
                           )}
                           {school.advisor && (
@@ -594,7 +602,7 @@ const Academic = () => {
                                 </CardDescription>
                               </CardHeader>
                               <CardContent>
-                                <p className="italic leading-relaxed text-muted-foreground">
+                                <p className="text-center italic leading-relaxed text-muted-foreground">
                                   "{testimonial.text}"
                                 </p>
                               </CardContent>
@@ -625,7 +633,7 @@ const Academic = () => {
                               </CardDescription>
                             </CardHeader>
                             <CardContent>
-                              <p className="italic leading-relaxed text-muted-foreground">
+                              <p className="text-center italic leading-relaxed text-muted-foreground">
                                 {testimonial.text}
                               </p>
                             </CardContent>
