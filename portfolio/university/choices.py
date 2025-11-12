@@ -8,6 +8,6 @@ class Seasons(models.TextChoices):  # pylint: disable=too-many-ancestors
 
 
 class Degrees(models.TextChoices):  # pylint: disable=too-many-ancestors
-    BACHELOR = "Bachelor Degree", _("Bachelor Degree")
-    MASTER = "Master Degree", _("Master Degree")
-    DOCTORATE = "Doctorate Degree", _("Doctorate Degree")
+    BACHELOR = "Bachelor's", _("Bachelor's")
+    MASTER = "Master's", _("Master's")
+    DOCTORATE = "Doctoral Studies", _("Doctoral Studies")

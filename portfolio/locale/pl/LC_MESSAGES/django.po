@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-12 12:43+0000\n"
+"POT-Creation-Date: 2025-11-12 14:30+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,22 +22,22 @@ msgstr ""
 
 #: university/choices.py:6
 msgid "Winter"
-msgstr "Semetr Zimowy"
+msgstr "Semestr Zimowy"
 
 #: university/choices.py:7
 msgid "Summer"
-msgstr "Semetr Letni"
+msgstr "Semestr Letni"
 
 #: university/choices.py:11
-msgid "Bachelor Degree"
+msgid "Bachelor's"
 msgstr "Studia licencjackie"
 
 #: university/choices.py:12
-msgid "Master Degree"
+msgid "Master's"
 msgstr "Studia magisterskie"
 
 #: university/choices.py:13
-msgid "Doctorate Degree"
+msgid "Doctoral Studies"
 msgstr "Studia doktoranckie"
 
 #: university/models.py:12 work/models.py:49
@@ -48,13 +48,13 @@ msgstr "Rozpoczęcie"
 msgid "End"
 msgstr "Koniec"
 
-#: university/models.py:16
-msgid "Study"
-msgstr "Kierunek"
-
-#: university/models.py:17
+#: university/models.py:14
 msgid "Degree"
 msgstr "Stopień"
+
+#: university/models.py:17
+msgid "Study"
+msgstr "Kierunek"
 
 #: university/models.py:18
 msgid "University"

@@ -1,3 +1,4 @@
+from django.utils import translation
 from parler_rest.fields import TranslatedFieldsField
 from parler_rest.serializers import TranslatableModelSerializer
 from rest_framework import serializers
@@ -14,7 +15,8 @@ class SchoolSerializer(TranslatableModelSerializer):
         fields = "__all__"
 
     def get_degree(self, obj) -> str:
-        return obj.get_degree_display()
+        with translation.override(self.context.get("request").LANGUAGE_CODE):
+            return obj.get_degree_display()
 
 
 class PublicationSerializer(TranslatableModelSerializer):
@@ -34,4 +36,5 @@ class TestimonialSerializer(TranslatableModelSerializer):
         fields = "__all__"
 
     def get_season(self, obj) -> str:
-        return obj.get_season_display()
+        with translation.override(self.context.get("request").LANGUAGE_CODE):
+            return obj.get_season_display()

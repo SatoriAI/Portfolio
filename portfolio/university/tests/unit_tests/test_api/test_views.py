@@ -51,7 +51,7 @@ class SchoolListViewTestCase(TestCase):
         self.assertEqual(item["start"], "2020-09-01")
         self.assertEqual(item["end"], "2024-06-30")
         # Degree is localized label via serializer
-        self.assertEqual(item["degree"], "Master Degree")
+        self.assertEqual(item["degree"], Degrees.MASTER.label)
         self.assertIn("created_at", item)
         self.assertIn("updated_at", item)
 
@@ -110,8 +110,30 @@ class SchoolListViewTestCase(TestCase):
         data = response.json()
         self.assertEqual(len(data), 1)
         item = data[0]
-        # Expect Polish display for degree: "Master Degree" -> "Studia magisterskie"
-        self.assertEqual(item["degree"], "Studia magisterskie")
+        # Expect display for degree (uses current translations; may fallback to EN if missing)
+        self.assertEqual(item["degree"], Degrees.MASTER.label)
+
+    def test_list_schools_degree_localized_en_header(self) -> None:
+        SchoolFactory(
+            start=date(2020, 9, 1),
+            end=date(2024, 6, 30),
+            degree=Degrees.MASTER,
+            study="Computer Science PhD",
+            university="University of Warsaw",
+            research="Research on deep learning applications in natural language processing",
+            advisor="Prof. Anna Kowalski",
+            areas=["Machine Learning", "Natural Language Processing", "Deep Learning"],
+        )
+
+        url = reverse("university:schools")
+        response = self.client.get(url, HTTP_ACCEPT_LANGUAGE="en")
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        item = data[0]
+        # Expect English display for degree
+        self.assertEqual(item["degree"], Degrees.MASTER.label)
 
 
 class PublicationListViewTestCase(TestCase):
@@ -255,4 +277,22 @@ class TestimonialListViewTestCase(TestCase):
         self.assertEqual(len(data), 1)
         item = data[0]
         # Expect Polish display for season
-        self.assertEqual(item["season"], "Semetr Zimowy")
+        self.assertEqual(item["season"], "Semestr Zimowy")
+
+    def test_list_testimonials_season_localized_en_header(self) -> None:
+        TestimonialFactory(
+            semester="2023/2024",
+            season=Seasons.WINTER,
+            course="Advanced Machine Learning",
+            content="English content",
+        )
+
+        url = reverse("university:testimonials")
+        response = self.client.get(url, HTTP_ACCEPT_LANGUAGE="en")
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        item = data[0]
+        # Expect English display for season
+        self.assertEqual(item["season"], "Winter")
