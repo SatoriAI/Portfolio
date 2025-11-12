@@ -121,6 +121,31 @@ class PublicationListViewTestCase(TestCase):
             "Ten artykuł przedstawia kompleksowy przegląd technik głębokiego uczenia.",
         )
 
+    def test_list_publications_ordering_by_year_desc(self) -> None:
+        PublicationFactory(year=2020)
+        PublicationFactory(year=2022)
+        PublicationFactory(year=2021)
+
+        url = reverse("university:publications")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertEqual(len(data), 3)
+        self.assertEqual([item["year"] for item in data], [2022, 2021, 2020])
+
+    def test_list_publications_ordering_tiebreaker_pk_desc_when_same_year(self) -> None:
+        first = PublicationFactory(year=2023)
+        second = PublicationFactory(year=2023)
+
+        url = reverse("university:publications")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertEqual(len(data), 2)
+        self.assertEqual([item["id"] for item in data], [second.id, first.id])
+
 
 class TestimonialListViewTestCase(TestCase):
     def test_list_testimonials_empty(self) -> None:
