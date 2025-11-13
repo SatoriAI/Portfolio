@@ -12,11 +12,27 @@ STANZA_PIPELINES: dict[str, stanza.Pipeline] = {}
 def get_pipeline(locale: str) -> stanza.Pipeline | None:
     try:
         if locale not in STANZA_PIPELINES:
-            STANZA_PIPELINES[locale] = stanza.Pipeline(
-                lang=locale, processors="tokenize,lemma", use_gpu=False, tokenize_pretokenized=False
-            )
+            try:
+                # Try constructing the pipeline using the configured resources directory.
+                STANZA_PIPELINES[locale] = stanza.Pipeline(
+                    lang=locale,
+                    processors="tokenize,lemma",
+                    use_gpu=False,
+                    tokenize_pretokenized=False,
+                    dir=settings.STANZA_RESOURCES_DIR,
+                )
+            except Exception:
+                # Lazily download just what's needed, then retry once.
+                stanza.download(locale, processors="tokenize,lemma", model_dir=settings.STANZA_RESOURCES_DIR)
+                STANZA_PIPELINES[locale] = stanza.Pipeline(
+                    lang=locale,
+                    processors="tokenize,lemma",
+                    use_gpu=False,
+                    tokenize_pretokenized=False,
+                    dir=settings.STANZA_RESOURCES_DIR,
+                )
     except Exception:  # pylint: disable=broad-exception-caught
-        pass
+        return STANZA_PIPELINES.get(locale)
     return STANZA_PIPELINES.get(locale)
 
 

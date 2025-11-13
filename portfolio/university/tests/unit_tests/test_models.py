@@ -2,7 +2,7 @@ import faker
 from ddt import data, ddt
 from django.test import TestCase
 
-from university.choices import Seasons
+from university.choices import Degrees, Seasons
 from university.models import Publication, School, Testimonial
 
 fake = faker.Faker()
@@ -31,6 +31,8 @@ class UniversityModelsTestCase(TestCase):
         self.assertEqual(School.objects.count(), 1)
         self.assertEqual(obj.start, start)
         self.assertEqual(obj.end, end)
+        # choices default (translated field)
+        self.assertEqual(obj.degree, Degrees.BACHELOR)
         # translated fields (current language)
         self.assertEqual(obj.study, "Computer Science PhD")
         self.assertEqual(obj.university, "University of Warsaw")
@@ -54,6 +56,8 @@ class UniversityModelsTestCase(TestCase):
         self.assertEqual(School.objects.count(), 1)
         self.assertEqual(obj.start, start)
         self.assertIsNone(obj.end)
+        # default degree still applied
+        self.assertEqual(obj.degree, Degrees.BACHELOR)
         self.assertIsNone(obj.advisor)
         self.assertIsNone(obj.areas)
 
@@ -78,6 +82,7 @@ class UniversityModelsTestCase(TestCase):
         obj.research = "Badania nad sztuczną inteligencją"
         obj.advisor = "Prof. Kowalski"
         obj.areas = ["SI", "ML"]
+        obj.degree = Degrees.MASTER
         obj.save()
 
         # fetch in PL
@@ -87,6 +92,7 @@ class UniversityModelsTestCase(TestCase):
         self.assertEqual(pl.research, "Badania nad sztuczną inteligencją")
         self.assertEqual(pl.advisor, "Prof. Kowalski")
         self.assertListEqual(pl.areas, ["SI", "ML"])
+        self.assertEqual(pl.degree, Degrees.MASTER)
 
         # fetch in EN
         en = School.objects.language("en").get(pk=obj.pk)
@@ -95,6 +101,8 @@ class UniversityModelsTestCase(TestCase):
         self.assertEqual(en.research, "AI research")
         self.assertEqual(en.advisor, "Prof. Smith")
         self.assertListEqual(en.areas, ["AI", "ML"])
+        # degree is a shared field (non-translated); remains MASTER after PL update
+        self.assertEqual(en.degree, Degrees.MASTER)
 
     def test_school_representation_for_locale(self) -> None:
         start = fake.date_object()
@@ -162,13 +170,16 @@ class UniversityModelsTestCase(TestCase):
 
         # Add PL translation
         obj.set_current_language("pl")
+        obj.title = "Zastosowania uczenia maszynowego"
         obj.summary = "Polskie streszczenie badań"
         obj.save()
 
         pl = Publication.objects.language("pl").get(pk=obj.pk)
+        self.assertEqual(pl.title, "Zastosowania uczenia maszynowego")
         self.assertEqual(pl.summary, "Polskie streszczenie badań")
 
         en = Publication.objects.language("en").get(pk=obj.pk)
+        self.assertEqual(en.title, "Machine Learning Applications")
         self.assertEqual(en.summary, "English summary of the research")
 
     def test_publication_representation_for_locale(self) -> None:
