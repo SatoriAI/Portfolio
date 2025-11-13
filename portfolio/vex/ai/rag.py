@@ -42,16 +42,19 @@ class RagChain:
 
     @staticmethod
     def _get_config() -> RagConfig | Configuration:
+        db_config: Configuration | None = None
         try:
-            if db_config := Configuration.objects.first():
-                return db_config
+            db_config = Configuration.objects.first()
         except Exception:  # pylint: disable=broad-exception-caught
-            return RagConfig(
-                model="gpt-4o-mini",
-                temperature=0.5,
-                system_prompt="You are a helpful assistant.",
-                user_prompt="Question: {question}\nContext: {context}",
-            )
+            db_config = None
+        if db_config is not None:
+            return db_config
+        return RagConfig(
+            model="gpt-4o-mini",
+            temperature=0.5,
+            system_prompt="You are a helpful assistant.",
+            user_prompt="Question: {question}\nContext: {context}",
+        )
 
     def build(self) -> RunnableWithMessageHistory:
         return RunnableWithMessageHistory(
@@ -124,4 +127,11 @@ def build_rag_chain() -> RunnableWithMessageHistory:
     return pipeline.build()
 
 
-rag_chain = build_rag_chain()
+_rag_chain: RunnableWithMessageHistory | None = None
+
+
+def get_rag_chain() -> RunnableWithMessageHistory:
+    global _rag_chain  # pylint: disable=global-statement
+    if _rag_chain is None:
+        _rag_chain = build_rag_chain()
+    return _rag_chain

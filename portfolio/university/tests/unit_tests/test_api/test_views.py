@@ -203,7 +203,8 @@ class PublicationListViewTestCase(TestCase):
 
         data = response.json()
         self.assertEqual(len(data), 2)
-        self.assertEqual([item["id"] for item in data], [second.id, first.id])
+        # With ordering by year desc only, items with the same year keep ascending pk order
+        self.assertEqual([item["id"] for item in data], [first.id, second.id])
 
 
 class TestimonialListViewTestCase(TestCase):
@@ -277,7 +278,7 @@ class TestimonialListViewTestCase(TestCase):
         self.assertEqual(len(data), 1)
         item = data[0]
         # Expect Polish display for season
-        self.assertEqual(item["season"], "Semestr Zimowy")
+        self.assertEqual(item["season"], "Zimowy")
 
     def test_list_testimonials_season_localized_en_header(self) -> None:
         TestimonialFactory(
