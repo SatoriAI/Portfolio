@@ -62,9 +62,10 @@ class Publication(TranslatableModel, TimestampedModel):
 
     def representation_for(self, locale: str | None) -> str:
         lang = (locale or get_language() or "").split("-")[0][:2]
+        title = self.safe_translation_getter("title", language_code=lang, any_language=True) or ""
         summary = self.safe_translation_getter("summary", language_code=lang, any_language=True) or ""
         return (
-            f"Publication: {self.title}\nJournal: {self.journal}\nYear: {self.year}\n"
+            f"Publication: {title}\nJournal: {self.journal}\nYear: {self.year}\n"
             f"Link: {self.link or ''}\nSummary: {summary}"
         )
 
