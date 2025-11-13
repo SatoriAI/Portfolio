@@ -3,6 +3,7 @@ from datetime import date
 import faker
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import translation
 
 from university.choices import Degrees, Seasons
 from university.tests.factories import PublicationFactory, SchoolFactory, TestimonialFactory
@@ -271,7 +272,8 @@ class TestimonialListViewTestCase(TestCase):
         )
 
         url = reverse("university:testimonials")
-        response = self.client.get(url, HTTP_ACCEPT_LANGUAGE="pl")
+        with translation.override("pl"):
+            response = self.client.get(url, HTTP_ACCEPT_LANGUAGE="pl")
         self.assertEqual(response.status_code, 200)
 
         data = response.json()
@@ -289,7 +291,8 @@ class TestimonialListViewTestCase(TestCase):
         )
 
         url = reverse("university:testimonials")
-        response = self.client.get(url, HTTP_ACCEPT_LANGUAGE="en")
+        with translation.override("en"):
+            response = self.client.get(url, HTTP_ACCEPT_LANGUAGE="en")
         self.assertEqual(response.status_code, 200)
 
         data = response.json()
