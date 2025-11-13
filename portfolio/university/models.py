@@ -1,5 +1,6 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from parler.managers import TranslatableManager
 from parler.models import TranslatableModel, TranslatedFields
@@ -28,6 +29,19 @@ class School(TranslatableModel, TimestampedModel):
         verbose_name = _("School")
         verbose_name_plural = _("Schools")
 
+    def representation_for(self, locale: str | None) -> str:
+        lang = (locale or get_language() or "").split("-")[0][:2]
+        study = self.safe_translation_getter("study", language_code=lang, any_language=True) or ""
+        university = self.safe_translation_getter("university", language_code=lang, any_language=True) or ""
+        research = self.safe_translation_getter("research", language_code=lang, any_language=True) or ""
+        advisor = self.safe_translation_getter("advisor", language_code=lang, any_language=True) or ""
+        areas = ", ".join(self.safe_translation_getter("areas", language_code=lang, any_language=True) or [])
+        period = f"{self.start.year} - {self.end.year if self.end is not None else ''}"
+        return (
+            f"School: {study} at {university}\nPeriod: {period}\nResearch: {research}\n"
+            f"Advisor: {advisor}\nAreas: {areas}"
+        )
+
 
 class Publication(TranslatableModel, TimestampedModel):
     journal = models.CharField(_("Journal"), max_length=256)
@@ -46,6 +60,14 @@ class Publication(TranslatableModel, TimestampedModel):
         verbose_name = _("Publication")
         verbose_name_plural = _("Publications")
 
+    def representation_for(self, locale: str | None) -> str:
+        lang = (locale or get_language() or "").split("-")[0][:2]
+        summary = self.safe_translation_getter("summary", language_code=lang, any_language=True) or ""
+        return (
+            f"Publication: {self.title}\nJournal: {self.journal}\nYear: {self.year}\n"
+            f"Link: {self.link or ''}\nSummary: {summary}"
+        )
+
 
 class Testimonial(TranslatableModel, TimestampedModel):
     semester = models.CharField(_("Semester"), max_length=128)
@@ -62,3 +84,10 @@ class Testimonial(TranslatableModel, TimestampedModel):
     class Meta:
         verbose_name = _("Testimonial")
         verbose_name_plural = _("Testimonials")
+
+    def representation_for(self, locale: str | None) -> str:
+        lang = (locale or get_language() or "").split("-")[0][:2]
+        course = self.safe_translation_getter("course", language_code=lang, any_language=True) or ""
+        content = self.safe_translation_getter("content", language_code=lang, any_language=True) or ""
+        season_display = self.get_season_display()
+        return f"Testimonial: {course}\nSemester: {self.semester}\nSeason: {season_display}\n" f"Content: {content}"

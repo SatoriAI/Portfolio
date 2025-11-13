@@ -8,3 +8,8 @@ class TimestampedModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class DescriptiveModel:
+    def representation_for(self, locale: str | None) -> str:
+        raise NotImplementedError

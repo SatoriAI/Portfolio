@@ -13,7 +13,7 @@ class SchoolViewSet(generics.ListAPIView):
 
 @extend_schema(summary="List Publications", tags=["University"])
 class PublicationViewSet(generics.ListAPIView):
-    queryset = Publication.objects.all().prefetch_related("translations").order_by("-year", "-pk")
+    queryset = Publication.objects.all().prefetch_related("translations").order_by("-year")
     serializer_class = PublicationSerializer
 
 
