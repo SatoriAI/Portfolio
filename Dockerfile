@@ -19,20 +19,6 @@ RUN uv sync --frozen --no-dev
 # Copy source code for Konfio
 COPY portfolio/ ./portfolio/
 
-# Where Stanza stores models; keep it stable and inside the image
-ENV STANZA_RESOURCES_DIR=/usr/local/stanza_resources
-
-# Pre-download Stanza models (CPU, tokenize+lemma is enough)
-RUN python - <<'PY'
-import os
-import stanza
-
-models = ["en", "pl"]
-dest = os.environ.get("STANZA_RESOURCES_DIR", "/usr/local/stanza_resources")
-for lang in models:
-    stanza.download(lang, model_dir=dest)
-PY
-
 # Probe /healtcheck every 30s, time out after 5s, start probing 20s after boot, retry 3x
 HEALTHCHECK --interval=30s --timeout=30s --start-period=20s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8000}/healthcheck/ || exit 1

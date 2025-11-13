@@ -5,13 +5,14 @@ from django.utils.translation import gettext_lazy as _
 from parler.managers import TranslatableManager
 from parler.models import TranslatableModel, TranslatedFields
 
-from university.choices import Seasons
+from university.choices import Degrees, Seasons
 from utils.models import TimestampedModel
 
 
 class School(TranslatableModel, TimestampedModel):
     start = models.DateField(_("Start"))
     end = models.DateField(_("End"), null=True, blank=True)
+    degree = models.CharField(_("Degree"), choices=Degrees, default=Degrees.BACHELOR, max_length=64)
 
     translations = TranslatedFields(
         study=models.CharField(_("Study"), max_length=128),
@@ -43,12 +44,12 @@ class School(TranslatableModel, TimestampedModel):
 
 
 class Publication(TranslatableModel, TimestampedModel):
-    title = models.CharField(_("Title"), max_length=256)
     journal = models.CharField(_("Journal"), max_length=256)
     link = models.URLField(_("Link"), null=True, blank=True)
     year = models.PositiveSmallIntegerField(_("Year"))
 
     translations = TranslatedFields(
+        title=models.CharField(_("Title"), max_length=256),
         summary=models.TextField(_("Summary")),
     )
 
@@ -61,9 +62,10 @@ class Publication(TranslatableModel, TimestampedModel):
 
     def representation_for(self, locale: str | None) -> str:
         lang = (locale or get_language() or "").split("-")[0][:2]
+        title = self.safe_translation_getter("title", language_code=lang, any_language=True) or ""
         summary = self.safe_translation_getter("summary", language_code=lang, any_language=True) or ""
         return (
-            f"Publication: {self.title}\nJournal: {self.journal}\nYear: {self.year}\n"
+            f"Publication: {title}\nJournal: {self.journal}\nYear: {self.year}\n"
             f"Link: {self.link or ''}\nSummary: {summary}"
         )
 

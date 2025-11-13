@@ -7,7 +7,7 @@ from university.models import Publication, School, Testimonial
 
 @extend_schema(summary="List Schools", tags=["University"])
 class SchoolViewSet(generics.ListAPIView):
-    queryset = School.objects.all().prefetch_related("translations")
+    queryset = School.objects.all().prefetch_related("translations").order_by("-pk")
     serializer_class = SchoolSerializer
 
 

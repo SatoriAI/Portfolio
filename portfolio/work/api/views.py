@@ -7,7 +7,7 @@ from work.models import Experience, Project, Skill
 
 @extend_schema(summary="List Skills", tags=["Work"])
 class SkillViewSet(generics.ListAPIView):
-    queryset = Skill.objects.all().prefetch_related("translations")
+    queryset = Skill.objects.all().prefetch_related("translations").order_by("pk")
     serializer_class = SkillSerializer
 
 
@@ -19,5 +19,5 @@ class ProjectViewSet(generics.ListAPIView):
 
 @extend_schema(summary="List Experiences", tags=["Work"])
 class ExperienceViewSet(generics.ListAPIView):
-    queryset = Experience.objects.all().prefetch_related("translations")
+    queryset = Experience.objects.all().prefetch_related("translations").order_by("-pk")
     serializer_class = ExperienceSerializer

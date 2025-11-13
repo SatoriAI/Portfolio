@@ -119,6 +119,7 @@ VECTOR_DB_COLLECTION = env("VECTOR_DB_COLLECTION")
 VECTOR_TEXT_EMBEDDING_MODEL = env("VECTOR_TEXT_EMBEDDING_MODEL", default="text-embedding-3-small")
 VECTOR_USE_JSONB = env.bool("USE_JSONB", default=True)
 VECTOR_RETRIEVE_K = env.int("RETRIEVE_K", default=6)
+STANZA_RESOURCES_DIR = env("STANZA_RESOURCES_DIR", default=str(BASE_DIR / "stanza_resources"))
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

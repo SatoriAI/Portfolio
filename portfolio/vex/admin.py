@@ -56,7 +56,6 @@ class DocumentAdmin(admin.ModelAdmin):
         "description",
     )
     readonly_fields = (
-        "injected",
         "created_at",
         "updated_at",
     )

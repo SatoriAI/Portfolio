@@ -5,7 +5,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseBadRequest, StreamingHttpResponse
 
 from utils.functions import ensure_session
-from vex.ai.rag import rag_chain
+from vex.ai.rag import get_rag_chain
 
 
 def chat(request: WSGIRequest) -> StreamingHttpResponse | HttpResponseBadRequest:
@@ -18,7 +18,8 @@ def chat(request: WSGIRequest) -> StreamingHttpResponse | HttpResponseBadRequest
     def event_stream() -> Iterator[str]:
         yield "event: received\ndata: ok\n\n"
         try:
-            for chunk in rag_chain.stream(
+            chain = get_rag_chain()
+            for chunk in chain.stream(
                 {"question": question, "locale": locale},
                 config={"configurable": {"session_id": session_key}},
             ):

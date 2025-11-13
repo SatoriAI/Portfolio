@@ -56,6 +56,19 @@ class SkillListViewTestCase(TestCase):
             "Programowanie w Pythonie na poziomie eksperckim",
         )
 
+    def test_list_skills_ordering_by_pk_asc(self) -> None:
+        first = SkillFactory()
+        second = SkillFactory()
+        third = SkillFactory()
+
+        url = reverse("work:skills")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertEqual(len(data), 3)
+        self.assertEqual([item["id"] for item in data], [first.id, second.id, third.id])
+
 
 class ProjectListViewTestCase(TestCase):
     def test_list_projects_empty(self) -> None:
@@ -148,3 +161,16 @@ class ExperienceListViewTestCase(TestCase):
             item["translations"]["pl"]["achievements"],
             ["Wdrożenie CI/CD", "Optymalizacja zapytań SQL"],
         )
+
+    def test_list_experiences_ordering_by_pk_desc(self) -> None:
+        first = ExperienceFactory()
+        second = ExperienceFactory()
+        third = ExperienceFactory()
+
+        url = reverse("work:experiences")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertEqual(len(data), 3)
+        self.assertEqual([item["id"] for item in data], [third.id, second.id, first.id])
