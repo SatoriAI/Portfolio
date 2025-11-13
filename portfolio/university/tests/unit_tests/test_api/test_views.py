@@ -273,7 +273,7 @@ class TestimonialListViewTestCase(TestCase):
 
         url = reverse("university:testimonials")
         with translation.override("pl"):
-            response = self.client.get(url, HTTP_ACCEPT_LANGUAGE="pl")
+            response = self.client.get(url, headers={"Accept-Language": "pl"})
         self.assertEqual(response.status_code, 200)
 
         data = response.json()
