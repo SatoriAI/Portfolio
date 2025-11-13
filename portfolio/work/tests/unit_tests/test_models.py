@@ -26,6 +26,7 @@ class WorkModelsTestCase(TestCase):
         # translated fields (current language)
         self.assertEqual(obj.name, "Python")
         self.assertEqual(obj.description, "General-purpose programming language.")
+        self.assertIsNotNone(obj.representation_for("en"))
 
     @data(Levels.INTERMEDIATE, Levels.ADVANCED, Levels.EXPERT)
     def test_create_skill_with_various_levels(self, level: Levels) -> None:
@@ -69,6 +70,7 @@ class WorkModelsTestCase(TestCase):
         self.assertEqual(obj.demo, "https://example.com/demo")
         self.assertEqual(obj.repository, "https://github.com/example/repo")
         self.assertEqual(obj.description, "HTTP API for clients")
+        self.assertIsNotNone(obj.representation_for("en"))
 
     def test_project_tags_optional(self) -> None:
         obj = Project.objects.create(
@@ -130,6 +132,7 @@ class WorkModelsTestCase(TestCase):
         self.assertListEqual(obj.achievements, ["Introduced CI/CD", "Optimized SQL queries"])
         # period property matches implementation
         self.assertEqual(obj.period, f"{start.year} - {end.year}")
+        self.assertIsNotNone(obj.representation_for("en"))
 
     def test_experience_open_ended_period(self) -> None:
         start = fake.date_object()
