@@ -14,13 +14,8 @@ from pathlib import Path
 
 import environ
 
-# Define types and defaults
-env = environ.Env(
-    DEBUG=(bool, False),
-    ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
-    CORS_ALLOWED_ORIGINS=(list, []),
-    CSRF_TRUSTED_ORIGINS=(list, []),
-)
+# Environment
+env = environ.Env()
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,11 +35,15 @@ if env_file.exists():
 SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env("DEBUG")
+DEBUG = env.bool("DEBUG", default=False)
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
-CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
-CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS")
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+
+if DEBUG:  # For development: Allow local file and HTTP server access
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOW_CREDENTIALS = True
 
 
 # Application definition
@@ -66,9 +65,11 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "rest_framework",
+    "django_filters",
     # Own Apps
     "university",
     "utils",
+    "vex",
     "work",
 ]
 
@@ -111,7 +112,13 @@ WSGI_APPLICATION = "portfolio.wsgi.application"
 DATABASES = {
     "default": env.db(),
 }
+DATABASE_URL = env("DATABASE_URL")
 
+# Vector Database
+VECTOR_DB_COLLECTION = env("VECTOR_DB_COLLECTION")
+VECTOR_TEXT_EMBEDDING_MODEL = env("VECTOR_TEXT_EMBEDDING_MODEL", default="text-embedding-3-small")
+VECTOR_USE_JSONB = env.bool("USE_JSONB", default=True)
+VECTOR_RETRIEVE_K = env.int("RETRIEVE_K", default=6)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -157,6 +164,10 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Media uploads
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 if not DEBUG:
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -179,3 +190,10 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.AllowAny",
     ],
 }
+
+# Own Variables
+OPENAI_API_KEY = env("OPENAI_API_KEY")
+
+# RAG Debugging
+RAG_DUMP_CONTEXTS = env.bool("RAG_DUMP_CONTEXTS", default=DEBUG)
+RAG_CONTEXT_DUMP_DIR = env("RAG_CONTEXT_DUMP_DIR", default=str(BASE_DIR / "media" / "rag_contexts"))

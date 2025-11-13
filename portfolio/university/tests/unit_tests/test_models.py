@@ -96,6 +96,23 @@ class UniversityModelsTestCase(TestCase):
         self.assertEqual(en.advisor, "Prof. Smith")
         self.assertListEqual(en.areas, ["AI", "ML"])
 
+    def test_school_representation_for_locale(self) -> None:
+        start = fake.date_object()
+        end = fake.date_between(start_date=start, end_date="+3y")
+        obj = School.objects.create(
+            start=start,
+            end=end,
+            study="Computer Science",
+            university="UW",
+            research="NLP",
+            advisor="Prof. X",
+            areas=["AI", "NLP"],
+        )
+        rep = obj.representation_for("en")
+        self.assertIn("School:", rep)
+        self.assertIn("Computer Science", rep)
+        self.assertIn("UW", rep)
+
     # -------------------------
     # Publication
     # -------------------------
@@ -154,6 +171,21 @@ class UniversityModelsTestCase(TestCase):
         en = Publication.objects.language("en").get(pk=obj.pk)
         self.assertEqual(en.summary, "English summary of the research")
 
+    def test_publication_representation_for_locale(self) -> None:
+        year = 2024
+        obj = Publication.objects.create(
+            title="Paper Title",
+            journal="JMLR",
+            link="https://example.com",
+            year=year,
+            summary="Summary EN",
+        )
+        rep = obj.representation_for("en")
+        self.assertIn("Publication:", rep)
+        self.assertIn("Paper Title", rep)
+        self.assertIn("JMLR", rep)
+        self.assertIn("2024", rep)
+
     # -------------------------
     # Testimonial
     # -------------------------
@@ -208,3 +240,15 @@ class UniversityModelsTestCase(TestCase):
         en = Testimonial.objects.language("en").get(pk=obj.pk)
         self.assertEqual(en.course, "Data Structures")
         self.assertEqual(en.content, "Great learning experience")
+
+    def test_testimonial_representation_for_locale(self) -> None:
+        obj = Testimonial.objects.create(
+            semester="2023/2024",
+            season=Seasons.WINTER,
+            course="Algorithms",
+            content="Challenging but rewarding",
+        )
+        rep = obj.representation_for("en")
+        self.assertIn("Testimonial:", rep)
+        self.assertIn("Algorithms", rep)
+        self.assertIn("Semester:", rep)
