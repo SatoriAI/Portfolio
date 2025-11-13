@@ -2,6 +2,7 @@
 from unittest.mock import MagicMock, patch
 
 import faker
+from django.conf import settings
 from django.test import TestCase
 
 from vex.ai.database import relational
@@ -82,7 +83,11 @@ class TokenizeAndPipelinesTestCase(TestCase):
             p2 = get_pipeline("en")
             self.assertIs(p1, p2)
             mock_ctor.assert_called_once_with(
-                lang="en", processors="tokenize,lemma", use_gpu=False, tokenize_pretokenized=False
+                lang="en",
+                processors="tokenize,lemma",
+                use_gpu=False,
+                tokenize_pretokenized=False,
+                dir=settings.STANZA_RESOURCES_DIR,
             )
 
     def test_tokenize_fallback_without_pipeline(self) -> None:
