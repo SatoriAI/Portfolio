@@ -99,6 +99,14 @@ jobs:
       - name: Set Up Python Environment
         uses: ./.github/actions/setup-python
 
+      - name: Install gettext for Django compilemessages
+        run: sudo apt-get update && sudo apt-get install -y gettext
+
+      - name: Compile Translations (.po -> .mo)
+        run: |
+          cd portfolio
+          uv run django-admin compilemessages -l pl
+
       - name: Run Pytest
         env:
           SECRET_KEY: "0m(b5ytsmyyq9al$uulhdvb(hw^jge298(11pm49c!^6se&)ht"

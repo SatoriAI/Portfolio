@@ -272,15 +272,14 @@ class TestimonialListViewTestCase(TestCase):
         )
 
         url = reverse("university:testimonials")
-        with translation.override("pl"):
-            response = self.client.get(url, HTTP_ACCEPT_LANGUAGE="pl")
-            self.assertEqual(response.status_code, 200)
+        response = self.client.get(url, HTTP_ACCEPT_LANGUAGE="pl")
+        self.assertEqual(response.status_code, 200)
 
-            data = response.json()
-            self.assertEqual(len(data), 1)
-            item = data[0]
-            # Expect Polish display for season
-            self.assertEqual(item["season"], "Zimowy")
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        item = data[0]
+        # Expect Polish display for season
+        self.assertEqual(item["season"], "Zimowy")
 
     def test_list_testimonials_season_localized_en_header(self) -> None:
         TestimonialFactory(
