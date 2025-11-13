@@ -14,12 +14,16 @@ class ParlerTranslatedFieldsFieldExtension(OpenApiSerializerFieldExtension):
 
         if shared_model is not None:
             try:
-                meta = shared_model._parler_meta  # pylint: disable=protected-access
+                meta = getattr(shared_model, "_parler_meta", None)  # pylint: disable=protected-access
+                if meta is None:
+                    raise AttributeError("_parler_meta is missing")
 
                 if hasattr(meta, "get_translated_fields"):  # 1) Prefer Parler’s own list of translated field names
                     names = list(meta.get_translated_fields())
                 else:  # 2) Fallback: introspect the translation model
-                    translation_model = meta.get_model()
+                    translation_model = getattr(meta, "get_model", lambda: None)()
+                    if translation_model is None:
+                        raise AttributeError("translation model is missing")
                     names = [
                         f.name
                         for f in translation_model._meta.get_fields()
