@@ -1,5 +1,9 @@
 export const translations = {
   en: {
+    meta: {
+      title: "Dawid's Portfolio",
+      description: "Dawid's Personal Portfolio",
+    },
     chat: {
       prompt: "What would you like to know?",
       inputPlaceholder: "Ask me anything about Dawid...",
@@ -85,6 +89,10 @@ export const translations = {
     },
   },
   pl: {
+    meta: {
+      title: "Portfolio Dawida",
+      description: "Osobiste portfolio Dawida",
+    },
     chat: {
       prompt: "O co chcesz zapytać?",
       inputPlaceholder: "Zapytaj o cokolwiek o Dawidzie...",

@@ -259,7 +259,7 @@ const Experience = () => {
                           </Reveal>
                         </div>
                         <Reveal direction="up" delayMs={120}>
-                          <CardDescription className="text-base leading-relaxed text-muted-foreground">
+                          <CardDescription className="text-justify text-base leading-relaxed text-muted-foreground">
                             {exp.description}
                           </CardDescription>
                         </Reveal>
@@ -270,17 +270,9 @@ const Experience = () => {
                             <h4 className="mb-3 font-semibold text-card-foreground">
                               {t.experience.keyAchievements}
                             </h4>
-                            <ul className="space-y-2">
+                            <ul className="list-disc space-y-2 pl-6 text-muted-foreground marker:text-orange-600 dark:marker:text-purple-400">
                               {exp.achievements.map((achievement, i) => (
-                                <li
-                                  key={i}
-                                  className="flex items-start gap-2 text-muted-foreground"
-                                >
-                                  <span className="mt-1 text-orange-600 dark:text-purple-400">
-                                    •
-                                  </span>
-                                  <span>{achievement}</span>
-                                </li>
+                                <li key={i}>{achievement}</li>
                               ))}
                             </ul>
                           </div>

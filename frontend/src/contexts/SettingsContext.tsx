@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
+import { translations } from "@/utils/translations";
+
 type Theme = "light" | "dark";
 type Language = "en" | "pl";
 
@@ -61,6 +63,34 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     localStorage.setItem("language", language);
+  }, [language]);
+
+  // Update document language, title and meta when language changes
+  useEffect(() => {
+    try {
+      // html lang
+      if (typeof document !== "undefined") {
+        document.documentElement.lang = language;
+      }
+      // localized title
+      const meta = translations[language]?.meta as
+        | { title?: string; description?: string }
+        | undefined;
+      if (meta?.title) {
+        document.title = meta.title;
+      }
+      // meta description
+      if (meta?.description) {
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) metaDesc.setAttribute("content", meta.description);
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle && meta.title) ogTitle.setAttribute("content", meta.title);
+        const ogDesc = document.querySelector('meta[property="og:description"]');
+        if (ogDesc) ogDesc.setAttribute("content", meta.description);
+      }
+    } catch (_error) {
+      // no-op
+    }
   }, [language]);
 
   const toggleTheme = () => {

@@ -553,7 +553,7 @@ const Index = () => {
                 direction={index % 2 === 0 ? "left" : "right"}
                 delayMs={index * 60}
               >
-                <Card className="flex max-h-[320px] min-h-[280px] flex-col border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:scale-105 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
+                <Card className="flex h-[320px] flex-col border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:scale-105 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
                   <CardHeader className="flex flex-shrink-0 flex-col items-center justify-center text-center">
                     <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400">
                       <skill.icon className="h-8 w-8 text-white" />
