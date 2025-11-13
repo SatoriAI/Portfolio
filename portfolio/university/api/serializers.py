@@ -14,7 +14,7 @@ class SchoolSerializer(TranslatableModelSerializer):
         model = School
         fields = "__all__"
 
-    def get_degree(self, obj) -> str:
+    def get_degree(self, obj: School) -> str:
         with translation.override(self.context.get("request").LANGUAGE_CODE):
             return obj.get_degree_display()
 
@@ -35,6 +35,6 @@ class TestimonialSerializer(TranslatableModelSerializer):
         model = Testimonial
         fields = "__all__"
 
-    def get_season(self, obj) -> str:
+    def get_season(self, obj: Testimonial) -> str:
         with translation.override(self.context.get("request").LANGUAGE_CODE):
             return obj.get_season_display()

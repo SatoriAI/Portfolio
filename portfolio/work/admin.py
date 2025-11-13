@@ -28,6 +28,7 @@ class ProjectAdmin(TranslatableAdmin):
 class ExperienceAdmin(TranslatableAdmin):
     list_display = (
         "position",
+        "company",
         "period",
         "created_at",
     )
