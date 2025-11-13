@@ -71,10 +71,17 @@ class TokenizeAndPipelinesTestCase(TestCase):
         relational.STANZA_PIPELINES.clear()
 
     def test_get_pipeline_returns_none_on_exception(self) -> None:
-        with patch("vex.ai.database.relational.stanza.Pipeline", side_effect=Exception("boom")) as mock_ctor:
+        with (
+            patch("vex.ai.database.relational.stanza.Pipeline", side_effect=Exception("boom")) as mock_ctor,
+            patch("vex.ai.database.relational.stanza.download") as mock_download,
+        ):
             pipe = get_pipeline("pl")
             self.assertIsNone(pipe)
-            mock_ctor.assert_called_once()
+            # Called twice: initial attempt + retry after lazy download
+            self.assertEqual(mock_ctor.call_count, 2)
+            mock_download.assert_called_once_with(
+                "pl", processors="tokenize,lemma", model_dir=settings.STANZA_RESOURCES_DIR
+            )
 
     def test_get_pipeline_caches_per_locale(self) -> None:
         fake_pipeline = MagicMock(name="Pipeline")
