@@ -46,14 +46,12 @@ class RagChain:
             if db_config := Configuration.objects.first():
                 return db_config
         except Exception:  # pylint: disable=broad-exception-caught
-            pass
-
-        return RagConfig(
-            model="gpt-4o-mini",
-            temperature=0.5,
-            system_prompt="You are a helpful assistant.",
-            user_prompt="Question: {question}\nContext: {context}",
-        )
+            return RagConfig(
+                model="gpt-4o-mini",
+                temperature=0.5,
+                system_prompt="You are a helpful assistant.",
+                user_prompt="Question: {question}\nContext: {context}",
+            )
 
     def build(self) -> RunnableWithMessageHistory:
         return RunnableWithMessageHistory(
@@ -112,16 +110,13 @@ class RagChain:
 
     @staticmethod
     def _save_context_to_file(question: str, locale: str, merged: str) -> None:
-        try:
-            dump_dir = Path(settings.RAG_CONTEXT_DUMP_DIR)
-            if not dump_dir.exists():
-                dump_dir.mkdir(parents=True, exist_ok=True)
-            filename = dump_dir / f"{datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}.txt"
-            with open(filename, "w", encoding="utf-8") as f:
-                f.write(f"Locale: {locale}\nQuestion: {question}\n\n")
-                f.write(merged)
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
+        dump_dir = Path(settings.RAG_CONTEXT_DUMP_DIR)
+        if not dump_dir.exists():
+            dump_dir.mkdir(parents=True, exist_ok=True)
+        filename = dump_dir / f"{datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}.txt"
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(f"Locale: {locale}\nQuestion: {question}\n\n")
+            f.write(merged)
 
 
 def build_rag_chain() -> RunnableWithMessageHistory:

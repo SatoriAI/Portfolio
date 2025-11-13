@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-12 16:24+0000\n"
+"POT-Creation-Date: 2025-11-13 09:49+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,18 +19,17 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && "
 "(n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && "
 "n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
-
-#: university/apps.py:9 university/models.py:18
+#: university/apps.py:9 university/models.py:19
 msgid "University"
 msgstr "Uczelnia"
 
 #: university/choices.py:6
 msgid "Winter"
-msgstr "Semestr Zimowy"
+msgstr "Zimowy"
 
 #: university/choices.py:7
 msgid "Summer"
-msgstr "Semestr Letni"
+msgstr "Letni"
 
 #: university/choices.py:11
 msgid "Bachelor's"
@@ -52,42 +51,33 @@ msgstr "Rozpoczęcie"
 msgid "End"
 msgstr "Koniec"
 
-#: university/models.py:14
+#: university/models.py:15
 msgid "Degree"
 msgstr "Stopień"
 
-#: university/models.py:17
+#: university/models.py:18
 msgid "Study"
 msgstr "Kierunek"
 
-#: university/models.py:18
-msgid "University"
-msgstr "Uczelnia"
-
-#: university/models.py:19
+#: university/models.py:20
 msgid "Research"
 msgstr "Badania"
 
-#: university/models.py:20
+#: university/models.py:21
 msgid "Advisor"
 msgstr "Promotor"
 
-#: university/models.py:21
+#: university/models.py:22
 msgid "Areas"
 msgstr "Zainteresowania"
 
-#: university/models.py:28
+#: university/models.py:29
 msgid "School"
 msgstr "Szkoła"
 
-#: university/models.py:29
+#: university/models.py:30
 msgid "Schools"
 msgstr "Szkoły"
-
-#: university/models.py:33
-#: university/models.py:46 vex/models.py:33 vex/models.py:56 work/models.py:36
-msgid "Title"
-msgstr "Tytuł"
 
 #: university/models.py:47
 msgid "Journal"
@@ -101,76 +91,43 @@ msgstr "Link"
 msgid "Year"
 msgstr "Rok"
 
-#: university/models.py:38 work/models.py:29
+#: university/models.py:52 vex/models.py:33 vex/models.py:56 work/models.py:36
 msgid "Title"
 msgstr "Tytuł"
 
-#: university/models.py:39
+#: university/models.py:53
 msgid "Summary"
 msgstr "Podsumowanie"
-
-#: university/models.py:46
-msgid "Publication"
-msgstr "Publikacja"
-
-#: university/models.py:47
-msgid "Publications"
-msgstr "Publikacje"
-
-#: university/models.py:51
-msgid "Semester"
-msgstr "Semestr"
-
-#: university/models.py:52
-msgid "Season"
-msgstr "Sezon"
-
-#: university/models.py:55
-msgid "Course"
-msgstr "Kurs"
-
-#: university/models.py:56
-msgid "Content"
-msgstr "Treść"
-
-#: university/models.py:63
-msgid "Testimonial"
-msgstr "Referancja"
-
-#: university/models.py:64
-#: university/models.py:52
-msgid "Summary"
-msgstr "Podsumowanie"
-
-#: university/models.py:59
-msgid "Publication"
-msgstr "Publikacja"
 
 #: university/models.py:60
+msgid "Publication"
+msgstr "Podsumowanie"
+
+#: university/models.py:61
 msgid "Publications"
 msgstr "Publikacje"
 
-#: university/models.py:72
+#: university/models.py:73
 msgid "Semester"
 msgstr "Semestr"
 
-#: university/models.py:73
+#: university/models.py:74
 msgid "Season"
 msgstr "Sezon"
 
-#: university/models.py:76
+#: university/models.py:77
 msgid "Course"
 msgstr "Kurs"
 
-#: university/models.py:77 vex/models.py:25
+#: university/models.py:78 vex/models.py:25
 msgid "Content"
 msgstr "Treść"
 
-#: university/models.py:84
+#: university/models.py:85
 msgid "Testimonial"
 msgstr "Referancja"
 
-#: university/models.py:85
+#: university/models.py:86
 msgid "Testimonials"
 msgstr "Referencje"
 
@@ -190,7 +147,7 @@ msgstr "Wstrzyknij Dokument(y) do Wektorowej Bazy Danych"
 msgid "Document(s) injected successfully."
 msgstr "Dokumenty wstrzyknięto pomyślnie."
 
-#: vex/admin.py:40
+#: vex/admin.py:41
 msgid "Number of Messages"
 msgstr "Liczba Wiadomości"
 
@@ -286,7 +243,7 @@ msgstr "5+ lat doświadczenia"
 msgid "10+ years of experience"
 msgstr "10+ lat doświadczenia"
 
-#: work/models.py:16
+#: work/models.py:17
 msgid "Name"
 msgstr "Nazwa"
 
@@ -298,11 +255,6 @@ msgstr "Umiejętność"
 msgid "Skills"
 msgstr "Umiejętności"
 
-#: work/models.py:30
-msgid "Image URL"
-msgstr "Adres URL obrazu"
-
-#: work/models.py:31
 #: work/models.py:37
 msgid "Image URL"
 msgstr "Adres URL obrazu"

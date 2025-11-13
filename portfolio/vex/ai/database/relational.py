@@ -16,8 +16,7 @@ def get_pipeline(locale: str) -> stanza.Pipeline | None:
                 lang=locale, processors="tokenize,lemma", use_gpu=False, tokenize_pretokenized=False
             )
     except Exception:  # pylint: disable=broad-exception-caught
-        pass
-    return STANZA_PIPELINES.get(locale)
+        return STANZA_PIPELINES.get(locale)
 
 
 def tokenize(question: str, locale: str) -> set[str]:
