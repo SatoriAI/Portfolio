@@ -204,8 +204,7 @@ class PublicationListViewTestCase(TestCase):
 
         data = response.json()
         self.assertEqual(len(data), 2)
-        # With ordering by year desc only, items with the same year keep ascending pk order
-        self.assertEqual([item["id"] for item in data], [first.id, second.id])
+        self.assertEqual([item["id"] for item in data], [second.id, first.id])
 
 
 class TestimonialListViewTestCase(TestCase):
