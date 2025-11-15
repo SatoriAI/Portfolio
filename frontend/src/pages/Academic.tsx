@@ -8,7 +8,6 @@ import {
   Menu,
   Quote,
   Settings,
-  Star,
 } from "lucide-react";
 
 import Reveal from "@/components/Reveal";
@@ -107,15 +106,6 @@ const Academic = () => {
     setTestimonialsTouchStartX(null);
     setTestimonialsTouchDeltaX(0);
     setTestimonialsIsDragging(false);
-  };
-
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`h-4 w-4 ${i < rating ? "fill-current text-yellow-400" : "text-gray-400"}`}
-      />
-    ));
   };
 
   const gradients = useScrollGradient(
@@ -590,10 +580,6 @@ const Academic = () => {
                           <div key={index} className="w-full flex-none px-6">
                             <Card className="border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
                               <CardHeader>
-                                <div className="mb-3 flex items-center gap-3">
-                                  <Quote className="h-6 w-6 text-orange-600 dark:text-purple-400" />
-                                  <div className="flex">{renderStars(testimonial.rating)}</div>
-                                </div>
                                 <CardTitle className="text-lg text-card-foreground">
                                   {testimonial.name}
                                 </CardTitle>
@@ -603,7 +589,7 @@ const Academic = () => {
                               </CardHeader>
                               <CardContent>
                                 <p className="text-center italic leading-relaxed text-muted-foreground">
-                                  "{testimonial.text}"
+                                  {testimonial.text}
                                 </p>
                               </CardContent>
                             </Card>

@@ -259,7 +259,7 @@ const Experience = () => {
                           </Reveal>
                         </div>
                         <Reveal direction="up" delayMs={120}>
-                          <CardDescription className="text-justify text-base leading-relaxed text-muted-foreground">
+                          <CardDescription className="text-base leading-relaxed text-muted-foreground md:text-justify">
                             {exp.description}
                           </CardDescription>
                         </Reveal>
