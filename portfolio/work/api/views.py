@@ -1,3 +1,4 @@
+from django.db.models import Case, IntegerField, Value, When
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics
 
@@ -19,5 +20,16 @@ class ProjectViewSet(generics.ListAPIView):
 
 @extend_schema(summary="List Experiences", tags=["Work"])
 class ExperienceViewSet(generics.ListAPIView):
-    queryset = Experience.objects.all().prefetch_related("translations").order_by("-pk")
+    queryset = (
+        Experience.objects.all()
+        .annotate(
+            is_current=Case(
+                When(end__isnull=True, then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField(),
+            )
+        )
+        .prefetch_related("translations")
+        .order_by("-is_current", "-start")
+    )
     serializer_class = ExperienceSerializer
