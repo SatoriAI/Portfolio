@@ -162,15 +162,41 @@ class ExperienceListViewTestCase(TestCase):
             ["Wdrożenie CI/CD", "Optymalizacja zapytań SQL"],
         )
 
-    def test_list_experiences_ordering_by_pk_desc(self) -> None:
-        first = ExperienceFactory()
-        second = ExperienceFactory()
-        third = ExperienceFactory()
+    def test_list_experiences_ordering_current_first_then_start_desc(self) -> None:
+        # Current roles (end=None)
+        current_newer = ExperienceFactory(position="Current Newer", start=date(2024, 6, 1), end=None)
+        current_older = ExperienceFactory(position="Current Older", start=date(2023, 1, 1), end=None)
+
+        # Ended roles (end set)
+        ended_newer = ExperienceFactory(position="Ended Newer", start=date(2022, 5, 1), end=date(2023, 5, 1))
+        ended_older = ExperienceFactory(position="Ended Older", start=date(2020, 3, 1), end=date(2021, 3, 1))
 
         url = reverse("work:experiences")
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
         data = response.json()
-        self.assertEqual(len(data), 3)
-        self.assertEqual([item["id"] for item in data], [third.id, second.id, first.id])
+        self.assertEqual(len(data), 4)
+        # Current (end is null) first, ordered by start desc, then ended ordered by start desc
+        self.assertEqual(
+            [item["id"] for item in data],
+            [current_newer.id, current_older.id, ended_newer.id, ended_older.id],
+        )
+
+    def test_list_experiences_ordering_with_multiple_current_and_ended(self) -> None:
+        # Mix more items to ensure grouping and secondary ordering hold
+        c3 = ExperienceFactory(position="Current 2025", start=date(2025, 1, 15), end=None)
+        c1 = ExperienceFactory(position="Current 2022", start=date(2022, 7, 10), end=None)
+        c2 = ExperienceFactory(position="Current 2023", start=date(2023, 8, 20), end=None)
+
+        e2 = ExperienceFactory(position="Ended 2024 start", start=date(2024, 2, 1), end=date(2024, 12, 1))
+        e1 = ExperienceFactory(position="Ended 2021 start", start=date(2021, 11, 1), end=date(2022, 2, 1))
+
+        url = reverse("work:experiences")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        # Expect all currents by start desc, then all ended by start desc
+        expected_order = [c3.id, c2.id, c1.id, e2.id, e1.id]
+        self.assertEqual([item["id"] for item in data], expected_order)
