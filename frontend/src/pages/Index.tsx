@@ -655,9 +655,7 @@ const Index = () => {
                             </CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <p className="mb-4 text-justify text-muted-foreground">
-                              {project.description}
-                            </p>
+                            <p className="mb-4 text-muted-foreground">{project.description}</p>
                             <div className="mb-4 flex flex-wrap gap-2">
                               {project.technologies.map((tech, techIndex) => (
                                 <Badge
@@ -750,9 +748,7 @@ const Index = () => {
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="mb-4 text-justify text-muted-foreground">
-                            {project.description}
-                          </p>
+                          <p className="mb-4 text-muted-foreground">{project.description}</p>
                           <div className="mb-4 flex flex-wrap gap-2">
                             {project.technologies.map((tech, techIndex) => (
                               <Badge
