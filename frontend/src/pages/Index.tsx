@@ -730,7 +730,7 @@ const Index = () => {
 
             {/* Tablet/Desktop: infinite carousel like testimonials */}
             <div className="hidden md:block md:px-12">
-              <Carousel opts={{ loop: true, align: "start" }} className="w-full">
+              <Carousel opts={{ loop: true, align: "start", watchDrag: false }} className="w-full">
                 <CarouselContent>
                   {projectsForDesktopCarousel.map((project, index) => (
                     <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">

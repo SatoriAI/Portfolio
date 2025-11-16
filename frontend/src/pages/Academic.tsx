@@ -602,7 +602,10 @@ const Academic = () => {
 
                 {/* Tablet/Desktop: infinite carousel */}
                 <div className="hidden md:block">
-                  <Carousel opts={{ loop: true, align: "start" }} className="w-full">
+                  <Carousel
+                    opts={{ loop: true, align: "start", watchDrag: false }}
+                    className="w-full"
+                  >
                     <CarouselContent>
                       {testimonials.map((testimonial) => (
                         <CarouselItem key={testimonial.id} className="md:basis-1/2 lg:basis-1/3">
