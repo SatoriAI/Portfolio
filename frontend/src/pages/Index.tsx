@@ -20,6 +20,7 @@ import {
 import ChatWidget from "@/components/ChatWidget";
 import Reveal from "@/components/Reveal";
 import SettingsPanel from "@/components/SettingsPanel";
+import SwipeHint from "@/components/SwipeHint";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,6 +54,8 @@ const Index = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [mobileIndex, setMobileIndex] = useState(1); // 1..projects.length for cloned edges
   const [allowTransition, setAllowTransition] = useState(true);
+  const [swipeHintSeen, setSwipeHintSeen] = useState<boolean>(false);
+  const [showProjectsHint, setShowProjectsHint] = useState<boolean>(false);
 
   const t = translations[language];
   const gradients = useScrollGradient(
@@ -173,6 +176,36 @@ const Index = () => {
       });
   }, [language]);
 
+  // Swipe hint: load persisted state once
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem("swipeHintSeen.projects") === "true";
+      setSwipeHintSeen(seen);
+    } catch (_e) {
+      // ignore
+    }
+  }, []);
+
+  // Swipe hint: observe when the first mobile slide is fully visible
+  useEffect(() => {
+    const target = mobileSliderRef.current;
+    if (!target) return;
+    const hasMultiple = projects.length > 1;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const fullyVisible = entry.intersectionRatio >= 1;
+        if (fullyVisible && !swipeHintSeen && hasMultiple && mobileIndex === 1) {
+          setShowProjectsHint(true);
+        } else {
+          setShowProjectsHint(false);
+        }
+      },
+      { threshold: [1] },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [mobileIndex, projects.length, swipeHintSeen]);
+
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -217,6 +250,15 @@ const Index = () => {
     if (Math.abs(touchDeltaX) > threshold) {
       if (touchDeltaX < 0) setMobileIndex((i) => i + 1);
       else setMobileIndex((i) => i - 1);
+      if (!swipeHintSeen) {
+        try {
+          localStorage.setItem("swipeHintSeen.projects", "true");
+        } catch (_e) {
+          // ignore
+        }
+        setSwipeHintSeen(true);
+        setShowProjectsHint(false);
+      }
     }
     setTouchStartX(null);
     setTouchDeltaX(0);
@@ -727,6 +769,7 @@ const Index = () => {
                 );
               })()}
             </div>
+            <SwipeHint visible={showProjectsHint} text={t.hints.swipeMore} />
 
             {/* Tablet/Desktop: infinite carousel like testimonials */}
             <div className="hidden md:block md:px-12">

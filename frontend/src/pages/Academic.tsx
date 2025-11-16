@@ -12,6 +12,7 @@ import {
 
 import Reveal from "@/components/Reveal";
 import SettingsPanel from "@/components/SettingsPanel";
+import SwipeHint from "@/components/SwipeHint";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,6 +53,8 @@ const Academic = () => {
   const [testimonialsIsDragging, setTestimonialsIsDragging] = useState(false);
   const [testimonialsMobileIndex, setTestimonialsMobileIndex] = useState(1); // 1..n, with clones
   const [testimonialsAllowTransition, setTestimonialsAllowTransition] = useState(true);
+  const [swipeHintSeen, setSwipeHintSeen] = useState<boolean>(false);
+  const [showTestimonialsHint, setShowTestimonialsHint] = useState<boolean>(false);
 
   useEffect(() => {
     const loadAcademicData = async () => {
@@ -85,6 +88,36 @@ const Academic = () => {
     setTestimonialsMobileIndex(1);
   }, [testimonials.length]);
 
+  // Swipe hint: load persisted state once
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem("swipeHintSeen.testimonials") === "true";
+      setSwipeHintSeen(seen);
+    } catch (_e) {
+      // ignore
+    }
+  }, []);
+
+  // Swipe hint: observe when the first mobile slide is fully visible
+  useEffect(() => {
+    const target = testimonialsSliderRef.current;
+    if (!target) return;
+    const hasMultiple = testimonials.length > 1;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const fullyVisible = entry.intersectionRatio >= 1;
+        if (fullyVisible && !swipeHintSeen && hasMultiple && testimonialsMobileIndex === 1) {
+          setShowTestimonialsHint(true);
+        } else {
+          setShowTestimonialsHint(false);
+        }
+      },
+      { threshold: [1] },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [testimonialsMobileIndex, testimonials.length, swipeHintSeen]);
+
   const handleTestimonialsTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     setTestimonialsTouchStartX(e.touches[0].clientX);
     setTestimonialsIsDragging(true);
@@ -102,6 +135,15 @@ const Academic = () => {
     if (Math.abs(testimonialsTouchDeltaX) > threshold) {
       if (testimonialsTouchDeltaX < 0) setTestimonialsMobileIndex((i) => i + 1);
       else setTestimonialsMobileIndex((i) => i - 1);
+      if (!swipeHintSeen) {
+        try {
+          localStorage.setItem("swipeHintSeen.testimonials", "true");
+        } catch (_e) {
+          // ignore
+        }
+        setSwipeHintSeen(true);
+        setShowTestimonialsHint(false);
+      }
     }
     setTestimonialsTouchStartX(null);
     setTestimonialsTouchDeltaX(0);
@@ -599,6 +641,7 @@ const Academic = () => {
                     );
                   })()}
                 </div>
+                <SwipeHint visible={showTestimonialsHint} text={t.hints.swipeMore} />
 
                 {/* Tablet/Desktop: infinite carousel */}
                 <div className="hidden md:block">

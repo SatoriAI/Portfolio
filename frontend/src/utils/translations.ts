@@ -62,6 +62,9 @@ export const translations = {
       quickMessage: "Have a Chat with Vex!",
       quickMessageDesc: "Have a quick question? Start a conversation with my AI assistant.",
     },
+    hints: {
+      swipeMore: "Swipe to see more",
+    },
     experience: {
       title: "Work Experience",
       subtitle: "A journey through the projects and experiences that shaped my skills.",
@@ -150,6 +153,9 @@ export const translations = {
       email: "Email",
       quickMessage: "Porozmawiaj z Vex!",
       quickMessageDesc: "Masz szybkie pytanie? Rozpocznij rozmowę z moim asystentem AI.",
+    },
+    hints: {
+      swipeMore: "Przeciągnij w bok, aby zobaczyć więcej",
     },
     experience: {
       title: "Doświadczenie Zawodowe",
