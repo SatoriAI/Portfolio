@@ -422,7 +422,7 @@ const Academic = () => {
                               <h4 className="mb-3 font-semibold text-card-foreground">
                                 {t.academic.researchFocus}
                               </h4>
-                              <p className="text-justify text-muted-foreground">
+                              <p className="text-muted-foreground md:text-justify">
                                 {school.research}
                               </p>
                             </div>
@@ -546,7 +546,7 @@ const Academic = () => {
                           )}
                         </div>
                         {pub.summary && (
-                          <CardDescription className="text-justify text-muted-foreground">
+                          <CardDescription className="text-muted-foreground md:text-justify">
                             {pub.summary}
                           </CardDescription>
                         )}
@@ -666,11 +666,14 @@ const Academic = () => {
                           <div key={index} className="w-full flex-none px-6">
                             <Card className="border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
                               <CardHeader>
+                                <div className="mb-3 flex items-center gap-3">
+                                  <Quote className="h-6 w-6 text-orange-600 dark:text-purple-400" />
+                                </div>
                                 <CardTitle className="text-lg text-card-foreground">
-                                  {testimonial.name}
+                                  {testimonial.course}
                                 </CardTitle>
                                 <CardDescription className="text-muted-foreground">
-                                  {testimonial.course} • {testimonial.semester}
+                                  {testimonial.semester}
                                 </CardDescription>
                               </CardHeader>
                               <CardContent>

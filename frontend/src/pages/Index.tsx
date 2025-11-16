@@ -592,12 +592,12 @@ const Index = () => {
           <div className="grid items-center gap-12 md:grid-cols-2">
             <div>
               <Reveal direction="right" delayMs={0} offset={48}>
-                <p className="mb-6 text-justify text-lg leading-relaxed text-muted-foreground">
+                <p className="mb-6 text-lg leading-relaxed text-muted-foreground md:text-justify">
                   {t.about.paragraph1}
                 </p>
               </Reveal>
               <Reveal direction="right" delayMs={140} offset={48}>
-                <p className="mb-6 text-justify text-lg leading-relaxed text-muted-foreground">
+                <p className="mb-6 text-lg leading-relaxed text-muted-foreground md:text-justify">
                   {t.about.paragraph2}
                 </p>
               </Reveal>
@@ -610,7 +610,7 @@ const Index = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-muted-foreground">
-                  <p className="text-justify">{t.about.philosophyText}</p>
+                  <p className="md:text-justify">{t.about.philosophyText}</p>
                 </CardContent>
               </Card>
             </Reveal>
