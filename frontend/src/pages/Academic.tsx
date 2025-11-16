@@ -49,8 +49,11 @@ const Academic = () => {
   // Mobile testimonials slider state
   const testimonialsSliderRef = useRef<HTMLDivElement>(null);
   const [testimonialsTouchStartX, setTestimonialsTouchStartX] = useState<number | null>(null);
+  const [testimonialsTouchStartY, setTestimonialsTouchStartY] = useState<number | null>(null);
   const [testimonialsTouchDeltaX, setTestimonialsTouchDeltaX] = useState(0);
   const [testimonialsIsDragging, setTestimonialsIsDragging] = useState(false);
+  const [testimonialsIsDirectionLocked, setTestimonialsIsDirectionLocked] = useState(false);
+  const [testimonialsIsLockedToHorizontal, setTestimonialsIsLockedToHorizontal] = useState(false);
   const [testimonialsMobileIndex, setTestimonialsMobileIndex] = useState(1); // 1..n, with clones
   const [testimonialsAllowTransition, setTestimonialsAllowTransition] = useState(true);
   const [swipeHintSeen, setSwipeHintSeen] = useState<boolean>(false);
@@ -120,17 +123,55 @@ const Academic = () => {
 
   const handleTestimonialsTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     setTestimonialsTouchStartX(e.touches[0].clientX);
-    setTestimonialsIsDragging(true);
+    setTestimonialsTouchStartY(e.touches[0].clientY);
+    setTestimonialsTouchDeltaX(0);
+    setTestimonialsIsDragging(false);
+    setTestimonialsIsDirectionLocked(false);
+    setTestimonialsIsLockedToHorizontal(false);
   };
 
   const handleTestimonialsTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (testimonialsTouchStartX === null) return;
-    const delta = e.touches[0].clientX - testimonialsTouchStartX;
-    setTestimonialsTouchDeltaX(delta);
+    if (testimonialsTouchStartX === null || testimonialsTouchStartY === null) return;
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const dx = currentX - testimonialsTouchStartX;
+    const dy = currentY - testimonialsTouchStartY;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+    const lockFactor = 1.2;
+
+    if (!testimonialsIsDirectionLocked) {
+      if (absDx < 3 && absDy < 3) return;
+      if (absDx > absDy * lockFactor) {
+        setTestimonialsIsDirectionLocked(true);
+        setTestimonialsIsLockedToHorizontal(true);
+        setTestimonialsIsDragging(true);
+        if (e.cancelable) e.preventDefault();
+        setTestimonialsTouchDeltaX(dx);
+      } else {
+        setTestimonialsIsDirectionLocked(true);
+        setTestimonialsIsLockedToHorizontal(false);
+        setTestimonialsIsDragging(false);
+      }
+      return;
+    }
+
+    if (testimonialsIsLockedToHorizontal) {
+      if (e.cancelable) e.preventDefault();
+      setTestimonialsTouchDeltaX(dx);
+    }
   };
 
   const handleTestimonialsTouchEnd = () => {
-    if (!testimonialsIsDragging) return;
+    if (!testimonialsIsDragging) {
+      setTestimonialsTouchStartX(null);
+      setTestimonialsTouchStartY(null);
+      setTestimonialsTouchDeltaX(0);
+      setTestimonialsIsDragging(false);
+      setTestimonialsIsDirectionLocked(false);
+      setTestimonialsIsLockedToHorizontal(false);
+      return;
+    }
     const threshold = 50;
     if (Math.abs(testimonialsTouchDeltaX) > threshold) {
       if (testimonialsTouchDeltaX < 0) setTestimonialsMobileIndex((i) => i + 1);
@@ -146,8 +187,11 @@ const Academic = () => {
       }
     }
     setTestimonialsTouchStartX(null);
+    setTestimonialsTouchStartY(null);
     setTestimonialsTouchDeltaX(0);
     setTestimonialsIsDragging(false);
+    setTestimonialsIsDirectionLocked(false);
+    setTestimonialsIsLockedToHorizontal(false);
   };
 
   const gradients = useScrollGradient(

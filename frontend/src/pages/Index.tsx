@@ -50,8 +50,11 @@ const Index = () => {
   const { language, theme } = useSettings();
   const mobileSliderRef = useRef<HTMLDivElement>(null);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
   const [touchDeltaX, setTouchDeltaX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isDirectionLocked, setIsDirectionLocked] = useState(false);
+  const [isLockedToHorizontal, setIsLockedToHorizontal] = useState(false);
   const [mobileIndex, setMobileIndex] = useState(1); // 1..projects.length for cloned edges
   const [allowTransition, setAllowTransition] = useState(true);
   const [swipeHintSeen, setSwipeHintSeen] = useState<boolean>(false);
@@ -235,17 +238,55 @@ const Index = () => {
 
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     setTouchStartX(e.touches[0].clientX);
-    setIsDragging(true);
+    setTouchStartY(e.touches[0].clientY);
+    setTouchDeltaX(0);
+    setIsDragging(false);
+    setIsDirectionLocked(false);
+    setIsLockedToHorizontal(false);
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (touchStartX === null) return;
-    const delta = e.touches[0].clientX - touchStartX;
-    setTouchDeltaX(delta);
+    if (touchStartX === null || touchStartY === null) return;
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const dx = currentX - touchStartX;
+    const dy = currentY - touchStartY;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+    const lockFactor = 1.2;
+
+    if (!isDirectionLocked) {
+      if (absDx < 3 && absDy < 3) return;
+      if (absDx > absDy * lockFactor) {
+        setIsDirectionLocked(true);
+        setIsLockedToHorizontal(true);
+        setIsDragging(true);
+        if (e.cancelable) e.preventDefault();
+        setTouchDeltaX(dx);
+      } else {
+        setIsDirectionLocked(true);
+        setIsLockedToHorizontal(false);
+        setIsDragging(false);
+      }
+      return;
+    }
+
+    if (isLockedToHorizontal) {
+      if (e.cancelable) e.preventDefault();
+      setTouchDeltaX(dx);
+    }
   };
 
   const handleTouchEnd = () => {
-    if (!isDragging) return;
+    if (!isDragging) {
+      setTouchStartX(null);
+      setTouchStartY(null);
+      setTouchDeltaX(0);
+      setIsDragging(false);
+      setIsDirectionLocked(false);
+      setIsLockedToHorizontal(false);
+      return;
+    }
     const threshold = 50;
     if (Math.abs(touchDeltaX) > threshold) {
       if (touchDeltaX < 0) setMobileIndex((i) => i + 1);
@@ -261,8 +302,11 @@ const Index = () => {
       }
     }
     setTouchStartX(null);
+    setTouchStartY(null);
     setTouchDeltaX(0);
     setIsDragging(false);
+    setIsDirectionLocked(false);
+    setIsLockedToHorizontal(false);
   };
 
   // Reset mobileIndex when projects change
