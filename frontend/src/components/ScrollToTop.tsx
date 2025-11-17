@@ -5,8 +5,13 @@ const ScrollToTop = () => {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    // Mobile-only scroll to top on route changes
-    if (typeof window !== "undefined" && window.matchMedia("(max-width: 767.98px)").matches) {
+    // Always scroll to top on Academic route; otherwise keep mobile-only behavior
+    if (typeof window === "undefined") return;
+
+    const isMobile = window.matchMedia("(max-width: 767.98px)").matches;
+    const shouldForceForThisRoute = pathname === "/academic";
+
+    if (shouldForceForThisRoute || isMobile) {
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     }
   }, [pathname]);
