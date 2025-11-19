@@ -1,4 +1,5 @@
-import stanza
+import re
+
 from django.conf import settings
 from django.db import models
 from langchain_core.documents import Document
@@ -6,77 +7,131 @@ from langchain_core.documents import Document
 from university.models import Publication, School, Testimonial
 from work.models import Experience, Project, Skill
 
-STANZA_PIPELINES: dict[str, stanza.Pipeline] = {}
 
-
-def get_pipeline(locale: str) -> stanza.Pipeline | None:
-    try:
-        if locale not in STANZA_PIPELINES:
-            try:
-                # Try constructing the pipeline using the configured resources directory.
-                STANZA_PIPELINES[locale] = stanza.Pipeline(
-                    lang=locale,
-                    processors="tokenize,lemma",
-                    use_gpu=False,
-                    tokenize_pretokenized=False,
-                    dir=settings.STANZA_RESOURCES_DIR,
-                )
-            except Exception:
-                # Lazily download just what's needed, then retry once.
-                stanza.download(locale, processors="tokenize,lemma", model_dir=settings.STANZA_RESOURCES_DIR)
-                STANZA_PIPELINES[locale] = stanza.Pipeline(
-                    lang=locale,
-                    processors="tokenize,lemma",
-                    use_gpu=False,
-                    tokenize_pretokenized=False,
-                    dir=settings.STANZA_RESOURCES_DIR,
-                )
-    except Exception:  # pylint: disable=broad-exception-caught
-        return STANZA_PIPELINES.get(locale)
-    return STANZA_PIPELINES.get(locale)
-
-
-def tokenize(question: str, locale: str) -> set[str]:
-    pipeline = get_pipeline(locale=locale)
-    if not pipeline:
-        return set((question or "").lower().split())
-    try:
-        doc = pipeline(question)
-        lemmas: set[str] = set()
-        for sentence in doc.sentences:
-            for word in sentence.words:
-                lemma = (word.lemma or "").lower()
-                if lemma:
-                    lemmas.add(lemma)
-        return lemmas
-    except Exception:  # pylint: disable=broad-exception-caught
-        return set((question or "").lower().split())
+def tokenize(question: str, locale: str) -> set[str]:  # pylint: disable=unused-argument
+    """
+    Simple tokenizer that splits by word boundaries and lowercases.
+    Replaces the heavy Stanza NLP pipeline for performance.
+    """
+    return set(re.findall(r"\w+", (question or "").lower()))
 
 
 class RelationalContextGetter:
     LEXICON_BY_LOCALE: dict[str, dict[type[models.Model], list[str]]] = {
         "en": {
-            Skill: ["skill", "skills", "stack", "tech", "technologies"],
-            Project: ["project", "projects", "portfolio", "repo", "repositories"],
-            Experience: ["experience", "work", "employment", "career", "job", "jobs"],
-            School: ["school", "university", "research", "study", "advisor", "areas"],
-            Publication: ["publication", "paper", "journal", "article", "summary"],
-            Testimonial: ["testimonial", "course", "semester", "season", "opinion", "review"],
+            Skill: ["skill", "skills", "stack", "tech", "technologies", "technology"],
+            Project: ["project", "projects", "portfolio", "repo", "repositories", "repository", "github"],
+            Experience: [
+                "experience",
+                "work",
+                "working",
+                "worked",
+                "employment",
+                "career",
+                "job",
+                "jobs",
+                "company",
+                "companies",
+            ],
+            School: [
+                "school",
+                "schools",
+                "university",
+                "universities",
+                "research",
+                "study",
+                "studies",
+                "studied",
+                "education",
+                "advisor",
+                "areas",
+            ],
+            Publication: [
+                "publication",
+                "publications",
+                "paper",
+                "papers",
+                "journal",
+                "journals",
+                "article",
+                "articles",
+                "summary",
+            ],
+            Testimonial: [
+                "testimonial",
+                "testimonials",
+                "course",
+                "courses",
+                "semester",
+                "season",
+                "opinion",
+                "opinions",
+                "review",
+                "reviews",
+            ],
         },
         "pl": {
-            Skill: ["umiejętność", "umiejętności", "stack", "technologie", "tech"],
-            Project: ["projekt", "projekty", "portfolio", "repozytorium", "repozytoria"],
+            Skill: ["umiejętność", "umiejętności", "stack", "technologie", "tech", "technologia"],
+            Project: [
+                "projekt",
+                "projekty",
+                "projektach",
+                "projektami",
+                "projektów",
+                "portfolio",
+                "repozytorium",
+                "repozytoria",
+            ],
             Experience: [
                 "doświadczenie",
+                "doświadczenia",
                 "praca",
+                "pracy",
+                "pracę",
+                "pracuję",
+                "pracowałem",
                 "zatrudnienie",
                 "kariera",
                 "stanowisko",
                 "firma",
+                "firmy",
             ],
-            School: ["szkoła", "uczelnia", "uniwersytet", "badania", "studia", "promotor", "obszary"],
-            Publication: ["publikacja", "artykuł", "czasopismo", "periodyk", "streszczenie"],
-            Testimonial: ["referencja", "opinia", "kurs", "semestr", "pora roku"],
+            School: [
+                "szkoła",
+                "szkoły",
+                "uczelnia",
+                "uczelnie",
+                "uniwersytet",
+                "uniwersytety",
+                "badania",
+                "studia",
+                "studiowałem",
+                "edukacja",
+                "wykształcenie",
+                "promotor",
+                "obszary",
+            ],
+            Publication: [
+                "publikacja",
+                "publikacje",
+                "publikacji",
+                "artykuł",
+                "artykuły",
+                "czasopismo",
+                "czasopisma",
+                "periodyk",
+                "streszczenie",
+            ],
+            Testimonial: [
+                "referencja",
+                "referencje",
+                "opinia",
+                "opinie",
+                "kurs",
+                "kursy",
+                "semestr",
+                "pora roku",
+            ],
         },
     }
 
@@ -89,7 +144,12 @@ class RelationalContextGetter:
         documents: list[Document] = []
 
         for model in self._get_requirements():
-            for obj in model.objects.all()[: self._limit_per_model]:  # type: ignore
+            qs = model.objects.all()
+            # Optimization: Prefetch translations to avoid N+1 queries
+            if hasattr(model, "translations"):
+                qs = qs.prefetch_related("translations")
+
+            for obj in qs[: self._limit_per_model]:  # type: ignore
                 documents.append(Document(page_content=obj.representation_for(self._locale)))
 
         return documents
