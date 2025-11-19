@@ -144,12 +144,11 @@ class RelationalContextGetter:
         documents: list[Document] = []
 
         for model in self._get_requirements():
-            qs = model.objects.all()
-            # Optimization: Prefetch translations to avoid N+1 queries
+            qs = model.objects.all()  # type: ignore[attr-defined]
             if hasattr(model, "translations"):
                 qs = qs.prefetch_related("translations")
 
-            for obj in qs[: self._limit_per_model]:  # type: ignore
+            for obj in qs[: self._limit_per_model]:
                 documents.append(Document(page_content=obj.representation_for(self._locale)))
 
         return documents
