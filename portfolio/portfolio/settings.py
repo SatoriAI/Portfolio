@@ -166,10 +166,39 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Media uploads
 MEDIA_URL = "media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = BASE_DIR / "media"  # local dev only; unused when USE_S3 is enabled
 
-if not DEBUG:
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+USE_S3 = env.bool("USE_S3", default=not DEBUG)
+
+if USE_S3:
+    AWS_S3_ENDPOINT_URL = env("BUCKET_ENDPOINT")
+    AWS_ACCESS_KEY_ID = env("BUCKET_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = env("BUCKET_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = env("BUCKET_NAME")
+    AWS_S3_REGION_NAME = env("BUCKET_REGION", default="auto")
+
+    AWS_S3_ADDRESSING_STYLE = "virtual"
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
+    AWS_DEFAULT_ACL = None  # bucket is private; never send ACL headers
+    AWS_QUERYSTRING_AUTH = True  # media is served through presigned URLs
+    AWS_QUERYSTRING_EXPIRE = env.int("BUCKET_URL_EXPIRE", default=3600)
+    AWS_S3_FILE_OVERWRITE = False
+
+    _DEFAULT_STORAGE = {"BACKEND": "storages.backends.s3.S3Storage"}
+else:
+    _DEFAULT_STORAGE = {"BACKEND": "django.core.files.storage.FileSystemStorage"}
+
+# Django 5.1 removed DEFAULT_FILE_STORAGE and STATICFILES_STORAGE; both live here now.
+STORAGES = {
+    "default": _DEFAULT_STORAGE,
+    "staticfiles": {
+        "BACKEND": (
+            "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            if not DEBUG
+            else "django.contrib.staticfiles.storage.StaticFilesStorage"
+        ),
+    },
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

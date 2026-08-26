@@ -12,6 +12,7 @@ dependencies = [
     "django-health-check>=3.20.0",
     "django-parler>=2.3",
     "django-parler-rest>=2.2",
+    "django-storages[s3]>=1.14.6",
     "djangorestframework>=3.16.1",
     "drf-spectacular>=0.28.0",
     "gunicorn>=23.0.0",
