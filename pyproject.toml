@@ -165,10 +165,12 @@ omit = [
     "*/__init__.py",
     "*/migrations/*",
     "*/tests/*",
+    "*/settings.py",
 ]
 
 [tool.coverage.report]
 omit = [
     "*/migrations/*",
     "*/tests/*",
+    "*/settings.py",
 ]
