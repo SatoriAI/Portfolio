@@ -1,0 +1,7 @@
+# Deliberately minimal. Each half keeps the full ignore list for its own
+# ecosystem in backend/.gitignore and frontend/.gitignore; only genuinely
+# repository-wide noise belongs here.
+
+.DS_Store
+.idea/
+.claude/

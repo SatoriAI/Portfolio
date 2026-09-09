@@ -1,0 +1,8 @@
+# node_modules is reinstalled inside the image; copying the host's would drag in
+# platform-specific binaries built for macOS.
+node_modules/
+dist/
+
+.env
+.env.local
+*.local

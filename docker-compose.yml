@@ -1,0 +1,78 @@
+# Local development for both halves of the repository, plus the database they
+# need.
+#
+# The Postgres image is pgvector's rather than the stock one: Vex keeps its
+# document embeddings in a vector column, and `CREATE EXTENSION vector` fails on
+# a plain postgres image. That extension is the one part of this stack that is
+# genuinely tedious to install by hand, which is why the database lives here
+# instead of on the host.
+#
+# First run: cp backend/.env.example backend/.env, fill in OPENAI_API_KEY, then
+# `docker compose up`.
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    container_name: portfolio-db
+    environment:
+      POSTGRES_USER: portfolio
+      POSTGRES_PASSWORD: portfolio
+      POSTGRES_DB: portfolio
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portfolio"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    container_name: portfolio-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/portfolio:/source/portfolio
+    # Secrets and the OpenAI key come from the file; everything below it is
+    # overridden here so a .env pointing at Railway cannot reach production by
+    # accident.
+    env_file: ./backend/.env
+    environment:
+      DEBUG: "True"
+      DATABASE_URL: postgresql://portfolio:portfolio@db:5432/portfolio
+      USE_S3: "False"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: python portfolio/manage.py runserver 0.0.0.0:8000
+
+  frontend:
+    container_name: portfolio-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    ports:
+      - "8080:8080"
+    volumes:
+      # The whole tree, not just src/: the @/ path alias is defined in
+      # vite.config.ts, and mounting only the source leaves vite running on
+      # defaults where every @/… import fails to resolve. The anonymous volume
+      # keeps the image's Linux node_modules from being shadowed by a host
+      # node_modules built for macOS.
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      # Read by the browser, not by the container, so it points at the host's
+      # published port rather than at the backend service name.
+      VITE_API_BASE_URL: http://localhost:8000
+      VITE_MOCK: "false"
+    command: npm run dev
+
+volumes:
+  postgres-data:

@@ -1,11 +1,17 @@
 # Multi-stage build for Railway deployment
-FROM node:18-alpine AS builder
+FROM node:18-alpine AS base
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 RUN npm ci
+
+# Development image: dependencies only. docker-compose bind-mounts src/ and
+# public/ over this, so Vite's HMR picks up edits without a rebuild.
+FROM base AS dev
+
+FROM base AS builder
 
 # Copy source code
 COPY . .
@@ -14,7 +20,8 @@ COPY . .
 ARG VITE_API_BASE_URL
 ARG VITE_MOCK
 
-# Set environment variables for the build
+# Set environment variables for the build. Vite inlines these into the bundle at
+# build time, so changing them later needs a rebuild, not a restart.
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 ENV VITE_MOCK=$VITE_MOCK
 
