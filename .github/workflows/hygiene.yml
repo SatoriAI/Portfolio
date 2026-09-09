@@ -9,15 +9,34 @@ on:
     branches:
       - main
   pull_request:
+  # With path filters there is otherwise no way to ask for a run on a ref whose
+  # last push touched the other half — after a runner-image change, an action
+  # bump worth a second look, or simply "is main green today".
+  workflow_dispatch:
+
+# The token reads the repository and nothing else; no job here writes anywhere.
+permissions:
+  contents: read
+
+concurrency:
+  # A new push supersedes the run in flight for the same ref. Nobody needs the
+  # verdict on a commit that has already been replaced.
+  group: hygiene-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lefthook:
     name: Lefthook Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          # Nothing here pushes, and left on disk the token is readable by every
+          # step that follows — including a dependency's install script.
+          persist-credentials: false
 
       # Both toolchains, because lefthook.yml dispatches to ruff, bandit and
       # codespell on one side and eslint and prettier on the other.
