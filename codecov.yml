@@ -1,0 +1,13 @@
+# Coverage is produced with working-directory: backend, so the paths inside
+# coverage.xml are relative to backend/ rather than to the repository root.
+# Without this prefix fix Codecov looks for files that do not exist and reports
+# every line as uncovered.
+fixes:
+  - "::backend/"
+
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%

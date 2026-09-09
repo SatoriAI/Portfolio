@@ -33,7 +33,6 @@ dependencies = [
 dev = [
     "django-stubs>=5.2.2",
     "mypy>=1.17.1",
-    "pre-commit>=4.2.0",
     "factory-boy>=3.3.3",
     "genbadge[all]>=1.1.2",
     "pytest>=8.4.1",
@@ -42,6 +41,11 @@ dev = [
     "ddt>=1.7.2",
     "pylint>=3.3.8",
     "pylint-django>=2.6.1",
+    # Ran inside pre-commit's isolated environments until lefthook replaced it;
+    # as real dev dependencies they are pinned by uv.lock like everything else.
+    "ruff>=0.5.5",
+    "bandit[toml]>=1.8.6",
+    "codespell>=2.3.0",
 ]
 
 [project.scripts]
@@ -63,6 +67,7 @@ select = [
     "I",   # isort
     "W",   # pycodestyle warnings
     "UP",  # pyupgrade
+    "T10", # flake8-debugger, replacing pre-commit's debug-statements hook
 ]
 
 [tool.ruff.format]

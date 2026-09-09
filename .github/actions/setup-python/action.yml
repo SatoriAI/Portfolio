@@ -24,10 +24,16 @@ runs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/uv
-        key: ${{ runner.os }}-python-${{ inputs.python-version }}-uv-${{ hashFiles('**/pyproject.lock') }}
+        # Hashes the real lockfile. This read '**/pyproject.lock' until the
+        # monorepo move, a filename that has never existed here, so the key was
+        # constant and the cache never once hit.
+        key: ${{ runner.os }}-python-${{ inputs.python-version }}-uv-${{ hashFiles('backend/uv.lock') }}
         restore-keys: |
           ${{ runner.os }}-python-${{ inputs.python-version }}-uv-
 
     - name: Install Dependencies
       run: uv sync --group dev
       shell: bash
+      # Composite actions do not inherit the calling job's
+      # defaults.run.working-directory, so it has to be stated here.
+      working-directory: backend

@@ -1,0 +1,81 @@
+# One hook manager for both halves of the repository.
+#
+# This replaced pre-commit (backend) and husky + lint-staged (frontend). The
+# two could not coexist: husky sets core.hooksPath, and once that is set git
+# ignores .git/hooks entirely — which is exactly where pre-commit installs
+# itself. Whichever ran `install` last silently disabled the other. Lefthook is
+# a single Go binary that needs neither Python nor Node to decide what to run,
+# which is what a repository with one of each actually wants.
+#
+# Setup, once per clone: `lefthook install`
+
+# Bash-like globs, so frontend/**/*.ts also matches frontend/vite.config.ts.
+# Lefthook's default matcher (gobwas) requires ** to span at least one
+# directory, which would silently skip every config file sitting at the top of
+# frontend/.
+glob_matcher: doublestar
+
+# Guards against a 1.x install, where `jobs` and `glob_matcher` do not exist and
+# this file would be silently misread.
+min_version: "2.1.0"
+
+pre-commit:
+  parallel: true
+  # Locally the fixing jobs rewrite files and stage them, which is what you want
+  # mid-commit. In CI that same behaviour would turn a badly formatted commit
+  # green, because the formatter fixes the file and exits zero — so there, any
+  # rewrite is a failure instead.
+  fail_on_changes: "ci"
+  jobs:
+    # Piped rather than parallel: ruff --fix and ruff format write to the same
+    # files, and running them concurrently races on the same inode. Each group
+    # below owns a disjoint set of paths, so the groups themselves are safe to
+    # run at once.
+    - name: backend
+      root: backend/
+      glob: "backend/**/*.py"
+      group:
+        piped: true
+        jobs:
+          - name: ruff-check
+            run: uv run ruff check --fix {staged_files}
+            stage_fixed: true
+          - name: ruff-format
+            run: uv run ruff format {staged_files}
+            stage_fixed: true
+          - name: bandit
+            run: uv run bandit -c pyproject.toml -q {staged_files}
+          - name: codespell
+            run: uv run codespell --quiet-level=2 {staged_files}
+
+    # Mirrors the lint-staged pipeline this replaced: eslint then prettier for
+    # scripts, prettier alone for everything else.
+    - name: frontend-scripts
+      root: frontend/
+      glob: "frontend/**/*.{ts,tsx,js,jsx}"
+      group:
+        piped: true
+        jobs:
+          - name: eslint
+            run: npx --no-install eslint --fix {staged_files}
+            stage_fixed: true
+          - name: prettier
+            run: npx --no-install prettier --write {staged_files}
+            stage_fixed: true
+
+    - name: frontend-styles
+      root: frontend/
+      glob: "frontend/**/*.{css,scss,json,md,html}"
+      exclude:
+        - "frontend/package-lock.json"
+      run: npx --no-install prettier --write {staged_files}
+      stage_fixed: true
+
+    # Lefthook is a runner, not a hook library, so pre-commit's hygiene suite
+    # has no direct equivalent. Most of it is covered elsewhere — ruff's W rules
+    # handle trailing whitespace and final newlines in Python, prettier does the
+    # same for the frontend, and ruff's T10 rules replace debug-statements. This
+    # catches what neither formatter sees: conflict markers, and whitespace
+    # errors in YAML, TOML and workflow files.
+    - name: conflict-markers
+      run: git diff --cached --check

@@ -94,7 +94,7 @@ class RagChain:
         structured_docs = relational_getter.get_context()
 
         merged = "\n\n".join(
-            f"[{i+1}] {d.page_content}" for i, d in enumerate((vector_docs or []) + (structured_docs or []))
+            f"[{i + 1}] {d.page_content}" for i, d in enumerate((vector_docs or []) + (structured_docs or []))
         )
 
         if settings.RAG_DUMP_CONTEXTS:
