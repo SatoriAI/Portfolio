@@ -32,6 +32,11 @@ pre-commit:
     # below owns a disjoint set of paths, so the groups themselves are safe to
     # run at once.
     - name: backend
+      # Tags let CI run a subset. The hygiene workflow runs backend + repo only,
+      # because frontend-quality already owns eslint and prettier and two jobs
+      # judging one file is a standoff waiting to happen: the day their versions
+      # disagree, one demands the edit the other rejects and nothing goes green.
+      tags: [backend]
       root: backend/
       glob: "backend/**/*.py"
       group:
@@ -51,6 +56,7 @@ pre-commit:
     # Mirrors the lint-staged pipeline this replaced: eslint then prettier for
     # scripts, prettier alone for everything else.
     - name: frontend-scripts
+      tags: [frontend]
       root: frontend/
       glob: "frontend/**/*.{ts,tsx,js,jsx}"
       group:
@@ -64,6 +70,7 @@ pre-commit:
             stage_fixed: true
 
     - name: frontend-styles
+      tags: [frontend]
       root: frontend/
       glob: "frontend/**/*.{css,scss,json,md,html}"
       exclude:
@@ -78,4 +85,5 @@ pre-commit:
     # catches what neither formatter sees: conflict markers, and whitespace
     # errors in YAML, TOML and workflow files.
     - name: conflict-markers
+      tags: [repo]
       run: git diff --cached --check
