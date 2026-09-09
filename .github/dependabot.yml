@@ -1,0 +1,23 @@
+version: 2
+updates:
+  # Keeps the SHA pins current. A pin nobody bumps is just an old version with a
+  # longer name — which is the honest argument people make *against* pinning, so
+  # the pins and this file are one decision rather than two.
+  - package-ecosystem: github-actions
+    # Every directory that pins an action has to be listed. Dependabot does not
+    # search the tree: with only "/" it would update the workflows and leave the
+    # composite actions alone, and since both pin setup-python, setup-node and
+    # cache, the first round of bumps would quietly leave two versions of the
+    # same action in one repository.
+    directories:
+      - /
+      - /.github/actions/setup-python
+      - /.github/actions/setup-node
+    schedule:
+      interval: weekly
+    groups:
+      # One pull request for a round of bumps rather than one per action per
+      # directory. Ungrouped, a single checkout release opens three pull requests
+      # that each rebase over the others.
+      actions:
+        patterns: ['*']
