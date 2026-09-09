@@ -32,7 +32,10 @@ runs:
           ${{ runner.os }}-python-${{ inputs.python-version }}-uv-
 
     - name: Install Dependencies
-      run: uv sync --group dev
+      # `--locked`: a lockfile that no longer matches pyproject.toml fails here,
+      # instead of CI quietly re-resolving and testing an environment that
+      # matches no lockfile.
+      run: uv sync --locked --group dev
       shell: bash
       # Composite actions do not inherit the calling job's
       # defaults.run.working-directory, so it has to be stated here.

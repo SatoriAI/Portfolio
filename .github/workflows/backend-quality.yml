@@ -42,9 +42,6 @@ concurrency:
   group: backend-${{ github.ref }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    working-directory: backend
 
 jobs:
   pylint:
@@ -72,7 +69,7 @@ jobs:
           VECTOR_DB_COLLECTION: ""
           OPENAI_API_KEY: ""
           USE_S3: "False"
-        run: uv run pylint portfolio/portfolio portfolio/university portfolio/utils portfolio/vex portfolio/work
+        run: make lint-backend
 
   mypy:
     name: MyPy Check
@@ -99,7 +96,7 @@ jobs:
           VECTOR_DB_COLLECTION: ""
           OPENAI_API_KEY: ""
           USE_S3: "False"
-        run: uv run mypy .
+        run: make typecheck
 
   pytest:
     name: Run Tests
@@ -137,9 +134,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y gettext
 
       - name: Compile Translations (.po -> .mo)
-        run: |
-          cd portfolio
-          uv run django-admin compilemessages -l pl
+        run: make translations
 
       - name: Run Pytest
         env:
@@ -148,7 +143,7 @@ jobs:
           VECTOR_DB_COLLECTION: ""
           OPENAI_API_KEY: ""
           USE_S3: "False"
-        run: uv run pytest --cov-report xml  --junitxml=report.xml
+        run: make test-backend
 
       - name: Upload Coverage Reports to Codecov
         uses: codecov/codecov-action@v5
