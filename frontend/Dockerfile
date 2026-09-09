@@ -1,5 +1,5 @@
 # Multi-stage build for Railway deployment
-FROM node:18-alpine AS base
+FROM node:24-alpine AS base
 
 WORKDIR /app
 
@@ -29,7 +29,7 @@ ENV VITE_MOCK=$VITE_MOCK
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:24-alpine AS production
 
 WORKDIR /app
 
