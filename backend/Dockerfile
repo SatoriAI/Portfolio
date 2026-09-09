@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.13-slim AS base
 
 ARG APP_DIR=/source
 WORKDIR ${APP_DIR}
@@ -12,11 +12,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
     && curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy and install dependencies with UV and no changes to the .lock file
+# Copy dependency manifests only, so the install layer is cached until they change
 COPY pyproject.toml uv.lock ./
+
+# Development image: dev dependencies included and no source baked in, because
+# docker-compose bind-mounts the tree instead — edits reload without a rebuild.
+FROM base AS dev
+RUN uv sync --frozen
+
+# Production image. This stage is last on purpose: Railway builds the Dockerfile
+# without specifying a target, so the final stage is what ships.
+FROM base AS production
+
+# Install dependencies with UV and no changes to the .lock file
 RUN uv sync --frozen --no-dev
 
-# Copy source code for Konfio
+# Copy source code for Portfolio
 COPY portfolio/ ./portfolio/
 
 # Probe /healtcheck every 30s, time out after 5s, start probing 20s after boot, retry 3x

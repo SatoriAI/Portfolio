@@ -1,0 +1,20 @@
+# Keep secrets and local state out of the build context.
+.env
+*.pgsql
+
+.venv/
+__pycache__/
+*.py[codz]
+
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+report.xml
+
+portfolio/media/
+portfolio/staticfiles/
+
+# A browser-only harness for poking the SSE endpoint; never part of the image.
+tools/

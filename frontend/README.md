@@ -1,73 +1,47 @@
-# Welcome to your Lovable project
+# Portfolio — Frontend
 
-## Project info
+[![Build Status](https://github.com/SatoriAI/Portfolio/actions/workflows/frontend-quality.yml/badge.svg)](https://github.com/SatoriAI/Portfolio/actions/workflows/frontend-quality.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**URL**: https://lovable.dev/projects/c221d28d-bf82-4745-a5f5-5b57176032dd
+The public single-page app for the portfolio: a Vite + React + TypeScript site styled with Tailwind and shadcn/ui, and the chat client for Vex.
 
-## How can I edit this code?
+For the combined quick start, see the [repository README](../README.md).
 
-There are several ways of editing your application.
+## Commands
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/c221d28d-bf82-4745-a5f5-5b57176032dd) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```bash
+npm ci             # install
+npm run dev        # serve on :8080
+npm run build      # production bundle into dist/ (this is where tsc runs)
+npm run lint       # eslint
+npm run format     # prettier --write
 ```
 
-**Edit a file directly in GitHub**
+## Layout
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Three routes — `/`, `/experience` and `/academic` — in `src/pages/`, on top of a thin data layer:
 
-**Use GitHub Codespaces**
+- `src/config/endpoints.ts` — every backend route, in one place
+- `src/lib/*Service.ts` — one module per domain, mapping the API's `translations` payloads onto UI types
+- `src/contexts/SettingsContext.tsx` — theme (dark by default) and language (`en`/`pl`), persisted in `localStorage`
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+There is no i18n library. Localised content comes from the backend's `django-parler` translations, and the chosen language is forwarded as an `Accept-Language` header by `src/lib/apiClient.ts`.
 
-## What technologies are used for this project?
+### ChatWidget
 
-This project is built with:
+[`src/components/ChatWidget.tsx`](src/components/ChatWidget.tsx) POSTs to `/api/vex/chat/` for a session key, then opens an `EventSource` against `/api/vex/chat/stream/` and renders the token stream as Markdown. Most of its bulk is stream defence: SSE payloads arrive in several shapes, and Markdown split across chunk boundaries has to be repaired mid-flight — unclosed code fences, headings and list items severed from their newlines — before a final cleanup pass once the stream closes.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Configuration
 
-## How can I deploy this project?
+Copy `.env.example` to `.env.local`:
 
-Simply open [Lovable](https://lovable.dev/projects/c221d28d-bf82-4745-a5f5-5b57176032dd) and click on Share -> Publish.
+| Variable            | Meaning                                                       |
+| ------------------- | ------------------------------------------------------------- |
+| `VITE_API_BASE_URL` | Backend origin, e.g. `http://localhost:8000`                  |
+| `VITE_MOCK`         | When true, render from local sample data and make no requests |
 
-## Can I connect a custom domain to my Lovable project?
+Vite inlines both at build time, so changing either needs a rebuild rather than a restart. In Docker they are build arguments for the same reason.
 
-Yes, you can!
+## Testing
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+There are no tests. CI runs ESLint, a Prettier check, and the production build, which is also what typechecks the project.
