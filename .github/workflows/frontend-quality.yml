@@ -43,9 +43,6 @@ concurrency:
   group: frontend-${{ github.ref }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    working-directory: frontend
 
 jobs:
   verify:
@@ -69,15 +66,15 @@ jobs:
       # Cheapest first: a failed step stops the job exactly as a failed job
       # stopped the chain this replaced.
       - name: Check Formatting
-        run: npm run format:check
+        run: make format-frontend
 
       - name: Run Vitest
-        run: npm test
+        run: make test-frontend
 
       - name: Run ESLint
-        run: npm run lint
+        run: make lint-frontend
 
       # Last because it is the slowest, and because it is the only step that
       # typechecks the project — `npm run lint` is ESLint, which does not.
       - name: Build
-        run: npm run build
+        run: make build
