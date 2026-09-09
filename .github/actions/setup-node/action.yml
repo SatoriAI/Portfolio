@@ -1,0 +1,27 @@
+name: "Set Up Node Environment"
+description: "Sets up Node and installs the frontend dependencies with caching."
+
+inputs:
+  node-version:
+    description: "The Node version to set up. Matches frontend/Dockerfile."
+    required: true
+    default: "18"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: npm
+        # Repo-root relative, and load-bearing: the lockfile is no longer at the
+        # root now that the frontend lives in a subdirectory.
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install Dependencies
+      run: npm ci
+      shell: bash
+      # Composite actions do not inherit the calling job's
+      # defaults.run.working-directory, so it has to be stated here.
+      working-directory: frontend

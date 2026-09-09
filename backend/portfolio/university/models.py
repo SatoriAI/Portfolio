@@ -91,4 +91,4 @@ class Testimonial(TranslatableModel, TimestampedModel):
         course = self.safe_translation_getter("course", language_code=lang, any_language=True) or ""
         content = self.safe_translation_getter("content", language_code=lang, any_language=True) or ""
         season_display = self.get_season_display()
-        return f"Testimonial: {course}\nSemester: {self.semester}\nSeason: {season_display}\n" f"Content: {content}"
+        return f"Testimonial: {course}\nSemester: {self.semester}\nSeason: {season_display}\nContent: {content}"

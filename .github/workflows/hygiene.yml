@@ -1,0 +1,40 @@
+name: Hygiene
+
+# Deliberately unfiltered: the lefthook suite runs over the whole repository on
+# every change, so a frontend-only pull request still gets the repo-wide checks
+# and vice versa. The jobs inside lefthook.yml are themselves path-scoped, so
+# the half that did not change simply matches no files and is skipped.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lefthook:
+    name: Lefthook Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Both toolchains, because lefthook.yml dispatches to ruff, bandit and
+      # codespell on one side and eslint and prettier on the other.
+      - name: Set Up Python Environment
+        uses: ./.github/actions/setup-python
+
+      - name: Set Up Node Environment
+        uses: ./.github/actions/setup-node
+
+      # Pinned so CI and a Homebrew install locally cannot drift apart in a way
+      # that changes how lefthook.yml is interpreted.
+      - name: Install Lefthook
+        run: npm install -g lefthook@2.1.12
+
+      # fail_on_changes: "ci" in lefthook.yml makes this an assertion rather
+      # than a fixer: locally ruff and prettier rewrite files and stage them,
+      # but here any rewrite fails the job. Without it a badly formatted commit
+      # would go green, because the formatter fixes the file and exits zero.
+      - name: Run Lefthook
+        run: lefthook run pre-commit --all-files

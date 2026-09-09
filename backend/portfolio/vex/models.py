@@ -12,7 +12,7 @@ class Conversation(TimestampedModel):
     session = models.CharField(_("Session Key"), max_length=64, db_index=True)
 
     def __str__(self) -> str:
-        return f"{_("Conversation")}: {self.session}"
+        return f"{_('Conversation')}: {self.session}"
 
     class Meta:
         verbose_name = _("Conversation")
