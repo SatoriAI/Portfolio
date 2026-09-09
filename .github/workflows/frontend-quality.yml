@@ -1,3 +1,14 @@
+# The frontend half of the gate. One job, steps ordered cheapest first.
+#
+# It was three jobs in a `needs:` chain — lint, then test, then build — on the
+# reasoning that linting should gate the build. That reasoning was wrong about
+# the mechanism: a failed *step* already stops the job, so the chain bought the
+# same fail-fast and charged two extra checkouts and `npm ci` for it. Measured
+# here at roughly 15s of setup per job against 9s, 2s and 5s of actual work, so
+# the chain spent longer provisioning than checking.
+#
+# The backend's split is different and stays: failing before its test job avoids
+# provisioning Postgres, which is real work rather than step ordering.
 name: Frontend Quality
 
 on:
@@ -8,65 +19,65 @@ on:
       - 'frontend/**'
       - '.github/workflows/frontend-quality.yml'
       - '.github/actions/setup-node/**'
+  # Deliberately unfiltered by branch. `branches:` here matches the *base* of the
+  # pull request, so restricting it to main silently skipped this entire workflow
+  # for stacked pull requests: they reported a single green check and looked
+  # verified while nothing had actually run.
   pull_request:
-    branches:
-      - main
-      - staging
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend-quality.yml'
       - '.github/actions/setup-node/**'
+  # With path filters there is otherwise no way to ask for a run on a ref whose
+  # last push touched the other half — after a runner-image change, an action
+  # bump worth a second look, or simply "is main green today".
+  workflow_dispatch:
+
+# The token reads the repository and nothing else; no job here writes anywhere.
+permissions:
+  contents: read
+
+concurrency:
+  # A new push supersedes the run in flight for the same ref. Nobody needs the
+  # verdict on a commit that has already been replaced.
+  group: frontend-${{ github.ref }}
+  cancel-in-progress: true
 
 defaults:
   run:
     working-directory: frontend
 
 jobs:
-  linting:
-    name: ESLint and Prettier Check
+  verify:
+    name: Lint, Test and Build
     runs-on: ubuntu-latest
+    # The default is six hours, long enough for one wedged run to hold a branch
+    # hostage while reporting nothing.
+    timeout-minutes: 10
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          # Nothing here pushes, and left on disk the token is readable by every
+          # step that follows — including a dependency's install script.
+          persist-credentials: false
 
       - name: Set Up Node Environment
         uses: ./.github/actions/setup-node
 
-      - name: Run ESLint
-        run: npm run lint
-
+      # Cheapest first: a failed step stops the job exactly as a failed job
+      # stopped the chain this replaced.
       - name: Check Formatting
         run: npm run format:check
-
-  testing:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    needs: linting
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set Up Node Environment
-        uses: ./.github/actions/setup-node
 
       - name: Run Vitest
         run: npm test
 
-  building:
-    name: Build
-    runs-on: ubuntu-latest
-    needs: testing
+      - name: Run ESLint
+        run: npm run lint
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set Up Node Environment
-        uses: ./.github/actions/setup-node
-
-      # Type errors only surface here: `npm run lint` is ESLint, which does not
-      # typecheck, so tsc runs as part of the Vite build.
+      # Last because it is the slowest, and because it is the only step that
+      # typechecks the project — `npm run lint` is ESLint, which does not.
       - name: Build
         run: npm run build
