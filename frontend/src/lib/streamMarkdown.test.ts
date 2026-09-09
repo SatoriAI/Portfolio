@@ -55,29 +55,63 @@ describe("normalizeMarkdown", () => {
     expect(normalizeMarkdown("```js\nconsole.log(1)")).toBe("```js\nconsole.log(1)\n```\n");
   });
 
-  // The two below document defects that exist today. They are marked as expected
-  // failures rather than deleted, so the evidence stays in the suite: fixing the
-  // code makes them pass, which turns the run red and prompts flipping `it.fails`
-  // back to `it`.
-  //
-  // Both matter more than "streaming artefact" suggests, because ChatWidget calls
-  // normalizeMarkdown on every render, not only mid-stream — so they are visible
-  // in finished answers and in history reloaded from the API.
-
-  // `endsWithFenceStart` cannot tell a closing fence at the end of the text from
-  // an opening one, so any answer ending in a code block gets a second, empty
-  // code block appended.
-  it.fails("should leave an already-closed fence alone", () => {
+  // Regression: a closing fence at the end of the text used to look identical to
+  // an opening one, so every answer ending in code gained an empty code block.
+  it("leaves an already-closed fence alone", () => {
     const closed = "```js\nconsole.log(1)\n```\n";
     expect(normalizeMarkdown(closed)).toBe(closed);
   });
 
-  // The numbered-list rule is applied to the whole string, including inside
-  // fenced code, so `foo(1) bar` becomes `foo(\n1) bar` and the displayed code
-  // is wrong.
-  it.fails("should not rewrite list-like text inside a code block", () => {
-    expect(normalizeMarkdown("```\nfoo(1) bar\n```\n")).toContain("foo(1) bar");
+  it("leaves a closed fence alone even without a trailing newline", () => {
+    expect(normalizeMarkdown("```\ncode\n```")).toBe("```\ncode\n```\n");
   });
+
+  // Regression: the numbered-list rule ran over the whole string, so `foo(1) bar`
+  // inside a code block was rewritten to `foo(\n1) bar`.
+  it("does not rewrite list-like text inside a code block", () => {
+    const code = "```\nfoo(1) bar\n```\n";
+    expect(normalizeMarkdown(code)).toBe(code);
+  });
+
+  it("does not touch headings or bullets inside a code block", () => {
+    const code = "```\n# not a heading\n• not a bullet\n```\n";
+    expect(normalizeMarkdown(code)).toBe(code);
+  });
+
+  it("preserves blank lines inside a code block", () => {
+    const code = "```\nfirst\n\n\n\nlast\n```\n";
+    expect(normalizeMarkdown(code)).toBe(code);
+    expect(finalizeMarkdown(code)).toBe(code);
+  });
+
+  // Inline constructs are not fences. ~~ in particular used to be counted by a
+  // /~~~?/ scan over the whole string.
+  it("does not mistake strikethrough for a code fence", () => {
+    expect(normalizeMarkdown("a ~~struck~~ b")).toBe("a ~~struck~~ b\n");
+  });
+
+  it("does not mistake inline code for a code fence", () => {
+    expect(normalizeMarkdown("use `npm ci` here")).toBe("use `npm ci` here\n");
+  });
+
+  it("closes an unterminated tilde fence with a tilde fence", () => {
+    expect(normalizeMarkdown("~~~\ncode")).toBe("~~~\ncode\n~~~\n");
+  });
+
+  it("still repairs prose that follows a code block", () => {
+    expect(normalizeMarkdown("```\ncode\n```\ntext ## Heading")).toBe(
+      "```\ncode\n```\ntext\n\n## Heading\n",
+    );
+  });
+
+  // It runs on every render, so applying it to its own output must be a no-op.
+  it.each(["plain text", "```\ncode\n```\n", "```js\nunterminated", "text ## Heading", "• bullet"])(
+    "is idempotent for %j",
+    (input) => {
+      const once = normalizeMarkdown(input);
+      expect(normalizeMarkdown(once)).toBe(once);
+    },
+  );
 
   it("rewrites bullet characters the model emits as markdown list items", () => {
     expect(normalizeMarkdown("• first")).toBe("- first\n");
