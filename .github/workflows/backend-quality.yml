@@ -76,7 +76,11 @@ jobs:
 
     services:
       postgres:
-        image: postgres:17-alpine
+        # pgvector's image, not stock postgres, and matched to docker-compose.
+        # Vex keeps its embeddings in a vector column, so CI on plain postgres
+        # could never run a test that touches the vector store — the capability
+        # was untestable rather than untested.
+        image: pgvector/pgvector:pg17
         ports:
           - 5432:5432
         env:
