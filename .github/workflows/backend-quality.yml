@@ -51,7 +51,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Nothing here pushes, and left on disk the token is readable by every
           # step that follows — including a dependency's install script.
@@ -78,7 +78,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Nothing here pushes, and left on disk the token is readable by every
           # step that follows — including a dependency's install script.
@@ -121,7 +121,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Nothing here pushes, and left on disk the token is readable by every
           # step that follows — including a dependency's install script.
@@ -146,7 +146,7 @@ jobs:
         run: make test-backend
 
       - name: Upload Coverage Reports to Codecov
-        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           # 'uses:' steps ignore defaults.run.working-directory, so this path is
