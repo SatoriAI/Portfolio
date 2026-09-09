@@ -13,7 +13,7 @@ class ConversationFactory(DjangoModelFactory):
     class Meta:
         model = Conversation
 
-    session = factory.LazyFunction(lambda: fake.uuid4())
+    session = factory.LazyFunction(fake.uuid4)
 
 
 class MessageFactory(DjangoModelFactory):
