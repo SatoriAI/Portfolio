@@ -1,3 +1,11 @@
+# The backend half of the gate, split on one axis: whether a step needs the
+# database. Pylint and MyPy answer in parallel; Postgres and the suite are paid
+# for only on a branch where both cheap answers were already yes.
+#
+# They stay two jobs rather than one. Merging them would save billed minutes,
+# which is the right trade in a private repository — but this one is public, so
+# Actions minutes are free and the only currency is how fast the answer arrives.
+# In parallel that is 82s; merged it would be 97s.
 name: Backend Quality
 
 # Path-filtered so a frontend-only change does not spin up Postgres to run the
@@ -11,14 +19,28 @@ on:
       - 'backend/**'
       - '.github/workflows/backend-quality.yml'
       - '.github/actions/setup-python/**'
+  # Deliberately unfiltered by branch: `branches:` here matches the *base* of
+  # the pull request, so restricting it to main silently skipped this workflow
+  # for stacked pull requests, which then looked verified having run nothing.
   pull_request:
-    branches:
-      - main
-      - staging
     paths:
       - 'backend/**'
       - '.github/workflows/backend-quality.yml'
       - '.github/actions/setup-python/**'
+  # With path filters there is otherwise no way to ask for a run on a ref whose
+  # last push touched the other half — after a runner-image change, an action
+  # bump worth a second look, or simply "is main green today".
+  workflow_dispatch:
+
+# The token reads the repository and nothing else; no job here writes anywhere.
+permissions:
+  contents: read
+
+concurrency:
+  # A new push supersedes the run in flight for the same ref. Nobody needs the
+  # verdict on a commit that has already been replaced.
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
 
 defaults:
   run:
@@ -28,10 +50,15 @@ jobs:
   pylint:
     name: Pylint Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          # Nothing here pushes, and left on disk the token is readable by every
+          # step that follows — including a dependency's install script.
+          persist-credentials: false
 
       - name: Set Up Python Environment
         uses: ./.github/actions/setup-python
@@ -50,10 +77,15 @@ jobs:
   mypy:
     name: MyPy Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          # Nothing here pushes, and left on disk the token is readable by every
+          # step that follows — including a dependency's install script.
+          persist-credentials: false
 
       - name: Set Up Python Environment
         uses: ./.github/actions/setup-python
@@ -72,6 +104,7 @@ jobs:
   pytest:
     name: Run Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [ pylint, mypy ]
 
     services:
@@ -92,6 +125,10 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          # Nothing here pushes, and left on disk the token is readable by every
+          # step that follows — including a dependency's install script.
+          persist-credentials: false
 
       - name: Set Up Python Environment
         uses: ./.github/actions/setup-python
