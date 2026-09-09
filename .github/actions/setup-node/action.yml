@@ -5,7 +5,7 @@ inputs:
   node-version:
     description: "The Node version to set up. Matches frontend/Dockerfile."
     required: true
-    default: "18"
+    default: "24"
 
 runs:
   using: "composite"
