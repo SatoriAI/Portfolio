@@ -6,8 +6,8 @@ export default defineConfig({
   resolve: {
     alias: {
       // Not __dirname: Vite warns that it is unsupported under the native
-      // config loader. import.meta.dirname would need Node >= 20.11, and CI
-      // still runs 18, so resolve from the module URL instead.
+      // config loader. Resolving from the module URL works on every Node the
+      // project supports, without depending on import.meta.dirname.
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
