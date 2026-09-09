@@ -72,7 +72,7 @@ jobs:
           VECTOR_DB_COLLECTION: ""
           OPENAI_API_KEY: ""
           USE_S3: "False"
-        run: uv run pylint portfolio/portfolio portfolio/university portfolio/utils portfolio/work
+        run: uv run pylint portfolio/portfolio portfolio/university portfolio/utils portfolio/vex portfolio/work
 
   mypy:
     name: MyPy Check
