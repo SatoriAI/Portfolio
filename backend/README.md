@@ -32,16 +32,28 @@ Documents uploaded in the admin are chunked and embedded into a pgvector collect
 
 ## Commands
 
+Run these from the repository root, where the [`Makefile`](../Makefile) holds the single
+definition of each one — CI calls the same targets, so the two cannot drift.
+
+- Install: `make install-backend`
+- Tests, with the 85% coverage gate: `make test-backend`
+- Lint and types: `make lint-backend`, `make typecheck`
+- Compile the Polish catalogue after editing `.po` files: `make translations`
+
+Serving is the one thing without a target, because it is interactive:
+
 ```bash
-uv sync --group dev                              # install
-uv run python portfolio/manage.py runserver      # serve
-uv run pytest                                    # tests, with an 85% coverage gate
-uv run mypy .                                    # types
-uv run pylint portfolio/portfolio portfolio/university portfolio/utils portfolio/work
+cd backend && uv run python portfolio/manage.py runserver
 ```
 
 ## Configuration
 
-Copy `.env.example` to `.env` and fill it in. `SECRET_KEY`, `DATABASE_URL`, `VECTOR_DB_COLLECTION` and `OPENAI_API_KEY` have no defaults and Django will not start without them.
+Copy `.env.example` to `.env` and fill it in. `SECRET_KEY`, `DATABASE_URL`, `VECTOR_DB_COLLECTION` and `OPENAI_API_KEY` have no defaults and Django will not start without them — including `OPENAI_API_KEY`, which only Vex actually uses.
 
 The database must have the `vector` extension available — `docker compose up` from the repository root provides one; a stock Postgres will not do.
+
+## Limitations
+
+- Vex needs a key with credit on it. Without one the stream opens and then returns an error event: `401` for a bad key, `429 insufficient_quota` for an empty balance. Nothing else on the site depends on it.
+- A fresh database is empty. There is no seed fixture, so content is added through the admin.
+- With `USE_S3` on, every `BUCKET_*` variable becomes required; media has no local fallback in that mode.

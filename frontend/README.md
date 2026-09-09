@@ -9,12 +9,19 @@ For the combined quick start, see the [repository README](../README.md).
 
 ## Commands
 
+Run these from the repository root, where the [`Makefile`](../Makefile) holds the single
+definition of each one — CI calls the same targets, so the two cannot drift.
+
+- Install: `make install-frontend`
+- Tests: `make test-frontend`
+- Lint and formatting: `make lint-frontend`, `make format-frontend`
+- Build, which is also what typechecks the project: `make build`
+
+Serving and auto-formatting stay local to this directory:
+
 ```bash
-npm ci             # install
-npm run dev        # serve on :8080
-npm run build      # production bundle into dist/ (this is where tsc runs)
-npm run lint       # eslint
-npm run format     # prettier --write
+cd frontend && npm run dev      # :8080
+cd frontend && npm run format   # prettier --write
 ```
 
 ## Layout
