@@ -44,4 +44,13 @@ Vite inlines both at build time, so changing either needs a rebuild rather than 
 
 ## Testing
 
-There are no tests. CI runs ESLint, a Prettier check, and the production build, which is also what typechecks the project.
+```bash
+npm test          # vitest, single run
+npm run test:watch
+```
+
+[Vitest](https://vitest.dev) covers the pure logic: the SSE decoding and markdown repair in `src/lib/streamMarkdown.ts`, and the locale fallbacks in the service mappers. It runs in the `node` environment because nothing under test needs a DOM — add `jsdom` when component tests arrive.
+
+Two tests in `streamMarkdown.test.ts` are marked `it.fails`. They are not flaky: they document real defects in the markdown repair, and are written so that fixing the code turns the suite red and prompts flipping them back to `it`.
+
+CI also runs ESLint, a Prettier check, and the production build, which is what typechecks the project.
