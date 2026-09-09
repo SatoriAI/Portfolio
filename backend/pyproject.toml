@@ -48,9 +48,6 @@ dev = [
     "codespell>=2.3.0",
 ]
 
-[project.scripts]
-lint = "pylint src tests"
-
 
 ########################################################################################################################
 # Ruff
@@ -113,7 +110,7 @@ load-plugins = [
 django-settings-module = "portfolio.settings"
 
 ignore-paths = [
-    "portfolio/*/migrations",
+    "portfolio/.*/migrations",
 ]
 
 [tool.pylint.format]

@@ -29,7 +29,7 @@ install-frontend:  ## Clean-install the frontend from the lockfile
 
 # ── Backend ──────────────────────────────────────────────────────────────
 lint-backend:  ## Pylint the backend apps
-	cd backend && uv run pylint portfolio/portfolio portfolio/university portfolio/utils portfolio/work
+	cd backend && uv run pylint portfolio/portfolio portfolio/university portfolio/utils portfolio/vex portfolio/work
 
 typecheck:  ## MyPy the backend
 	cd backend && uv run mypy .
