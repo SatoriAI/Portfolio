@@ -14,22 +14,19 @@ import {
 import AskVexBar from "@/components/AskVexBar";
 import BinaryAxisMark from "@/components/brand/BinaryAxisMark";
 import HeatField, { HeatCaption } from "@/components/brand/HeatField";
-import FeaturedProjectCard from "@/components/cards/FeaturedProjectCard";
-import ProjectCard from "@/components/cards/ProjectCard";
+import ProjectIndex from "@/components/home/ProjectIndex";
 import SkillYears from "@/components/home/SkillYears";
-import { Col, Grid, type Span12 } from "@/components/layout/Grid";
+import { Col, Grid } from "@/components/layout/Grid";
 import PageLayout from "@/components/layout/PageLayout";
 import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
 import ProofPoints from "@/components/ProofPoints";
 import Reveal from "@/components/Reveal";
-import SwipeCarousel from "@/components/SwipeCarousel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { env } from "@/config/env";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useVex } from "@/contexts/VexContext";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import type { UiProject } from "@/lib/projectsService";
 import { fetchProjects } from "@/lib/projectsService";
@@ -40,17 +37,6 @@ import { translations } from "@/utils/translations";
 
 const GITHUB_URL = "https://github.com/SatoriAI";
 const EMAIL = "dawidhanrahan@gmail.com";
-
-// Card reveals stagger by 50–70ms and stop after the third item (kit).
-const staggerMs = (index: number) => Math.min(index, 2) * 60;
-
-/**
- * How wide each project after the first should be, so the row always fills the
- * grid. Hard-coding the column count is what left a 339px dead column whenever
- * the API returned exactly three projects.
- */
-const secondaryProjectSpan = (count: number): Span12 =>
-  count >= 4 ? 3 : count === 3 ? 4 : count === 2 ? 6 : 12;
 
 const sampleSkills: UiSkill[] = [
   {
@@ -111,7 +97,6 @@ const Index = () => {
   const { askVex } = useVex();
   const { language } = useSettings();
   const t = translations[language];
-  const isMobile = useIsMobile();
   usePageMeta(t.meta.home);
 
   const [projects, setProjects] = useState<UiProject[]>(sampleProjects);
@@ -142,9 +127,11 @@ const Index = () => {
     demo: t.common.demo,
     privateProject: t.common.privateProject,
     imageAlt: t.projects.imageAlt,
+    stack: t.projects.stack,
+    youAreHere: t.projects.youAreHere,
+    askVex: t.projects.askVex,
+    askVexQuestion: t.projects.askVexQuestion,
   };
-  const projectKey = (project: UiProject) => project.title;
-  const [featuredProject, ...otherProjects] = projects;
 
   return (
     <PageLayout>
@@ -268,47 +255,18 @@ const Index = () => {
         <SkillYears skills={skills} labels={{ years: (count) => formatYears(count, language) }} />
       </Section>
 
-      {/* Projects: one card at a time on phones; on larger screens the first
-          project takes the full width and the rest share one row (1 + 3). */}
+      {/* Projects, as an index: titles in a column, the selected one opened
+          beside them and read in sequence. The images the backend holds are
+          app icons and are shown at icon size. */}
       <Section id="projects">
         <SectionHeading
           eyebrow={`03 / ${t.nav.projects}`}
           title={t.projects.title}
           lead={t.projects.subtitle}
         />
-        {isMobile ? (
-          <SwipeCarousel
-            items={projects}
-            getKey={projectKey}
-            storageKey="swipeHintSeen.projects"
-            hintText={t.hints.swipeMore}
-            renderItem={(project) => <ProjectCard project={project} labels={projectLabels} />}
-          />
-        ) : (
-          projects.length > 0 && (
-            <div className="space-y-6">
-              <Reveal>
-                <FeaturedProjectCard project={featuredProject} labels={projectLabels} />
-              </Reveal>
-              {otherProjects.length > 0 && (
-                <Grid>
-                  {otherProjects.map((project, index) => (
-                    <Col
-                      as={Reveal}
-                      key={projectKey(project)}
-                      spanMd={6}
-                      spanLg={secondaryProjectSpan(otherProjects.length)}
-                      delayMs={staggerMs(index)}
-                      className="h-full"
-                    >
-                      <ProjectCard project={project} labels={projectLabels} className="h-full" />
-                    </Col>
-                  ))}
-                </Grid>
-              )}
-            </div>
-          )
-        )}
+        <Reveal>
+          <ProjectIndex projects={projects} labels={projectLabels} onAsk={askVex} />
+        </Reveal>
       </Section>
 
       {/* Contact: the same field, at rest, closing the page. */}

@@ -113,7 +113,11 @@ const copy = {
       subtitle:
         "Backend and AI systems shipped end to end — from the data model to the deployment — for real users.",
       code: "Code",
-      imageAlt: "{title} — preview",
+      imageAlt: "{title} — icon",
+      stack: "Stack",
+      youAreHere: "you are here",
+      askVex: "Ask Vex about {title}",
+      askVexQuestion: "Tell me about {title}.",
     },
     contact: {
       title: "Let's Talk",
@@ -268,7 +272,11 @@ const copy = {
       subtitle:
         "Systemy backendowe i AI dostarczone od początku do końca — od modelu danych po wdrożenie — dla prawdziwych użytkowników.",
       code: "Kod",
-      imageAlt: "{title} — podgląd",
+      imageAlt: "{title} — ikona",
+      stack: "Technologie",
+      youAreHere: "jesteś tutaj",
+      askVex: "Zapytaj Vex o {title}",
+      askVexQuestion: "Opowiedz o {title}.",
     },
     contact: {
       title: "Porozmawiajmy",
