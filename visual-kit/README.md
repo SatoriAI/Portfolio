@@ -33,9 +33,25 @@ mini-brand-sheet.png    Shareable reference sheet
 
 The primary audience is potential clients, employers, and collaborators; students are a secondary audience. Projects and software or AI engineering expertise should lead. Research and teaching should remain easy to find without competing with the main portfolio narrative.
 
-Suggested positioning: “I build useful software by combining engineering with research curiosity.” This is a communication direction, not an approved tagline.
+The line is **“Mathematician by training. Engineer by trade.”** — in Polish, **„Matematyk z wykształcenia. Inżynier z zawodu.”** Two clauses, no connective, no hedge. It earns the mathematical second layer of the mark instead of asserting it, and it is the only sentence that has to survive being read alone. Lead with it.
+
+It replaces the earlier suggestion, “I build useful software by combining engineering with research curiosity.” *Useful* is a hedge, and a positioning line that hedges inside its first five words is not a position.
 
 The **Binary Axis** mark reduces the initials to `0 · 1 → dh`: the bowl of the `d` recalls zero, the shared vertical acts as one, and a single curve completes the `h`. The initials should remain the immediate reading; the mathematical idea is the second layer.
+
+## Voice
+
+The mark and the palette are maybe a third of a personal brand. The rest is how the person writes, and this one has a settled character worth protecting.
+
+- **Short declaratives.** Let a full stop do the work a comma would blur. Two clauses beat one sentence with a connective.
+- **Evidence instead of adjectives.** Name the company, the number, the field: Nokia, Xperi, CloudFerro; two published papers; harmonic analysis. One named fact outranks any quantity of "extensive experience".
+- **First person, plain.** "I'm drawn to problems where the maths and the infrastructure both have to be right." Not *passionate about*, not *leveraging*, not *cutting-edge*.
+- **Understatement.** The work is strong enough that overselling it reads as doubt. Say what was built and what it did, and let the reader be the one who is impressed.
+- **A technical claim arrives with its proof or it is not made.** This is the writing form of the rule that decorative geometry must not be presented as data.
+
+Projects are written problem → role → solution → verified result, in that order. The verified result is the part most portfolios leave out, and the part that earns the other three.
+
+Avoid superlatives, *innovative*, *passionate*, *world-class*, exclamation marks, and any sentence that hedges before its sixth word.
 
 ## Logo and symbol
 
@@ -151,6 +167,8 @@ Nothing about the mark, the typography, the spacing scale, the layout grid, the 
 - The `symbol/` masters moved from a 100 × 100 canvas to 104 × 104. The artwork itself is untouched — same path data, same stroke, same proportions — but it had been sitting 2.25 units left and 2.5 units above centre, with only 9.25 units of clear space on the left against the 13.5 the kit requires. Anything that cropped the file to a square or a circle cropped it off-centre.
 - The mark inside `favicon/favicon.svg` was centred in its tile; it had been 8 units from the left edge and 12 from the right.
 - The actionable-card elevation is named `lift`. Under its previous name it collided with the `card` colour token, so it had been rendering as a white shadow on a near-white page and the hover lift the kit asks for never appeared.
+- The kit has a voice section, which it had never had. For a personal brand that was the largest gap in it: the mark and the palette are a third of the identity and the writing is the rest.
+- The positioning line is now the one the site already leads with, “Mathematician by training. Engineer by trade.”, in place of the hedged suggestion carried since version 1.
 - Elevation, an icon specification, the radius scale, the column gutter, the breakpoints and the heading tracking values are now written down. All six were already decided in the implementation and simply undocumented, so these entries record existing practice rather than changing it.
 
 ## Scope and limitations
