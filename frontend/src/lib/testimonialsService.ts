@@ -29,6 +29,18 @@ export type UiTestimonial = {
   text: string;
 };
 
+// The season is a fixed English enum on the backend; the Polish academic
+// calendar knows two semesters, so autumn and spring fold into them.
+const POLISH_SEASON: Record<ApiTestimonial["season"], string> = {
+  Winter: "sem. zimowy",
+  Fall: "sem. zimowy",
+  Spring: "sem. letni",
+  Summer: "sem. letni",
+};
+
+const seasonLabel = (season: ApiTestimonial["season"], lang: string) =>
+  lang === "pl" ? (POLISH_SEASON[season] ?? season) : season;
+
 export function mapApiTestimonialToUi(
   testimonial: ApiTestimonial,
   language: string,
@@ -58,7 +70,7 @@ export function mapApiTestimonialToUi(
     id: testimonial.id,
     name,
     course: localized.course || "",
-    semester: `${testimonial.season} ${testimonial.semester}`,
+    semester: `${seasonLabel(testimonial.season, lang)} ${testimonial.semester}`,
     season: testimonial.season,
     rating,
     text: localized.content || "",

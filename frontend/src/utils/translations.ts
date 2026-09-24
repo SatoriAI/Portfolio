@@ -150,7 +150,14 @@ const copy = {
     academic: {
       title: "Research and Teaching",
       subtitle:
-        "Alongside my professional career, I am pursuing a PhD in Theoretical Mathematics, where I combine my passion for research, teaching, and problem-solving. I have taught courses in mathematics and programming, receiving excellent feedback for my ability to present complex topics in an accessible and engaging way. Academic work not only sharpens my analytical skills but also fuels my curiosity; from exploring algorithms to the latest applications of artificial intelligence.",
+        "Heat kernels, since a bachelor's thesis in 2019: sharp estimates on segments, cones and double cones. Two papers. Teaching analysis and algebra alongside.",
+      figure: {
+        figure: "The Neumann heat kernel on a segment, at four times",
+        caption:
+          "The Neumann heat kernel on a segment, K_t(x, y) for fixed y, at four times: heat placed at one point spreads and flattens towards the mean, 1/π. A sharp estimate bounds a kernel like this one from above and below by the same expression, up to constants. The series is cut at n = 60.",
+      },
+      inProgress: "in progress",
+      quotes: { open: "“", close: "”" },
       researchFocus: "Research Focus",
       advisor: "Advisor",
       researchAreas: "Research Areas",
@@ -317,7 +324,14 @@ const copy = {
     academic: {
       title: "Badania i dydaktyka",
       subtitle:
-        "Obok kariery zawodowej realizuję doktorat z matematyki teoretycznej, gdzie łączę pasję do badań, nauczania i rozwiązywania problemów. Prowadziłem zajęcia z matematyki i programowania, otrzymując doskonałe opinie za umiejętność przystępnego i angażującego przedstawiania złożonych tematów. Praca naukowa nie tylko wyostrza moje umiejętności analityczne, ale także podsyca ciekawość; od eksploracji algorytmów po najnowsze zastosowania sztucznej inteligencji.",
+        "Jądra ciepła od pracy licencjackiej w 2019 roku: ostre oszacowania na odcinku, stożku i podwójnym stożku. Dwa artykuły. Obok tego zajęcia z analizy i algebry.",
+      figure: {
+        figure: "Jądro ciepła Neumanna na odcinku, w czterech chwilach",
+        caption:
+          "Jądro ciepła Neumanna na odcinku, K_t(x, y) dla ustalonego y, w czterech chwilach: ciepło z jednego punktu rozchodzi się i wyrównuje do średniej, 1/π. Ostre oszacowanie ogranicza takie jądro z góry i z dołu tym samym wyrażeniem, z dokładnością do stałych. Szereg ucięto na n = 60.",
+      },
+      inProgress: "w toku",
+      quotes: { open: "„", close: "”" },
       researchFocus: "Obszar badań",
       advisor: "Promotor",
       researchAreas: "Obszary badawcze",
