@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 
+import { Formula } from "@/components/Formula";
 import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
 import { cn } from "@/lib/utils";
 
@@ -417,7 +418,12 @@ export const HeatCaption = ({ label, replayLabel, locale, className }: HeatCapti
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(field.tau);
-  const text = `${label} · ∂ₜu = Δu · t = ${time}`;
+  // Set as a formula, not as characters that look like one.
+  const text = (
+    <>
+      {label} · <Formula tex="∂_t u = Δu" /> · <Formula tex={`t = ${time}`} />
+    </>
+  );
   const textClassName = "font-mono text-meta text-muted-foreground";
 
   if (!field.animated) return <p className={cn(textClassName, className)}>{text}</p>;

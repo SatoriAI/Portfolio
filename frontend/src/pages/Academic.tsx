@@ -8,6 +8,7 @@ import QuoteWall from "@/components/academic/QuoteWall";
 import ResearchThread from "@/components/academic/ResearchThread";
 import HeatField from "@/components/brand/HeatField";
 import StatusMessage from "@/components/feedback/StatusMessage";
+import { MathText } from "@/components/Formula";
 import { Col, Grid } from "@/components/layout/Grid";
 import PageLayout from "@/components/layout/PageLayout";
 import Section from "@/components/layout/Section";
@@ -128,7 +129,7 @@ const Academic = () => {
                 {t.academic.figureNotice}
               </p>
               <p id="kernel-caption" className="mt-2 max-w-[48ch] text-sm text-muted-foreground">
-                {t.academic.figure.caption}
+                <MathText text={t.academic.figure.caption} />
               </p>
             </Col>
             <Col spanLg={7} className="lg:pl-6">
@@ -158,7 +159,7 @@ const Academic = () => {
               </h3>
               {t.academic.interests.transformers.paragraphs.map((paragraph) => (
                 <p key={paragraph} className="max-w-[52ch] text-base text-muted-foreground">
-                  {paragraph}
+                  <MathText text={paragraph} />
                 </p>
               ))}
             </Col>

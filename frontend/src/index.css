@@ -118,6 +118,14 @@
   }
 }
 
+/* Formulas are MathML set inline by the Formula component. The browser's
+   math face is a serif by design — a formula reads as a formula — and it is
+   drawn a shade larger than the prose so its scripts stay legible. */
+math {
+  font-family: "STIX Two Math", "Latin Modern Math", "Cambria Math", "Noto Sans Math", math, serif;
+  font-size: 1.08em;
+}
+
 /* Markdown (prose) tweaks for chat */
 .prose {
   @apply max-w-none leading-7;

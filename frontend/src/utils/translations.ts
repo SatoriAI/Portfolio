@@ -163,13 +163,13 @@ const copy = {
         transformers: {
           title: "Mathematical structure in transformers",
           paragraphs: [
-            "I study how transformers learn to generalise on tasks with algebraic structure: models trained on modular addition over ℤ₁₁₃, watched through grokking. The question is whether, as generalisation appears, the hidden activations begin to encode cyclic shifts, and whether that structure can be tracked through training and across layers. Across three seeds, after grokking, selected activation subspaces do carry the dynamics of cyclic shifts, most coherently between a late layer and the output.",
+            "I study how transformers learn to generalise on tasks with algebraic structure: models trained on modular addition over $ℤ_{113}$, watched through grokking. The question is whether, as generalisation appears, the hidden activations begin to encode cyclic shifts, and whether that structure can be tracked through training and across layers. Across three seeds, after grokking, selected activation subspaces do carry the dynamics of cyclic shifts, most coherently between a late layer and the output.",
             "The mathematics runs alongside. Exact intertwiners between group representations preserve the isotypic components, and for cyclic groups a bound connects approximate agreement between layers with the transport of Fourier components. How far that explains the experiments is the open question: the strict representation law is not yet established, and nothing shows that the structure causes generalisation.",
           ],
           figure: {
             figure: "The cyclic group of order 113 with one Fourier mode, under a shift",
             caption:
-              "ℤ₁₁₃ as 113 points, with the Fourier mode k drawn over them. A shift by a turns the mode rigidly: e^(2πik(x+a)/113) = e^(2πika/113) · e^(2πikx/113), a change of phase and nothing else. An operator that commutes with shifts therefore cannot mix one mode with another, which is the fact the intertwiner result rests on. The phase is printed with ka reduced mod 113.",
+              "$ℤ_{113}$ as 113 points, with the Fourier mode $k$ drawn over them. A shift by $a$ turns the mode rigidly: $e^{2πik(x+a)/113} = e^{2πika/113} · e^{2πikx/113}$, a change of phase and nothing else. An operator that commutes with shifts therefore cannot mix one mode with another, which is the fact the intertwiner result rests on. The phase is printed with $ka$ reduced $\\text{mod }113$.",
             shift: "shift by",
             mode: "Fourier mode",
             notice:
@@ -185,7 +185,7 @@ const copy = {
           figure: {
             figure: "One qubit on the Bloch sphere, with gates to apply",
             caption:
-              "One qubit, simulated exactly: the buttons apply the unitaries H, X, Z, S and T to the amplitudes, and the vector turns along each gate's true rotation of the Bloch sphere. Press H twice and the state returns to |0⟩: interference, in one line of a circuit.",
+              "One qubit, simulated exactly: the buttons apply the unitaries $H$, $X$, $Z$, $S$ and $T$ to the amplitudes, and the vector turns along each gate's true rotation of the Bloch sphere. Press $H$ twice and the state returns to $|0⟩$: interference, in one line of a circuit.",
             gates: "Gates",
             reset: "Reset to |0⟩",
             notice:
@@ -198,7 +198,7 @@ const copy = {
       figure: {
         figure: "The Neumann heat kernel on a segment, over time",
         caption:
-          "The Neumann heat kernel on a segment, K_t(x, y) for fixed y. Drag t: heat placed at one point spreads and flattens towards the mean, 1/π, and the field behind this page spreads with it. A sharp estimate bounds a kernel like this one from above and below by the same expression, up to constants. The series is cut at n = 60.",
+          "The Neumann heat kernel on a segment, $K_t(x, y)$ for fixed $y$. Drag $t$: heat placed at one point spreads and flattens towards the mean, $1/π$, and the field behind this page spreads with it. A sharp estimate bounds a kernel like this one from above and below by the same expression, up to constants. The series is cut at $n = 60$.",
         play: "Run the diffusion",
         time: "time t",
       },
@@ -389,14 +389,14 @@ const copy = {
         transformers: {
           title: "Struktura matematyczna w transformerach",
           paragraphs: [
-            "Badam, jak transformery uczą się generalizować na zadaniach o strukturze algebraicznej: modele trenowane na dodawaniu modularnym w ℤ₁₁₃, obserwowane przez grokking. Pytanie brzmi, czy wraz z pojawieniem się generalizacji ukryte aktywacje zaczynają kodować przesunięcia cykliczne i czy tę strukturę da się śledzić w trakcie treningu i pomiędzy warstwami. Dla trzech ziaren losowych, po grokkingu, wybrane podprzestrzenie aktywacji rzeczywiście niosą dynamikę przesunięć cyklicznych, najspójniej między jedną z późnych warstw a wyjściem modelu.",
+            "Badam, jak transformery uczą się generalizować na zadaniach o strukturze algebraicznej: modele trenowane na dodawaniu modularnym w $ℤ_{113}$, obserwowane przez grokking. Pytanie brzmi, czy wraz z pojawieniem się generalizacji ukryte aktywacje zaczynają kodować przesunięcia cykliczne i czy tę strukturę da się śledzić w trakcie treningu i pomiędzy warstwami. Dla trzech ziaren losowych, po grokkingu, wybrane podprzestrzenie aktywacji rzeczywiście niosą dynamikę przesunięć cyklicznych, najspójniej między jedną z późnych warstw a wyjściem modelu.",
             "Równolegle idzie matematyka. Dokładne operatory splatające między reprezentacjami grupy zachowują składowe izotypowe, a dla grup cyklicznych oszacowanie wiąże przybliżoną zgodność między warstwami z transportem składowych Fouriera. Na ile to wyjaśnia eksperymenty, pozostaje pytaniem otwartym: ścisłe prawo reprezentacji nie jest jeszcze ustalone, a nic nie pokazuje, że ta struktura jest przyczyną generalizacji.",
           ],
           figure: {
             figure:
               "Grupa cykliczna rzędu 113 z jedną składową Fouriera, pod działaniem przesunięcia",
             caption:
-              "ℤ₁₁₃ jako 113 punktów, a nad nimi składowa Fouriera k. Przesunięcie o a obraca ją sztywno: e^(2πik(x+a)/113) = e^(2πika/113) · e^(2πikx/113), czyli zmienia tylko fazę. Operator przemienny z przesunięciami nie może więc mieszać jednej składowej z drugą i na tym opiera się wynik o operatorach splatających. Faza jest wypisana z ka zredukowanym mod 113.",
+              "$ℤ_{113}$ jako 113 punktów, a nad nimi składowa Fouriera $k$. Przesunięcie o $a$ obraca ją sztywno: $e^{2πik(x+a)/113} = e^{2πika/113} · e^{2πikx/113}$, czyli zmienia tylko fazę. Operator przemienny z przesunięciami nie może więc mieszać jednej składowej z drugą i na tym opiera się wynik o operatorach splatających. Faza jest wypisana z $ka$ zredukowanym $\\text{mod }113$.",
             shift: "przesuń o",
             mode: "Składowa Fouriera",
             notice:
@@ -412,7 +412,7 @@ const copy = {
           figure: {
             figure: "Jeden kubit na sferze Blocha, z bramkami do zastosowania",
             caption:
-              "Jeden kubit, symulowany dokładnie: przyciski stosują bramki unitarne H, X, Z, S i T do amplitud, a wektor obraca się wzdłuż rzeczywistego obrotu sfery Blocha dla danej bramki. Naciśnij H dwa razy, a stan wróci do |0⟩: interferencja w jednej linii obwodu.",
+              "Jeden kubit, symulowany dokładnie: przyciski stosują bramki unitarne $H$, $X$, $Z$, $S$ i $T$ do amplitud, a wektor obraca się wzdłuż rzeczywistego obrotu sfery Blocha dla danej bramki. Naciśnij $H$ dwa razy, a stan wróci do $|0⟩$: interferencja w jednej linii obwodu.",
             gates: "Bramki",
             reset: "Wróć do |0⟩",
             notice:
@@ -425,7 +425,7 @@ const copy = {
       figure: {
         figure: "Jądro ciepła Neumanna na odcinku, w czasie",
         caption:
-          "Jądro ciepła Neumanna na odcinku, K_t(x, y) dla ustalonego y. Przesuń t: ciepło z jednego punktu rozchodzi się i wyrównuje do średniej, 1/π, a razem z nim rozchodzi się pole w tle tej strony. Ostre oszacowanie ogranicza takie jądro z góry i z dołu tym samym wyrażeniem, z dokładnością do stałych. Szereg ucięto na n = 60.",
+          "Jądro ciepła Neumanna na odcinku, $K_t(x, y)$ dla ustalonego $y$. Przesuń $t$: ciepło z jednego punktu rozchodzi się i wyrównuje do średniej, $1/π$, a razem z nim rozchodzi się pole w tle tej strony. Ostre oszacowanie ogranicza takie jądro z góry i z dołu tym samym wyrażeniem, z dokładnością do stałych. Szereg ucięto na $n = 60$.",
         play: "Uruchom dyfuzję",
         time: "czas t",
       },

@@ -186,12 +186,12 @@ const HeatKernelFigure = ({
           y1={py(1 / Math.PI)}
           x2={PLOT.right}
           y2={py(1 / Math.PI)}
-          className="stroke-control-border"
+          className="stroke-iris"
           strokeWidth={1}
           strokeDasharray="3 4"
           vectorEffect="non-scaling-stroke"
         />
-        <g className="fill-muted-foreground font-mono" fontSize={10}>
+        <g className="fill-muted-foreground font-mono" fontSize={11}>
           <text x={px(0)} y={PLOT.bottom + 18} textAnchor="start">
             0
           </text>
@@ -206,7 +206,8 @@ const HeatKernelFigure = ({
           </text>
         </g>
 
-        {/* Reference times, as hairlines: the path the collapse takes. */}
+        {/* Reference times, as hairlines in control-border: the path the
+            collapse takes. The decorative border grey was invisible here. */}
         {REFERENCE_PATHS.map((d, index) => (
           <path
             key={REFERENCE_TIMES[index]}
@@ -214,7 +215,7 @@ const HeatKernelFigure = ({
             fill="none"
             strokeWidth={1}
             vectorEffect="non-scaling-stroke"
-            className="stroke-border"
+            className="stroke-control-border"
           />
         ))}
 

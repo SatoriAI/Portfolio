@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { Formula, MathText } from "@/components/Formula";
 import { Button } from "@/components/ui/button";
 import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
@@ -168,7 +169,7 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
               x2={CX}
               y2={CY + R}
               {...drawClassName(300)}
-              className={cn("stroke-border", drawClassName(300).className)}
+              className={cn("stroke-control-border", drawClassName(300).className)}
             />
             <line
               x1={CX - R}
@@ -176,7 +177,7 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
               x2={CX + R}
               y2={CY}
               {...drawClassName(450)}
-              className={cn("stroke-border", drawClassName(450).className)}
+              className={cn("stroke-control-border", drawClassName(450).className)}
             />
           </g>
           <g className="fill-muted-foreground font-mono" fontSize={10}>
@@ -249,13 +250,13 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
               </Button>
             </div>
           </div>
-          <dl className="space-y-2 font-mono text-sm">
+          <dl className="space-y-2 text-base">
             <div>
               <dt className="text-meta uppercase tracking-widest text-muted-foreground">
                 {labels.circuit}
               </dt>
               <dd className="mt-1 text-foreground" aria-live="polite">
-                |0⟩{circuit.map((name) => ` → ${name}`).join("")}
+                <Formula tex={`|0⟩${circuit.map((name) => ` → ${name}`).join("")}`} />
               </dd>
             </div>
             <div>
@@ -263,17 +264,19 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
                 {labels.state}
               </dt>
               <dd className="mt-1 text-foreground">
-                ({formatComplex(state.alpha)})|0⟩ + ({formatComplex(state.beta)})|1⟩
+                <Formula
+                  tex={`(${formatComplex(state.alpha)}) |0⟩ + (${formatComplex(state.beta)}) |1⟩`}
+                />
               </dd>
               <dd className="mt-1 text-muted-foreground">
-                P(0) = {p0.toFixed(2)} · P(1) = {p1.toFixed(2)}
+                <Formula tex={`P(0) = ${p0.toFixed(2)} · P(1) = ${p1.toFixed(2)}`} />
               </dd>
             </div>
           </dl>
         </div>
       </div>
       <figcaption className="mt-4 max-w-[48ch] text-sm text-muted-foreground">
-        {labels.caption}
+        <MathText text={labels.caption} />
       </figcaption>
     </figure>
   );

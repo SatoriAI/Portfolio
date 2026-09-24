@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { Formula, MathText } from "@/components/Formula";
 import { Button } from "@/components/ui/button";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { cn } from "@/lib/utils";
@@ -152,7 +153,7 @@ const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
             pathLength={1}
             strokeDasharray={1}
             className={cn(
-              "stroke-border",
+              "stroke-control-border",
               animateEntrance && "transition-[stroke-dashoffset] duration-700 ease-brand",
               drawn ? "[stroke-dashoffset:0]" : "[stroke-dashoffset:1]",
             )}
@@ -238,16 +239,20 @@ const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
               {labels.shift} 10
             </Button>
           </div>
-          <div className="space-y-1 font-mono text-sm text-foreground" aria-live="polite">
-            <p>a = {shift}</p>
+          <div className="space-y-2 text-base text-foreground" aria-live="polite">
             <p>
-              φ = 2π·{k}·{shift}/113 = 2π·{phaseNumerator}/113
+              <Formula tex={`a = ${shift}`} />
+            </p>
+            <p>
+              <Formula
+                tex={`φ = \\frac{2π · ${k} · ${shift}}{113} = \\frac{2π · ${phaseNumerator}}{113}`}
+              />
             </p>
           </div>
         </div>
       </div>
       <figcaption className="mt-4 max-w-[48ch] text-sm text-muted-foreground">
-        {labels.caption}
+        <MathText text={labels.caption} />
       </figcaption>
     </figure>
   );
