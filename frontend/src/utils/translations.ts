@@ -1,4 +1,6 @@
-export const translations = {
+import { typesetDeep } from "@/lib/typography";
+
+const copy = {
   en: {
     meta: {
       home: {
@@ -284,6 +286,16 @@ export const translations = {
       home: "Wróć na stronę główną",
     },
   },
+};
+
+/**
+ * Site copy in both languages. The Polish half passes through the typographic
+ * rules once here, so no component has to remember that a one-letter word may
+ * not end a line.
+ */
+export const translations = {
+  en: copy.en,
+  pl: typesetDeep(copy.pl, "pl"),
 };
 
 export type Language = keyof typeof translations;

@@ -35,6 +35,10 @@ interface Message {
 interface ChatWidgetProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Sent as the visitor's first message as soon as the chat is open and hydrated. */
+  initialQuestion?: string | null;
+  /** Called once the initial question has been taken, so it is not sent twice. */
+  onInitialQuestionSent?: () => void;
 }
 
 class MarkdownBoundary extends React.Component<
@@ -68,7 +72,12 @@ class MarkdownBoundary extends React.Component<
 // Rendering errors are unlikely with react-markdown, and the fallback could mask formatting.
 // We render markdown directly to ensure live formatting.
 
-const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
+const ChatWidget = ({
+  isOpen,
+  onClose,
+  initialQuestion = null,
+  onInitialQuestionSent,
+}: ChatWidgetProps) => {
   const { language } = useSettings();
   const t = translations[language];
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -409,6 +418,18 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
       failConversation(err?.message || "Failed to send message");
     }
   };
+
+  // A question handed over from the page (the hero's ask bar, a project's
+  // "ask Vex about this") goes out the moment history has loaded, so it lands
+  // after any earlier conversation rather than before it. The handler is read
+  // through a ref because it closes over state and is recreated every render.
+  const sendRef = useRef(handleSendMessage);
+  sendRef.current = handleSendMessage;
+  useEffect(() => {
+    if (!isOpen || !hydrated || !initialQuestion) return;
+    onInitialQuestionSent?.();
+    void sendRef.current(initialQuestion);
+  }, [isOpen, hydrated, initialQuestion, onInitialQuestionSent]);
 
   const handleClearChat = () => {
     try {

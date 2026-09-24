@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowDown,
@@ -15,8 +15,6 @@ import DiffusionField from "@/components/brand/DiffusionField";
 import FeaturedProjectCard from "@/components/cards/FeaturedProjectCard";
 import ProjectCard from "@/components/cards/ProjectCard";
 import SkillCard from "@/components/cards/SkillCard";
-import ChatLauncher from "@/components/ChatLauncher";
-import ChatWidget from "@/components/ChatWidget";
 import { Col, Grid, type Span12 } from "@/components/layout/Grid";
 import PageLayout from "@/components/layout/PageLayout";
 import Section from "@/components/layout/Section";
@@ -28,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { env } from "@/config/env";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useVex } from "@/contexts/VexContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import type { UiProject } from "@/lib/projectsService";
@@ -106,7 +105,7 @@ const sampleProjects: UiProject[] = [
 ];
 
 const Index = () => {
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const { askVex } = useVex();
   const { language } = useSettings();
   const t = translations[language];
   const isMobile = useIsMobile();
@@ -135,15 +134,6 @@ const Index = () => {
       });
   }, [language]);
 
-  // The launcher unmounts while the chat is open, so Radix cannot return focus
-  // to it; do that here once it is back.
-  const launcherRef = useRef<HTMLButtonElement>(null);
-  const wasChatOpenRef = useRef(false);
-  useEffect(() => {
-    if (wasChatOpenRef.current && !isChatOpen) launcherRef.current?.focus();
-    wasChatOpenRef.current = isChatOpen;
-  }, [isChatOpen]);
-
   const projectLabels = {
     code: t.projects.code,
     demo: t.common.demo,
@@ -154,7 +144,7 @@ const Index = () => {
   const [featuredProject, ...otherProjects] = projects;
 
   return (
-    <PageLayout footerClassName="pb-24 sm:pb-8 sm:pr-24">
+    <PageLayout>
       {/* Hero: nothing here animates — it is the first thing a visitor sees.
           The diffusion field is what puts the kit's pastels above the fold.
           They are the one thing that separates this page from every other
@@ -176,7 +166,7 @@ const Index = () => {
                 {t.hero.subtitle}
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Button size="lg" onClick={() => setIsChatOpen(true)}>
+                <Button size="lg" onClick={() => askVex()}>
                   <MessageSquare />
                   {t.hero.askAI}
                 </Button>
@@ -360,7 +350,7 @@ const Index = () => {
                 </CardHeader>
                 <CardContent className="flex flex-1 flex-col justify-between gap-6">
                   <p className="text-muted-foreground">{t.contact.quickMessageDesc}</p>
-                  <Button onClick={() => setIsChatOpen(true)} className="w-full sm:w-auto">
+                  <Button onClick={() => askVex()} className="w-full sm:w-auto">
                     <MessageSquare />
                     {t.hero.askAI}
                   </Button>
@@ -370,15 +360,6 @@ const Index = () => {
           </Grid>
         </Section>
       </DiffusionField>
-
-      <ChatWidget isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
-      {!isChatOpen && (
-        <ChatLauncher
-          ref={launcherRef}
-          label={t.common.chatWithVex}
-          onClick={() => setIsChatOpen(true)}
-        />
-      )}
     </PageLayout>
   );
 };
