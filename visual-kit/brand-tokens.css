@@ -1,0 +1,52 @@
+/*
+ * Dawid Hanrahan Visual Identity Kit — version 5.1
+ *
+ * Colour, type, radius, elevation and layout tokens. Shadows are expressed in
+ * ink rather than neutral black; a grey shadow over this palette reads as dirt.
+ */
+:root {
+  /* Colour */
+  --brand-background: #F8F9FC;
+  --brand-surface: #FFFFFF;
+  --brand-ink: #17233D;
+  --brand-text-secondary: #566078;
+  --brand-lavender: #E8E1FA;
+  --brand-blush: #F6E2EB;
+  --brand-iris: #65509A;
+  --brand-border: #E0E3EB;
+  /* 3.28:1 on background, 3.45:1 on surface. Do not lighten: 1.4.11 needs 3:1. */
+  --brand-control-border: #848A9A;
+  --brand-primary-hover: #293A5C;
+
+  /* Type */
+  --brand-font: "Manrope", system-ui, sans-serif;
+  --brand-font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --brand-tracking-heading: -0.035em;
+  --brand-tracking-card-title: -0.02em;
+  --brand-tracking-label: 0.1em;
+
+  /* Radius. There is no fourth value. */
+  --brand-radius-motif: 2px;
+  --brand-radius-control: 12px;
+  --brand-radius-surface: 20px;
+  --brand-radius: var(--brand-radius-surface);
+
+  /* Elevation. Only for something actionable. */
+  --brand-elevation-lift: 0 8px 24px -12px rgb(23 35 61 / 0.25);
+  --brand-elevation-float: 0 12px 32px -12px rgb(23 35 61 / 0.5);
+  --brand-elevation-sm: 0 1px 2px 0 rgb(23 35 61 / 0.06);
+  --brand-elevation-md: 0 4px 6px -1px rgb(23 35 61 / 0.1), 0 2px 4px -2px rgb(23 35 61 / 0.1);
+  --brand-elevation-lg: 0 10px 15px -3px rgb(23 35 61 / 0.12), 0 4px 6px -4px rgb(23 35 61 / 0.12);
+  --brand-elevation-xl: 0 20px 25px -5px rgb(23 35 61 / 0.14), 0 8px 10px -6px rgb(23 35 61 / 0.14);
+
+  /* Layout */
+  --brand-content-max: 1160px;
+  --brand-margin-lg: 48px;
+  --brand-margin-sm: 24px;
+  --brand-gutter: 24px;
+
+  /* Motion */
+  --brand-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --brand-duration-entrance: 400ms;
+  --brand-duration-hover: 180ms;
+}

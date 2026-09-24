@@ -1,0 +1,5 @@
+# Manrope and IBM Plex Mono ship with their licence texts, and the kit requires
+# those files to travel with the fonts. They are upstream documents kept
+# byte-for-byte as published, so their trailing whitespace is not ours to
+# correct; exempt them from the whitespace check rather than editing a licence.
+fonts/*.txt -whitespace
