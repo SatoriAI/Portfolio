@@ -71,16 +71,15 @@ const copy = {
     hero: {
       title: "Mathematician by training. Engineer by trade.",
       subtitle:
-        "Almost a decade of Python, in production at Nokia, Xperi and CloudFerro — alongside a PhD in harmonic analysis. I'm drawn to problems where the maths and the infrastructure both have to be right.",
+        "A decade of Python, in production at Nokia, Xperi and CloudFerro — alongside a PhD in harmonic analysis. I'm drawn to problems where the maths and the infrastructure both have to be right.",
       proof: [
-        { value: "2", label: "published papers" },
+        { value: "2", label: "papers on heat kernels" },
         { value: "4", label: "production systems" },
-        { value: "10k+", label: "weekly users served" },
+        { value: "GB → MB", label: "memory cut in a Nokia service" },
       ],
       askAI: "Ask Vex about me",
       askPlaceholder: "Ask Vex anything about me…",
       ask: "Ask",
-      askHint: "Vex is my assistant. It has read this site.",
       viewProjects: "View projects",
       field: {
         label: "heat kernel",
@@ -118,6 +117,14 @@ const copy = {
       youAreHere: "you are here",
       askVex: "Ask Vex about {title}",
       askVexQuestion: "Tell me about {title}.",
+      /** One line under each title in the index, keyed by the backend's title. */
+      subtitles: {
+        tURL: "Temporary short links, with a lifetime you can extend",
+        OpenGrant: "Generative AI that drafts and manages R&D grant proposals",
+        AdLume: "AI that runs and tunes ad campaigns",
+        Portfolio: "This site, with an assistant that has read it",
+        Picko: "A Secret Santa draw with no accounts",
+      } as Record<string, string>,
     },
     contact: {
       title: "Let's Talk",
@@ -125,7 +132,7 @@ const copy = {
       email: "Email",
       quickMessage: "Chat with Vex",
       quickMessageDesc:
-        "Vex is my assistant, trained on this site. Ask it about my experience, research or availability.",
+        "Vex is my assistant. It answers from this site's content: ask it about my experience, research or availability.",
     },
     hints: {
       swipeMore: "Swipe to see more",
@@ -166,6 +173,8 @@ const copy = {
               "ℤ₁₁₃ as 113 points, with the Fourier mode k drawn over them. A shift by a turns the mode rigidly: e^(2πik(x+a)/113) = e^(2πika/113) · e^(2πikx/113), a change of phase and nothing else. An operator that commutes with shifts therefore cannot mix one mode with another, which is the fact the intertwiner result rests on. The phase is printed with ka reduced mod 113.",
             shift: "shift by",
             mode: "Fourier mode",
+            notice:
+              "What to notice: press shift and the wave keeps its shape. Only its position moves, and the readout says by exactly how much.",
           },
         },
         quantum: {
@@ -181,6 +190,8 @@ const copy = {
               "One qubit, simulated exactly: the buttons apply the unitaries H, X, Z, S and T to the amplitudes, and the vector turns along each gate's true rotation of the Bloch sphere. Press H twice and the state returns to |0⟩: interference, in one line of a circuit.",
             gates: "Gates",
             reset: "Reset to |0⟩",
+            notice:
+              "What to notice: one H makes both outcomes equally likely; a second H makes the first certain again.",
             circuit: "Circuit",
             state: "State",
           },
@@ -191,7 +202,9 @@ const copy = {
         caption:
           "The Neumann heat kernel on a segment, K_t(x, y) for fixed y, at four times: heat placed at one point spreads and flattens towards the mean, 1/π. A sharp estimate bounds a kernel like this one from above and below by the same expression, up to constants. The series is cut at n = 60.",
       },
-      inProgress: "in progress",
+      education: "Education",
+      figureNotice:
+        "What to notice: every curve flattens towards the dashed mean, and the sharp one does so fastest.",
       quotes: { open: "“", close: "”" },
       researchFocus: "Research Focus",
       advisor: "Advisor",
@@ -280,16 +293,15 @@ const copy = {
     hero: {
       title: "Matematyk z wykształcenia. Inżynier z zawodu.",
       subtitle:
-        "Prawie dekada Pythona, na produkcji w Nokii, Xperi i CloudFerro — równolegle z doktoratem z analizy harmonicznej. Ciągną mnie problemy, w których i matematyka, i infrastruktura muszą być poprawne.",
+        "Dekada Pythona, na produkcji w Nokii, Xperi i CloudFerro — równolegle z doktoratem z analizy harmonicznej. Ciągną mnie problemy, w których i matematyka, i infrastruktura muszą być poprawne.",
       proof: [
-        { value: "2", label: "opublikowane artykuły" },
+        { value: "2", label: "artykuły o jądrach ciepła" },
         { value: "4", label: "systemy produkcyjne" },
-        { value: "10k+", label: "użytkowników tygodniowo" },
+        { value: "GB → MB", label: "mniej pamięci w usłudze Nokii" },
       ],
       askAI: "Zapytaj Vex o mnie",
       askPlaceholder: "Zapytaj Vex o cokolwiek…",
       ask: "Zapytaj",
-      askHint: "Vex to mój asystent. Przeczytał tę stronę.",
       viewProjects: "Zobacz projekty",
       field: {
         label: "jądro ciepła",
@@ -327,6 +339,13 @@ const copy = {
       youAreHere: "jesteś tutaj",
       askVex: "Zapytaj Vex o {title}",
       askVexQuestion: "Opowiedz o {title}.",
+      subtitles: {
+        tURL: "Tymczasowe krótkie linki, z ważnością do przedłużenia",
+        OpenGrant: "Generatywna SI, która pisze i prowadzi wnioski grantowe B+R",
+        AdLume: "SI, która prowadzi i stroi kampanie reklamowe",
+        Portfolio: "Ta strona, z asystentem, który ją przeczytał",
+        Picko: "Losowanie prezentów bez zakładania kont",
+      } as Record<string, string>,
     },
     contact: {
       title: "Porozmawiajmy",
@@ -334,7 +353,7 @@ const copy = {
       email: "Email",
       quickMessage: "Porozmawiaj z Vex",
       quickMessageDesc:
-        "Vex to mój asystent, wytrenowany na tej stronie. Zapytaj o moje doświadczenie, badania lub dostępność.",
+        "Vex to mój asystent. Odpowiada na podstawie treści tej strony: zapytaj o moje doświadczenie, badania lub dostępność.",
     },
     hints: {
       swipeMore: "Przeciągnij w bok, aby zobaczyć więcej",
@@ -376,6 +395,8 @@ const copy = {
               "ℤ₁₁₃ jako 113 punktów, a nad nimi składowa Fouriera k. Przesunięcie o a obraca ją sztywno: e^(2πik(x+a)/113) = e^(2πika/113) · e^(2πikx/113), czyli zmienia tylko fazę. Operator przemienny z przesunięciami nie może więc mieszać jednej składowej z drugą i na tym opiera się wynik o operatorach splatających. Faza jest wypisana z ka zredukowanym mod 113.",
             shift: "przesuń o",
             mode: "Składowa Fouriera",
+            notice:
+              "Na co patrzeć: naciśnij „przesuń”, a fala zachowa kształt. Zmienia się tylko jej położenie, a odczyt mówi dokładnie o ile.",
           },
         },
         quantum: {
@@ -391,6 +412,8 @@ const copy = {
               "Jeden kubit, symulowany dokładnie: przyciski stosują bramki unitarne H, X, Z, S i T do amplitud, a wektor obraca się wzdłuż rzeczywistego obrotu sfery Blocha dla danej bramki. Naciśnij H dwa razy, a stan wróci do |0⟩: interferencja w jednej linii obwodu.",
             gates: "Bramki",
             reset: "Wróć do |0⟩",
+            notice:
+              "Na co patrzeć: jedno H czyni oba wyniki równie prawdopodobnymi; drugie H znów czyni pierwszy pewnym.",
             circuit: "Obwód",
             state: "Stan",
           },
@@ -401,7 +424,9 @@ const copy = {
         caption:
           "Jądro ciepła Neumanna na odcinku, K_t(x, y) dla ustalonego y, w czterech chwilach: ciepło z jednego punktu rozchodzi się i wyrównuje do średniej, 1/π. Ostre oszacowanie ogranicza takie jądro z góry i z dołu tym samym wyrażeniem, z dokładnością do stałych. Szereg ucięto na n = 60.",
       },
-      inProgress: "w toku",
+      education: "Wykształcenie",
+      figureNotice:
+        "Na co patrzeć: każda krzywa wyrównuje się do przerywanej średniej, a ta najostrzejsza robi to najszybciej.",
       quotes: { open: "„", close: "”" },
       researchFocus: "Obszar badań",
       advisor: "Promotor",

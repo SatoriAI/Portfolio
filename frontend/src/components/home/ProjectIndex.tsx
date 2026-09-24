@@ -70,6 +70,7 @@ const ProjectIcon = ({ project, alt, className }: ProjectIconProps) => (
 
 type ProjectDetailProps = {
   project: UiProject;
+  subtitle?: string;
   position: number;
   count: number;
   labels: ProjectIndexLabels;
@@ -80,6 +81,7 @@ type ProjectDetailProps = {
 
 const ProjectDetail = ({
   project,
+  subtitle,
   position,
   count,
   labels,
@@ -100,6 +102,7 @@ const ProjectDetail = ({
             <Heading className="text-card-title-sm font-semibold md:text-card-title">
               {project.title}
             </Heading>
+            {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
             {isThisSite(project) && (
               <p className="mt-1 font-mono text-meta text-iris">← {labels.youAreHere}</p>
             )}
@@ -176,12 +179,20 @@ const ProjectDetail = ({
 
 type ProjectIndexProps = {
   projects: readonly UiProject[];
+  /** One descriptive line per title. A name like tURL says nothing until opened. */
+  subtitles?: Record<string, string>;
   labels: ProjectIndexLabels;
   onAsk: (question: string) => void;
   className?: string;
 };
 
-const ProjectIndex = ({ projects, labels, onAsk, className }: ProjectIndexProps) => {
+const ProjectIndex = ({
+  projects,
+  subtitles = {},
+  labels,
+  onAsk,
+  className,
+}: ProjectIndexProps) => {
   const isMobile = useIsMobile();
   const [value, setValue] = useState(projects[0]?.title ?? "");
   const selected = projects.some((project) => project.title === value)
@@ -197,6 +208,7 @@ const ProjectIndex = ({ projects, labels, onAsk, className }: ProjectIndexProps)
           <li key={project.title} className="py-8">
             <ProjectDetail
               project={project}
+              subtitle={subtitles[project.title]}
               position={position}
               count={projects.length}
               labels={labels}
@@ -237,11 +249,18 @@ const ProjectIndex = ({ projects, labels, onAsk, className }: ProjectIndexProps)
             <span className="w-7 shrink-0 font-mono text-meta text-muted-foreground">
               {index(position)}
             </span>
-            <span className="text-card-title-sm font-semibold tracking-[-0.02em] text-muted-foreground transition-colors duration-200 group-hover:text-foreground group-data-[state=active]:text-foreground md:text-card-title">
-              {project.title}
+            <span className="min-w-0 flex-1">
+              <span className="block text-card-title-sm font-semibold tracking-[-0.02em] text-muted-foreground transition-colors duration-200 group-hover:text-foreground group-data-[state=active]:text-foreground md:text-card-title">
+                {project.title}
+              </span>
+              {subtitles[project.title] && (
+                <span className="mt-1 block text-sm text-muted-foreground">
+                  {subtitles[project.title]}
+                </span>
+              )}
             </span>
             {isThisSite(project) && (
-              <span className="ml-auto shrink-0 pl-4 font-mono text-meta text-iris">
+              <span className="shrink-0 pl-4 font-mono text-meta text-iris">
                 ← {labels.youAreHere}
               </span>
             )}

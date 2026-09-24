@@ -61,20 +61,15 @@ const SkillRow = ({ skill, labels }: SkillRowProps) => {
   const animate = !prefersReducedMotion && !isInitiallyVisible;
 
   return (
-    <li
-      ref={ref}
-      className="grid grid-cols-4 gap-x-6 gap-y-3 py-5 md:grid-cols-12 md:items-baseline md:py-6"
-    >
-      <div className="col-span-4 md:col-span-5">
+    <li ref={ref} className="flex flex-col gap-3 border-t border-border py-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h3 className="text-card-title-sm font-semibold">{skill.name}</h3>
-        <p className="mt-1 max-w-[45ch] text-base text-muted-foreground">{skill.description}</p>
-      </div>
-      <div className="col-span-4 flex flex-wrap items-center gap-x-4 gap-y-2 md:col-span-7">
-        {years !== null && <ModuleBar years={years} revealed={isRevealed} animate={animate} />}
         <span className="font-mono text-meta text-foreground">
           {years !== null ? labels.years(years) : skill.level}
         </span>
       </div>
+      {years !== null && <ModuleBar years={years} revealed={isRevealed} animate={animate} />}
+      <p className="max-w-[45ch] text-sm text-muted-foreground">{skill.description}</p>
     </li>
   );
 };
@@ -90,7 +85,9 @@ const SkillYears = ({ skills, labels, className }: SkillYearsProps) => {
     (a, b) => (parseYears(b.level) ?? -1) - (parseYears(a.level) ?? -1),
   );
   return (
-    <ol className={cn("divide-y divide-border border-y border-border", className)}>
+    // Two columns from lg: eight single-column rows gave the motif more page
+    // than its information warranted.
+    <ol className={cn("grid grid-cols-1 gap-x-6 border-b border-border lg:grid-cols-2", className)}>
       {rows.map((skill) => (
         <SkillRow key={skill.name} skill={skill} labels={labels} />
       ))}

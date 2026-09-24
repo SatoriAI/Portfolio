@@ -71,7 +71,6 @@ const Academic = () => {
   const threadLabels = {
     advisor: t.academic.advisor,
     researchAreas: t.academic.researchAreas,
-    inProgress: t.academic.inProgress,
   };
   const publicationLabels = { view: t.academic.view };
 
@@ -101,24 +100,16 @@ const Academic = () => {
             />
           </Col>
           <Col as={Reveal} spanLg={5}>
+            <p className="mb-4 text-base text-foreground">{t.academic.figureNotice}</p>
             <HeatKernelFigure labels={t.academic.figure} locale={language} />
           </Col>
         </Grid>
-        <div className="mt-16 md:mt-20">
-          {status ??
-            (schools.length === 0 ? (
-              <StatusMessage variant="empty" message={t.academic.noData} />
-            ) : (
-              <Reveal>
-                <ResearchThread schools={chronological(schools)} labels={threadLabels} />
-              </Reveal>
-            ))}
-        </div>
       </Section>
 
-      {/* Research beyond the doctorate. Each topic faces a figure that is the
-          object itself rather than a picture of it: the cyclic group under a
-          shift, and a qubit under real gates. */}
+      {/* Current work first, so the page opens on a live question rather than
+          a history. Each topic faces a figure that is the object itself rather
+          than a picture of it, with one plain sentence on what to notice
+          before the formal caption. */}
       <Section id="interests">
         <SectionHeading
           eyebrow={`01 / ${t.academic.interests.title}`}
@@ -137,6 +128,9 @@ const Academic = () => {
               ))}
             </Col>
             <Col as={Reveal} spanLg={6}>
+              <p className="mb-4 text-base text-foreground">
+                {t.academic.interests.transformers.figure.notice}
+              </p>
               <CyclicShiftFigure labels={t.academic.interests.transformers.figure} />
             </Col>
           </Grid>
@@ -152,15 +146,32 @@ const Academic = () => {
               ))}
             </Col>
             <Col as={Reveal} spanLg={6}>
+              <p className="mb-4 text-base text-foreground">
+                {t.academic.interests.quantum.figure.notice}
+              </p>
               <QubitFigure labels={t.academic.interests.quantum.figure} />
             </Col>
           </Grid>
         </div>
       </Section>
 
+      {/* The degrees, after the current work: three steps of one line of
+          research, read forward. */}
+      <Section id="education">
+        <SectionHeading eyebrow={`02 / ${t.academic.education}`} title={t.academic.education} />
+        {status ??
+          (schools.length === 0 ? (
+            <StatusMessage variant="empty" message={t.academic.noData} />
+          ) : (
+            <Reveal>
+              <ResearchThread schools={chronological(schools)} labels={threadLabels} />
+            </Reveal>
+          ))}
+      </Section>
+
       <Section id="publications">
         <SectionHeading
-          eyebrow={`02 / ${t.academic.publications}`}
+          eyebrow={`03 / ${t.academic.publications}`}
           title={t.academic.publications}
         />
         {status ??
@@ -179,7 +190,7 @@ const Academic = () => {
 
       <Section id="testimonials">
         <SectionHeading
-          eyebrow={`03 / ${t.academic.studentTestimonials}`}
+          eyebrow={`04 / ${t.academic.studentTestimonials}`}
           title={t.academic.studentTestimonials}
         />
         {status ??

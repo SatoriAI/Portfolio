@@ -36,6 +36,19 @@ export type UiSchool = {
   endDate: string;
 };
 
+// The degree is an untranslated field on the backend; these are the values it
+// holds today, said in Polish. Anything else passes through unchanged.
+const POLISH_DEGREE: Record<string, string> = {
+  "Bachelor's": "Licencjat",
+  "Master's": "Magisterium",
+  "Doctoral Studies": "Studia doktoranckie",
+  PhD: "Doktorat",
+  MSc: "Magisterium",
+};
+
+const degreeLabel = (degree: string, lang: string) =>
+  lang === "pl" ? (POLISH_DEGREE[degree] ?? degree) : degree;
+
 export function mapApiSchoolToUi(school: ApiSchool, language: string): UiSchool {
   const lang = language.toLowerCase();
   const localized = school.translations?.[lang] || school.translations?.["en"] || {};
@@ -69,7 +82,7 @@ export function mapApiSchoolToUi(school: ApiSchool, language: string): UiSchool 
     id: school.id,
     study: localized.study || "",
     university: localized.university || "",
-    degree: school.degree || "",
+    degree: degreeLabel(school.degree || "", lang),
     research: localized.research || "",
     advisor: localized.advisor || "",
     areas,

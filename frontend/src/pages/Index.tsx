@@ -143,9 +143,10 @@ const Index = () => {
           the mathematics is literally running under the engineering. The
           heading and copy still do not move.
 
-          Vex is asked from here rather than from a corner button. A field you
-          can type a question into is the site's unusual thing, so it sits
-          where the eye lands, not behind a launcher. */}
+          The primary action is the work, in the kit's solid navy, directly
+          under the introduction; a review of the first cut found it below the
+          fold behind Vex's starter questions. Vex keeps one compact line here
+          and is otherwise a contextual guide beside each project and role. */}
       <HeatField placement="top" live>
         <Section id="hero" className="pb-8 pt-12 md:pb-10 md:pt-20">
           <Grid gapY={48} className="lg:items-end">
@@ -160,16 +161,8 @@ const Index = () => {
               <p className="mt-5 max-w-[65ch] text-base text-muted-foreground md:text-body-lg">
                 {t.hero.subtitle}
               </p>
-              <AskVexBar
-                className="mt-6 max-w-[40rem]"
-                placeholder={t.hero.askPlaceholder}
-                submitLabel={t.hero.ask}
-                starters={t.chat.starters}
-                onAsk={askVex}
-              />
-              <p className="mt-3 font-mono text-meta text-muted-foreground">{t.hero.askHint}</p>
-              <div className="mt-6 flex flex-wrap items-center gap-3">
-                <Button variant="outline" asChild>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <Button size="lg" asChild>
                   <Link to="/#projects">
                     {t.hero.viewProjects}
                     <ArrowDown />
@@ -193,6 +186,12 @@ const Index = () => {
                   </Button>
                 </div>
               </div>
+              <AskVexBar
+                className="mt-8 max-w-[32rem]"
+                placeholder={t.hero.askPlaceholder}
+                submitLabel={t.hero.ask}
+                onAsk={askVex}
+              />
             </Col>
             <Col spanLg={4} align="end">
               <ProofPoints items={t.hero.proof} />
@@ -207,11 +206,43 @@ const Index = () => {
         </Section>
       </HeatField>
 
+      {/* Projects come first after the hero, as the kit's structure asks:
+          an index of titles with the selected one opened beside them and read
+          in sequence. The images the backend holds are app icons and are shown
+          at icon size. */}
+      <Section id="projects">
+        <SectionHeading
+          eyebrow={`01 / ${t.nav.projects}`}
+          title={t.projects.title}
+          lead={t.projects.subtitle}
+        />
+        <Reveal>
+          <ProjectIndex
+            projects={projects}
+            subtitles={t.projects.subtitles}
+            labels={projectLabels}
+            onAsk={askVex}
+          />
+        </Reveal>
+      </Section>
+
+      {/* Skills, as years. Icon tiles said nothing a visitor could weigh; a
+          row of modules per year, with the running year as the kit's single
+          filled module, is the same data made legible. */}
+      <Section id="skills">
+        <SectionHeading
+          eyebrow={`02 / ${t.nav.skills}`}
+          title={t.skills.title}
+          lead={t.skills.subtitle}
+        />
+        <SkillYears skills={skills} labels={{ years: (count) => formatYears(count, language) }} />
+      </Section>
+
       {/* About. The mark, at a size where it can be read, faces the prose: the
           identity's second layer (0 · 1 → dh) is one hover away, and the copy
           beside it says the same thing in words. */}
       <Section id="about">
-        <SectionHeading eyebrow={`01 / ${t.nav.about}`} title={t.about.title} />
+        <SectionHeading eyebrow={`03 / ${t.nav.about}`} title={t.about.title} />
         <Grid gapY={48}>
           <Col as={Reveal} spanLg={4}>
             <BinaryAxisMark labels={t.about.mark} />
@@ -242,71 +273,6 @@ const Index = () => {
           </Col>
         </Grid>
       </Section>
-
-      {/* Skills, as years. Icon tiles said nothing a visitor could weigh; a
-          row of modules per year, with the running year as the kit's single
-          filled module, is the same data made legible. */}
-      <Section id="skills">
-        <SectionHeading
-          eyebrow={`02 / ${t.nav.skills}`}
-          title={t.skills.title}
-          lead={t.skills.subtitle}
-        />
-        <SkillYears skills={skills} labels={{ years: (count) => formatYears(count, language) }} />
-      </Section>
-
-      {/* Projects, as an index: titles in a column, the selected one opened
-          beside them and read in sequence. The images the backend holds are
-          app icons and are shown at icon size. */}
-      <Section id="projects">
-        <SectionHeading
-          eyebrow={`03 / ${t.nav.projects}`}
-          title={t.projects.title}
-          lead={t.projects.subtitle}
-        />
-        <Reveal>
-          <ProjectIndex projects={projects} labels={projectLabels} onAsk={askVex} />
-        </Reveal>
-      </Section>
-
-      {/* Contact: the same field, at rest, closing the page. No cards: an
-          address set large enough to be the point of the section. */}
-      <HeatField>
-        <Section id="contact">
-          <SectionHeading
-            eyebrow={`04 / ${t.nav.contact}`}
-            title={t.contact.title}
-            lead={t.contact.subtitle2}
-          />
-          <Grid gapY={32}>
-            <Col as={Reveal} spanLg={7}>
-              <a
-                href={`mailto:${EMAIL}`}
-                className="inline-block break-all font-mono text-xl leading-tight text-foreground underline decoration-1 underline-offset-8 transition-colors duration-200 hover:text-iris sm:text-2xl md:text-[2rem]"
-              >
-                {EMAIL}
-              </a>
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Button onClick={() => askVex()}>
-                  <MessageSquare />
-                  {t.hero.askAI}
-                </Button>
-                <Button variant="outline" asChild>
-                  <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
-                    <Github />
-                    github.com/SatoriAI
-                  </a>
-                </Button>
-              </div>
-            </Col>
-            <Col as={Reveal} spanLg={5} delayMs={60}>
-              <p className="max-w-[45ch] text-base text-muted-foreground md:text-body-lg">
-                {t.contact.quickMessageDesc}
-              </p>
-            </Col>
-          </Grid>
-        </Section>
-      </HeatField>
     </PageLayout>
   );
 };

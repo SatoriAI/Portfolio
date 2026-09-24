@@ -11,9 +11,9 @@ export type NavItem = {
 
 /** Sections of the home page, in page order. */
 export const homeSections: readonly NavItem[] = [
-  { labelKey: "about", to: "/#about" },
-  { labelKey: "skills", to: "/#skills" },
   { labelKey: "projects", to: "/#projects" },
+  { labelKey: "skills", to: "/#skills" },
+  { labelKey: "about", to: "/#about" },
   { labelKey: "contact", to: "/#contact" },
 ];
 

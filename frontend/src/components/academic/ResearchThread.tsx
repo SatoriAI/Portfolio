@@ -14,8 +14,6 @@ import { cn } from "@/lib/utils";
 export type ResearchThreadLabels = {
   advisor: string;
   researchAreas: string;
-  /** Appended to the period of a degree not yet finished. */
-  inProgress: string;
 };
 
 type ResearchThreadProps = {
@@ -47,9 +45,7 @@ const ResearchThread = ({ schools, labels, className }: ResearchThreadProps) => 
           />
           <div className="min-w-0">
             <p className="font-mono text-meta text-iris">
-              {[school.degree, school.period, current ? labels.inProgress : null]
-                .filter(Boolean)
-                .join(" · ")}
+              {[school.degree, school.period].filter(Boolean).join(" · ")}
             </p>
             <h3 className="mt-2 text-card-title-sm font-semibold md:text-card-title">
               {school.study}

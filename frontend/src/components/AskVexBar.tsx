@@ -9,7 +9,7 @@ type AskVexBarProps = {
   /** Accessible name of the submit control. */
   submitLabel: string;
   /** Questions a visitor can send with one press, shown under the field. */
-  starters: readonly string[];
+  starters?: readonly string[];
   onAsk: (question: string) => void;
   className?: string;
 };
@@ -23,7 +23,13 @@ type AskVexBarProps = {
  * and the iris focus ring drawn around the whole bar rather than the bare
  * input, so the send button reads as part of the field.
  */
-const AskVexBar = ({ placeholder, submitLabel, starters, onAsk, className }: AskVexBarProps) => {
+const AskVexBar = ({
+  placeholder,
+  submitLabel,
+  starters = [],
+  onAsk,
+  className,
+}: AskVexBarProps) => {
   const [value, setValue] = useState("");
 
   const submit = (event: FormEvent) => {
