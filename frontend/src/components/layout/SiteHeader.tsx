@@ -110,12 +110,12 @@ const SiteHeader = () => {
               >
                 <SheetTitle className="sr-only">{t.common.menu}</SheetTitle>
                 <nav aria-label={t.common.menu} className="mt-8 flex flex-col gap-1">
-                  <p className="px-4 pb-1 font-mono text-meta uppercase tracking-wide text-muted-foreground">
+                  <p className="px-4 pb-1 font-mono text-meta uppercase tracking-widest text-muted-foreground">
                     {t.nav.mainPage}
                   </p>
                   {homeSections.map(renderMobileLink)}
                   <Separator className="my-3" />
-                  <p className="px-4 pb-1 font-mono text-meta uppercase tracking-wide text-muted-foreground">
+                  <p className="px-4 pb-1 font-mono text-meta uppercase tracking-widest text-muted-foreground">
                     {t.nav.pages}
                   </p>
                   {pages.map(renderMobileLink)}

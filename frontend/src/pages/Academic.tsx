@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import CyclicShiftFigure from "@/components/academic/CyclicShiftFigure";
 import HeatKernelFigure from "@/components/academic/HeatKernelFigure";
-import PublicationEntry from "@/components/academic/PublicationEntry";
+import PublicationStack from "@/components/academic/PublicationStack";
 import QubitFigure from "@/components/academic/QubitFigure";
 import QuoteWall from "@/components/academic/QuoteWall";
 import ResearchThread from "@/components/academic/ResearchThread";
@@ -31,6 +31,10 @@ const chronological = (schools: readonly UiSchool[]) =>
  * gathered at the sources.
  */
 const fieldTimeFor = (t: number) => t / 2;
+
+const SECTION_COUNT = 4;
+const eyebrow = (index: number) =>
+  `${String(index).padStart(2, "0")} / ${String(SECTION_COUNT).padStart(2, "0")}`;
 
 /**
  * Research and teaching. The page opens on a heat kernel the visitor can run,
@@ -83,7 +87,12 @@ const Academic = () => {
     advisor: t.academic.advisor,
     researchAreas: t.academic.researchAreas,
   };
-  const publicationLabels = { view: t.academic.view };
+  const publicationLabels = {
+    view: t.academic.view,
+    stack: t.academic.stack,
+    venue: t.academic.venue,
+    year: t.academic.year,
+  };
 
   // All three lists share one request, so they share one status block.
   const status = loading ? (
@@ -103,7 +112,7 @@ const Academic = () => {
           it, so dragging t spreads the heat behind the title too. */}
       <HeatField placement="top" time={fieldTimeFor(fieldTime)}>
         <Section className="pb-12 pt-12 md:pb-16 md:pt-20">
-          <Grid gapY={48} className="lg:items-center">
+          <Grid gapY={48} className="lg:items-start">
             <Col spanLg={5}>
               <SectionHeading
                 level={1}
@@ -114,9 +123,8 @@ const Academic = () => {
               />
             </Col>
             <Col spanLg={7} className="lg:pl-6">
-              <p className="mb-4 text-base text-foreground">{t.academic.figureNotice}</p>
               <HeatKernelFigure
-                labels={t.academic.figure}
+                labels={{ ...t.academic.figure, lead: t.academic.figureNotice }}
                 locale={language}
                 onTimeChange={setFieldTime}
               />
@@ -131,10 +139,7 @@ const Academic = () => {
           visualisation — with one plain sentence on what to notice before the
           formal caption. The two alternate sides. */}
       <Section id="interests">
-        <SectionHeading
-          eyebrow={`01 / ${t.academic.interests.title}`}
-          title={t.academic.interests.title}
-        />
+        <SectionHeading eyebrow={eyebrow(1)} title={t.academic.interests.title} />
         <div className="space-y-20 md:space-y-24">
           <Grid gapY={48} className="lg:items-start">
             <Col spanLg={5} className="space-y-5">
@@ -142,12 +147,12 @@ const Academic = () => {
                 {t.academic.interests.transformers.title}
               </h3>
               {t.academic.interests.transformers.paragraphs.map((paragraph) => (
-                <p key={paragraph} className="max-w-[65ch] text-base text-muted-foreground">
+                <p key={paragraph} className="max-w-[52ch] text-base text-muted-foreground">
                   {paragraph}
                 </p>
               ))}
             </Col>
-            <Col as={Reveal} spanLg={7} className="lg:mt-12">
+            <Col as={Reveal} spanLg={7}>
               <Card tone="lavender">
                 <CardContent className="p-6 md:p-8">
                   <p className="mb-6 text-base text-foreground">
@@ -164,12 +169,12 @@ const Academic = () => {
                 {t.academic.interests.quantum.title}
               </h3>
               {t.academic.interests.quantum.paragraphs.map((paragraph) => (
-                <p key={paragraph} className="max-w-[65ch] text-base text-muted-foreground">
+                <p key={paragraph} className="max-w-[52ch] text-base text-muted-foreground">
                   {paragraph}
                 </p>
               ))}
             </Col>
-            <Col as={Reveal} spanLg={7} className="lg:mt-12">
+            <Col as={Reveal} spanLg={7}>
               <Card tone="lavender">
                 <CardContent className="p-6 md:p-8">
                   <p className="mb-6 text-base text-foreground">
@@ -186,7 +191,7 @@ const Academic = () => {
       {/* The degrees, on a white band after the current work: three steps of
           one line of research, read left to right. */}
       <Section id="education" tone="surface">
-        <SectionHeading eyebrow={`02 / ${t.academic.education}`} title={t.academic.education} />
+        <SectionHeading eyebrow={eyebrow(2)} title={t.academic.education} />
         {status ??
           (schools.length === 0 ? (
             <StatusMessage variant="empty" message={t.academic.noData} />
@@ -199,31 +204,25 @@ const Academic = () => {
 
       <Section id="publications">
         <SectionHeading
-          eyebrow={`03 / ${t.academic.publications}`}
+          eyebrow={eyebrow(3)}
           title={t.academic.publications}
+          lead={t.academic.publicationsLead}
         />
         {status ??
           (publications.length === 0 ? (
             <StatusMessage variant="empty" message={t.academic.noPublications} />
           ) : (
-            <Grid gapY={32}>
-              {publications.map((publication, index) => (
-                <Col as={Reveal} key={publication.id} spanMd={6} delayMs={Math.min(index, 2) * 60}>
-                  <PublicationEntry publication={publication} labels={publicationLabels} />
-                </Col>
-              ))}
-            </Grid>
+            <Reveal>
+              <PublicationStack publications={publications} labels={publicationLabels} />
+            </Reveal>
           ))}
       </Section>
 
       {/* The students' words close the page on the field at rest, the same
           bookend the home page uses. */}
       <HeatField>
-        <Section id="testimonials">
-          <SectionHeading
-            eyebrow={`04 / ${t.academic.studentTestimonials}`}
-            title={t.academic.studentTestimonials}
-          />
+        <Section id="testimonials" className="py-12 md:py-20">
+          <SectionHeading eyebrow={eyebrow(4)} title={t.academic.studentTestimonials} />
           {status ??
             (testimonials.length === 0 ? (
               <StatusMessage variant="empty" message={t.academic.noTestimonials} />

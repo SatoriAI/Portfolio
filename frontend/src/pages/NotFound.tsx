@@ -25,7 +25,7 @@ const NotFound = () => {
     <PageLayout className="flex items-center">
       <Section className="w-full">
         <Reveal className="max-w-2xl">
-          <p className="mb-4 font-mono text-meta uppercase tracking-wide text-iris">404</p>
+          <p className="mb-4 font-mono text-meta uppercase tracking-widest text-iris">404</p>
           <h1 className="text-display-sm md:text-display">{t.notFound.title}</h1>
           <p className="mt-6 max-w-[55ch] text-base text-muted-foreground md:text-body-lg">
             {t.notFound.body}

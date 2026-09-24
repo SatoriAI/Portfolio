@@ -91,7 +91,7 @@ const copy = {
       paragraph1:
         "Mathematics taught me to distrust anything I cannot prove; engineering taught me that a proof nobody can run is worth little. I work in the space between the two: production backends and AI systems built with the care of a research argument, and research questions approached with an engineer's insistence on something that actually works. Teaching sits alongside both — explaining a hard idea simply is the best test of whether you understand it.",
       paragraph2:
-        "Day to day that means Python — Django, FastAPI, SQLAlchemy — and the infrastructure around it: API design, data modeling, CI/CD pipelines and cloud deployments. I value clean code, automation and documentation, and I am most at home where backend development, DevOps and data-driven applications meet. Emerging areas such as LLMs, distributed systems and cryptography are where my curiosity currently points.",
+        "Day to day that means Python — Django, FastAPI, SQLAlchemy — and the infrastructure around it: API design, data modelling, CI/CD and cloud deployments. LLMs, distributed systems and cryptography are where my curiosity currently points.",
       mark: {
         toggle: "Show how the mark reads as 0 and 1",
         zero: "0",
@@ -163,9 +163,8 @@ const copy = {
         transformers: {
           title: "Mathematical structure in transformers",
           paragraphs: [
-            "I study how transformers learn to generalise on tasks with algebraic structure. In a project on grokking, I analyse models trained on modular addition over the cyclic group ℤ₁₁₃. The central question is whether, as generalisation emerges, the model's hidden activations begin to encode cyclic shifts — and whether this structure can be tracked throughout training and across network layers.",
-            "In my experiments, I analyse model activations at different stages of training, fit operators that describe shifts, and compare how these operators behave across layers. Preliminary results across three random seeds suggest that, after grokking, selected activation subspaces capture the dynamics of cyclic shifts. This structure emerges near the transition to generalisation, and its transport is particularly coherent between a later layer and the model's output.",
-            "The project also develops a mathematical account of this phenomenon. I have derived a result showing that exact intertwiners between group representations preserve the corresponding isotypic components. For cyclic groups, a related bound connects approximate agreement between group actions across layers with the transport of Fourier components. I am now investigating how well this relationship explains the empirical results. In particular, the strict representation law for the model's activations has not yet been fully established, and the experiments do not show that the observed structure causes generalisation.",
+            "I study how transformers learn to generalise on tasks with algebraic structure: models trained on modular addition over ℤ₁₁₃, watched through grokking. The question is whether, as generalisation appears, the hidden activations begin to encode cyclic shifts, and whether that structure can be tracked through training and across layers. Across three seeds, after grokking, selected activation subspaces do carry the dynamics of cyclic shifts, most coherently between a late layer and the output.",
+            "The mathematics runs alongside. Exact intertwiners between group representations preserve the isotypic components, and for cyclic groups a bound connects approximate agreement between layers with the transport of Fourier components. How far that explains the experiments is the open question: the strict representation law is not yet established, and nothing shows that the structure causes generalisation.",
           ],
           figure: {
             figure: "The cyclic group of order 113 with one Fourier mode, under a shift",
@@ -180,9 +179,8 @@ const copy = {
         quantum: {
           title: "Quantum computing and quantum algorithms",
           paragraphs: [
-            "I am building my knowledge of quantum computing, from its basic concepts to the theory and implementation of quantum algorithms. My planned learning path combines three perspectives: an intuitive understanding of qubits and interference, a formal treatment of quantum computation, and practical experience programming and simulating quantum circuits.",
-            "I am especially interested in the mathematical structure of the field: quantum states as vectors or operators, unitary evolution, measurement, and the role of linear algebra and operator theory. Potential areas for further specialisation include quantum information theory, quantum error correction, and quantum machine learning. My goal is to build a strong foundation first, then choose a problem that can be studied theoretically or through controlled computational experiments.",
-            "At this stage, I consider quantum computing a developing area of interest and a direction for future research, rather than a completed project with original results.",
+            "I am building my knowledge of quantum computing from the basic concepts to the theory and implementation of quantum algorithms, along three lines at once: an intuition for qubits and interference, a formal treatment of quantum computation, and practice programming and simulating circuits.",
+            "What draws me is the mathematical structure: states as vectors or operators, unitary evolution, measurement, and the operator theory underneath. Quantum information, error correction and quantum machine learning are the likely directions. For now this is a direction for future research, not a project with results.",
           ],
           figure: {
             figure: "One qubit on the Bloch sphere, with gates to apply",
@@ -205,6 +203,11 @@ const copy = {
         time: "time t",
       },
       education: "Education",
+      stack: "Publications, as a stack of files",
+      venue: "Venue",
+      year: "Year",
+      publicationsLead:
+        "Two papers on sharp estimates for Jacobi heat kernels: on the cone, then on the double cone. Open one.",
       figureNotice:
         "What to notice: the peak drops fast at first and slowly later, and the whole curve settles onto the dashed mean.",
       quotes: { open: "“", close: "”" },
@@ -315,7 +318,7 @@ const copy = {
       paragraph1:
         "Matematyka nauczyła mnie nie ufać niczemu, czego nie potrafię udowodnić; inżynieria — że dowód, którego nikt nie może uruchomić, jest niewiele wart. Pracuję pomiędzy tymi dwoma światami: buduję produkcyjne backendy i systemy AI ze starannością badawczego wywodu, a do pytań naukowych podchodzę z inżynierskim uporem, żeby coś naprawdę działało. Obok tego jest nauczanie — proste wyjaśnienie trudnej idei to najlepszy sprawdzian, czy się ją rozumie.",
       paragraph2:
-        "Na co dzień oznacza to Pythona — Django, FastAPI, SQLAlchemy — i infrastrukturę wokół niego: projektowanie API, modelowanie danych, pipeline'y CI/CD i wdrożenia w chmurze. Cenię czysty kod, automatyzację i dokumentację, a najlepiej czuję się tam, gdzie spotykają się backend, DevOps i aplikacje oparte na danych. Moja ciekawość kieruje się dziś ku rozwijającym się obszarom: LLM-om, systemom rozproszonym i kryptografii.",
+        "Na co dzień oznacza to Pythona — Django, FastAPI, SQLAlchemy — i infrastrukturę wokół niego: projektowanie API, modelowanie danych, CI/CD i wdrożenia w chmurze. Moja ciekawość kieruje się dziś ku LLM-om, systemom rozproszonym i kryptografii.",
       mark: {
         toggle: "Pokaż, jak znak czyta się jako 0 i 1",
         zero: "0",
@@ -386,9 +389,8 @@ const copy = {
         transformers: {
           title: "Struktura matematyczna w transformerach",
           paragraphs: [
-            "Badam, jak transformery uczą się generalizować na zadaniach o strukturze algebraicznej. W projekcie dotyczącym grokkingu analizuję modele trenowane na dodawaniu modularnym w grupie cyklicznej ℤ₁₁₃. Główne pytanie brzmi: czy wraz z pojawieniem się generalizacji ukryte aktywacje modelu zaczynają kodować przesunięcia cykliczne — i czy tę strukturę da się śledzić w trakcie treningu i pomiędzy warstwami sieci.",
-            "W eksperymentach analizuję aktywacje modelu na różnych etapach treningu, dopasowuję operatory opisujące przesunięcia i porównuję, jak zachowują się one pomiędzy warstwami. Wstępne wyniki dla trzech ziaren losowych sugerują, że po grokkingu wybrane podprzestrzenie aktywacji oddają dynamikę przesunięć cyklicznych. Struktura ta pojawia się w pobliżu przejścia do generalizacji, a jej transport jest szczególnie spójny między jedną z późniejszych warstw a wyjściem modelu.",
-            "Projekt rozwija także matematyczny opis tego zjawiska. Wyprowadziłem wynik pokazujący, że dokładne operatory splatające między reprezentacjami grupy zachowują odpowiadające im składowe izotypowe. Dla grup cyklicznych pokrewne oszacowanie wiąże przybliżoną zgodność działań grupy pomiędzy warstwami z transportem składowych Fouriera. Obecnie badam, na ile ta zależność wyjaśnia wyniki empiryczne. W szczególności ścisłe prawo reprezentacji dla aktywacji modelu nie zostało jeszcze w pełni ustalone, a eksperymenty nie pokazują, że zaobserwowana struktura jest przyczyną generalizacji.",
+            "Badam, jak transformery uczą się generalizować na zadaniach o strukturze algebraicznej: modele trenowane na dodawaniu modularnym w ℤ₁₁₃, obserwowane przez grokking. Pytanie brzmi, czy wraz z pojawieniem się generalizacji ukryte aktywacje zaczynają kodować przesunięcia cykliczne i czy tę strukturę da się śledzić w trakcie treningu i pomiędzy warstwami. Dla trzech ziaren losowych, po grokkingu, wybrane podprzestrzenie aktywacji rzeczywiście niosą dynamikę przesunięć cyklicznych, najspójniej między jedną z późnych warstw a wyjściem modelu.",
+            "Równolegle idzie matematyka. Dokładne operatory splatające między reprezentacjami grupy zachowują składowe izotypowe, a dla grup cyklicznych oszacowanie wiąże przybliżoną zgodność między warstwami z transportem składowych Fouriera. Na ile to wyjaśnia eksperymenty, pozostaje pytaniem otwartym: ścisłe prawo reprezentacji nie jest jeszcze ustalone, a nic nie pokazuje, że ta struktura jest przyczyną generalizacji.",
           ],
           figure: {
             figure:
@@ -404,9 +406,8 @@ const copy = {
         quantum: {
           title: "Obliczenia kwantowe i algorytmy kwantowe",
           paragraphs: [
-            "Buduję swoją wiedzę o obliczeniach kwantowych: od podstawowych pojęć po teorię i implementację algorytmów kwantowych. Zaplanowana ścieżka nauki łączy trzy perspektywy: intuicyjne rozumienie kubitów i interferencji, formalne ujęcie obliczeń kwantowych oraz praktykę w programowaniu i symulowaniu obwodów kwantowych.",
-            "Szczególnie interesuje mnie matematyczna struktura tej dziedziny: stany kwantowe jako wektory lub operatory, ewolucja unitarna, pomiar oraz rola algebry liniowej i teorii operatorów. Możliwe kierunki dalszej specjalizacji to kwantowa teoria informacji, kwantowa korekcja błędów i kwantowe uczenie maszynowe. Moim celem jest najpierw zbudować solidne podstawy, a potem wybrać problem, który da się badać teoretycznie lub w kontrolowanych eksperymentach obliczeniowych.",
-            "Na tym etapie traktuję obliczenia kwantowe jako rozwijający się obszar zainteresowań i kierunek przyszłych badań, a nie zamknięty projekt z własnymi wynikami.",
+            "Buduję swoją wiedzę o obliczeniach kwantowych od podstawowych pojęć po teorię i implementację algorytmów kwantowych, trzema torami naraz: intuicja kubitów i interferencji, formalne ujęcie obliczeń kwantowych oraz praktyka w programowaniu i symulowaniu obwodów.",
+            "Przyciąga mnie struktura matematyczna: stany jako wektory lub operatory, ewolucja unitarna, pomiar i stojąca za tym teoria operatorów. Prawdopodobne kierunki to kwantowa teoria informacji, korekcja błędów i kwantowe uczenie maszynowe. Na razie to kierunek przyszłych badań, nie projekt z wynikami.",
           ],
           figure: {
             figure: "Jeden kubit na sferze Blocha, z bramkami do zastosowania",
@@ -429,6 +430,11 @@ const copy = {
         time: "czas t",
       },
       education: "Wykształcenie",
+      stack: "Publikacje jako stos akt",
+      venue: "Miejsce publikacji",
+      year: "Rok",
+      publicationsLead:
+        "Dwa artykuły o ostrych oszacowaniach jąder ciepła Jacobiego: na stożku, potem na podwójnym stożku. Otwórz jeden.",
       figureNotice:
         "Na co patrzeć: szczyt opada najpierw szybko, potem powoli, a cała krzywa osiada na przerywanej średniej.",
       quotes: { open: "„", close: "”" },

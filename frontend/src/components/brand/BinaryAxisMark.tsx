@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { cn } from "@/lib/utils";
 
 /**
@@ -18,6 +19,11 @@ import { cn } from "@/lib/utils";
  * Path data is the kit's standard cut, unchanged. Guides use
  * `vector-effect: non-scaling-stroke` so they stay the 1px of the rhythm motif
  * at any rendered size.
+ *
+ * On first sight the mark draws itself: the bowl first, then the shoulder,
+ * the order a hand would take. That is an entrance, not an effect on the
+ * mark — the finished form is exactly the kit's — and it is skipped under
+ * reduced motion or when the mark is already on screen at load.
  */
 
 const BOWL = "M49 18V77H31A17.5 17.5 0 0 1 31 42H49";
@@ -45,6 +51,14 @@ const BinaryAxisMark = ({ labels, className }: BinaryAxisMarkProps) => {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const open = pinned || hovered || focused;
+  const { ref, isRevealed, isInitiallyVisible, prefersReducedMotion } =
+    useScrollReveal<HTMLButtonElement>();
+  const animateEntrance = !prefersReducedMotion && !isInitiallyVisible;
+  const drawn = !animateEntrance || isRevealed;
+  const strokeClassName = cn(
+    animateEntrance && "transition-[stroke-dashoffset] duration-700 ease-brand",
+    drawn ? "[stroke-dashoffset:0]" : "[stroke-dashoffset:1]",
+  );
 
   const guideClassName = cn(
     "stroke-iris transition-[stroke-dashoffset,opacity] duration-400 ease-brand motion-reduce:transition-none",
@@ -59,6 +73,7 @@ const BinaryAxisMark = ({ labels, className }: BinaryAxisMarkProps) => {
 
   return (
     <button
+      ref={ref}
       type="button"
       aria-pressed={pinned}
       aria-label={labels.toggle}
@@ -72,7 +87,7 @@ const BinaryAxisMark = ({ labels, className }: BinaryAxisMarkProps) => {
         className,
       )}
     >
-      <svg viewBox="-14 -18 140 124" className="block h-auto w-full" aria-hidden="true">
+      <svg viewBox="-14 -12 140 118" className="block h-auto w-full" aria-hidden="true">
         {/* Annotation, under the mark so the ink always wins where they cross. */}
         <g fill="none" strokeWidth={1} vectorEffect="non-scaling-stroke">
           <circle
@@ -132,8 +147,14 @@ const BinaryAxisMark = ({ labels, className }: BinaryAxisMarkProps) => {
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <path d={BOWL} />
-          <path d={SHOULDER} />
+          <path d={BOWL} pathLength={1} strokeDasharray={1} className={strokeClassName} />
+          <path
+            d={SHOULDER}
+            pathLength={1}
+            strokeDasharray={1}
+            className={strokeClassName}
+            style={animateEntrance ? { transitionDelay: "500ms" } : undefined}
+          />
         </g>
       </svg>
     </button>

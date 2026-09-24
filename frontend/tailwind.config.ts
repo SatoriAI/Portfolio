@@ -89,6 +89,9 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
         card: "20px",
+        // The kit's smallest radius, for motif modules. `rounded-sm` here is
+        // calc(var(--radius) - 4px) = 8px, which turned every module into a pebble.
+        motif: "2px",
       },
       // Elevation, per the kit: every shadow is cast in ink rather than neutral
       // black, because a grey shadow over this palette reads as dirt. `lift`

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import {
   applyGate,
   blochVector,
@@ -30,7 +31,8 @@ import { cn } from "@/lib/utils";
  *
  * The sphere is drawn in the kit's motif vocabulary — 1px lines, the state's
  * tip as the single navy dot — in a slightly tilted orthographic projection so
- * the y axis reads as depth.
+ * the y axis reads as depth. On first sight it draws itself: the outline,
+ * the equator, the axes, then the vector rising to |0⟩.
  */
 
 const GATE_ORDER: GateName[] = ["H", "X", "Z", "S", "T"];
@@ -68,6 +70,18 @@ type QubitFigureProps = {
 
 const QubitFigure = ({ labels, className }: QubitFigureProps) => {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const { ref, isRevealed, isInitiallyVisible } = useScrollReveal<HTMLElement>();
+  const animateEntrance = !prefersReducedMotion && !isInitiallyVisible;
+  const built = !animateEntrance || isRevealed;
+  const drawClassName = (delayMs: number) => ({
+    className: cn(
+      animateEntrance && "transition-[stroke-dashoffset] duration-700 ease-brand",
+      built ? "[stroke-dashoffset:0]" : "[stroke-dashoffset:1]",
+    ),
+    style: animateEntrance ? { transitionDelay: `${delayMs}ms` } : undefined,
+    pathLength: 1,
+    strokeDasharray: 1,
+  });
   const [state, setState] = useState<Qubit>(ZERO);
   const [circuit, setCircuit] = useState<GateName[]>([]);
   // The drawn vector lags the state while a gate turns it.
@@ -122,21 +136,48 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
   const behind = drawn[1] < 0;
 
   return (
-    <figure aria-label={labels.figure} className={cn("w-full", className)}>
+    <figure ref={ref} aria-label={labels.figure} className={cn("w-full", className)}>
       <div className="grid gap-6 sm:grid-cols-[minmax(0,260px)_1fr] sm:items-start">
         <svg viewBox="0 0 260 240" className="block h-auto w-full max-w-[260px]" aria-hidden="true">
           <g fill="none" strokeWidth={1} vectorEffect="non-scaling-stroke">
-            <circle cx={CX} cy={CY} r={R} className="stroke-control-border" />
+            <circle
+              cx={CX}
+              cy={CY}
+              r={R}
+              {...drawClassName(0)}
+              className={cn("stroke-control-border", drawClassName(0).className)}
+            />
+            {/* The equator's dash pattern is drawn by opacity rather than by
+                offset, since a dash offset would fight its own dashes. */}
             <ellipse
               cx={CX}
               cy={CY}
               rx={R}
               ry={R * TILT}
-              className="stroke-control-border"
               strokeDasharray="3 4"
+              style={animateEntrance ? { transitionDelay: "500ms" } : undefined}
+              className={cn(
+                "stroke-control-border",
+                animateEntrance && "transition-opacity duration-400 ease-brand",
+                built ? "opacity-100" : "opacity-0",
+              )}
             />
-            <line x1={CX} y1={CY - R} x2={CX} y2={CY + R} className="stroke-border" />
-            <line x1={CX - R} y1={CY} x2={CX + R} y2={CY} className="stroke-border" />
+            <line
+              x1={CX}
+              y1={CY - R}
+              x2={CX}
+              y2={CY + R}
+              {...drawClassName(300)}
+              className={cn("stroke-border", drawClassName(300).className)}
+            />
+            <line
+              x1={CX - R}
+              y1={CY}
+              x2={CX + R}
+              y2={CY}
+              {...drawClassName(450)}
+              className={cn("stroke-border", drawClassName(450).className)}
+            />
           </g>
           <g className="fill-muted-foreground font-mono" fontSize={10}>
             <text x={CX} y={CY - R - 6} textAnchor="middle">
@@ -167,21 +208,28 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
               y1={CY}
               x2={tip.x}
               y2={tip.y}
-              className={cn("stroke-iris", behind && "opacity-60")}
               strokeWidth={2}
+              {...drawClassName(800)}
+              className={cn("stroke-iris", behind && "opacity-60", drawClassName(800).className)}
             />
           </g>
           <circle
             cx={tip.x}
             cy={tip.y}
             r={5}
-            className={cn("fill-primary", behind && "opacity-70")}
+            style={animateEntrance ? { transitionDelay: "1300ms" } : undefined}
+            className={cn(
+              "fill-primary",
+              behind && "opacity-70",
+              animateEntrance && "transition-opacity duration-400 ease-brand",
+              !built && "opacity-0",
+            )}
           />
         </svg>
 
         <div className="space-y-5">
           <div>
-            <p className="mb-2 font-mono text-meta uppercase tracking-wide text-muted-foreground">
+            <p className="mb-2 font-mono text-meta uppercase tracking-widest text-muted-foreground">
               {labels.gates}
             </p>
             <div className="flex flex-wrap gap-2">
@@ -203,7 +251,7 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
           </div>
           <dl className="space-y-2 font-mono text-sm">
             <div>
-              <dt className="text-meta uppercase tracking-wide text-muted-foreground">
+              <dt className="text-meta uppercase tracking-widest text-muted-foreground">
                 {labels.circuit}
               </dt>
               <dd className="mt-1 text-foreground" aria-live="polite">
@@ -211,7 +259,7 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
               </dd>
             </div>
             <div>
-              <dt className="text-meta uppercase tracking-wide text-muted-foreground">
+              <dt className="text-meta uppercase tracking-widest text-muted-foreground">
                 {labels.state}
               </dt>
               <dd className="mt-1 text-foreground">
@@ -224,7 +272,7 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
           </dl>
         </div>
       </div>
-      <figcaption className="mt-4 max-w-[60ch] font-mono text-meta text-muted-foreground">
+      <figcaption className="mt-4 max-w-[48ch] text-sm text-muted-foreground">
         {labels.caption}
       </figcaption>
     </figure>

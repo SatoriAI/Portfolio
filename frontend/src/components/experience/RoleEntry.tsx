@@ -32,7 +32,9 @@ const RoleEntry = ({ experience, labels, onAsk }: RoleEntryProps) => (
     id={`role-${experience.id}`}
     className="grid scroll-mt-24 grid-cols-4 gap-x-6 gap-y-6 border-t border-border py-10 md:grid-cols-12 md:py-12"
   >
-    <header className="col-span-4 md:col-span-4">
+    {/* Sticky from md: the facts stay beside the paragraph they describe as it
+        scrolls, and the column no longer sits empty under three lines. */}
+    <header className="col-span-4 md:sticky md:top-24 md:col-span-4 md:self-start">
       <p className="font-mono text-meta text-iris">
         {experience.period}
         {experience.location && ` · ${experience.location}`}
@@ -41,25 +43,37 @@ const RoleEntry = ({ experience, labels, onAsk }: RoleEntryProps) => (
         {experience.company}
       </h2>
       <p className="mt-1 text-base text-muted-foreground">{experience.position}</p>
+      {experience.technologies.length > 0 && (
+        <div className="mt-6">
+          <h3 className="mb-2 font-mono text-meta uppercase tracking-widest text-muted-foreground">
+            {labels.technologies}
+          </h3>
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-sm text-foreground md:max-w-[28ch]">
+            {experience.technologies.map((tech) => (
+              <li key={tech}>{tech}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </header>
 
     <div className="col-span-4 space-y-8 md:col-span-8 lg:col-span-7">
       {experience.description && (
-        <p className="max-w-[65ch] text-base text-muted-foreground md:text-body-lg">
+        <p className="max-w-[52ch] text-base text-muted-foreground md:text-body-lg">
           {experience.description}
         </p>
       )}
       {experience.achievements.length > 0 && (
         <div>
-          <h3 className="mb-3 font-mono text-meta uppercase tracking-wide text-muted-foreground">
+          <h3 className="mb-3 font-mono text-meta uppercase tracking-widest text-muted-foreground">
             {labels.keyAchievements}
           </h3>
           <ul className="space-y-3">
             {experience.achievements.map((achievement) => (
-              <li key={achievement} className="flex max-w-[65ch] gap-4 text-foreground">
+              <li key={achievement} className="flex max-w-[52ch] gap-4 text-foreground">
                 <span
                   aria-hidden="true"
-                  className="mt-2.5 h-2 w-2 shrink-0 rounded-sm bg-primary"
+                  className="mt-2.5 h-2 w-2 shrink-0 rounded-motif bg-primary"
                 />
                 <span>{achievement}</span>
               </li>
@@ -67,22 +81,9 @@ const RoleEntry = ({ experience, labels, onAsk }: RoleEntryProps) => (
           </ul>
         </div>
       )}
-      {experience.technologies.length > 0 && (
-        <div>
-          <h3 className="mb-2 font-mono text-meta uppercase tracking-wide text-muted-foreground">
-            {labels.technologies}
-          </h3>
-          <ul className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-sm text-foreground">
-            {experience.technologies.map((tech) => (
-              <li key={tech}>{tech}</li>
-            ))}
-          </ul>
-        </div>
-      )}
       <Button
         variant="link"
-        size="sm"
-        className="font-medium"
+        className="h-auto whitespace-normal text-left text-sm font-medium"
         onClick={() => onAsk(fill(labels.askVexQuestion, experience.company))}
       >
         <MessageSquare />

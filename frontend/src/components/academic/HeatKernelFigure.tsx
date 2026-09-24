@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
  *   K_t(x, y) = 1/π + (2/π) Σ e^(−n²t) cos(nx) cos(ny),
  *
  * which is the kernel the bachelor's thesis estimated. The figure shows it for
- * a fixed y at a time t the visitor controls: a scrubber runs t from 0.01 to
+ * a fixed y at a time t the visitor controls: a scrubber runs t from 0.02 to
  * 2, and the curve is recomputed from the series at every step. Heat placed
  * at one point spreads and flattens towards the mean, 1/π, drawn as the dashed
  * line. Four reference times stay as hairlines so the path of the collapse is
@@ -23,16 +23,17 @@ import { cn } from "@/lib/utils";
  *
  * The time is reported outward through `onTimeChange`; the Research page hands
  * it to the heat field behind its header, so the plot and the background are
- * the same equation at the same t. The figure runs once from t = 0.01 to 2 on
+ * the same equation at the same t. The figure runs once from t = 0.02 to 2 on
  * mount, then waits; under reduced motion it starts at rest and moves only
  * when the visitor moves it.
  *
- * The series is truncated at n = 60; at t = 0.01 the dropped terms are below
- * e^(−36). The scrubber is logarithmic in t, since the interesting part of the
+ * The series is truncated at n = 60; at t = 0.02 the dropped terms are below
+ * e^(−72). The scrubber is logarithmic in t, since the interesting part of the
  * collapse happens in the first tenth of the range.
  */
 
-const T_MIN = 0.01;
+// 0.02 rather than 0.01: at 0.01 the peak stands above the plot and clips flat.
+const T_MIN = 0.02;
 const T_MAX = 2;
 const REFERENCE_TIMES = [0.02, 0.1, 0.5, 2] as const;
 const SOURCE = 1.0;
@@ -73,6 +74,8 @@ type HeatKernelFigureLabels = {
   /** Accessible name of the figure. */
   figure: string;
   caption: string;
+  /** One plain sentence on what to notice, set before the formal caption. */
+  lead?: string;
   /** The play control. */
   play: string;
   /** The scrubber's label, e.g. "time t". */
@@ -237,15 +240,16 @@ const HeatKernelFigure = ({ labels, locale, onTimeChange, className }: HeatKerne
             className={cn(
               "h-6 w-full min-w-0 cursor-pointer appearance-none bg-transparent",
               "[&::-webkit-slider-runnable-track]:h-px [&::-webkit-slider-runnable-track]:bg-control-border",
-              "[&::-webkit-slider-thumb]:-mt-[7px] [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-sm [&::-webkit-slider-thumb]:bg-primary",
+              "[&::-webkit-slider-thumb]:-mt-[7px] [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-motif [&::-webkit-slider-thumb]:bg-primary",
               "[&::-moz-range-track]:h-px [&::-moz-range-track]:bg-control-border",
-              "[&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-sm [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-primary",
+              "[&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-motif [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-primary",
               "focus-visible:outline-none focus-visible:[&::-webkit-slider-thumb]:ring-2 focus-visible:[&::-webkit-slider-thumb]:ring-ring focus-visible:[&::-webkit-slider-thumb]:ring-offset-2",
             )}
           />
         </label>
       </div>
-      <figcaption className="mt-4 max-w-[60ch] font-mono text-meta text-muted-foreground">
+      <figcaption className="mt-4 max-w-[48ch] text-sm text-muted-foreground">
+        {labels.lead && <span className="mb-2 block text-base text-foreground">{labels.lead}</span>}
         {labels.caption}
       </figcaption>
     </figure>

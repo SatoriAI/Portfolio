@@ -27,7 +27,7 @@ const ProofPoints = ({ items }: ProofPointsProps) => (
       <li key={item.label} className="flex items-baseline gap-3 lg:block">
         <span
           aria-hidden="true"
-          className="h-2 w-2 shrink-0 translate-y-[-1px] rounded-sm bg-primary lg:mr-4 lg:inline-block"
+          className="h-2 w-2 shrink-0 translate-y-[-1px] rounded-motif bg-primary lg:mr-4 lg:inline-block"
         />
         <span className="font-mono text-2xl text-foreground">{item.value}</span>
         {/* Bullet (8) + lg:mr-4 (16) = 24, so the label sits exactly under the value. */}

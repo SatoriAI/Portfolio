@@ -49,9 +49,10 @@ export function mapApiExperienceToUi(experience: ApiExperience, language: string
   };
 
   const startYear = formatDate(experience.start);
-  const presentLabel = lang === "pl" ? "Obecnie" : "Present";
+  const presentLabel = lang === "pl" ? "obecnie" : "present";
   const endYear = experience.end ? formatDate(experience.end) : presentLabel;
-  const period = `${startYear} - ${endYear}`;
+  // An en dash, closed up: the typographic range, not a hyphen with spaces.
+  const period = `${startYear}–${endYear}`;
 
   return {
     id: experience.id,

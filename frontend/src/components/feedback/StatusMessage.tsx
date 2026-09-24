@@ -44,7 +44,7 @@ const StatusMessage = ({
             <Inbox className="h-6 w-6" />
           )}
         </span>
-        <p className="max-w-[45ch] text-base text-muted-foreground md:text-body-lg">{message}</p>
+        <p className="max-w-[38ch] text-base text-muted-foreground md:text-body-lg">{message}</p>
         {variant === "error" && onRetry && retryLabel && (
           <Button variant="outline" onClick={onRetry}>
             {retryLabel}

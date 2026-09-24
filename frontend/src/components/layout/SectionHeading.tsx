@@ -29,13 +29,13 @@ const SectionHeading = ({
   return (
     <Reveal className={cn("mb-8 md:mb-12", centered && "text-center", className)}>
       {eyebrow && (
-        <p className="mb-3 font-mono text-meta uppercase tracking-wide text-iris">{eyebrow}</p>
+        <p className="mb-3 font-mono text-meta uppercase tracking-widest text-iris">{eyebrow}</p>
       )}
       <Heading className={cn("text-h2-sm md:text-h2", centered && "mx-auto")}>{title}</Heading>
       {lead && (
         <p
           className={cn(
-            "mt-4 max-w-[65ch] text-base text-muted-foreground md:text-body-lg",
+            "mt-4 max-w-[52ch] text-base text-muted-foreground md:text-body-lg",
             centered && "mx-auto",
           )}
         >

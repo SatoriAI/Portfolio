@@ -36,6 +36,12 @@ import { formatYears } from "@/lib/skillYears";
 import { translations } from "@/utils/translations";
 
 const GITHUB_URL = "https://github.com/SatoriAI";
+
+/** "A. B." → ["A.", "B."]: the brand line's two declaratives, one per line. */
+const clauses = (title: string) => title.match(/[^.]+\.?/g)?.map((c) => c.trim()) ?? [title];
+const SECTION_COUNT = 4;
+const eyebrow = (index: number) =>
+  `${String(index).padStart(2, "0")} / ${String(SECTION_COUNT).padStart(2, "0")}`;
 const EMAIL = "dawidhanrahan@gmail.com";
 
 const sampleSkills: UiSkill[] = [
@@ -153,12 +159,20 @@ const Index = () => {
             {/* No max-width here: the column is the measure. The subtitle keeps
                 its own 65ch cap, and a width cap on the column would pull it off
                 the grid axis. */}
-            <Col spanLg={8}>
-              <p className="mb-4 font-mono text-meta uppercase tracking-wide text-iris">
+            <Col spanLg={9}>
+              <p className="mb-4 font-mono text-meta uppercase tracking-widest text-iris">
                 Dawid Hanrahan
               </p>
-              <h1 className="text-display-sm md:text-display">{t.hero.title}</h1>
-              <p className="mt-5 max-w-[65ch] text-base text-muted-foreground md:text-body-lg">
+              {/* One clause per line: the line is two declaratives, and a wrap
+                  inside a clause broke it into three uneven pieces. */}
+              <h1 className="text-display-sm md:text-display">
+                {clauses(t.hero.title).map((clause) => (
+                  <span key={clause} className="block">
+                    {clause}
+                  </span>
+                ))}
+              </h1>
+              <p className="mt-5 max-w-[52ch] text-base text-muted-foreground md:text-body-lg">
                 {t.hero.subtitle}
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -193,7 +207,7 @@ const Index = () => {
                 onAsk={askVex}
               />
             </Col>
-            <Col spanLg={4} align="end">
+            <Col spanLg={3} align="end">
               <ProofPoints items={t.hero.proof} />
             </Col>
           </Grid>
@@ -211,11 +225,7 @@ const Index = () => {
           in sequence. The images the backend holds are app icons and are shown
           at icon size. */}
       <Section id="projects">
-        <SectionHeading
-          eyebrow={`01 / ${t.nav.projects}`}
-          title={t.projects.title}
-          lead={t.projects.subtitle}
-        />
+        <SectionHeading eyebrow={eyebrow(1)} title={t.projects.title} lead={t.projects.subtitle} />
         <Reveal>
           <ProjectIndex
             projects={projects}
@@ -230,11 +240,7 @@ const Index = () => {
           row of modules per year, with the running year as the kit's single
           filled module, is the same data made legible. */}
       <Section id="skills">
-        <SectionHeading
-          eyebrow={`02 / ${t.nav.skills}`}
-          title={t.skills.title}
-          lead={t.skills.subtitle}
-        />
+        <SectionHeading eyebrow={eyebrow(2)} title={t.skills.title} lead={t.skills.subtitle} />
         <SkillYears skills={skills} labels={{ years: (count) => formatYears(count, language) }} />
       </Section>
 
@@ -242,9 +248,9 @@ const Index = () => {
           identity's second layer (0 · 1 → dh) is one hover away, and the copy
           beside it says the same thing in words. */}
       <Section id="about">
-        <SectionHeading eyebrow={`03 / ${t.nav.about}`} title={t.about.title} />
+        <SectionHeading eyebrow={eyebrow(3)} title={t.about.title} />
         <Grid gapY={48}>
-          <Col as={Reveal} spanLg={4}>
+          <Col as={Reveal} spanLg={4} className="lg:sticky lg:top-24 lg:self-start">
             <BinaryAxisMark labels={t.about.mark} />
             <p className="mt-6 max-w-[28ch] font-mono text-meta text-muted-foreground">
               {t.about.markHint}
@@ -254,10 +260,10 @@ const Index = () => {
               line, under the kit's 55-70 range. The text keeps its own 65ch cap
               inside the 8-column span. */}
           <Col spanLg={8} className="space-y-6">
-            <p className="max-w-[65ch] text-base text-muted-foreground md:text-body-lg">
+            <p className="max-w-[52ch] text-base text-muted-foreground md:text-body-lg">
               {t.about.paragraph1}
             </p>
-            <p className="max-w-[65ch] text-base text-muted-foreground md:text-body-lg">
+            <p className="max-w-[52ch] text-base text-muted-foreground md:text-body-lg">
               {t.about.paragraph2}
             </p>
             <Reveal>
@@ -266,13 +272,48 @@ const Index = () => {
                   <CardTitle className="text-xl md:text-xl">{t.about.philosophy}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="max-w-[65ch] text-muted-foreground">{t.about.philosophyText}</p>
+                  <p className="max-w-[52ch] text-muted-foreground">{t.about.philosophyText}</p>
                 </CardContent>
               </Card>
             </Reveal>
           </Col>
         </Grid>
       </Section>
+
+      {/* Contact: the same field, at rest, closing the page. No cards: an
+          address set large enough to be the point of the section. */}
+      <HeatField>
+        <Section id="contact" className="py-12 md:py-20">
+          <SectionHeading eyebrow={eyebrow(4)} title={t.contact.title} lead={t.contact.subtitle2} />
+          <Grid gapY={32}>
+            <Col as={Reveal} spanLg={7}>
+              <a
+                href={`mailto:${EMAIL}`}
+                className="inline-block break-all font-mono text-xl leading-tight text-foreground underline decoration-1 underline-offset-8 transition-colors duration-200 hover:text-iris sm:text-2xl md:text-[2rem]"
+              >
+                {EMAIL}
+              </a>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <Button onClick={() => askVex()}>
+                  <MessageSquare />
+                  {t.hero.askAI}
+                </Button>
+                <Button variant="outline" asChild>
+                  <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
+                    <Github />
+                    github.com/SatoriAI
+                  </a>
+                </Button>
+              </div>
+            </Col>
+            <Col as={Reveal} spanLg={5} delayMs={60}>
+              <p className="max-w-[38ch] text-base text-muted-foreground md:text-body-lg">
+                {t.contact.quickMessageDesc}
+              </p>
+            </Col>
+          </Grid>
+        </Section>
+      </HeatField>
     </PageLayout>
   );
 };

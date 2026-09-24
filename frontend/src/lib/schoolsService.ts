@@ -61,9 +61,10 @@ export function mapApiSchoolToUi(school: ApiSchool, language: string): UiSchool 
   };
 
   const startYear = formatDate(school.start);
-  const presentLabel = lang === "pl" ? "Obecnie" : "Present";
+  const presentLabel = lang === "pl" ? "obecnie" : "present";
   const endYear = school.end ? formatDate(school.end) : presentLabel;
-  const period = `${startYear} - ${endYear}`;
+  // An en dash, closed up: the typographic range, not a hyphen with spaces.
+  const period = `${startYear}–${endYear}`;
 
   // Handle areas - can be string or array
   let areas: string[] = [];

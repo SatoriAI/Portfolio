@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { cn } from "@/lib/utils";
 
@@ -20,8 +19,10 @@ import { cn } from "@/lib/utils";
  * so it must carry each Fourier component to itself. The phase 2πka/113 is
  * printed, with ka reduced mod 113, which is the arithmetic the model learns.
  *
- * The figure turns once through a full cycle when it enters the viewport and
- * then waits for the visitor; under reduced motion it stands still.
+ * On first sight the figure assembles itself — the ring draws, the 113
+ * elements appear in order round it, the mode draws over them — and then
+ * turns once through a full cycle before waiting for the visitor. Under
+ * reduced motion it stands, complete, still.
  */
 
 const N = 113;
@@ -32,6 +33,8 @@ const AMPLITUDE = 22;
 const MODES = [1, 3, 8] as const;
 const SHIFT_MS = 400;
 const TOUR_MS = 3600;
+const ASSEMBLE_MS = 1200;
+const ELEMENT_STAGGER_MS = 6;
 
 const easeOut = (t: number) => 1 - (1 - t) ** 3;
 
@@ -70,13 +73,15 @@ type CyclicShiftFigureProps = {
 };
 
 const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
-  const prefersReducedMotion = usePrefersReducedMotion();
-  const { ref, isRevealed } = useScrollReveal<HTMLElement>();
+  const { ref, isRevealed, isInitiallyVisible, prefersReducedMotion } =
+    useScrollReveal<HTMLElement>();
+  const animateEntrance = !prefersReducedMotion && !isInitiallyVisible;
+  const drawn = !animateEntrance || isRevealed;
   const [k, setK] = useState<(typeof MODES)[number]>(3);
   /** The group element a, an integer mod N. */
   const [shift, setShift] = useState(0);
   /** The drawn shift, which passes through the reals between integers. */
-  const [drawn, setDrawn] = useState(0);
+  const [shiftDrawn, setShiftDrawn] = useState(0);
   const frameRef = useRef<number | null>(null);
   const touredRef = useRef(false);
 
@@ -85,7 +90,7 @@ const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
     const started = performance.now();
     const step = (now: number) => {
       const progress = Math.min(1, (now - started) / ms);
-      setDrawn(from + (to - from) * easeOut(progress));
+      setShiftDrawn(from + (to - from) * easeOut(progress));
       if (progress < 1) frameRef.current = requestAnimationFrame(step);
       else {
         frameRef.current = null;
@@ -95,12 +100,18 @@ const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
     frameRef.current = requestAnimationFrame(step);
   };
 
-  // One full turn of the group on first sight, then it waits.
+  // One full turn of the group on first sight, once it has assembled, then
+  // it waits.
   useEffect(() => {
     if (!isRevealed || touredRef.current || prefersReducedMotion) return;
     touredRef.current = true;
-    animateTo(0, N, TOUR_MS, () => setDrawn(0));
+    const timer = window.setTimeout(
+      () => animateTo(0, N, TOUR_MS, () => setShiftDrawn(0)),
+      animateEntrance ? ASSEMBLE_MS : 0,
+    );
+    return () => window.clearTimeout(timer);
     // animateTo reads refs only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRevealed, prefersReducedMotion]);
 
   useEffect(
@@ -114,13 +125,13 @@ const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
     const next = (shift + amount) % N;
     setShift(next);
     if (prefersReducedMotion) {
-      setDrawn(next);
+      setShiftDrawn(next);
       return;
     }
-    animateTo(drawn, shift + amount, SHIFT_MS, () => setDrawn(next));
+    animateTo(shiftDrawn, shift + amount, SHIFT_MS, () => setShiftDrawn(next));
   };
 
-  const origin = point((2 * Math.PI * drawn) / N, R);
+  const origin = point((2 * Math.PI * shiftDrawn) / N, R);
   const phaseNumerator = (k * shift) % N;
 
   return (
@@ -138,18 +149,45 @@ const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
             fill="none"
             strokeWidth={1}
             vectorEffect="non-scaling-stroke"
-            className="stroke-border"
+            pathLength={1}
+            strokeDasharray={1}
+            className={cn(
+              "stroke-border",
+              animateEntrance && "transition-[stroke-dashoffset] duration-700 ease-brand",
+              drawn ? "[stroke-dashoffset:0]" : "[stroke-dashoffset:1]",
+            )}
           />
           <path
-            d={modePath(k, drawn)}
+            d={modePath(k, shiftDrawn)}
             fill="none"
             strokeWidth={1.5}
             vectorEffect="non-scaling-stroke"
-            className="stroke-iris"
+            pathLength={1}
+            strokeDasharray={1}
+            style={animateEntrance ? { transitionDelay: "400ms" } : undefined}
+            className={cn(
+              "stroke-iris",
+              animateEntrance && "transition-[stroke-dashoffset] duration-700 ease-brand",
+              drawn ? "[stroke-dashoffset:0]" : "[stroke-dashoffset:1]",
+            )}
           />
           <g className="fill-control-border">
             {ELEMENTS.map(({ x, y }, index) => (
-              <circle key={index} cx={x} cy={y} r={1.6} />
+              <circle
+                key={index}
+                cx={x}
+                cy={y}
+                r={1.6}
+                style={
+                  animateEntrance
+                    ? { transitionDelay: `${index * ELEMENT_STAGGER_MS}ms` }
+                    : undefined
+                }
+                className={cn(
+                  animateEntrance && "transition-opacity duration-200",
+                  drawn ? "opacity-100" : "opacity-0",
+                )}
+              />
             ))}
           </g>
           {/* The element a: where the shift has carried the identity. */}
@@ -174,7 +212,7 @@ const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
 
         <div className="space-y-5">
           <div>
-            <p className="mb-2 font-mono text-meta uppercase tracking-wide text-muted-foreground">
+            <p className="mb-2 font-mono text-meta uppercase tracking-widest text-muted-foreground">
               {labels.mode}
             </p>
             <div className="flex flex-wrap gap-2" role="group" aria-label={labels.mode}>
@@ -208,7 +246,7 @@ const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
           </div>
         </div>
       </div>
-      <figcaption className="mt-4 max-w-[60ch] font-mono text-meta text-muted-foreground">
+      <figcaption className="mt-4 max-w-[48ch] text-sm text-muted-foreground">
         {labels.caption}
       </figcaption>
     </figure>

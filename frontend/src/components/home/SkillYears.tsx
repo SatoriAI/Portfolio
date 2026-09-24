@@ -38,7 +38,7 @@ const ModuleBar = ({ years, revealed, animate }: ModuleBarProps) => (
           key={index}
           style={animate ? { transitionDelay: `${index * MODULE_STAGGER_MS}ms` } : undefined}
           className={cn(
-            "block h-5 w-5 rounded-sm border md:h-6 md:w-6",
+            "block h-5 w-5 rounded-motif border md:h-6 md:w-6",
             running ? "border-primary bg-primary" : "border-iris bg-lavender",
             animate && "transition-[opacity,transform] duration-400 ease-brand",
             animate && !revealed && "translate-y-2 opacity-0",
@@ -69,7 +69,7 @@ const SkillRow = ({ skill, labels }: SkillRowProps) => {
         </span>
       </div>
       {years !== null && <ModuleBar years={years} revealed={isRevealed} animate={animate} />}
-      <p className="max-w-[45ch] text-sm text-muted-foreground">{skill.description}</p>
+      <p className="max-w-[38ch] text-sm text-muted-foreground">{skill.description}</p>
     </li>
   );
 };
