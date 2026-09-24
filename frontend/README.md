@@ -34,13 +34,15 @@ Three routes — `/`, `/experience` and `/academic` — in `src/pages/`, on top 
 - `src/config/navigation.ts` — the header's links, shared by the desktop nav and the mobile sheet
 - `src/utils/translations.ts` — all site copy in both languages, including per-page titles (`usePageMeta`)
 
-Pages are composed from `src/components/layout/` (header, footer, `Section`, `SectionHeading`), the cards in `src/components/cards/` (one per backend domain type), and `SwipeCarousel`, the phone-only one-slide-at-a-time carousel. The shadcn primitives stay in `src/components/ui/`. The home page is in the main bundle; the other routes and the chat's Markdown renderer load lazily.
+Pages are composed from `src/components/layout/` (header, footer, `Section`, `SectionHeading`, the 12-column `Grid`) and one folder of page-specific pieces per route: `src/components/home/` (the skills-as-years ledger and the project index), `src/components/experience/` (the to-scale career timeline and the role entries) and `src/components/academic/` (the heat-kernel figure, the research thread, publication entries and the quote wall). The shadcn primitives stay in `src/components/ui/`. The home page is in the main bundle; the other routes and the chat's Markdown renderer load lazily.
+
+Pure layout logic lives in `src/lib/` where the node test suite can reach it: `timeline.ts` lays overlapping roles out into lanes, `skillYears.ts` reads a year count out of the backend's level text and declines the Polish unit, and `typography.ts` binds Polish one-letter words to the word after them with a non-breaking space — the Polish half of `translations.ts` passes through it once at module load.
 
 There is no i18n library. Localised content comes from the backend's `django-parler` translations, and the chosen language is forwarded as an `Accept-Language` header by `src/lib/apiClient.ts`.
 
-### ChatWidget
+### Vex
 
-[`src/components/ChatWidget.tsx`](src/components/ChatWidget.tsx) POSTs to `/api/vex/chat/` for a session key, then opens an `EventSource` against `/api/vex/chat/stream/` and renders the token stream as Markdown. Most of its bulk is stream defence: SSE payloads arrive in several shapes, and Markdown split across chunk boundaries has to be repaired mid-flight — unclosed code fences, headings and list items severed from their newlines — before a final cleanup pass once the stream closes. Thirty seconds of silence, before the first token or between tokens, is treated as a failure and shown inline with an email fallback, so a broken backend never looks like a page that is merely slow.
+The chat is available on every route: `PageLayout` renders the widget and its floating launcher, and `src/contexts/VexContext.tsx` holds the open state together with an optional question to send on opening, so the hero's ask bar, a project's "ask Vex about this" and a role's counterpart can hand a visitor over mid-sentence. [`src/components/ChatWidget.tsx`](src/components/ChatWidget.tsx) POSTs to `/api/vex/chat/` for a session key, then opens an `EventSource` against `/api/vex/chat/stream/` and renders the token stream as Markdown. Most of its bulk is stream defence: SSE payloads arrive in several shapes, and Markdown split across chunk boundaries has to be repaired mid-flight — unclosed code fences, headings and list items severed from their newlines — before a final cleanup pass once the stream closes. Thirty seconds of silence, before the first token or between tokens, is treated as a failure and shown inline with an email fallback, so a broken backend never looks like a page that is merely slow.
 
 ### Visual identity
 
@@ -48,9 +50,11 @@ The site implements Dawid's Visual Identity Kit ("Binary Axis", v5), which is ve
 
 - `src/index.css` — the palette as HSL variables (`--ink`, `--lavender`, `--iris`, …) mapped onto the shadcn semantic names the `ui/` primitives consume, plus the `@font-face` rules
 - `tailwind.config.ts` — the same tokens exposed as Tailwind colours, the kit's type scale (`text-display`, `text-h2`, `text-card-title`, …), the 20 px card radius and the reveal easing
-- `src/components/brand/` — the `dh` mark drawn inline, the geometric `RhythmMotif` band and the `DiffusionField` colour field
+- `src/components/brand/` — the `dh` mark drawn inline (`BrandLogo`, and `BinaryAxisMark` for the annotated reading of it as `0 · 1 → dh`), the geometric `RhythmMotif` band, and `HeatField`, the diffusion motif computed as a sum of heat kernels on a canvas rather than drawn as a gradient
 
 The mark reduces the initials to `0 · 1 → dh`: the bowl of the `d` reads as zero, the shared vertical as one, and one curve completes the `h`. `BrandSymbol` carries both of the kit's cuts and picks between them by size — below 32 px the kit requires a separate, heavier micro drawing rather than a scaled-down standard one, so no call site has to remember that. `BrandLogo` sets the wordmark from the master artwork's proportions, so the lockup stays correct at any size.
+
+`HeatField` is the one place the site knowingly goes past the kit's motion rules. The kit says nothing in a section entrance moves except an 8px rise, and the previous pass had ruled that nothing in the hero animates; the hero's field now spreads once from two point sources after load, with the equation and the kernel time printed under the copy, and takes heat from a mouse. It is the brand line made visible — the mathematics literally running under the engineering — and it is capped so the copy above it never sits on anything darker than the resting field. Under `prefers-reduced-motion` it renders at rest and ignores the pointer.
 
 The kit defines no dark theme, so the site has none; adding one later means a second variable block in `src/index.css`, nothing else. It also leaves semantic error and success colours undefined — `--destructive` is a placeholder used only for error copy. Fonts are self-hosted from `public/fonts/` with their OFL licences, and the favicon set and manifest in `public/` are copied from `../visual-kit/favicon/`.
 
