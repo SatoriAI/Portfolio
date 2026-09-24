@@ -110,9 +110,12 @@ const Academic = () => {
     <PageLayout>
       {/* The header's field is not on its own clock: the kernel figure drives
           it, so dragging t spreads the heat behind the title too. */}
+      {/* The explanation sits under the title, not under the plot: the plot at
+          rest is a line near its mean, and a caption beneath it left the left
+          column short and the right one tall. */}
       <HeatField placement="top" time={fieldTimeFor(fieldTime)}>
-        <Section className="pb-12 pt-12 md:pb-16 md:pt-20">
-          <Grid gapY={48} className="lg:items-start">
+        <Section className="py-10 md:py-16">
+          <Grid gapY={32} className="lg:items-center">
             <Col spanLg={5}>
               <SectionHeading
                 level={1}
@@ -121,12 +124,19 @@ const Academic = () => {
                 lead={t.academic.subtitle}
                 className="mb-0"
               />
+              <p id="kernel-notice" className="mt-6 max-w-[48ch] text-base text-foreground">
+                {t.academic.figureNotice}
+              </p>
+              <p id="kernel-caption" className="mt-2 max-w-[48ch] text-sm text-muted-foreground">
+                {t.academic.figure.caption}
+              </p>
             </Col>
             <Col spanLg={7} className="lg:pl-6">
               <HeatKernelFigure
-                labels={{ ...t.academic.figure, lead: t.academic.figureNotice }}
+                labels={{ ...t.academic.figure, caption: undefined }}
                 locale={language}
                 onTimeChange={setFieldTime}
+                describedBy="kernel-notice kernel-caption"
               />
             </Col>
           </Grid>

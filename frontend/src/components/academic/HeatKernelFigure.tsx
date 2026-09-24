@@ -42,8 +42,10 @@ const SAMPLES = 160;
 const PLAY_MS = 3200;
 
 const WIDTH = 400;
-const HEIGHT = 240;
-const PLOT = { left: 12, right: 388, top: 20, bottom: 208 };
+// Wider than tall: at rest the kernel is a line near the mean, and a tall
+// plot left a field of air above it.
+const HEIGHT = 200;
+const PLOT = { left: 12, right: 388, top: 16, bottom: 170 };
 const K_MAX = 2.2;
 
 const kernel = (x: number, y: number, t: number): number => {
@@ -73,7 +75,8 @@ const REFERENCE_PATHS = REFERENCE_TIMES.map((t) => curvePath(t));
 type HeatKernelFigureLabels = {
   /** Accessible name of the figure. */
   figure: string;
-  caption: string;
+  /** Omitted when the page sets the caption beside the figure instead. */
+  caption?: string;
   /** One plain sentence on what to notice, set before the formal caption. */
   lead?: string;
   /** The play control. */
@@ -88,10 +91,18 @@ type HeatKernelFigureProps = {
   locale: string;
   /** Called with every t the figure shows. */
   onTimeChange?: (t: number) => void;
+  /** Id of text elsewhere on the page that describes the figure. */
+  describedBy?: string;
   className?: string;
 };
 
-const HeatKernelFigure = ({ labels, locale, onTimeChange, className }: HeatKernelFigureProps) => {
+const HeatKernelFigure = ({
+  labels,
+  locale,
+  onTimeChange,
+  describedBy,
+  className,
+}: HeatKernelFigureProps) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [t, setT] = useState(prefersReducedMotion ? T_MAX : T_MIN);
   const frameRef = useRef<number | null>(null);
@@ -139,7 +150,11 @@ const HeatKernelFigure = ({ labels, locale, onTimeChange, className }: HeatKerne
   const peak = { x: px(SOURCE), y: py(kernel(SOURCE, SOURCE, t)) };
 
   return (
-    <figure aria-label={labels.figure} className={cn("w-full", className)}>
+    <figure
+      aria-label={labels.figure}
+      aria-describedby={describedBy}
+      className={cn("w-full", className)}
+    >
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         className="block h-auto w-full overflow-visible"
@@ -248,10 +263,14 @@ const HeatKernelFigure = ({ labels, locale, onTimeChange, className }: HeatKerne
           />
         </label>
       </div>
-      <figcaption className="mt-4 max-w-[48ch] text-sm text-muted-foreground">
-        {labels.lead && <span className="mb-2 block text-base text-foreground">{labels.lead}</span>}
-        {labels.caption}
-      </figcaption>
+      {(labels.lead || labels.caption) && (
+        <figcaption className="mt-4 max-w-[48ch] text-sm text-muted-foreground">
+          {labels.lead && (
+            <span className="mb-2 block text-base text-foreground">{labels.lead}</span>
+          )}
+          {labels.caption}
+        </figcaption>
+      )}
     </figure>
   );
 };
