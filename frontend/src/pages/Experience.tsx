@@ -1,23 +1,29 @@
 import { useCallback, useEffect, useState } from "react";
 
-import ExperienceCard from "@/components/cards/ExperienceCard";
+import CareerTimeline from "@/components/experience/CareerTimeline";
+import RoleEntry from "@/components/experience/RoleEntry";
 import StatusMessage from "@/components/feedback/StatusMessage";
 import PageLayout from "@/components/layout/PageLayout";
 import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
 import Reveal from "@/components/Reveal";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useVex } from "@/contexts/VexContext";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { UiExperience, useExperiences } from "@/lib/experiencesService";
 import { translations } from "@/utils/translations";
 
-const staggerMs = (index: number) => Math.min(index, 2) * 60;
-
+/**
+ * The career, first as a drawing to scale and then as entries. The timeline
+ * is what a stack of cards could never show: how long each role ran and which
+ * ones ran together. Each line links to its entry.
+ */
 const Experience = () => {
   const [experiences, setExperiences] = useState<UiExperience[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { language } = useSettings();
+  const { askVex } = useVex();
   const t = translations[language];
   usePageMeta(t.meta.experience);
   const experiencesService = useExperiences();
@@ -42,9 +48,16 @@ const Experience = () => {
     loadExperiences();
   }, [loadExperiences]);
 
-  const labels = {
+  const entryLabels = {
     keyAchievements: t.experience.keyAchievements,
     technologies: t.experience.technologies,
+    askVex: t.experience.askVex,
+    askVexQuestion: t.experience.askVexQuestion,
+  };
+  const timelineLabels = {
+    figure: t.experience.timeline.figure,
+    caption: t.experience.timeline.caption,
+    now: t.experience.timeline.now,
   };
 
   return (
@@ -69,13 +82,18 @@ const Experience = () => {
         ) : experiences.length === 0 ? (
           <StatusMessage variant="empty" message={t.experience.noData} />
         ) : (
-          <div className="space-y-6">
-            {experiences.map((experience, index) => (
-              <Reveal key={experience.id} delayMs={staggerMs(index)}>
-                <ExperienceCard experience={experience} labels={labels} />
-              </Reveal>
-            ))}
-          </div>
+          <>
+            <Reveal className="mb-16 md:mb-20">
+              <CareerTimeline experiences={experiences} labels={timelineLabels} />
+            </Reveal>
+            <div className="border-b border-border">
+              {experiences.map((experience) => (
+                <Reveal key={experience.id}>
+                  <RoleEntry experience={experience} labels={entryLabels} onAsk={askVex} />
+                </Reveal>
+              ))}
+            </div>
+          </>
         )}
       </Section>
     </PageLayout>

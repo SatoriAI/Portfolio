@@ -28,6 +28,9 @@ export type UiExperience = {
   company: string;
   position: string;
   period: string;
+  /** ISO dates, kept so the timeline can be drawn to scale; `end` is empty while current. */
+  start: string;
+  end: string;
   location: string;
   description: string;
   achievements: string[];
@@ -55,6 +58,8 @@ export function mapApiExperienceToUi(experience: ApiExperience, language: string
     company: experience.company || "",
     position: experience.position || "",
     period,
+    start: experience.start || "",
+    end: experience.end || "",
     location: localized.location || "",
     description: localized.description || "",
     achievements: localized.achievements || [],

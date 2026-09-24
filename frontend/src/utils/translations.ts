@@ -132,9 +132,17 @@ const copy = {
     },
     experience: {
       title: "Work Experience",
-      subtitle: "A journey through the projects and experiences that shaped my skills.",
+      subtitle:
+        "Every role, drawn to scale. Where two lines overlap, the roles ran at the same time.",
+      timeline: {
+        figure: "Career timeline, to scale",
+        caption: "One tick per January. The dot marks the role still running.",
+        now: "now",
+      },
       keyAchievements: "Key Achievements",
       technologies: "Technologies",
+      askVex: "Ask Vex about {company}",
+      askVexQuestion: "What did he do at {company}?",
       error: "Failed to load work experience data",
       tryAgain: "Try Again",
       noData: "No work experience data available.",
@@ -290,10 +298,18 @@ const copy = {
       swipeMore: "Przeciągnij w bok, aby zobaczyć więcej",
     },
     experience: {
-      title: "Doświadczenie Zawodowe",
-      subtitle: "Podróż przez miejsca i projekty, które rozwijały moje umiejętności.",
+      title: "Doświadczenie zawodowe",
+      subtitle:
+        "Każda rola, narysowana w skali. Tam, gdzie dwie linie się nakładają, role trwały równocześnie.",
+      timeline: {
+        figure: "Oś czasu kariery, w skali",
+        caption: "Jedna kreska na każdy styczeń. Kropka oznacza rolę, która wciąż trwa.",
+        now: "teraz",
+      },
       keyAchievements: "Kluczowe osiągnięcia",
       technologies: "Technologie",
+      askVex: "Zapytaj Vex o {company}",
+      askVexQuestion: "Co robił w firmie {company}?",
       error: "Nie udało się załadować danych o doświadczeniu zawodowym",
       tryAgain: "Spróbuj ponownie",
       noData: "Brak dostępnych danych o doświadczeniu zawodowym.",
