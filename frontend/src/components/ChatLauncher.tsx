@@ -22,7 +22,7 @@ const ChatLauncher = forwardRef<HTMLButtonElement, ChatLauncherProps>(({ label, 
     onMouseEnter={preloadMarkdown}
     onFocus={preloadMarkdown}
     aria-label={label}
-    className="fixed right-6 z-40 h-14 w-14 rounded-xl shadow-[0_12px_32px_-12px_hsl(var(--ink)/0.5)] transition-transform duration-200 ease-brand hover:-translate-y-0.5 motion-reduce:transform-none"
+    className="fixed right-6 z-40 h-14 w-14 rounded-xl shadow-float transition-transform duration-200 ease-brand hover:-translate-y-0.5 motion-reduce:transform-none"
     style={{ bottom: "calc(env(safe-area-inset-bottom) + 1.5rem)" }}
   >
     <MessageSquare className="!size-6" />

@@ -90,12 +90,23 @@ export default {
         sm: "calc(var(--radius) - 4px)",
         card: "20px",
       },
-      // The kit defines no shadow values; it only says elevation may imply
-      // interactivity when the whole card is actionable. This is the one
-      // elevation the interface uses, kept here so it has a single home like
-      // the radius and the easing above.
+      // Elevation, per the kit: every shadow is cast in ink rather than neutral
+      // black, because a grey shadow over this palette reads as dirt. `lift`
+      // and `float` are the kit's two named elevations. `lift` is deliberately
+      // not called `card`: a boxShadow key that collides with a colour key
+      // makes Tailwind read `shadow-card` as a shadow-COLOUR utility, which
+      // rendered the card hover lift in white on a near-white page. sm-xl keep Tailwind's
+      // default geometry and only restate the colour, so the vendored
+      // primitives in components/ui pick up the brand tint without being
+      // edited. Elevation still means actionable: a static card gets none.
       boxShadow: {
-        card: "0 8px 24px -12px hsl(var(--ink) / 0.25)",
+        sm: "0 1px 2px 0 hsl(var(--ink) / 0.06)",
+        DEFAULT: "0 1px 3px 0 hsl(var(--ink) / 0.1), 0 1px 2px -1px hsl(var(--ink) / 0.1)",
+        md: "0 4px 6px -1px hsl(var(--ink) / 0.1), 0 2px 4px -2px hsl(var(--ink) / 0.1)",
+        lg: "0 10px 15px -3px hsl(var(--ink) / 0.12), 0 4px 6px -4px hsl(var(--ink) / 0.12)",
+        xl: "0 20px 25px -5px hsl(var(--ink) / 0.14), 0 8px 10px -6px hsl(var(--ink) / 0.14)",
+        lift: "0 8px 24px -12px hsl(var(--ink) / 0.25)",
+        float: "0 12px 32px -12px hsl(var(--ink) / 0.5)",
       },
       transitionTimingFunction: {
         brand: "cubic-bezier(0.22, 1, 0.36, 1)",

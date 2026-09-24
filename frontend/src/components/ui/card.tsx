@@ -36,7 +36,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
           // won by stylesheet order, and under reduced motion the transform rule
           // is now never generated. The shadow and border still respond, so the
           // card keeps a visible hover state without moving.
-          "relative transition-[box-shadow,border-color,transform] duration-200 ease-brand hover:border-control-border hover:shadow-card motion-safe:hover:-translate-y-0.5",
+          "relative transition-[box-shadow,border-color,transform] duration-200 ease-brand hover:border-control-border hover:shadow-lift motion-safe:hover:-translate-y-0.5",
         className,
       )}
       {...props}

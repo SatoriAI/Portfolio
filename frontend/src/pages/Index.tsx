@@ -155,55 +155,62 @@ const Index = () => {
 
   return (
     <PageLayout footerClassName="pb-24 sm:pb-8 sm:pr-24">
-      {/* Hero: nothing here animates — it is the first thing a visitor sees. */}
-      <Section id="hero" className="pb-10 pt-12 md:pb-14 md:pt-24">
-        <Grid gapY={48} className="lg:items-end">
-          {/* No max-width here: the column is the measure. The subtitle keeps
-              its own 65ch cap, and a width cap on the column would pull it off
-              the grid axis. */}
-          <Col spanLg={9}>
-            <p className="mb-4 font-mono text-meta uppercase tracking-wide text-iris">
-              Dawid Hanrahan
-            </p>
-            <h1 className="text-display-sm md:text-display">{t.hero.title}</h1>
-            <p className="mt-6 max-w-[65ch] text-base text-muted-foreground md:text-body-lg">
-              {t.hero.subtitle}
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Button size="lg" onClick={() => setIsChatOpen(true)}>
-                <MessageSquare />
-                {t.hero.askAI}
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link to="/#projects">
-                  {t.hero.viewProjects}
-                  <ArrowDown />
-                </Link>
-              </Button>
-              <div className="flex gap-2">
-                <Button variant="outline" size="icon" asChild>
-                  <a
-                    href={GITHUB_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="GitHub"
-                  >
-                    <Github className="!size-5" />
-                  </a>
+      {/* Hero: nothing here animates — it is the first thing a visitor sees.
+          The diffusion field is what puts the kit's pastels above the fold.
+          They are the one thing that separates this page from every other
+          engineer's, and they had been spent only on badges and hover states.
+          The page closes on the same motif at Contact, so the field reads as
+          a deliberate bookend rather than decoration. */}
+      <DiffusionField placement="top">
+        <Section id="hero" className="pb-10 pt-12 md:pb-14 md:pt-24">
+          <Grid gapY={48} className="lg:items-end">
+            {/* No max-width here: the column is the measure. The subtitle keeps
+                its own 65ch cap, and a width cap on the column would pull it off
+                the grid axis. */}
+            <Col spanLg={9}>
+              <p className="mb-4 font-mono text-meta uppercase tracking-wide text-iris">
+                Dawid Hanrahan
+              </p>
+              <h1 className="text-display-sm md:text-display">{t.hero.title}</h1>
+              <p className="mt-6 max-w-[65ch] text-base text-muted-foreground md:text-body-lg">
+                {t.hero.subtitle}
+              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <Button size="lg" onClick={() => setIsChatOpen(true)}>
+                  <MessageSquare />
+                  {t.hero.askAI}
                 </Button>
-                <Button variant="outline" size="icon" asChild>
-                  <a href={`mailto:${EMAIL}`} aria-label={t.contact.email}>
-                    <Mail className="!size-5" />
-                  </a>
+                <Button size="lg" variant="outline" asChild>
+                  <Link to="/#projects">
+                    {t.hero.viewProjects}
+                    <ArrowDown />
+                  </Link>
                 </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="icon" asChild>
+                    <a
+                      href={GITHUB_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="GitHub"
+                    >
+                      <Github className="!size-5" />
+                    </a>
+                  </Button>
+                  <Button variant="outline" size="icon" asChild>
+                    <a href={`mailto:${EMAIL}`} aria-label={t.contact.email}>
+                      <Mail className="!size-5" />
+                    </a>
+                  </Button>
+                </div>
               </div>
-            </div>
-          </Col>
-          <Col spanLg={3} align="end">
-            <ProofPoints items={t.hero.proof} />
-          </Col>
-        </Grid>
-      </Section>
+            </Col>
+            <Col spanLg={3} align="end">
+              <ProofPoints items={t.hero.proof} />
+            </Col>
+          </Grid>
+        </Section>
+      </DiffusionField>
 
       {/* About */}
       <Section id="about">
@@ -214,28 +221,19 @@ const Index = () => {
           <Col spanLg={6} className="space-y-6">
             <p className="text-base text-muted-foreground md:text-body-lg">{t.about.paragraph1}</p>
             <p className="text-base text-muted-foreground md:text-body-lg">{t.about.paragraph2}</p>
-            <Reveal>
-              <Card tone="lavender">
-                <CardHeader>
-                  <CardTitle className="text-xl md:text-xl">{t.about.philosophy}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{t.about.philosophyText}</p>
-                </CardContent>
-              </Card>
-            </Reveal>
           </Col>
-          <Col as={Reveal} spanLg={6} className="lg:h-full">
-            {/* h-full rather than a fixed ratio: the column is a grid item and
-                stretches, so the portrait ends level with the philosophy card
-                instead of leaving an empty band beside it. */}
-            <img
-              src="/profile-picture.jpg"
-              alt="Dawid Hanrahan"
-              width={640}
-              height={640}
-              className="aspect-[4/3] w-full rounded-card object-cover lg:aspect-auto lg:h-full"
-            />
+          {/* The lavender panel now faces the prose on its own axis. It carries
+              the pastel at column scale rather than as a badge, which is where
+              the kit's 20% allocation was meant to be spent. */}
+          <Col as={Reveal} spanLg={6}>
+            <Card tone="lavender">
+              <CardHeader>
+                <CardTitle className="text-xl md:text-xl">{t.about.philosophy}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">{t.about.philosophyText}</p>
+              </CardContent>
+            </Card>
           </Col>
         </Grid>
       </Section>
