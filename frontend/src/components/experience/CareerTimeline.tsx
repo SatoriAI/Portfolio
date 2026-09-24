@@ -84,7 +84,7 @@ const CareerTimeline = ({
           {timeline.spans.map((span, index) => {
             const experience = byId.get(span.id);
             if (!experience) return null;
-            const delay = animateEntrance ? { transitionDelay: `${index * 150}ms` } : undefined;
+            const delay = animateEntrance ? { transitionDelay: `${index * 80}ms` } : undefined;
             return (
               <li
                 key={span.id}
@@ -114,7 +114,7 @@ const CareerTimeline = ({
                       style={delay}
                       className={cn(
                         "absolute inset-0 origin-left bg-iris",
-                        animateEntrance && "transition-transform duration-700 ease-brand",
+                        animateEntrance && "transition-transform duration-500 ease-brand",
                         grown ? "scale-x-100" : "scale-x-0",
                       )}
                     />
@@ -126,9 +126,7 @@ const CareerTimeline = ({
                       <span
                         aria-hidden="true"
                         style={
-                          animateEntrance
-                            ? { transitionDelay: `${index * 150 + 600}ms` }
-                            : undefined
+                          animateEntrance ? { transitionDelay: `${index * 80 + 500}ms` } : undefined
                         }
                         className={cn(
                           "absolute right-0 top-1/2 -translate-y-1/2",

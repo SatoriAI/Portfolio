@@ -10,19 +10,20 @@ import { cn } from "@/lib/utils";
 /**
  * The papers as a stack of files.
  *
- * Every paper is a sheet. The one that is open lies in front, showing the
- * domain it works on, its venue and year, the title, the abstract and the
- * link; the others sit behind it, each a little narrower, with only its
- * tab showing — venue, year and title on one line — the way folders sit in a
- * drawer. Pressing a tab brings that sheet to the front over the kit's 400ms
- * and sends the open one back. The tabs are real tabs (roving focus, arrow
- * keys) so the stack reads correctly to a keyboard and a screen reader.
+ * Every paper is a sheet. The one that is open lies in front and answers
+ * first what the work established, in two or three sentences, with the full
+ * abstract behind a press; the others sit behind it, each a little narrower,
+ * with only a tab showing — the domain glyph, venue, year and title — the way
+ * folders sit in a drawer. Pressing a tab brings that sheet to the front over
+ * the kit's 400ms and sends the open one back. The tabs are real tabs (roving
+ * focus, arrow keys) so the stack reads correctly to a keyboard and a screen
+ * reader.
  *
  * The stack is built from two measures: the tab height (44px, the kit's
- * minimum control) and the inset each sheet behind loses on both sides. It
- * holds two papers today and any number later. Every sheet stays mounted on
- * one grid cell, so the stack is as tall as its tallest paper and the page
- * does not shift when a different one opens.
+ * minimum control) and the inset each sheet behind loses on both sides. Every
+ * sheet stays mounted on one grid cell, so the stack is as tall as its tallest
+ * paper and the page does not shift when a different one opens; with the
+ * abstracts folded the sheets are close to one height anyway.
  */
 
 const TAB_PX = 44;
@@ -34,15 +35,99 @@ type PublicationStackLabels = {
   stack: string;
   venue: string;
   year: string;
+  established: string;
+  showAbstract: string;
+  hideAbstract: string;
 };
 
 type PublicationStackProps = {
   publications: readonly UiPublication[];
   labels: PublicationStackLabels;
+  /** What each paper established, keyed by its link. A paper without one shows its abstract. */
+  summaries?: Record<string, string>;
   className?: string;
 };
 
-const PublicationStack = ({ publications, labels, className }: PublicationStackProps) => {
+type SheetProps = {
+  publication: UiPublication;
+  labels: PublicationStackLabels;
+  summary?: string;
+};
+
+const Sheet = ({ publication, labels, summary }: SheetProps) => {
+  const [abstractOpen, setAbstractOpen] = useState(false);
+  const domain = domainFor(publication.title);
+  const lead = summary ?? publication.summary;
+  const abstract = summary ? publication.summary : "";
+
+  return (
+    <article className="grid gap-6 md:grid-cols-[96px_minmax(0,7fr)_minmax(0,3fr)] md:gap-10">
+      {domain ? <DomainGlyph kind={domain} className="h-24" /> : <span />}
+      <div>
+        <h3 className="text-card-title-sm font-semibold md:text-card-title">{publication.title}</h3>
+        {lead && (
+          <>
+            {summary && (
+              <p className="mt-4 font-mono text-meta uppercase tracking-widest text-muted-foreground">
+                {labels.established}
+              </p>
+            )}
+            <p className="mt-2 max-w-[52ch] text-base text-foreground">{lead}</p>
+          </>
+        )}
+        {abstract && (
+          <>
+            <Button
+              variant="link"
+              className="mt-3 h-auto text-sm font-medium"
+              aria-expanded={abstractOpen}
+              onClick={() => setAbstractOpen((value) => !value)}
+            >
+              {abstractOpen ? labels.hideAbstract : labels.showAbstract}
+            </Button>
+            {abstractOpen && (
+              <p className="mt-3 max-w-[52ch] text-base text-muted-foreground">{abstract}</p>
+            )}
+          </>
+        )}
+      </div>
+      <dl className="space-y-4 font-mono text-meta md:border-l md:border-border md:pl-8">
+        <div>
+          <dt className="uppercase tracking-widest text-muted-foreground">{labels.venue}</dt>
+          <dd className="mt-1 text-foreground">{publication.journal}</dd>
+        </div>
+        {publication.year > 0 && (
+          <div>
+            <dt className="uppercase tracking-widest text-muted-foreground">{labels.year}</dt>
+            <dd className="mt-1 text-foreground">{publication.year}</dd>
+          </div>
+        )}
+        {publication.link && (
+          <div className="pt-2">
+            <Button variant="outline" size="sm" asChild>
+              <a
+                href={publication.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${labels.view} — ${publication.title}`}
+              >
+                <ExternalLink />
+                {labels.view}
+              </a>
+            </Button>
+          </div>
+        )}
+      </dl>
+    </article>
+  );
+};
+
+const PublicationStack = ({
+  publications,
+  labels,
+  summaries = {},
+  className,
+}: PublicationStackProps) => {
   const [openId, setOpenId] = useState(() => String(publications[0]?.id ?? ""));
   const open = publications.some((p) => String(p.id) === openId)
     ? openId
@@ -71,6 +156,7 @@ const PublicationStack = ({ publications, labels, className }: PublicationStackP
           const id = String(publication.id);
           const d = depthOf.get(id) ?? 0;
           const isOpen = d === 0;
+          const domain = domainFor(publication.title);
           return (
             <TabsPrimitive.Trigger
               key={id}
@@ -84,17 +170,17 @@ const PublicationStack = ({ publications, labels, className }: PublicationStackP
               }}
               className={cn(
                 "absolute top-0 flex items-center gap-3 rounded-t-card border border-border bg-card px-5 text-left outline-none",
-                "transition-[transform,left,right,color,border-color] duration-400 ease-brand motion-reduce:transition-none",
+                "transition-[transform,left,right,color,border-color,box-shadow] duration-400 ease-brand motion-reduce:transition-none",
                 "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-[3px] focus-visible:ring-offset-background",
                 isOpen
                   ? "border-b-transparent text-foreground"
-                  : "text-muted-foreground hover:text-foreground",
+                  : "text-muted-foreground hover:text-foreground hover:shadow-lift",
               )}
             >
               {/* The two titles differ by one word; the domain, drawn small,
                   tells them apart before anyone reads. */}
-              {domainFor(publication.title) ? (
-                <DomainGlyph kind={domainFor(publication.title)!} className="h-6 shrink-0" />
+              {domain ? (
+                <DomainGlyph kind={domain} className="h-6 shrink-0" />
               ) : (
                 <span
                   aria-hidden="true"
@@ -115,69 +201,22 @@ const PublicationStack = ({ publications, labels, className }: PublicationStackP
         })}
       </TabsPrimitive.List>
 
-      {/* Every sheet stays mounted on one grid cell, so the stack is as tall
-          as its tallest paper and the page does not shift when one opens. */}
       <div className="grid" style={{ marginTop: TAB_PX }}>
-        {publications.map((publication) => {
-          const domain = domainFor(publication.title);
-          return (
-            <TabsPrimitive.Content
-              key={publication.id}
-              value={String(publication.id)}
-              forceMount
-              style={{ zIndex: count + 1 }}
-              className="relative col-start-1 row-start-1 rounded-b-card border border-t-0 border-border bg-card p-6 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-[3px] focus-visible:ring-offset-background data-[state=inactive]:pointer-events-none data-[state=inactive]:invisible data-[state=active]:duration-400 data-[state=active]:ease-brand data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-2 motion-reduce:data-[state=active]:animate-none md:p-8"
-            >
-              {/* Three columns on the open sheet: the domain, the paper, and its
-                  record — venue, year and the link — so the width is used and
-                  the abstract keeps its measure. */}
-              <article className="grid gap-6 md:grid-cols-[96px_minmax(0,7fr)_minmax(0,3fr)] md:gap-10">
-                {domain ? <DomainGlyph kind={domain} className="h-24" /> : <span />}
-                <div>
-                  <h3 className="text-card-title-sm font-semibold md:text-card-title">
-                    {publication.title}
-                  </h3>
-                  {publication.summary && (
-                    <p className="mt-4 max-w-[52ch] text-base text-muted-foreground">
-                      {publication.summary}
-                    </p>
-                  )}
-                </div>
-                <dl className="space-y-4 font-mono text-meta md:border-l md:border-border md:pl-8">
-                  <div>
-                    <dt className="uppercase tracking-widest text-muted-foreground">
-                      {labels.venue}
-                    </dt>
-                    <dd className="mt-1 text-foreground">{publication.journal}</dd>
-                  </div>
-                  {publication.year > 0 && (
-                    <div>
-                      <dt className="uppercase tracking-widest text-muted-foreground">
-                        {labels.year}
-                      </dt>
-                      <dd className="mt-1 text-foreground">{publication.year}</dd>
-                    </div>
-                  )}
-                  {publication.link && (
-                    <div className="pt-2">
-                      <Button variant="outline" size="sm" asChild>
-                        <a
-                          href={publication.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={`${labels.view} — ${publication.title}`}
-                        >
-                          <ExternalLink />
-                          {labels.view}
-                        </a>
-                      </Button>
-                    </div>
-                  )}
-                </dl>
-              </article>
-            </TabsPrimitive.Content>
-          );
-        })}
+        {publications.map((publication) => (
+          <TabsPrimitive.Content
+            key={publication.id}
+            value={String(publication.id)}
+            forceMount
+            style={{ zIndex: count + 1 }}
+            className="relative col-start-1 row-start-1 rounded-b-card border border-t-0 border-border bg-card p-6 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-[3px] focus-visible:ring-offset-background data-[state=inactive]:pointer-events-none data-[state=inactive]:invisible data-[state=active]:duration-400 data-[state=active]:ease-brand data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-2 motion-reduce:data-[state=active]:animate-none md:p-8"
+          >
+            <Sheet
+              publication={publication}
+              labels={labels}
+              summary={summaries[publication.link]}
+            />
+          </TabsPrimitive.Content>
+        ))}
       </div>
     </TabsPrimitive.Root>
   );

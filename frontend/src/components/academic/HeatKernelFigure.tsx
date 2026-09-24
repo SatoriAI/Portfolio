@@ -79,8 +79,9 @@ type HeatKernelFigureLabels = {
   caption?: string;
   /** One plain sentence on what to notice, set before the formal caption. */
   lead?: string;
-  /** The play control. */
+  /** The play control, and its label while the run is in progress. */
   play: string;
+  playing?: string;
   /** The scrubber's label, e.g. "time t". */
   time: string;
 };
@@ -105,6 +106,7 @@ const HeatKernelFigure = ({
 }: HeatKernelFigureProps) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [t, setT] = useState(prefersReducedMotion ? T_MAX : T_MIN);
+  const [running, setRunning] = useState(false);
   const frameRef = useRef<number | null>(null);
   const onTimeChangeRef = useRef(onTimeChange);
   onTimeChangeRef.current = onTimeChange;
@@ -116,16 +118,21 @@ const HeatKernelFigure = ({
   const stop = () => {
     if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
     frameRef.current = null;
+    setRunning(false);
   };
 
   const play = () => {
     stop();
+    setRunning(true);
     const started = performance.now();
     const step = (now: number) => {
       const progress = Math.min(1, (now - started) / PLAY_MS);
       setT(fromSlider(easeOut(progress)));
       if (progress < 1) frameRef.current = requestAnimationFrame(step);
-      else frameRef.current = null;
+      else {
+        frameRef.current = null;
+        setRunning(false);
+      }
     };
     frameRef.current = requestAnimationFrame(step);
   };
@@ -239,9 +246,9 @@ const HeatKernelFigure = ({
       </svg>
 
       <div className="mt-4 flex items-center gap-4">
-        <Button variant="outline" size="sm" onClick={play} className="shrink-0">
+        <Button variant="outline" size="sm" onClick={play} className="shrink-0" aria-live="polite">
           <Play />
-          {labels.play}
+          {running && labels.playing ? labels.playing : labels.play}
         </Button>
         <label className="flex min-w-0 flex-1 items-center gap-3 font-mono text-meta text-muted-foreground">
           <span className="shrink-0">{labels.time}</span>

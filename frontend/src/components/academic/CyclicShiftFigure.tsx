@@ -34,8 +34,8 @@ const AMPLITUDE = 22;
 const MODES = [1, 3, 8] as const;
 const SHIFT_MS = 400;
 const TOUR_MS = 3600;
-const ASSEMBLE_MS = 1200;
-const ELEMENT_STAGGER_MS = 6;
+const ASSEMBLE_MS = 900;
+const ELEMENT_STAGGER_MS = 4;
 
 const easeOut = (t: number) => 1 - (1 - t) ** 3;
 

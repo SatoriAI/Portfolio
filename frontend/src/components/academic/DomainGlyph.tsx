@@ -45,7 +45,7 @@ const DomainGlyph = ({ kind, className }: DomainGlyphProps) => {
 
   const lineClassName = (delayMs: number) =>
     cn(
-      animate && "transition-[stroke-dashoffset] duration-700 ease-brand",
+      animate && "transition-[stroke-dashoffset] duration-500 ease-brand",
       drawn ? "[stroke-dashoffset:0]" : "[stroke-dashoffset:1]",
     );
 

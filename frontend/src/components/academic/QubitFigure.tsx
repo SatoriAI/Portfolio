@@ -76,7 +76,7 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
   const built = !animateEntrance || isRevealed;
   const drawClassName = (delayMs: number) => ({
     className: cn(
-      animateEntrance && "transition-[stroke-dashoffset] duration-700 ease-brand",
+      animateEntrance && "transition-[stroke-dashoffset] duration-500 ease-brand",
       built ? "[stroke-dashoffset:0]" : "[stroke-dashoffset:1]",
     ),
     style: animateEntrance ? { transitionDelay: `${delayMs}ms` } : undefined,
@@ -210,7 +210,7 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
               x2={tip.x}
               y2={tip.y}
               strokeWidth={2}
-              {...drawClassName(800)}
+              {...drawClassName(600)}
               className={cn("stroke-iris", behind && "opacity-60", drawClassName(800).className)}
             />
           </g>
@@ -218,7 +218,7 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
             cx={tip.x}
             cy={tip.y}
             r={5}
-            style={animateEntrance ? { transitionDelay: "1300ms" } : undefined}
+            style={animateEntrance ? { transitionDelay: "1000ms" } : undefined}
             className={cn(
               "fill-primary",
               behind && "opacity-70",

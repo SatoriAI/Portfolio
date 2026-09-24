@@ -163,7 +163,7 @@ const copy = {
         transformers: {
           title: "Mathematical structure in transformers",
           paragraphs: [
-            "I study how transformers learn to generalise on tasks with algebraic structure: models trained on modular addition over $ℤ_{113}$, watched through grokking. The question is whether, as generalisation appears, the hidden activations begin to encode cyclic shifts, and whether that structure can be tracked through training and across layers. Across three seeds, after grokking, selected activation subspaces do carry the dynamics of cyclic shifts, most coherently between a late layer and the output.",
+            "The test case is modular addition over $ℤ_{113}$, a task whose algebra is known, watched through grokking. If the hidden activations begin to encode cyclic shifts as generalisation appears, that structure should be trackable through training and across layers. Across three seeds, after grokking, selected activation subspaces do carry the dynamics of cyclic shifts, most coherently between a late layer and the output.",
             "The mathematics runs alongside. Exact intertwiners between group representations preserve the isotypic components, and for cyclic groups a bound connects approximate agreement between layers with the transport of Fourier components. How far that explains the experiments is the open question: the strict representation law is not yet established, and nothing shows that the structure causes generalisation.",
           ],
           figure: {
@@ -200,10 +200,65 @@ const copy = {
         caption:
           "The Neumann heat kernel on a segment, $K_t(x, y)$ for fixed $y$. Drag $t$: heat placed at one point spreads and flattens towards the mean, $1/π$, and the field behind this page spreads with it. A sharp estimate bounds a kernel like this one from above and below by the same expression, up to constants. The series is cut at $n = 60$.",
         play: "Run the diffusion",
+        playing: "Running…",
         time: "time t",
       },
-      education: "Education",
+      education: "Academic background",
+      story: {
+        lead: "One question runs through the work: how the shape of a space decides what happens in it. For heat, how fast it spreads on a cone and where the estimate is tight. For a trained network, whether the algebra of its task shows up in its activations. Quantum computing is the next place to ask it.",
+        contents: "On this page",
+        kernels: {
+          title: "Heat kernels",
+          eyebrow: "Established",
+          lead: "A heat kernel says how much heat travels from one point to another in time $t$. On a cone the geometry bends that answer, and the two papers pin it down.",
+          result:
+            "Result: genuinely sharp estimates for Jacobi heat kernels on the cone, its surface and the double cone. The same expression bounds the kernel above and below, exact up to constants.",
+          why: "Why it matters here: the papers bound a kernel like this one, on a cone, from above and below by one expression. That is what sharp means: the picture is known at every point and every time, up to a constant.",
+        },
+        transformers: {
+          eyebrow: "Current investigation",
+          question: "What changes inside a model at the moment it starts to generalise?",
+          why: "This is the mathematics, not the model. The experiments ask whether a trained network's activations move like this under a shift of the input; the figure shows what like this means.",
+        },
+        quantum: {
+          eyebrow: "Learning",
+          lead: "A developing interest, not a result. How I learn a subject: build the smallest working instance and press its buttons.",
+          why: "Why it is here: a subject is understood when its smallest example runs. This one does, exactly, in fifty lines.",
+        },
+        teaching: {
+          title: "Teaching",
+          eyebrow: "Classes",
+          /** `{courses}`, `{from}` and `{to}` are filled from the testimonials. */
+          intro: "Classes taught: {courses} ({from}–{to}).",
+          approach:
+            "Explaining a hard idea simply is the best test of whether you understand it; the classes are built on that.",
+          showAll: "Show all {count}",
+          showFewer: "Show fewer",
+        },
+        closing: {
+          title: "Research, collaboration or teaching?",
+          body: "Write, or ask Vex first.",
+          email: "Write to me",
+        },
+      },
       stack: "Publications, as a stack of files",
+      established: "What it established",
+      showAbstract: "Show the abstract",
+      hideAbstract: "Hide the abstract",
+      more: "More",
+      less: "Less",
+      /** Two or three sentences per paper, keyed by its link; the abstract sits behind a toggle. */
+      publicationSummaries: {
+        "https://ui.adsabs.harvard.edu/abs/2022arXiv221014590H/abstract":
+          "Genuinely sharp two-sided estimates for Jacobi heat kernels on the multidimensional cone and its surface. Xu's Jacobi polynomials on the cone meet the Nowak–Sjögren–Szarek method for the spherical kernel.",
+        "https://arxiv.org/abs/2411.15793":
+          "The sharp estimates extended to the double cone and its surface for the even and odd kernels, and to the hyperboloid for the even one. The paraboloid resists the method, and the paper says where.",
+      } as Record<string, string>,
+      /** One line worth its own place, keyed by the degree's start date. */
+      educationHighlights: {
+        "2019-10-03":
+          "2nd place, Józef Marcinkiewicz Competition for the best master's thesis in mathematics in Poland (PTM).",
+      } as Record<string, string>,
       venue: "Venue",
       year: "Year",
       publicationsLead:
@@ -389,7 +444,7 @@ const copy = {
         transformers: {
           title: "Struktura matematyczna w transformerach",
           paragraphs: [
-            "Badam, jak transformery uczą się generalizować na zadaniach o strukturze algebraicznej: modele trenowane na dodawaniu modularnym w $ℤ_{113}$, obserwowane przez grokking. Pytanie brzmi, czy wraz z pojawieniem się generalizacji ukryte aktywacje zaczynają kodować przesunięcia cykliczne i czy tę strukturę da się śledzić w trakcie treningu i pomiędzy warstwami. Dla trzech ziaren losowych, po grokkingu, wybrane podprzestrzenie aktywacji rzeczywiście niosą dynamikę przesunięć cyklicznych, najspójniej między jedną z późnych warstw a wyjściem modelu.",
+            "Przypadkiem testowym jest dodawanie modularne w $ℤ_{113}$, zadanie o znanej algebrze, obserwowane przez grokking. Jeśli wraz z pojawieniem się generalizacji ukryte aktywacje zaczynają kodować przesunięcia cykliczne, tę strukturę powinno dać się śledzić w trakcie treningu i pomiędzy warstwami. Dla trzech ziaren losowych, po grokkingu, wybrane podprzestrzenie aktywacji rzeczywiście niosą dynamikę przesunięć cyklicznych, najspójniej między jedną z późnych warstw a wyjściem modelu.",
             "Równolegle idzie matematyka. Dokładne operatory splatające między reprezentacjami grupy zachowują składowe izotypowe, a dla grup cyklicznych oszacowanie wiąże przybliżoną zgodność między warstwami z transportem składowych Fouriera. Na ile to wyjaśnia eksperymenty, pozostaje pytaniem otwartym: ścisłe prawo reprezentacji nie jest jeszcze ustalone, a nic nie pokazuje, że ta struktura jest przyczyną generalizacji.",
           ],
           figure: {
@@ -427,10 +482,62 @@ const copy = {
         caption:
           "Jądro ciepła Neumanna na odcinku, $K_t(x, y)$ dla ustalonego $y$. Przesuń $t$: ciepło z jednego punktu rozchodzi się i wyrównuje do średniej, $1/π$, a razem z nim rozchodzi się pole w tle tej strony. Ostre oszacowanie ogranicza takie jądro z góry i z dołu tym samym wyrażeniem, z dokładnością do stałych. Szereg ucięto na $n = 60$.",
         play: "Uruchom dyfuzję",
+        playing: "Trwa…",
         time: "czas t",
       },
       education: "Wykształcenie",
+      story: {
+        lead: "Przez całą tę pracę biegnie jedno pytanie: jak kształt przestrzeni decyduje o tym, co się w niej dzieje. Dla ciepła: jak szybko rozchodzi się na stożku i gdzie oszacowanie jest ostre. Dla wytrenowanej sieci: czy algebra zadania pojawia się w jej aktywacjach. Obliczenia kwantowe to następne miejsce, w którym warto je zadać.",
+        contents: "Na tej stronie",
+        kernels: {
+          title: "Jądra ciepła",
+          eyebrow: "Ukończone",
+          lead: "Jądro ciepła mówi, ile ciepła przechodzi z jednego punktu do drugiego w czasie $t$. Na stożku geometria zmienia tę odpowiedź, a dwa artykuły ją precyzują.",
+          result:
+            "Wynik: rzeczywiście ostre oszacowania jąder ciepła Jacobiego na stożku, jego powierzchni i podwójnym stożku. To samo wyrażenie ogranicza jądro z góry i z dołu, z dokładnością do stałych.",
+          why: "Dlaczego to ważne: artykuły ograniczają takie jądro, na stożku, z góry i z dołu jednym wyrażeniem. To znaczy „ostre”: obraz jest znany w każdym punkcie i w każdej chwili, z dokładnością do stałej.",
+        },
+        transformers: {
+          eyebrow: "W toku",
+          question: "Co zmienia się wewnątrz modelu w chwili, gdy zaczyna generalizować?",
+          why: "To matematyka, nie model. Eksperymenty pytają, czy aktywacje wytrenowanej sieci poruszają się tak pod wpływem przesunięcia wejścia; rysunek pokazuje, co znaczy „tak”.",
+        },
+        quantum: {
+          eyebrow: "Nauka",
+          lead: "Rozwijające się zainteresowanie, nie wynik. Tak uczę się przedmiotu: buduję najmniejszy działający egzemplarz i naciskam jego przyciski.",
+          why: "Dlaczego to tutaj jest: przedmiot jest zrozumiany, gdy jego najmniejszy przykład działa. Ten działa, dokładnie, w pięćdziesięciu liniach.",
+        },
+        teaching: {
+          title: "Dydaktyka",
+          eyebrow: "Zajęcia",
+          intro: "Prowadzone zajęcia: {courses} ({from}–{to}).",
+          approach:
+            "Proste wyjaśnienie trudnej idei to najlepszy sprawdzian, czy się ją rozumie; na tym opierają się zajęcia.",
+          showAll: "Pokaż wszystkie ({count})",
+          showFewer: "Pokaż mniej",
+        },
+        closing: {
+          title: "Badania, współpraca albo dydaktyka?",
+          body: "Napisz albo najpierw zapytaj Vex.",
+          email: "Napisz do mnie",
+        },
+      },
       stack: "Publikacje jako stos akt",
+      established: "Co ustala",
+      showAbstract: "Pokaż abstrakt",
+      hideAbstract: "Ukryj abstrakt",
+      more: "Więcej",
+      less: "Mniej",
+      publicationSummaries: {
+        "https://ui.adsabs.harvard.edu/abs/2022arXiv221014590H/abstract":
+          "Rzeczywiście ostre obustronne oszacowania jąder ciepła Jacobiego na wielowymiarowym stożku i jego powierzchni. Wielomiany Jacobiego Xu na stożku spotykają się z metodą Nowaka, Sjögrena i Szarka dla jądra sferycznego.",
+        "https://arxiv.org/abs/2411.15793":
+          "Ostre oszacowania rozszerzone na podwójny stożek i jego powierzchnię dla jąder parzystego i nieparzystego oraz na hiperboloidę dla parzystego. Paraboloida opiera się tej metodzie, a artykuł mówi gdzie.",
+      } as Record<string, string>,
+      educationHighlights: {
+        "2019-10-03":
+          "II miejsce w Konkursie im. Józefa Marcinkiewicza na najlepszą pracę magisterską z matematyki w Polsce (PTM).",
+      } as Record<string, string>,
       venue: "Miejsce publikacji",
       year: "Rok",
       publicationsLead:
