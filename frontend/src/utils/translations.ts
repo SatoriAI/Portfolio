@@ -93,14 +93,20 @@ const copy = {
         "Mathematics taught me to distrust anything I cannot prove; engineering taught me that a proof nobody can run is worth little. I work in the space between the two: production backends and AI systems built with the care of a research argument, and research questions approached with an engineer's insistence on something that actually works. Teaching sits alongside both — explaining a hard idea simply is the best test of whether you understand it.",
       paragraph2:
         "Day to day that means Python — Django, FastAPI, SQLAlchemy — and the infrastructure around it: API design, data modeling, CI/CD pipelines and cloud deployments. I value clean code, automation and documentation, and I am most at home where backend development, DevOps and data-driven applications meet. Emerging areas such as LLMs, distributed systems and cryptography are where my curiosity currently points.",
+      mark: {
+        toggle: "Show how the mark reads as 0 and 1",
+        zero: "0",
+        one: "1",
+        reading: "→ dh",
+      },
+      markHint: "Binary Axis. Hover or tap: the initials first, the maths second.",
       philosophy: "Technical Philosophy",
       philosophyText:
         "Clarity always outlives shortcuts. Before I trust a system I want to be able to argue that it is correct — a property stated plainly, a test that would fail if it were false, and an invariant the code makes hard to break. That instinct comes from mathematics, and it is the most useful thing I brought from it into engineering.",
     },
     skills: {
       title: "Technical Skills",
-      subtitle:
-        "Practical engineering rooted in Python, powered by automation, and driven by curiosity.",
+      subtitle: "One square is a year in production. The filled one is the year still running.",
     },
     projects: {
       title: "Featured Projects",
@@ -242,14 +248,20 @@ const copy = {
         "Matematyka nauczyła mnie nie ufać niczemu, czego nie potrafię udowodnić; inżynieria — że dowód, którego nikt nie może uruchomić, jest niewiele wart. Pracuję pomiędzy tymi dwoma światami: buduję produkcyjne backendy i systemy AI ze starannością badawczego wywodu, a do pytań naukowych podchodzę z inżynierskim uporem, żeby coś naprawdę działało. Obok tego jest nauczanie — proste wyjaśnienie trudnej idei to najlepszy sprawdzian, czy się ją rozumie.",
       paragraph2:
         "Na co dzień oznacza to Pythona — Django, FastAPI, SQLAlchemy — i infrastrukturę wokół niego: projektowanie API, modelowanie danych, pipeline'y CI/CD i wdrożenia w chmurze. Cenię czysty kod, automatyzację i dokumentację, a najlepiej czuję się tam, gdzie spotykają się backend, DevOps i aplikacje oparte na danych. Moja ciekawość kieruje się dziś ku rozwijającym się obszarom: LLM-om, systemom rozproszonym i kryptografii.",
+      mark: {
+        toggle: "Pokaż, jak znak czyta się jako 0 i 1",
+        zero: "0",
+        one: "1",
+        reading: "→ dh",
+      },
+      markHint: "Oś binarna. Najedź lub dotknij: najpierw inicjały, potem matematyka.",
       philosophy: "Podejście techniczne",
       philosophyText:
         "Przejrzystość zawsze przeżywa skróty. Zanim zaufam systemowi, chcę umieć uzasadnić, że jest poprawny — własność zapisana wprost, test, który by nie przeszedł, gdyby była fałszywa, i niezmiennik, którego kod nie pozwala łatwo złamać. Ten odruch pochodzi z matematyki i jest najbardziej użyteczną rzeczą, jaką z niej przeniosłem do inżynierii.",
     },
     skills: {
       title: "Umiejętności",
-      subtitle:
-        "Praktyczna inżynieria zakorzeniona w Pythonie, napędzana automatyzacją i kierowana ciekawością.",
+      subtitle: "Jeden kwadrat to rok na produkcji. Wypełniony to rok, który wciąż trwa.",
     },
     projects: {
       title: "Wybrane projekty",

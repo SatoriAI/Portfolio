@@ -12,10 +12,11 @@ import {
 } from "lucide-react";
 
 import AskVexBar from "@/components/AskVexBar";
+import BinaryAxisMark from "@/components/brand/BinaryAxisMark";
 import HeatField, { HeatCaption } from "@/components/brand/HeatField";
 import FeaturedProjectCard from "@/components/cards/FeaturedProjectCard";
 import ProjectCard from "@/components/cards/ProjectCard";
-import SkillCard from "@/components/cards/SkillCard";
+import SkillYears from "@/components/home/SkillYears";
 import { Col, Grid, type Span12 } from "@/components/layout/Grid";
 import PageLayout from "@/components/layout/PageLayout";
 import Section from "@/components/layout/Section";
@@ -34,6 +35,7 @@ import type { UiProject } from "@/lib/projectsService";
 import { fetchProjects } from "@/lib/projectsService";
 import type { UiSkill } from "@/lib/skillsService";
 import { fetchSkills } from "@/lib/skillsService";
+import { formatYears } from "@/lib/skillYears";
 import { translations } from "@/utils/translations";
 
 const GITHUB_URL = "https://github.com/SatoriAI";
@@ -54,25 +56,25 @@ const sampleSkills: UiSkill[] = [
   {
     icon: Code,
     name: "Python",
-    level: "Expert",
+    level: "10+ years of experience",
     description: "Backend development, APIs, automation",
   },
   {
     icon: Database,
     name: "Databases",
-    level: "Advanced",
+    level: "5+ years of experience",
     description: "PostgreSQL, MongoDB, Redis",
   },
   {
     icon: Brain,
     name: "LLMs & RAG",
-    level: "Expert",
+    level: "3+ years of experience",
     description: "Pipeline development, vector databases",
   },
   {
     icon: Server,
     name: "Infrastructure",
-    level: "Advanced",
+    level: "5+ years of experience",
     description: "AWS, Docker, Kubernetes",
   },
 ];
@@ -218,53 +220,52 @@ const Index = () => {
         </Section>
       </HeatField>
 
-      {/* About */}
+      {/* About. The mark, at a size where it can be read, faces the prose: the
+          identity's second layer (0 · 1 → dh) is one hover away, and the copy
+          beside it says the same thing in words. */}
       <Section id="about">
         <SectionHeading eyebrow={`01 / ${t.nav.about}`} title={t.about.title} />
-        {/* Splits at lg, not md: a half column at md is ~39 characters per
-            line, under the kit's 55-70 range. */}
         <Grid gapY={48}>
-          <Col spanLg={6} className="space-y-6">
-            <p className="text-base text-muted-foreground md:text-body-lg">{t.about.paragraph1}</p>
-            <p className="text-base text-muted-foreground md:text-body-lg">{t.about.paragraph2}</p>
+          <Col as={Reveal} spanLg={4}>
+            <BinaryAxisMark labels={t.about.mark} />
+            <p className="mt-6 max-w-[28ch] font-mono text-meta text-muted-foreground">
+              {t.about.markHint}
+            </p>
           </Col>
-          {/* The lavender panel now faces the prose on its own axis. It carries
-              the pastel at column scale rather than as a badge, which is where
-              the kit's 20% allocation was meant to be spent. */}
-          <Col as={Reveal} spanLg={6}>
-            <Card tone="lavender">
-              <CardHeader>
-                <CardTitle className="text-xl md:text-xl">{t.about.philosophy}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">{t.about.philosophyText}</p>
-              </CardContent>
-            </Card>
+          {/* Splits at lg, not md: a half column at md is ~39 characters per
+              line, under the kit's 55-70 range. The text keeps its own 65ch cap
+              inside the 8-column span. */}
+          <Col spanLg={8} className="space-y-6">
+            <p className="max-w-[65ch] text-base text-muted-foreground md:text-body-lg">
+              {t.about.paragraph1}
+            </p>
+            <p className="max-w-[65ch] text-base text-muted-foreground md:text-body-lg">
+              {t.about.paragraph2}
+            </p>
+            <Reveal>
+              <Card tone="lavender">
+                <CardHeader>
+                  <CardTitle className="text-xl md:text-xl">{t.about.philosophy}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="max-w-[65ch] text-muted-foreground">{t.about.philosophyText}</p>
+                </CardContent>
+              </Card>
+            </Reveal>
           </Col>
         </Grid>
       </Section>
 
-      {/* Skills */}
+      {/* Skills, as years. Icon tiles said nothing a visitor could weigh; a
+          row of modules per year, with the running year as the kit's single
+          filled module, is the same data made legible. */}
       <Section id="skills">
         <SectionHeading
           eyebrow={`02 / ${t.nav.skills}`}
           title={t.skills.title}
           lead={t.skills.subtitle}
         />
-        <Grid>
-          {skills.map((skill, index) => (
-            <Col
-              as={Reveal}
-              key={skill.name}
-              spanSm={2}
-              spanLg={3}
-              delayMs={staggerMs(index)}
-              className="h-full"
-            >
-              <SkillCard skill={skill} className="h-full" />
-            </Col>
-          ))}
-        </Grid>
+        <SkillYears skills={skills} labels={{ years: (count) => formatYears(count, language) }} />
       </Section>
 
       {/* Projects: one card at a time on phones; on larger screens the first
