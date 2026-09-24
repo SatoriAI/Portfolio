@@ -126,10 +126,16 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        // A stroke drawing itself: pair with pathLength={1} and strokeDasharray={1}.
+        draw: {
+          from: { strokeDashoffset: "1" },
+          to: { strokeDashoffset: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        draw: "draw 500ms cubic-bezier(0.22, 1, 0.36, 1) both",
       },
     },
   },

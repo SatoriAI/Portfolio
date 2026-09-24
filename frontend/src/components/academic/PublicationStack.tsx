@@ -52,9 +52,15 @@ type SheetProps = {
   publication: UiPublication;
   labels: PublicationStackLabels;
   summary?: string;
+  /**
+   * Counts the selections that opened this sheet. Zero is the initial open,
+   * whose glyph draws when the stack scrolls into view; each later selection
+   * remounts the glyph so it draws again as the sheet comes forward.
+   */
+  activation: number;
 };
 
-const Sheet = ({ publication, labels, summary }: SheetProps) => {
+const Sheet = ({ publication, labels, summary, activation }: SheetProps) => {
   const [abstractOpen, setAbstractOpen] = useState(false);
   const domain = domainFor(publication.title);
   const lead = summary ?? publication.summary;
@@ -62,7 +68,16 @@ const Sheet = ({ publication, labels, summary }: SheetProps) => {
 
   return (
     <article className="grid gap-6 md:grid-cols-[96px_minmax(0,7fr)_minmax(0,3fr)] md:gap-10">
-      {domain ? <DomainGlyph kind={domain} className="h-24" /> : <span />}
+      {domain ? (
+        <DomainGlyph
+          key={activation}
+          kind={domain}
+          entrance={activation > 0 ? "mount" : "reveal"}
+          className="h-24"
+        />
+      ) : (
+        <span />
+      )}
       <div>
         <h3 className="text-card-title-sm font-semibold md:text-card-title">{publication.title}</h3>
         {lead && (
@@ -129,6 +144,12 @@ const PublicationStack = ({
   className,
 }: PublicationStackProps) => {
   const [openId, setOpenId] = useState(() => String(publications[0]?.id ?? ""));
+  // How many times each sheet has been selected since the page loaded.
+  const [activations, setActivations] = useState<Record<string, number>>({});
+  const select = (id: string) => {
+    setOpenId(id);
+    setActivations((previous) => ({ ...previous, [id]: (previous[id] ?? 0) + 1 }));
+  };
   const open = publications.some((p) => String(p.id) === openId)
     ? openId
     : String(publications[0]?.id ?? "");
@@ -146,7 +167,7 @@ const PublicationStack = ({
   return (
     <TabsPrimitive.Root
       value={open}
-      onValueChange={setOpenId}
+      onValueChange={select}
       orientation="horizontal"
       className={cn("relative", className)}
       style={{ paddingTop: (count - 1) * TAB_PX }}
@@ -214,6 +235,7 @@ const PublicationStack = ({
               publication={publication}
               labels={labels}
               summary={summaries[publication.link]}
+              activation={activations[String(publication.id)] ?? 0}
             />
           </TabsPrimitive.Content>
         ))}
