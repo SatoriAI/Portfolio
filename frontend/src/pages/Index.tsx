@@ -269,7 +269,8 @@ const Index = () => {
         </Reveal>
       </Section>
 
-      {/* Contact: the same field, at rest, closing the page. */}
+      {/* Contact: the same field, at rest, closing the page. No cards: an
+          address set large enough to be the point of the section. */}
       <HeatField>
         <Section id="contact">
           <SectionHeading
@@ -277,60 +278,31 @@ const Index = () => {
             title={t.contact.title}
             lead={t.contact.subtitle2}
           />
-          <Grid>
-            <Col spanMd={6} className="grid gap-6">
-              <Reveal>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-xl md:text-xl">
-                      <Mail className="h-5 w-5 text-iris" aria-hidden="true" />
-                      {t.contact.email}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <a
-                      href={`mailto:${EMAIL}`}
-                      className="text-iris underline decoration-1 underline-offset-4 hover:text-primary"
-                    >
-                      {EMAIL}
-                    </a>
-                  </CardContent>
-                </Card>
-              </Reveal>
-              <Reveal delayMs={60}>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-xl md:text-xl">
-                      <Github className="h-5 w-5 text-iris" aria-hidden="true" />
-                      GitHub
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <a
-                      href={GITHUB_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-iris underline decoration-1 underline-offset-4 hover:text-primary"
-                    >
-                      github.com/SatoriAI
-                    </a>
-                  </CardContent>
-                </Card>
-              </Reveal>
+          <Grid gapY={32}>
+            <Col as={Reveal} spanLg={7}>
+              <a
+                href={`mailto:${EMAIL}`}
+                className="inline-block break-all font-mono text-xl leading-tight text-foreground underline decoration-1 underline-offset-8 transition-colors duration-200 hover:text-iris sm:text-2xl md:text-[2rem]"
+              >
+                {EMAIL}
+              </a>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <Button onClick={() => askVex()}>
+                  <MessageSquare />
+                  {t.hero.askAI}
+                </Button>
+                <Button variant="outline" asChild>
+                  <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
+                    <Github />
+                    github.com/SatoriAI
+                  </a>
+                </Button>
+              </div>
             </Col>
-            <Col as={Reveal} spanMd={6} delayMs={120} className="h-full">
-              <Card className="flex h-full flex-col">
-                <CardHeader>
-                  <CardTitle className="text-xl md:text-xl">{t.contact.quickMessage}</CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-1 flex-col justify-between gap-6">
-                  <p className="text-muted-foreground">{t.contact.quickMessageDesc}</p>
-                  <Button onClick={() => askVex()} className="w-full sm:w-auto">
-                    <MessageSquare />
-                    {t.hero.askAI}
-                  </Button>
-                </CardContent>
-              </Card>
+            <Col as={Reveal} spanLg={5} delayMs={60}>
+              <p className="max-w-[45ch] text-base text-muted-foreground md:text-body-lg">
+                {t.contact.quickMessageDesc}
+              </p>
             </Col>
           </Grid>
         </Section>
