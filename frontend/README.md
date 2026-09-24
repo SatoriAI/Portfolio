@@ -30,13 +30,29 @@ Three routes — `/`, `/experience` and `/academic` — in `src/pages/`, on top 
 
 - `src/config/endpoints.ts` — every backend route, in one place
 - `src/lib/*Service.ts` — one module per domain, mapping the API's `translations` payloads onto UI types
-- `src/contexts/SettingsContext.tsx` — theme (dark by default) and language (`en`/`pl`), persisted in `localStorage`
+- `src/contexts/SettingsContext.tsx` — language (`en`/`pl`), persisted in `localStorage`
+- `src/config/navigation.ts` — the header's links, shared by the desktop nav and the mobile sheet
+- `src/utils/translations.ts` — all site copy in both languages, including per-page titles (`usePageMeta`)
+
+Pages are composed from `src/components/layout/` (header, footer, `Section`, `SectionHeading`), the cards in `src/components/cards/` (one per backend domain type), and `SwipeCarousel`, the phone-only one-slide-at-a-time carousel. The shadcn primitives stay in `src/components/ui/`. The home page is in the main bundle; the other routes and the chat's Markdown renderer load lazily.
 
 There is no i18n library. Localised content comes from the backend's `django-parler` translations, and the chosen language is forwarded as an `Accept-Language` header by `src/lib/apiClient.ts`.
 
 ### ChatWidget
 
-[`src/components/ChatWidget.tsx`](src/components/ChatWidget.tsx) POSTs to `/api/vex/chat/` for a session key, then opens an `EventSource` against `/api/vex/chat/stream/` and renders the token stream as Markdown. Most of its bulk is stream defence: SSE payloads arrive in several shapes, and Markdown split across chunk boundaries has to be repaired mid-flight — unclosed code fences, headings and list items severed from their newlines — before a final cleanup pass once the stream closes.
+[`src/components/ChatWidget.tsx`](src/components/ChatWidget.tsx) POSTs to `/api/vex/chat/` for a session key, then opens an `EventSource` against `/api/vex/chat/stream/` and renders the token stream as Markdown. Most of its bulk is stream defence: SSE payloads arrive in several shapes, and Markdown split across chunk boundaries has to be repaired mid-flight — unclosed code fences, headings and list items severed from their newlines — before a final cleanup pass once the stream closes. Thirty seconds of silence, before the first token or between tokens, is treated as a failure and shown inline with an email fallback, so a broken backend never looks like a page that is merely slow.
+
+### Visual identity
+
+The site implements Dawid's Visual Identity Kit ("Binary Axis", v5), which is versioned alongside the code in [`../visual-kit/`](../visual-kit/README.md) — read that first when adding colours, type, motion or decoration. It gives a single light palette, Manrope for text and IBM Plex Mono for tags, dates and labels, a 1160 px content column, and two decorative motifs. Everything lives in three places:
+
+- `src/index.css` — the palette as HSL variables (`--ink`, `--lavender`, `--iris`, …) mapped onto the shadcn semantic names the `ui/` primitives consume, plus the `@font-face` rules
+- `tailwind.config.ts` — the same tokens exposed as Tailwind colours, the kit's type scale (`text-display`, `text-h2`, `text-card-title`, …), the 20 px card radius and the reveal easing
+- `src/components/brand/` — the `dh` mark drawn inline, the geometric `RhythmMotif` band and the `DiffusionField` colour field
+
+The mark reduces the initials to `0 · 1 → dh`: the bowl of the `d` reads as zero, the shared vertical as one, and one curve completes the `h`. `BrandSymbol` carries both of the kit's cuts and picks between them by size — below 32 px the kit requires a separate, heavier micro drawing rather than a scaled-down standard one, so no call site has to remember that. `BrandLogo` sets the wordmark from the master artwork's proportions, so the lockup stays correct at any size.
+
+The kit defines no dark theme, so the site has none; adding one later means a second variable block in `src/index.css`, nothing else. It also leaves semantic error and success colours undefined — `--destructive` is a placeholder used only for error copy. Fonts are self-hosted from `public/fonts/` with their OFL licences, and the favicon set and manifest in `public/` are copied from `../visual-kit/favicon/`.
 
 ## Configuration
 

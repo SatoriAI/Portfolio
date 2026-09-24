@@ -1,4 +1,14 @@
-import { Brain, Code, Database, LucideIcon, Server } from "lucide-react";
+import {
+  Boxes,
+  Brain,
+  Cloud,
+  Code,
+  Container,
+  Database,
+  LucideIcon,
+  Server,
+  Sparkles,
+} from "lucide-react";
 
 import { endpoints } from "../config/endpoints";
 import { useSettings } from "../contexts/SettingsContext";
@@ -11,7 +21,7 @@ export type ApiSkill = {
   created_at: string;
   updated_at: string;
   level: string;
-  icon: "Code" | "Brain" | "Server" | "Database";
+  icon: "Code" | "Brain" | "Server" | "Database" | "Cloud" | "Container" | "Sparkles" | "Boxes";
 };
 
 export type UiSkill = {
@@ -21,11 +31,16 @@ export type UiSkill = {
   description: string;
 };
 
+// Mirrors work.choices.Icons in the backend; unknown names fall back to Code.
 const iconMap: Record<ApiSkill["icon"], LucideIcon> = {
   Code,
   Brain,
   Server,
   Database,
+  Cloud,
+  Container,
+  Sparkles,
+  Boxes,
 };
 
 export function mapApiSkillToUi(skill: ApiSkill, language: string): UiSkill {

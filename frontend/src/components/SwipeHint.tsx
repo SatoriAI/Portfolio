@@ -1,5 +1,6 @@
-import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+
+import { cn } from "@/lib/utils";
 
 type SwipeHintProps = {
   visible: boolean;
@@ -7,29 +8,28 @@ type SwipeHintProps = {
   className?: string;
 };
 
-const SwipeHint: React.FC<SwipeHintProps> = ({ visible, text, className }) => {
-  return (
+const SwipeHint = ({ visible, text, className }: SwipeHintProps) => (
+  <div
+    className={cn("pointer-events-none mt-4 flex w-full justify-center md:hidden", className)}
+    aria-hidden={!visible}
+  >
     <div
-      className={`pointer-events-none mt-3 flex w-full justify-center md:hidden ${className || ""}`}
-      aria-hidden={!visible}
+      className={cn(
+        "inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 font-mono text-meta text-muted-foreground",
+        // Kit entrance: opacity and an 8px rise over 400ms on the brand easing.
+        "transition-[opacity,transform] duration-400 ease-brand",
+        visible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0",
+      )}
+      role="status"
+      aria-live="polite"
     >
-      <div
-        className={[
-          "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs sm:text-sm",
-          "border-orange-200/60 bg-orange-50/80 text-muted-foreground backdrop-blur",
-          "dark:border-white/10 dark:bg-white/5",
-          "transition-all duration-500",
-          visible ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0",
-        ].join(" ")}
-        role="status"
-        aria-live="polite"
-      >
-        <ChevronLeft className="h-3.5 w-3.5 opacity-70 motion-safe:animate-pulse" />
-        <span>{text}</span>
-        <ChevronRight className="h-3.5 w-3.5 opacity-70 motion-safe:animate-pulse" />
-      </div>
+      {/* Static chevrons: the kit rules out autoplay loops, and the hint
+          already announces itself by fading in. */}
+      <ChevronLeft className="h-3.5 w-3.5 text-iris" />
+      <span>{text}</span>
+      <ChevronRight className="h-3.5 w-3.5 text-iris" />
     </div>
-  );
-};
+  </div>
+);
 
 export default SwipeHint;

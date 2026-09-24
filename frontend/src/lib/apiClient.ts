@@ -30,6 +30,7 @@ type FetchOptions<TBody> = {
   body?: TBody;
   headers?: Record<string, string>;
   query?: Record<string, string | number | boolean | undefined | null>;
+  signal?: AbortSignal;
 };
 
 type JsonValue = unknown;
@@ -46,7 +47,7 @@ export async function apiFetch<TResponse extends JsonValue, TBody extends JsonVa
     );
   }
 
-  const { method = "GET", body, headers, query } = options;
+  const { method = "GET", body, headers, query, signal } = options;
   const url = buildUrl(path, query);
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
   const computedHeaders: Record<string, string> = {
@@ -61,6 +62,7 @@ export async function apiFetch<TResponse extends JsonValue, TBody extends JsonVa
   const init: RequestInit = {
     method,
     headers: computedHeaders,
+    signal,
   };
 
   if (body !== undefined) {

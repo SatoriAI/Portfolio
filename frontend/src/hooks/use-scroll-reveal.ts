@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+
+import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
 
 export type ScrollRevealOptions = {
   root?: Element | null;
@@ -15,21 +17,35 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>(
 ) {
   const {
     root = null,
-    rootMargin = "0px 0px -10% 0px",
+    // A positive bottom margin reveals a section shortly before it scrolls into
+    // view, so text is never read mid-fade.
+    rootMargin = "0px 0px 15% 0px",
     threshold = 0.1,
     once = true,
   } = options || {};
 
   const elementRef = useRef<T | null>(null);
   const [isRevealed, setIsRevealed] = useState(false);
+  // Content already on screen when it mounts must never start hidden; this is
+  // what keeps the first paint from looking blank.
+  const [isInitiallyVisible, setIsInitiallyVisible] = useState(false);
 
-  const prefersReducedMotion = useMemo(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia === "undefined") return false;
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  }, []);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const setRef = useCallback((node: T | null) => {
     elementRef.current = node;
+  }, []);
+
+  // Layout effect: the state update re-renders before the browser paints, so
+  // there is no opacity-0 frame for above-the-fold content.
+  useLayoutEffect(() => {
+    const node = elementRef.current;
+    if (!node || typeof window === "undefined") return;
+    const rect = node.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      setIsInitiallyVisible(true);
+      setIsRevealed(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -59,5 +75,5 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>(
     return () => observer.disconnect();
   }, [root, rootMargin, threshold, once, prefersReducedMotion]);
 
-  return { ref: setRef, isRevealed, prefersReducedMotion } as const;
+  return { ref: setRef, isRevealed, isInitiallyVisible, prefersReducedMotion } as const;
 }

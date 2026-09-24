@@ -1,12 +1,50 @@
 export const translations = {
   en: {
     meta: {
-      title: "Dawid's Portfolio",
-      description: "Dawid's Personal Portfolio",
+      home: {
+        title: "Dawid Hanrahan — Mathematician by training, engineer by trade",
+        description:
+          "Backend and AI engineer with a PhD in harmonic analysis. Python in production at Nokia, Xperi and CloudFerro.",
+      },
+      experience: {
+        title: "Work experience — Dawid Hanrahan",
+        description:
+          "Roles, achievements and technologies across Nokia, Xperi, CloudFerro and PeakData.",
+      },
+      research: {
+        title: "Research and teaching — Dawid Hanrahan",
+        description:
+          "PhD in harmonic analysis, published papers, and what students say about the teaching.",
+      },
+      notFound: {
+        title: "Page not found — Dawid Hanrahan",
+        description:
+          "Backend and AI engineer with a PhD in harmonic analysis. Python in production at Nokia, Xperi and CloudFerro.",
+      },
+    },
+    common: {
+      tagline: "Mathematician by training, engineer by trade",
+      language: "Language",
+      menu: "Menu",
+      openMenu: "Open navigation menu",
+      chatWithVex: "Chat with Vex",
+      loading: "Loading…",
+      demo: "Demo",
+      privateProject: "Private, commercial project — the code is not public.",
     },
     chat: {
-      prompt: "What would you like to know?",
-      inputPlaceholder: "Ask me anything about Dawid...",
+      prompt: "Ask Vex anything about Dawid.",
+      inputPlaceholder: "Ask Vex about Dawid…",
+      starters: [
+        "What's his experience with Kubernetes?",
+        "Tell me about his PhD research",
+        "Is he available for contract work?",
+      ],
+      errorFallback:
+        "Vex didn't answer. Email me at dawidhanrahan@gmail.com and I'll reply within a day.",
+      typing: "Vex is typing",
+      clear: "Clear",
+      send: "Send",
     },
     nav: {
       home: "Home",
@@ -15,7 +53,7 @@ export const translations = {
       projects: "Projects",
       contact: "Contact",
       experience: "Experience",
-      academic: "University",
+      academic: "Research",
       mainPage: "Main Page",
       pages: "Pages",
       homeSections: "Home Sections",
@@ -29,20 +67,26 @@ export const translations = {
       contact: "Get in touch or chat with Vex on the Home page.",
     },
     hero: {
-      title: "Backend Developer",
+      title: "Mathematician by training. Engineer by trade.",
       subtitle:
-        "I transform ideas into stable and reliable systems. From backend logic to infrastructure solutions. My passion is creating products that connect technology with people.",
-      askAI: "Ask AI About Me",
+        "Almost a decade of Python, in production at Nokia, Xperi and CloudFerro — alongside a PhD in harmonic analysis. I'm drawn to problems where the maths and the infrastructure both have to be right.",
+      proof: [
+        { value: "2", label: "published papers" },
+        { value: "4", label: "production systems" },
+        { value: "10k+", label: "weekly users served" },
+      ],
+      askAI: "Ask Vex about me",
+      viewProjects: "View projects",
     },
     about: {
       title: "About Me",
       paragraph1:
-        "I am someone who enjoys combining curiosity with creativity, both in my professional work and personal life. Beyond programming, I am passionate about teaching, exploring new ideas, and sharing knowledge in a way that inspires others. I am drawn to challenges that require analytical thinking as well as a touch of imagination — whether it’s solving complex mathematical problems or working on personal projects that allow me to learn and grow.",
+        "Mathematics taught me to distrust anything I cannot prove; engineering taught me that a proof nobody can run is worth little. I work in the space between the two: production backends and AI systems built with the care of a research argument, and research questions approached with an engineer's insistence on something that actually works. Teaching sits alongside both — explaining a hard idea simply is the best test of whether you understand it.",
       paragraph2:
-        "I specialize in building robust backend systems and scalable infrastructures, primarily in Python (Django, FastAPI, SQLAlchemy), as well as in modern DevOps practices. My work includes designing APIs, data modeling, configuring CI/CD pipelines, and deploying to the cloud. I value clean code, automation, and documentation, and I especially enjoy working at the intersection of backend development, DevOps, and data-driven applications. I am also deeply interested in newest areas such as LLMs, distributed systems, and cryptography.",
+        "Day to day that means Python — Django, FastAPI, SQLAlchemy — and the infrastructure around it: API design, data modeling, CI/CD pipelines and cloud deployments. I value clean code, automation and documentation, and I am most at home where backend development, DevOps and data-driven applications meet. Emerging areas such as LLMs, distributed systems and cryptography are where my curiosity currently points.",
       philosophy: "Technical Philosophy",
       philosophyText:
-        "I approach technology with the conviction that clean, scalable, and above all maintainable solutions are the foundation of lasting systems. I see code as a craft — it should be tested, well-structured, and supported by clear documentation. I follow SOLID principles and value simplicity, because clarity always outlives shortcuts. In my work, I strive to automate everything possible so that teams can move faster without sacrificing quality. At the same time, I remain curious and pragmatic: I explore new tools and approaches, but adopt them only when they bring real value to the product and the people who use it.",
+        "Clarity always outlives shortcuts. Before I trust a system I want to be able to argue that it is correct — a property stated plainly, a test that would fail if it were false, and an invariant the code makes hard to break. That instinct comes from mathematics, and it is the most useful thing I brought from it into engineering.",
     },
     skills: {
       title: "Technical Skills",
@@ -52,15 +96,17 @@ export const translations = {
     projects: {
       title: "Featured Projects",
       subtitle:
-        "From concept to system in action. Turning my passion for innovation into real solutions.",
+        "Backend and AI systems shipped end to end — from the data model to the deployment — for real users.",
       code: "Code",
+      imageAlt: "{title} — preview",
     },
     contact: {
       title: "Let's Talk",
-      subtitle2: "Let’s build something that matters together. I’m available anytime.",
+      subtitle2: "Open to backend and AI work — contract or full-time. I reply within a day.",
       email: "Email",
-      quickMessage: "Have a Chat with Vex!",
-      quickMessageDesc: "Have a quick question? Start a conversation with my AI assistant.",
+      quickMessage: "Chat with Vex",
+      quickMessageDesc:
+        "Vex is my assistant, trained on this site. Ask it about my experience, research or availability.",
     },
     hints: {
       swipeMore: "Swipe to see more",
@@ -75,7 +121,7 @@ export const translations = {
       noData: "No work experience data available.",
     },
     academic: {
-      title: "Academic Career",
+      title: "Research and Teaching",
       subtitle:
         "Alongside my professional career, I am pursuing a PhD in Theoretical Mathematics, where I combine my passion for research, teaching, and problem-solving. I have taught courses in mathematics and programming, receiving excellent feedback for my ability to present complex topics in an accessible and engaging way. Academic work not only sharpens my analytical skills but also fuels my curiosity; from exploring algorithms to the latest applications of artificial intelligence.",
       researchFocus: "Research Focus",
@@ -90,15 +136,57 @@ export const translations = {
       noPublications: "No publications available.",
       noTestimonials: "No testimonials available.",
     },
+    notFound: {
+      title: "Page not found",
+      body: "The address you followed does not exist or has moved.",
+      home: "Back to the home page",
+    },
   },
   pl: {
     meta: {
-      title: "Portfolio Dawida",
-      description: "Osobiste portfolio Dawida",
+      home: {
+        title: "Dawid Hanrahan — Matematyk z wykształcenia, inżynier z zawodu",
+        description:
+          "Inżynier backendu i AI z doktoratem z analizy harmonicznej. Python na produkcji w Nokii, Xperi i CloudFerro.",
+      },
+      experience: {
+        title: "Doświadczenie zawodowe — Dawid Hanrahan",
+        description: "Stanowiska, osiągnięcia i technologie w Nokii, Xperi, CloudFerro i PeakData.",
+      },
+      research: {
+        title: "Badania i dydaktyka — Dawid Hanrahan",
+        description:
+          "Doktorat z analizy harmonicznej, publikacje i opinie studentów o prowadzonych zajęciach.",
+      },
+      notFound: {
+        title: "Nie znaleziono strony — Dawid Hanrahan",
+        description:
+          "Inżynier backendu i AI z doktoratem z analizy harmonicznej. Python na produkcji w Nokii, Xperi i CloudFerro.",
+      },
+    },
+    common: {
+      tagline: "Matematyk z wykształcenia, inżynier z zawodu",
+      language: "Język",
+      menu: "Menu",
+      openMenu: "Otwórz menu nawigacji",
+      chatWithVex: "Porozmawiaj z Vex",
+      loading: "Wczytywanie…",
+      demo: "Demo",
+      privateProject: "Projekt prywatny, komercyjny — kod nie jest publiczny.",
     },
     chat: {
-      prompt: "O co chcesz zapytać?",
-      inputPlaceholder: "Zapytaj o cokolwiek o Dawidzie...",
+      prompt: "Zapytaj Vex o cokolwiek o Dawidzie.",
+      inputPlaceholder: "Zapytaj Vex o Dawida…",
+      starters: [
+        "Jakie ma doświadczenie z Kubernetesem?",
+        "Opowiedz o jego badaniach doktorskich",
+        "Czy jest dostępny do pracy kontraktowej?",
+      ],
+      errorFallback:
+        "Vex nie odpowiedział. Napisz na dawidhanrahan@gmail.com — odpowiem w ciągu dnia.",
+      typing: "Vex pisze",
+      clear: "Wyczyść",
+      send: "Wyślij",
     },
     nav: {
       home: "Strona główna",
@@ -107,7 +195,7 @@ export const translations = {
       projects: "Projekty",
       contact: "Kontakt",
       experience: "Doświadczenie",
-      academic: "Uczelnia",
+      academic: "Badania",
       mainPage: "Strona główna",
       pages: "Strony",
       homeSections: "Sekcje strony głównej",
@@ -121,20 +209,26 @@ export const translations = {
       contact: "Skontaktuj się lub porozmawiaj z Vex na stronie głównej.",
     },
     hero: {
-      title: "Backend Developer",
+      title: "Matematyk z wykształcenia. Inżynier z zawodu.",
       subtitle:
-        "Zamieniam pomysły w stabilne i niezawodne systemy. Od logiki backendu po rozwiązania infrastrukturalne. Moją pasją jest tworzenie produktów, które łączą technologię z ludźmi.",
-      askAI: "Porozmawiaj o mnie z AI",
+        "Prawie dekada Pythona, na produkcji w Nokii, Xperi i CloudFerro — równolegle z doktoratem z analizy harmonicznej. Ciągną mnie problemy, w których i matematyka, i infrastruktura muszą być poprawne.",
+      proof: [
+        { value: "2", label: "opublikowane artykuły" },
+        { value: "4", label: "systemy produkcyjne" },
+        { value: "10k+", label: "użytkowników tygodniowo" },
+      ],
+      askAI: "Zapytaj Vex o mnie",
+      viewProjects: "Zobacz projekty",
     },
     about: {
       title: "O mnie",
       paragraph1:
-        "Jestem osobą, która lubi łączyć ciekawość z kreatywnością, zarówno w pracy, jak i w życiu prywatnym. Poza programowaniem pasjonuję się nauczaniem, odkrywaniem nowych pomysłów i dzieleniem się wiedzą w sposób, który inspiruje innych. Przyciągają mnie wyzwania wymagające analitycznego myślenia, ale i odrobiny wyobraźni — czy to przy rozwiązywaniu trudnych problemów matematycznych, czy nad osobistymi projektami, które pozwalają mi się rozwijać.",
+        "Matematyka nauczyła mnie nie ufać niczemu, czego nie potrafię udowodnić; inżynieria — że dowód, którego nikt nie może uruchomić, jest niewiele wart. Pracuję pomiędzy tymi dwoma światami: buduję produkcyjne backendy i systemy AI ze starannością badawczego wywodu, a do pytań naukowych podchodzę z inżynierskim uporem, żeby coś naprawdę działało. Obok tego jest nauczanie — proste wyjaśnienie trudnej idei to najlepszy sprawdzian, czy się ją rozumie.",
       paragraph2:
-        "Specjalizuję się w budowaniu solidnych systemów backendowych i skalowalnych infrastruktur, głównie w Pythonie (Django, FastAPI, SQLAlchemy) oraz w nowoczesnych praktykach DevOps. Moja praca obejmuje projektowanie API, modelowanie danych, konfigurację pipeline’ów CI/CD i wdrożenia w chmurze. Cenię czysty kod, automatyzację i dokumentację, a szczególnie lubię działać na styku backendu, DevOps i aplikacji opartych na danych. Interesują mnie także najnowsze zagadnienia, takie jak LLM, systemy rozproszone czy kryptografia.",
+        "Na co dzień oznacza to Pythona — Django, FastAPI, SQLAlchemy — i infrastrukturę wokół niego: projektowanie API, modelowanie danych, pipeline'y CI/CD i wdrożenia w chmurze. Cenię czysty kod, automatyzację i dokumentację, a najlepiej czuję się tam, gdzie spotykają się backend, DevOps i aplikacje oparte na danych. Moja ciekawość kieruje się dziś ku rozwijającym się obszarom: LLM-om, systemom rozproszonym i kryptografii.",
       philosophy: "Podejście techniczne",
       philosophyText:
-        "Podchodzę do technologii z przekonaniem, że czyste, skalowalne i przede wszystkim łatwe w utrzymaniu rozwiązania stanowią fundament trwałych systemów. Kod traktuję jak rzemiosło. Uważam, że powinien być testowany, dobrze zorganizowany, a także wspierany przejrzystą dokumentacją. Przestrzegam zasad SOLID i cenię prostotę, bo przejrzystość zawsze wygrywa ze skrótami. W pracy staram się automatyzować wszystko, co możliwe, aby zespoły mogły działać szybciej bez poświęcania jakości. Jednocześnie pozostaję ciekawy i pragmatyczny: eksploruję nowe narzędzia i podejścia, ale wdrażam je tylko wtedy, gdy wnoszą realną wartość do produktu i dla ludzi, którzy z niego korzystają.",
+        "Przejrzystość zawsze przeżywa skróty. Zanim zaufam systemowi, chcę umieć uzasadnić, że jest poprawny — własność zapisana wprost, test, który by nie przeszedł, gdyby była fałszywa, i niezmiennik, którego kod nie pozwala łatwo złamać. Ten odruch pochodzi z matematyki i jest najbardziej użyteczną rzeczą, jaką z niej przeniosłem do inżynierii.",
     },
     skills: {
       title: "Umiejętności",
@@ -144,15 +238,17 @@ export const translations = {
     projects: {
       title: "Wybrane projekty",
       subtitle:
-        "Od pomysłu do działającego systemu. Moja pasja do innowacji przełożona na realne rozwiązania.",
+        "Systemy backendowe i AI dostarczone od początku do końca — od modelu danych po wdrożenie — dla prawdziwych użytkowników.",
       code: "Kod",
+      imageAlt: "{title} — podgląd",
     },
     contact: {
       title: "Porozmawiajmy",
-      subtitle2: "Zbudujmy razem coś, co ma znaczenie. Jestem dostępny w każdej chwili.",
+      subtitle2: "Otwarty na pracę backendową i AI — kontrakt lub etat. Odpowiadam w ciągu dnia.",
       email: "Email",
-      quickMessage: "Porozmawiaj z Vex!",
-      quickMessageDesc: "Masz szybkie pytanie? Rozpocznij rozmowę z moim asystentem AI.",
+      quickMessage: "Porozmawiaj z Vex",
+      quickMessageDesc:
+        "Vex to mój asystent, wytrenowany na tej stronie. Zapytaj o moje doświadczenie, badania lub dostępność.",
     },
     hints: {
       swipeMore: "Przeciągnij w bok, aby zobaczyć więcej",
@@ -167,7 +263,7 @@ export const translations = {
       noData: "Brak dostępnych danych o doświadczeniu zawodowym.",
     },
     academic: {
-      title: "Kariera Akademicka",
+      title: "Badania i dydaktyka",
       subtitle:
         "Obok kariery zawodowej realizuję doktorat z matematyki teoretycznej, gdzie łączę pasję do badań, nauczania i rozwiązywania problemów. Prowadziłem zajęcia z matematyki i programowania, otrzymując doskonałe opinie za umiejętność przystępnego i angażującego przedstawiania złożonych tematów. Praca naukowa nie tylko wyostrza moje umiejętności analityczne, ale także podsyca ciekawość; od eksploracji algorytmów po najnowsze zastosowania sztucznej inteligencji.",
       researchFocus: "Obszar badań",
@@ -181,6 +277,11 @@ export const translations = {
       view: "Zobacz",
       noPublications: "Brak dostępnych publikacji.",
       noTestimonials: "Brak dostępnych opinii.",
+    },
+    notFound: {
+      title: "Nie znaleziono strony",
+      body: "Adres, który otworzyłeś, nie istnieje lub został przeniesiony.",
+      home: "Wróć na stronę główną",
     },
   },
 };
