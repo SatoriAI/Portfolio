@@ -78,7 +78,14 @@ const copy = {
         { value: "10k+", label: "weekly users served" },
       ],
       askAI: "Ask Vex about me",
+      askPlaceholder: "Ask Vex anything about me…",
+      ask: "Ask",
+      askHint: "Vex is my assistant. It has read this site.",
       viewProjects: "View projects",
+      field: {
+        label: "heat kernel",
+        replay: "Run the heat spread again",
+      },
     },
     about: {
       title: "About Me",
@@ -220,7 +227,14 @@ const copy = {
         { value: "10k+", label: "użytkowników tygodniowo" },
       ],
       askAI: "Zapytaj Vex o mnie",
+      askPlaceholder: "Zapytaj Vex o cokolwiek…",
+      ask: "Zapytaj",
+      askHint: "Vex to mój asystent. Przeczytał tę stronę.",
       viewProjects: "Zobacz projekty",
+      field: {
+        label: "jądro ciepła",
+        replay: "Uruchom rozchodzenie ciepła ponownie",
+      },
     },
     about: {
       title: "O mnie",

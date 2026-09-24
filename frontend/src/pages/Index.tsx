@@ -11,7 +11,8 @@ import {
   Server,
 } from "lucide-react";
 
-import DiffusionField from "@/components/brand/DiffusionField";
+import AskVexBar from "@/components/AskVexBar";
+import HeatField, { HeatCaption } from "@/components/brand/HeatField";
 import FeaturedProjectCard from "@/components/cards/FeaturedProjectCard";
 import ProjectCard from "@/components/cards/ProjectCard";
 import SkillCard from "@/components/cards/SkillCard";
@@ -145,32 +146,41 @@ const Index = () => {
 
   return (
     <PageLayout>
-      {/* Hero: nothing here animates — it is the first thing a visitor sees.
-          The diffusion field is what puts the kit's pastels above the fold.
-          They are the one thing that separates this page from every other
-          engineer's, and they had been spent only on badges and hover states.
-          The page closes on the same motif at Contact, so the field reads as
-          a deliberate bookend rather than decoration. */}
-      <DiffusionField placement="top">
-        <Section id="hero" className="pb-10 pt-12 md:pb-14 md:pt-24">
+      {/* Hero. The field behind it is a live heat kernel: two point sources
+          spreading into the kit's colour fields once after load, with the
+          equation and the kernel time printed under the copy. The previous
+          pass ruled that nothing in the hero animates; this is the one thing
+          that earns an exception, because it is the brand line made visible —
+          the mathematics is literally running under the engineering. The
+          heading and copy still do not move.
+
+          Vex is asked from here rather than from a corner button. A field you
+          can type a question into is the site's unusual thing, so it sits
+          where the eye lands, not behind a launcher. */}
+      <HeatField placement="top" live>
+        <Section id="hero" className="pb-8 pt-12 md:pb-10 md:pt-20">
           <Grid gapY={48} className="lg:items-end">
             {/* No max-width here: the column is the measure. The subtitle keeps
                 its own 65ch cap, and a width cap on the column would pull it off
                 the grid axis. */}
-            <Col spanLg={9}>
+            <Col spanLg={8}>
               <p className="mb-4 font-mono text-meta uppercase tracking-wide text-iris">
                 Dawid Hanrahan
               </p>
               <h1 className="text-display-sm md:text-display">{t.hero.title}</h1>
-              <p className="mt-6 max-w-[65ch] text-base text-muted-foreground md:text-body-lg">
+              <p className="mt-5 max-w-[65ch] text-base text-muted-foreground md:text-body-lg">
                 {t.hero.subtitle}
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Button size="lg" onClick={() => askVex()}>
-                  <MessageSquare />
-                  {t.hero.askAI}
-                </Button>
-                <Button size="lg" variant="outline" asChild>
+              <AskVexBar
+                className="mt-6 max-w-[40rem]"
+                placeholder={t.hero.askPlaceholder}
+                submitLabel={t.hero.ask}
+                starters={t.chat.starters}
+                onAsk={askVex}
+              />
+              <p className="mt-3 font-mono text-meta text-muted-foreground">{t.hero.askHint}</p>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Button variant="outline" asChild>
                   <Link to="/#projects">
                     {t.hero.viewProjects}
                     <ArrowDown />
@@ -195,12 +205,18 @@ const Index = () => {
                 </div>
               </div>
             </Col>
-            <Col spanLg={3} align="end">
+            <Col spanLg={4} align="end">
               <ProofPoints items={t.hero.proof} />
             </Col>
           </Grid>
+          <HeatCaption
+            className="mt-10 block md:mt-12"
+            label={t.hero.field.label}
+            replayLabel={t.hero.field.replay}
+            locale={language}
+          />
         </Section>
-      </DiffusionField>
+      </HeatField>
 
       {/* About */}
       <Section id="about">
@@ -294,8 +310,8 @@ const Index = () => {
         )}
       </Section>
 
-      {/* Contact: the kit's soft colour field, with the copy on white cards. */}
-      <DiffusionField>
+      {/* Contact: the same field, at rest, closing the page. */}
+      <HeatField>
         <Section id="contact">
           <SectionHeading
             eyebrow={`04 / ${t.nav.contact}`}
@@ -359,7 +375,7 @@ const Index = () => {
             </Col>
           </Grid>
         </Section>
-      </DiffusionField>
+      </HeatField>
     </PageLayout>
   );
 };
