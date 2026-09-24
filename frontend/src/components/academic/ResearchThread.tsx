@@ -5,10 +5,11 @@ import { cn } from "@/lib/utils";
  * Three degrees in one subject at one university, read as what they are:
  * a single line of research, from the bachelor's thesis to the doctorate.
  *
- * A hairline rail runs down the left with one module of the rhythm motif
- * per degree; the degree still in progress is the filled module, the one
- * that breaks the pattern. Entries are in the order the work was done,
- * earliest first, because the thread reads forward.
+ * A hairline rail carries one module of the rhythm motif per degree; the
+ * degree still in progress is the filled module, the one that breaks the
+ * pattern. On a phone the rail runs down the left and the entries stack. From
+ * lg it runs across the top and the three degrees stand side by side, so the
+ * thread reads left to right in the order the work was done.
  */
 
 export type ResearchThreadLabels = {
@@ -24,22 +25,22 @@ type ResearchThreadProps = {
 };
 
 const ResearchThread = ({ schools, labels, className }: ResearchThreadProps) => (
-  <ol className={cn("relative", className)}>
+  <ol className={cn("relative grid gap-y-14 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-0", className)}>
     <span
       aria-hidden="true"
-      className="absolute bottom-6 left-3 top-6 w-px bg-iris/40 motion-reduce:transition-none"
+      className="absolute bottom-6 left-3 top-6 w-px bg-iris/40 lg:bottom-auto lg:left-3 lg:right-3 lg:top-3 lg:h-px lg:w-auto"
     />
     {schools.map((school) => {
       const current = !school.endDate;
       return (
         <li
           key={school.id}
-          className="relative grid grid-cols-[24px_minmax(0,1fr)] gap-x-6 pb-14 last:pb-0 md:gap-x-10"
+          className="relative grid grid-cols-[24px_minmax(0,1fr)] gap-x-6 md:gap-x-10 lg:grid-cols-1 lg:gap-x-0 lg:gap-y-6"
         >
           <span
             aria-hidden="true"
             className={cn(
-              "relative z-10 mt-0.5 block h-6 w-6 rounded-sm border",
+              "relative z-10 mt-0.5 block h-6 w-6 rounded-sm border lg:mt-0",
               current ? "border-primary bg-primary" : "border-iris bg-lavender",
             )}
           />
@@ -52,9 +53,7 @@ const ResearchThread = ({ schools, labels, className }: ResearchThreadProps) => 
             </h3>
             <p className="mt-1 text-base text-muted-foreground">{school.university}</p>
             {school.research && (
-              <p className="mt-5 max-w-[65ch] text-base text-muted-foreground md:text-body-lg">
-                {school.research}
-              </p>
+              <p className="mt-5 max-w-[65ch] text-base text-muted-foreground">{school.research}</p>
             )}
             <dl className="mt-5 space-y-2 font-mono text-meta">
               {school.advisor && (

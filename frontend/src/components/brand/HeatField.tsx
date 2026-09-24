@@ -213,21 +213,36 @@ type HeatFieldProps = HTMLAttributes<HTMLDivElement> & {
   placement?: HeatPlacement;
   /** Spread from the sources once on mount and take heat from the mouse. */
   live?: boolean;
+  /**
+   * Kernel time under outside control, in units of the resting time (0, 1].
+   * Given, the field plays no intro and simply shows this time — the
+   * Research page's kernel figure drives its header's field this way, so the
+   * plot and the background are one equation at one t.
+   */
+  time?: number;
 };
+
+const clampTau = (tau: number) => Math.max(INTRO_START, Math.min(1, tau));
 
 const HeatField = ({
   placement = "corners",
   live = false,
+  time,
   className,
   children,
   ...props
 }: HeatFieldProps) => {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const controlled = time !== undefined;
   const animated = live && !prefersReducedMotion;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const geometryRef = useRef<FieldGeometry>(geometryFor(16, 9));
-  const stateRef = useRef<FieldState>({ tau: animated ? INTRO_START : 1, pointer: [], clock: 0 });
+  const stateRef = useRef<FieldState>({
+    tau: controlled ? clampTau(time) : animated ? INTRO_START : 1,
+    pointer: [],
+    clock: 0,
+  });
   const frameRef = useRef<number | null>(null);
   const introStartRef = useRef<number | null>(null);
   const lastFrameRef = useRef<number | null>(null);
@@ -278,8 +293,19 @@ const HeatField = ({
     if (frameRef.current === null) frameRef.current = requestAnimationFrame(step);
   };
 
+  // An outside time is drawn as it arrives; the pointer loop, if running,
+  // picks it up on its next frame anyway.
+  useEffect(() => {
+    if (!controlled) return;
+    stateRef.current.tau = clampTau(time);
+    setDisplayedTau(stateRef.current.tau);
+    if (frameRef.current === null) draw();
+    // draw reads refs only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [controlled, time]);
+
   const replay = () => {
-    if (!animated) return;
+    if (!animated || controlled) return;
     introStartRef.current = performance.now();
     stateRef.current.tau = INTRO_START;
     schedule();
@@ -301,7 +327,9 @@ const HeatField = ({
   }, [placement]);
 
   useEffect(() => {
-    if (animated) {
+    if (controlled) {
+      draw();
+    } else if (animated) {
       introStartRef.current = performance.now();
       stateRef.current.tau = INTRO_START;
       schedule();
@@ -315,7 +343,7 @@ const HeatField = ({
       frameRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [animated, placement]);
+  }, [animated, controlled, placement]);
 
   // A mouse over the field is a moving heat source. Touch is excluded: on a
   // phone the same gesture is a scroll.
@@ -336,10 +364,10 @@ const HeatField = ({
   };
 
   const context = useMemo(
-    () => ({ tau: displayedTau, animated, replay }),
+    () => ({ tau: displayedTau, animated: animated && !controlled, replay }),
     // replay reads refs only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [displayedTau, animated],
+    [displayedTau, animated, controlled],
   );
 
   return (

@@ -198,13 +198,15 @@ const copy = {
         },
       },
       figure: {
-        figure: "The Neumann heat kernel on a segment, at four times",
+        figure: "The Neumann heat kernel on a segment, over time",
         caption:
-          "The Neumann heat kernel on a segment, K_t(x, y) for fixed y, at four times: heat placed at one point spreads and flattens towards the mean, 1/π. A sharp estimate bounds a kernel like this one from above and below by the same expression, up to constants. The series is cut at n = 60.",
+          "The Neumann heat kernel on a segment, K_t(x, y) for fixed y. Drag t: heat placed at one point spreads and flattens towards the mean, 1/π, and the field behind this page spreads with it. A sharp estimate bounds a kernel like this one from above and below by the same expression, up to constants. The series is cut at n = 60.",
+        play: "Run the diffusion",
+        time: "time t",
       },
       education: "Education",
       figureNotice:
-        "What to notice: every curve flattens towards the dashed mean, and the sharp one does so fastest.",
+        "What to notice: the peak drops fast at first and slowly later, and the whole curve settles onto the dashed mean.",
       quotes: { open: "“", close: "”" },
       researchFocus: "Research Focus",
       advisor: "Advisor",
@@ -420,13 +422,15 @@ const copy = {
         },
       },
       figure: {
-        figure: "Jądro ciepła Neumanna na odcinku, w czterech chwilach",
+        figure: "Jądro ciepła Neumanna na odcinku, w czasie",
         caption:
-          "Jądro ciepła Neumanna na odcinku, K_t(x, y) dla ustalonego y, w czterech chwilach: ciepło z jednego punktu rozchodzi się i wyrównuje do średniej, 1/π. Ostre oszacowanie ogranicza takie jądro z góry i z dołu tym samym wyrażeniem, z dokładnością do stałych. Szereg ucięto na n = 60.",
+          "Jądro ciepła Neumanna na odcinku, K_t(x, y) dla ustalonego y. Przesuń t: ciepło z jednego punktu rozchodzi się i wyrównuje do średniej, 1/π, a razem z nim rozchodzi się pole w tle tej strony. Ostre oszacowanie ogranicza takie jądro z góry i z dołu tym samym wyrażeniem, z dokładnością do stałych. Szereg ucięto na n = 60.",
+        play: "Uruchom dyfuzję",
+        time: "czas t",
       },
       education: "Wykształcenie",
       figureNotice:
-        "Na co patrzeć: każda krzywa wyrównuje się do przerywanej średniej, a ta najostrzejsza robi to najszybciej.",
+        "Na co patrzeć: szczyt opada najpierw szybko, potem powoli, a cała krzywa osiada na przerywanej średniej.",
       quotes: { open: "„", close: "”" },
       researchFocus: "Obszar badań",
       advisor: "Promotor",

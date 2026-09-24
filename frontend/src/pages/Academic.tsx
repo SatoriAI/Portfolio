@@ -6,12 +6,14 @@ import PublicationEntry from "@/components/academic/PublicationEntry";
 import QubitFigure from "@/components/academic/QubitFigure";
 import QuoteWall from "@/components/academic/QuoteWall";
 import ResearchThread from "@/components/academic/ResearchThread";
+import HeatField from "@/components/brand/HeatField";
 import StatusMessage from "@/components/feedback/StatusMessage";
 import { Col, Grid } from "@/components/layout/Grid";
 import PageLayout from "@/components/layout/PageLayout";
 import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
 import Reveal from "@/components/Reveal";
+import { Card, CardContent } from "@/components/ui/card";
 import { useSettings } from "@/contexts/SettingsContext";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { UiPublication, usePublications } from "@/lib/publicationsService";
@@ -24,10 +26,18 @@ const chronological = (schools: readonly UiSchool[]) =>
   [...schools].sort((a, b) => a.startDate.localeCompare(b.startDate));
 
 /**
- * Research and teaching. The page opens beside a figure of the object the
- * research is about — a heat kernel, drawn from its series — then reads the
- * three degrees as one thread, the two papers as entries, and the students'
- * words all at once.
+ * The kernel figure's t runs 0.01–2; the field's time is in units of its
+ * resting spread, so t = 2 is the field at rest and small t is heat still
+ * gathered at the sources.
+ */
+const fieldTimeFor = (t: number) => t / 2;
+
+/**
+ * Research and teaching. The page opens on a heat kernel the visitor can run,
+ * with the same equation spreading through the field behind the title; then
+ * the current questions with their own interactive figures, the three degrees
+ * as one thread, the two papers with their domains drawn, and the students'
+ * words on the field at rest.
  */
 const Academic = () => {
   const [schools, setSchools] = useState<UiSchool[]>([]);
@@ -35,6 +45,7 @@ const Academic = () => {
   const [testimonials, setTestimonials] = useState<UiTestimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fieldTime, setFieldTime] = useState(1);
   const { language } = useSettings();
   const t = translations[language];
   usePageMeta(t.meta.research);
@@ -88,28 +99,37 @@ const Academic = () => {
 
   return (
     <PageLayout>
-      <Section>
-        <Grid gapY={48} className="lg:items-start">
-          <Col spanLg={7}>
-            <SectionHeading
-              level={1}
-              eyebrow={t.nav.academic}
-              title={t.academic.title}
-              lead={t.academic.subtitle}
-              className="mb-0"
-            />
-          </Col>
-          <Col as={Reveal} spanLg={5}>
-            <p className="mb-4 text-base text-foreground">{t.academic.figureNotice}</p>
-            <HeatKernelFigure labels={t.academic.figure} locale={language} />
-          </Col>
-        </Grid>
-      </Section>
+      {/* The header's field is not on its own clock: the kernel figure drives
+          it, so dragging t spreads the heat behind the title too. */}
+      <HeatField placement="top" time={fieldTimeFor(fieldTime)}>
+        <Section className="pb-12 pt-12 md:pb-16 md:pt-20">
+          <Grid gapY={48} className="lg:items-center">
+            <Col spanLg={5}>
+              <SectionHeading
+                level={1}
+                eyebrow={t.nav.academic}
+                title={t.academic.title}
+                lead={t.academic.subtitle}
+                className="mb-0"
+              />
+            </Col>
+            <Col spanLg={7} className="lg:pl-6">
+              <p className="mb-4 text-base text-foreground">{t.academic.figureNotice}</p>
+              <HeatKernelFigure
+                labels={t.academic.figure}
+                locale={language}
+                onTimeChange={setFieldTime}
+              />
+            </Col>
+          </Grid>
+        </Section>
+      </HeatField>
 
       {/* Current work first, so the page opens on a live question rather than
           a history. Each topic faces a figure that is the object itself rather
-          than a picture of it, with one plain sentence on what to notice
-          before the formal caption. */}
+          than a picture of it, on a lavender panel — the kit's surface for a
+          visualisation — with one plain sentence on what to notice before the
+          formal caption. The two alternate sides. */}
       <Section id="interests">
         <SectionHeading
           eyebrow={`01 / ${t.academic.interests.title}`}
@@ -117,7 +137,7 @@ const Academic = () => {
         />
         <div className="space-y-20 md:space-y-24">
           <Grid gapY={48} className="lg:items-start">
-            <Col spanLg={6} className="space-y-5">
+            <Col spanLg={5} className="space-y-5">
               <h3 className="text-card-title-sm font-semibold md:text-card-title">
                 {t.academic.interests.transformers.title}
               </h3>
@@ -127,15 +147,19 @@ const Academic = () => {
                 </p>
               ))}
             </Col>
-            <Col as={Reveal} spanLg={6}>
-              <p className="mb-4 text-base text-foreground">
-                {t.academic.interests.transformers.figure.notice}
-              </p>
-              <CyclicShiftFigure labels={t.academic.interests.transformers.figure} />
+            <Col as={Reveal} spanLg={7} className="lg:mt-12">
+              <Card tone="lavender">
+                <CardContent className="p-6 md:p-8">
+                  <p className="mb-6 text-base text-foreground">
+                    {t.academic.interests.transformers.figure.notice}
+                  </p>
+                  <CyclicShiftFigure labels={t.academic.interests.transformers.figure} />
+                </CardContent>
+              </Card>
             </Col>
           </Grid>
           <Grid gapY={48} className="lg:items-start">
-            <Col spanLg={6} className="space-y-5">
+            <Col spanLg={5} className="space-y-5 lg:order-last">
               <h3 className="text-card-title-sm font-semibold md:text-card-title">
                 {t.academic.interests.quantum.title}
               </h3>
@@ -145,19 +169,23 @@ const Academic = () => {
                 </p>
               ))}
             </Col>
-            <Col as={Reveal} spanLg={6}>
-              <p className="mb-4 text-base text-foreground">
-                {t.academic.interests.quantum.figure.notice}
-              </p>
-              <QubitFigure labels={t.academic.interests.quantum.figure} />
+            <Col as={Reveal} spanLg={7} className="lg:mt-12">
+              <Card tone="lavender">
+                <CardContent className="p-6 md:p-8">
+                  <p className="mb-6 text-base text-foreground">
+                    {t.academic.interests.quantum.figure.notice}
+                  </p>
+                  <QubitFigure labels={t.academic.interests.quantum.figure} />
+                </CardContent>
+              </Card>
             </Col>
           </Grid>
         </div>
       </Section>
 
-      {/* The degrees, after the current work: three steps of one line of
-          research, read forward. */}
-      <Section id="education">
+      {/* The degrees, on a white band after the current work: three steps of
+          one line of research, read left to right. */}
+      <Section id="education" tone="surface">
         <SectionHeading eyebrow={`02 / ${t.academic.education}`} title={t.academic.education} />
         {status ??
           (schools.length === 0 ? (
@@ -188,18 +216,22 @@ const Academic = () => {
           ))}
       </Section>
 
-      <Section id="testimonials">
-        <SectionHeading
-          eyebrow={`04 / ${t.academic.studentTestimonials}`}
-          title={t.academic.studentTestimonials}
-        />
-        {status ??
-          (testimonials.length === 0 ? (
-            <StatusMessage variant="empty" message={t.academic.noTestimonials} />
-          ) : (
-            <QuoteWall testimonials={testimonials} quotes={t.academic.quotes} />
-          ))}
-      </Section>
+      {/* The students' words close the page on the field at rest, the same
+          bookend the home page uses. */}
+      <HeatField>
+        <Section id="testimonials">
+          <SectionHeading
+            eyebrow={`04 / ${t.academic.studentTestimonials}`}
+            title={t.academic.studentTestimonials}
+          />
+          {status ??
+            (testimonials.length === 0 ? (
+              <StatusMessage variant="empty" message={t.academic.noTestimonials} />
+            ) : (
+              <QuoteWall testimonials={testimonials} quotes={t.academic.quotes} />
+            ))}
+        </Section>
+      </HeatField>
     </PageLayout>
   );
 };
