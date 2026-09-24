@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 
+import CyclicShiftFigure from "@/components/academic/CyclicShiftFigure";
 import HeatKernelFigure from "@/components/academic/HeatKernelFigure";
 import PublicationEntry from "@/components/academic/PublicationEntry";
+import QubitFigure from "@/components/academic/QubitFigure";
 import QuoteWall from "@/components/academic/QuoteWall";
 import ResearchThread from "@/components/academic/ResearchThread";
 import StatusMessage from "@/components/feedback/StatusMessage";
@@ -114,9 +116,51 @@ const Academic = () => {
         </div>
       </Section>
 
+      {/* Research beyond the doctorate. Each topic faces a figure that is the
+          object itself rather than a picture of it: the cyclic group under a
+          shift, and a qubit under real gates. */}
+      <Section id="interests">
+        <SectionHeading
+          eyebrow={`01 / ${t.academic.interests.title}`}
+          title={t.academic.interests.title}
+        />
+        <div className="space-y-20 md:space-y-24">
+          <Grid gapY={48} className="lg:items-start">
+            <Col spanLg={6} className="space-y-5">
+              <h3 className="text-card-title-sm font-semibold md:text-card-title">
+                {t.academic.interests.transformers.title}
+              </h3>
+              {t.academic.interests.transformers.paragraphs.map((paragraph) => (
+                <p key={paragraph} className="max-w-[65ch] text-base text-muted-foreground">
+                  {paragraph}
+                </p>
+              ))}
+            </Col>
+            <Col as={Reveal} spanLg={6}>
+              <CyclicShiftFigure labels={t.academic.interests.transformers.figure} />
+            </Col>
+          </Grid>
+          <Grid gapY={48} className="lg:items-start">
+            <Col spanLg={6} className="space-y-5">
+              <h3 className="text-card-title-sm font-semibold md:text-card-title">
+                {t.academic.interests.quantum.title}
+              </h3>
+              {t.academic.interests.quantum.paragraphs.map((paragraph) => (
+                <p key={paragraph} className="max-w-[65ch] text-base text-muted-foreground">
+                  {paragraph}
+                </p>
+              ))}
+            </Col>
+            <Col as={Reveal} spanLg={6}>
+              <QubitFigure labels={t.academic.interests.quantum.figure} />
+            </Col>
+          </Grid>
+        </div>
+      </Section>
+
       <Section id="publications">
         <SectionHeading
-          eyebrow={`01 / ${t.academic.publications}`}
+          eyebrow={`02 / ${t.academic.publications}`}
           title={t.academic.publications}
         />
         {status ??
@@ -135,7 +179,7 @@ const Academic = () => {
 
       <Section id="testimonials">
         <SectionHeading
-          eyebrow={`02 / ${t.academic.studentTestimonials}`}
+          eyebrow={`03 / ${t.academic.studentTestimonials}`}
           title={t.academic.studentTestimonials}
         />
         {status ??

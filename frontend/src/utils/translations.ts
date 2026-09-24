@@ -150,7 +150,42 @@ const copy = {
     academic: {
       title: "Research and Teaching",
       subtitle:
-        "Heat kernels, since a bachelor's thesis in 2019: sharp estimates on segments, cones and double cones. Two papers. Teaching analysis and algebra alongside.",
+        "Heat kernels, since a bachelor's thesis in 2019: sharp estimates on segments, cones and double cones. Two papers. Lately, the algebra inside transformers; next, quantum computing. Teaching analysis and algebra alongside.",
+      interests: {
+        title: "Research interests",
+        transformers: {
+          title: "Mathematical structure in transformers",
+          paragraphs: [
+            "I study how transformers learn to generalise on tasks with algebraic structure. In a project on grokking, I analyse models trained on modular addition over the cyclic group ℤ₁₁₃. The central question is whether, as generalisation emerges, the model's hidden activations begin to encode cyclic shifts — and whether this structure can be tracked throughout training and across network layers.",
+            "In my experiments, I analyse model activations at different stages of training, fit operators that describe shifts, and compare how these operators behave across layers. Preliminary results across three random seeds suggest that, after grokking, selected activation subspaces capture the dynamics of cyclic shifts. This structure emerges near the transition to generalisation, and its transport is particularly coherent between a later layer and the model's output.",
+            "The project also develops a mathematical account of this phenomenon. I have derived a result showing that exact intertwiners between group representations preserve the corresponding isotypic components. For cyclic groups, a related bound connects approximate agreement between group actions across layers with the transport of Fourier components. I am now investigating how well this relationship explains the empirical results. In particular, the strict representation law for the model's activations has not yet been fully established, and the experiments do not show that the observed structure causes generalisation.",
+          ],
+          figure: {
+            figure: "The cyclic group of order 113 with one Fourier mode, under a shift",
+            caption:
+              "ℤ₁₁₃ as 113 points, with the Fourier mode k drawn over them. A shift by a turns the mode rigidly: e^(2πik(x+a)/113) = e^(2πika/113) · e^(2πikx/113), a change of phase and nothing else. An operator that commutes with shifts therefore cannot mix one mode with another, which is the fact the intertwiner result rests on. The phase is printed with ka reduced mod 113.",
+            shift: "shift by",
+            mode: "Fourier mode",
+          },
+        },
+        quantum: {
+          title: "Quantum computing and quantum algorithms",
+          paragraphs: [
+            "I am building my knowledge of quantum computing, from its basic concepts to the theory and implementation of quantum algorithms. My planned learning path combines three perspectives: an intuitive understanding of qubits and interference, a formal treatment of quantum computation, and practical experience programming and simulating quantum circuits.",
+            "I am especially interested in the mathematical structure of the field: quantum states as vectors or operators, unitary evolution, measurement, and the role of linear algebra and operator theory. Potential areas for further specialisation include quantum information theory, quantum error correction, and quantum machine learning. My goal is to build a strong foundation first, then choose a problem that can be studied theoretically or through controlled computational experiments.",
+            "At this stage, I consider quantum computing a developing area of interest and a direction for future research, rather than a completed project with original results.",
+          ],
+          figure: {
+            figure: "One qubit on the Bloch sphere, with gates to apply",
+            caption:
+              "One qubit, simulated exactly: the buttons apply the unitaries H, X, Z, S and T to the amplitudes, and the vector turns along each gate's true rotation of the Bloch sphere. Press H twice and the state returns to |0⟩: interference, in one line of a circuit.",
+            gates: "Gates",
+            reset: "Reset to |0⟩",
+            circuit: "Circuit",
+            state: "State",
+          },
+        },
+      },
       figure: {
         figure: "The Neumann heat kernel on a segment, at four times",
         caption:
@@ -324,7 +359,43 @@ const copy = {
     academic: {
       title: "Badania i dydaktyka",
       subtitle:
-        "Jądra ciepła od pracy licencjackiej w 2019 roku: ostre oszacowania na odcinku, stożku i podwójnym stożku. Dwa artykuły. Obok tego zajęcia z analizy i algebry.",
+        "Jądra ciepła od pracy licencjackiej w 2019 roku: ostre oszacowania na odcinku, stożku i podwójnym stożku. Dwa artykuły. Ostatnio algebra wewnątrz transformerów, dalej obliczenia kwantowe. Obok tego zajęcia z analizy i algebry.",
+      interests: {
+        title: "Zainteresowania badawcze",
+        transformers: {
+          title: "Struktura matematyczna w transformerach",
+          paragraphs: [
+            "Badam, jak transformery uczą się generalizować na zadaniach o strukturze algebraicznej. W projekcie dotyczącym grokkingu analizuję modele trenowane na dodawaniu modularnym w grupie cyklicznej ℤ₁₁₃. Główne pytanie brzmi: czy wraz z pojawieniem się generalizacji ukryte aktywacje modelu zaczynają kodować przesunięcia cykliczne — i czy tę strukturę da się śledzić w trakcie treningu i pomiędzy warstwami sieci.",
+            "W eksperymentach analizuję aktywacje modelu na różnych etapach treningu, dopasowuję operatory opisujące przesunięcia i porównuję, jak zachowują się one pomiędzy warstwami. Wstępne wyniki dla trzech ziaren losowych sugerują, że po grokkingu wybrane podprzestrzenie aktywacji oddają dynamikę przesunięć cyklicznych. Struktura ta pojawia się w pobliżu przejścia do generalizacji, a jej transport jest szczególnie spójny między jedną z późniejszych warstw a wyjściem modelu.",
+            "Projekt rozwija także matematyczny opis tego zjawiska. Wyprowadziłem wynik pokazujący, że dokładne operatory splatające między reprezentacjami grupy zachowują odpowiadające im składowe izotypowe. Dla grup cyklicznych pokrewne oszacowanie wiąże przybliżoną zgodność działań grupy pomiędzy warstwami z transportem składowych Fouriera. Obecnie badam, na ile ta zależność wyjaśnia wyniki empiryczne. W szczególności ścisłe prawo reprezentacji dla aktywacji modelu nie zostało jeszcze w pełni ustalone, a eksperymenty nie pokazują, że zaobserwowana struktura jest przyczyną generalizacji.",
+          ],
+          figure: {
+            figure:
+              "Grupa cykliczna rzędu 113 z jedną składową Fouriera, pod działaniem przesunięcia",
+            caption:
+              "ℤ₁₁₃ jako 113 punktów, a nad nimi składowa Fouriera k. Przesunięcie o a obraca ją sztywno: e^(2πik(x+a)/113) = e^(2πika/113) · e^(2πikx/113), czyli zmienia tylko fazę. Operator przemienny z przesunięciami nie może więc mieszać jednej składowej z drugą i na tym opiera się wynik o operatorach splatających. Faza jest wypisana z ka zredukowanym mod 113.",
+            shift: "przesuń o",
+            mode: "Składowa Fouriera",
+          },
+        },
+        quantum: {
+          title: "Obliczenia kwantowe i algorytmy kwantowe",
+          paragraphs: [
+            "Buduję swoją wiedzę o obliczeniach kwantowych: od podstawowych pojęć po teorię i implementację algorytmów kwantowych. Zaplanowana ścieżka nauki łączy trzy perspektywy: intuicyjne rozumienie kubitów i interferencji, formalne ujęcie obliczeń kwantowych oraz praktykę w programowaniu i symulowaniu obwodów kwantowych.",
+            "Szczególnie interesuje mnie matematyczna struktura tej dziedziny: stany kwantowe jako wektory lub operatory, ewolucja unitarna, pomiar oraz rola algebry liniowej i teorii operatorów. Możliwe kierunki dalszej specjalizacji to kwantowa teoria informacji, kwantowa korekcja błędów i kwantowe uczenie maszynowe. Moim celem jest najpierw zbudować solidne podstawy, a potem wybrać problem, który da się badać teoretycznie lub w kontrolowanych eksperymentach obliczeniowych.",
+            "Na tym etapie traktuję obliczenia kwantowe jako rozwijający się obszar zainteresowań i kierunek przyszłych badań, a nie zamknięty projekt z własnymi wynikami.",
+          ],
+          figure: {
+            figure: "Jeden kubit na sferze Blocha, z bramkami do zastosowania",
+            caption:
+              "Jeden kubit, symulowany dokładnie: przyciski stosują bramki unitarne H, X, Z, S i T do amplitud, a wektor obraca się wzdłuż rzeczywistego obrotu sfery Blocha dla danej bramki. Naciśnij H dwa razy, a stan wróci do |0⟩: interferencja w jednej linii obwodu.",
+            gates: "Bramki",
+            reset: "Wróć do |0⟩",
+            circuit: "Obwód",
+            state: "Stan",
+          },
+        },
+      },
       figure: {
         figure: "Jądro ciepła Neumanna na odcinku, w czterech chwilach",
         caption:
