@@ -66,6 +66,8 @@ export type CyclicShiftFigureLabels = {
   shift: string;
   /** Heading of the mode buttons. */
   mode: string;
+  /** Heading of the shift buttons. */
+  shiftGroup: string;
 };
 
 type CyclicShiftFigureProps = {
@@ -137,109 +139,82 @@ const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
 
   return (
     <figure ref={ref} aria-label={labels.figure} className={cn("w-full", className)}>
-      <div className="grid gap-6 sm:grid-cols-[minmax(0,260px)_1fr] sm:items-start">
-        <svg
-          viewBox={`0 0 ${SIZE} ${SIZE}`}
-          className="block h-auto w-full max-w-[260px]"
-          aria-hidden="true"
-        >
-          <circle
-            cx={C}
-            cy={C}
-            r={R}
-            fill="none"
-            strokeWidth={1}
-            vectorEffect="non-scaling-stroke"
-            pathLength={1}
-            strokeDasharray={1}
-            className={cn(
-              "stroke-control-border",
-              animateEntrance && "transition-[stroke-dashoffset] duration-700 ease-brand",
-              drawn ? "[stroke-dashoffset:0]" : "[stroke-dashoffset:1]",
-            )}
-          />
-          <path
-            d={modePath(k, shiftDrawn)}
-            fill="none"
-            strokeWidth={1.5}
-            vectorEffect="non-scaling-stroke"
-            pathLength={1}
-            strokeDasharray={1}
-            style={animateEntrance ? { transitionDelay: "400ms" } : undefined}
-            className={cn(
-              "stroke-iris",
-              animateEntrance && "transition-[stroke-dashoffset] duration-700 ease-brand",
-              drawn ? "[stroke-dashoffset:0]" : "[stroke-dashoffset:1]",
-            )}
-          />
-          <g className="fill-control-border">
-            {ELEMENTS.map(({ x, y }, index) => (
-              <circle
-                key={index}
-                cx={x}
-                cy={y}
-                r={1.6}
-                style={
-                  animateEntrance
-                    ? { transitionDelay: `${index * ELEMENT_STAGGER_MS}ms` }
-                    : undefined
-                }
-                className={cn(
-                  animateEntrance && "transition-opacity duration-200",
-                  drawn ? "opacity-100" : "opacity-0",
-                )}
-              />
-            ))}
-          </g>
-          {/* The element a: where the shift has carried the identity. */}
-          <rect
-            x={origin.x - 4}
-            y={origin.y - 4}
-            width={8}
-            height={8}
-            rx={1.5}
-            className="fill-primary"
-          />
-          <text
-            x={C}
-            y={C + 4}
-            textAnchor="middle"
-            fontSize={12}
-            className="fill-muted-foreground font-mono"
+      <div className="grid gap-8 sm:grid-cols-[minmax(0,300px)_1fr] sm:items-start">
+        <div>
+          <svg
+            viewBox={`0 0 ${SIZE} ${SIZE}`}
+            className="block h-auto w-full max-w-[300px]"
+            aria-hidden="true"
           >
-            ℤ₁₁₃
-          </text>
-        </svg>
-
-        <div className="space-y-5">
-          <div>
-            <p className="mb-2 font-mono text-meta uppercase tracking-widest text-muted-foreground">
-              {labels.mode}
-            </p>
-            <div className="flex flex-wrap gap-2" role="group" aria-label={labels.mode}>
-              {MODES.map((mode) => (
-                <Button
-                  key={mode}
-                  variant="outline"
-                  size="sm"
-                  aria-pressed={mode === k}
-                  className={cn("w-14 font-mono", mode === k && "border-foreground bg-lavender")}
-                  onClick={() => setK(mode)}
-                >
-                  k = {mode}
-                </Button>
+            <circle
+              cx={C}
+              cy={C}
+              r={R}
+              fill="none"
+              strokeWidth={1}
+              vectorEffect="non-scaling-stroke"
+              pathLength={1}
+              strokeDasharray={1}
+              className={cn(
+                "stroke-control-border",
+                animateEntrance && "transition-[stroke-dashoffset] duration-700 ease-brand",
+                drawn ? "[stroke-dashoffset:0]" : "[stroke-dashoffset:1]",
+              )}
+            />
+            <path
+              d={modePath(k, shiftDrawn)}
+              fill="none"
+              strokeWidth={1.5}
+              vectorEffect="non-scaling-stroke"
+              pathLength={1}
+              strokeDasharray={1}
+              style={animateEntrance ? { transitionDelay: "400ms" } : undefined}
+              className={cn(
+                "stroke-iris",
+                animateEntrance && "transition-[stroke-dashoffset] duration-700 ease-brand",
+                drawn ? "[stroke-dashoffset:0]" : "[stroke-dashoffset:1]",
+              )}
+            />
+            <g className="fill-control-border">
+              {ELEMENTS.map(({ x, y }, index) => (
+                <circle
+                  key={index}
+                  cx={x}
+                  cy={y}
+                  r={1.6}
+                  style={
+                    animateEntrance
+                      ? { transitionDelay: `${index * ELEMENT_STAGGER_MS}ms` }
+                      : undefined
+                  }
+                  className={cn(
+                    animateEntrance && "transition-opacity duration-200",
+                    drawn ? "opacity-100" : "opacity-0",
+                  )}
+                />
               ))}
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" className="font-mono" onClick={() => shiftBy(1)}>
-              {labels.shift} 1
-            </Button>
-            <Button variant="outline" size="sm" className="font-mono" onClick={() => shiftBy(10)}>
-              {labels.shift} 10
-            </Button>
-          </div>
-          <div className="space-y-2 text-base text-foreground" aria-live="polite">
+            </g>
+            {/* The element a: where the shift has carried the identity. */}
+            <rect
+              x={origin.x - 4}
+              y={origin.y - 4}
+              width={8}
+              height={8}
+              rx={1.5}
+              className="fill-primary"
+            />
+            <text
+              x={C}
+              y={C + 4}
+              textAnchor="middle"
+              fontSize={12}
+              className="fill-muted-foreground font-mono"
+            >
+              ℤ₁₁₃
+            </text>
+          </svg>
+          {/* The readout sits with the drawing it reads. */}
+          <div className="mt-4 space-y-2 text-base text-foreground" aria-live="polite">
             <p>
               <Formula tex={`a = ${shift}`} />
             </p>
@@ -250,8 +225,53 @@ const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
             </p>
           </div>
         </div>
+
+        <div className="space-y-6">
+          <div>
+            <p className="mb-2 font-mono text-meta uppercase tracking-widest text-muted-foreground">
+              {labels.mode}
+            </p>
+            {/* A segmented control: one of three modes is always chosen, and
+                the chosen one is the filled module. */}
+            <div
+              role="group"
+              aria-label={labels.mode}
+              className="inline-flex rounded-xl border border-control-border bg-card p-1"
+            >
+              {MODES.map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  aria-pressed={mode === k}
+                  onClick={() => setK(mode)}
+                  className={cn(
+                    "h-9 min-w-[3.5rem] rounded-lg px-3 font-mono text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-[3px] focus-visible:ring-offset-background",
+                    mode === k
+                      ? "bg-primary text-primary-foreground"
+                      : "text-foreground hover:bg-lavender",
+                  )}
+                >
+                  k = {mode}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="mb-2 font-mono text-meta uppercase tracking-widest text-muted-foreground">
+              {labels.shiftGroup}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" className="font-mono" onClick={() => shiftBy(1)}>
+                {labels.shift} 1
+              </Button>
+              <Button variant="outline" size="sm" className="font-mono" onClick={() => shiftBy(10)}>
+                {labels.shift} 10
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
-      <figcaption className="mt-4 max-w-[48ch] text-sm text-muted-foreground">
+      <figcaption className="mt-6 text-sm text-muted-foreground">
         <MathText text={labels.caption} />
       </figcaption>
     </figure>

@@ -3,6 +3,7 @@ import { Mail, MessageSquare } from "lucide-react";
 
 import CyclicShiftFigure from "@/components/academic/CyclicShiftFigure";
 import HeatKernelFigure from "@/components/academic/HeatKernelFigure";
+import Notice from "@/components/academic/Notice";
 import PublicationStack from "@/components/academic/PublicationStack";
 import QubitFigure from "@/components/academic/QubitFigure";
 import QuoteWall from "@/components/academic/QuoteWall";
@@ -175,10 +176,10 @@ const Academic = () => {
               />
             </Col>
             <Col spanLg={5} className="lg:row-start-2">
-              <p id="kernel-notice" className="max-w-[48ch] text-base text-foreground">
+              <Notice id="kernel-notice" label={t.academic.noticeLabel}>
                 {t.academic.figureNotice}
-              </p>
-              <p id="kernel-caption" className="mt-2 max-w-[48ch] text-sm text-muted-foreground">
+              </Notice>
+              <p id="kernel-caption" className="mt-4 max-w-[48ch] text-sm text-muted-foreground">
                 <MathText text={t.academic.figure.caption} />
               </p>
               <nav aria-label={story.contents} className="mt-8">
@@ -251,13 +252,11 @@ const Academic = () => {
           <Col as={Reveal} spanLg={7} className="lg:col-start-6 lg:row-span-2 lg:row-start-1">
             <Card tone="lavender">
               <CardContent className="p-6 pb-20 sm:pb-8 md:p-8 md:pb-8">
-                <p className="mb-6 text-base text-foreground">
+                <Notice label={t.academic.noticeLabel} className="mb-8">
                   {t.academic.interests.transformers.figure.notice}
-                </p>
+                </Notice>
                 <CyclicShiftFigure labels={t.academic.interests.transformers.figure} />
-                <p className="mt-6 max-w-[48ch] text-sm text-foreground">
-                  {story.transformers.why}
-                </p>
+                <p className="mt-6 text-base text-foreground">{story.transformers.why}</p>
               </CardContent>
             </Card>
           </Col>
@@ -281,9 +280,9 @@ const Academic = () => {
         />
         <Grid gapY={32} className="lg:items-start">
           <Col as={Reveal} spanLg={6} className="pb-16 sm:pb-0">
-            <p className="mb-6 text-base text-foreground">
+            <Notice label={t.academic.noticeLabel} className="mb-8">
               {t.academic.interests.quantum.figure.notice}
-            </p>
+            </Notice>
             <QubitFigure labels={t.academic.interests.quantum.figure} />
           </Col>
           <Col spanLg={5} className="space-y-5 lg:col-start-8">

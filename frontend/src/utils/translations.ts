@@ -171,9 +171,10 @@ const copy = {
             caption:
               "$ℤ_{113}$ as 113 points, with the Fourier mode $k$ drawn over them. A shift by $a$ turns the mode rigidly: $e^{2πik(x+a)/113} = e^{2πika/113} · e^{2πikx/113}$, a change of phase and nothing else. An operator that commutes with shifts therefore cannot mix one mode with another, which is the fact the intertwiner result rests on. The phase is printed with $ka$ reduced $\\text{mod }113$.",
             shift: "shift by",
+            shiftGroup: "Shift",
             mode: "Fourier mode",
             notice:
-              "What to notice: press shift and the wave keeps its shape. Only its position moves, and the readout says by exactly how much.",
+              "Press shift and the wave keeps its shape. Only its position moves, and the readout says by exactly how much.",
           },
         },
         quantum: {
@@ -189,7 +190,7 @@ const copy = {
             gates: "Gates",
             reset: "Reset to |0⟩",
             notice:
-              "What to notice: one H makes both outcomes equally likely; a second H makes the first certain again.",
+              "One H makes both outcomes equally likely; a second H makes the first certain again.",
             circuit: "Circuit",
             state: "State",
           },
@@ -263,8 +264,9 @@ const copy = {
       year: "Year",
       publicationsLead:
         "Two papers on sharp estimates for Jacobi heat kernels: on the cone, then on the double cone. Open one.",
+      noticeLabel: "What to notice",
       figureNotice:
-        "What to notice: the peak drops fast at first and slowly later, and the whole curve settles onto the dashed mean.",
+        "The peak drops fast at first and slowly later, and the whole curve settles onto the dashed mean.",
       quotes: { open: "“", close: "”" },
       researchFocus: "Research Focus",
       advisor: "Advisor",
@@ -453,9 +455,10 @@ const copy = {
             caption:
               "$ℤ_{113}$ jako 113 punktów, a nad nimi składowa Fouriera $k$. Przesunięcie o $a$ obraca ją sztywno: $e^{2πik(x+a)/113} = e^{2πika/113} · e^{2πikx/113}$, czyli zmienia tylko fazę. Operator przemienny z przesunięciami nie może więc mieszać jednej składowej z drugą i na tym opiera się wynik o operatorach splatających. Faza jest wypisana z $ka$ zredukowanym $\\text{mod }113$.",
             shift: "przesuń o",
+            shiftGroup: "Przesunięcie",
             mode: "Składowa Fouriera",
             notice:
-              "Na co patrzeć: naciśnij „przesuń”, a fala zachowa kształt. Zmienia się tylko jej położenie, a odczyt mówi dokładnie o ile.",
+              "Naciśnij „przesuń”, a fala zachowa kształt. Zmienia się tylko jej położenie, a odczyt mówi dokładnie o ile.",
           },
         },
         quantum: {
@@ -471,7 +474,7 @@ const copy = {
             gates: "Bramki",
             reset: "Wróć do |0⟩",
             notice:
-              "Na co patrzeć: jedno H czyni oba wyniki równie prawdopodobnymi; drugie H znów czyni pierwszy pewnym.",
+              "Jedno H czyni oba wyniki równie prawdopodobnymi; drugie H znów czyni pierwszy pewnym.",
             circuit: "Obwód",
             state: "Stan",
           },
@@ -542,8 +545,9 @@ const copy = {
       year: "Rok",
       publicationsLead:
         "Dwa artykuły o ostrych oszacowaniach jąder ciepła Jacobiego: na stożku, potem na podwójnym stożku. Otwórz jeden.",
+      noticeLabel: "Na co patrzeć",
       figureNotice:
-        "Na co patrzeć: szczyt opada najpierw szybko, potem powoli, a cała krzywa osiada na przerywanej średniej.",
+        "Szczyt opada najpierw szybko, potem powoli, a cała krzywa osiada na przerywanej średniej.",
       quotes: { open: "„", close: "”" },
       researchFocus: "Obszar badań",
       advisor: "Promotor",

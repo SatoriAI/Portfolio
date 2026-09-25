@@ -138,121 +138,103 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
 
   return (
     <figure ref={ref} aria-label={labels.figure} className={cn("w-full", className)}>
-      <div className="grid gap-6 sm:grid-cols-[minmax(0,260px)_1fr] sm:items-start">
-        <svg viewBox="0 0 260 240" className="block h-auto w-full max-w-[260px]" aria-hidden="true">
-          <g fill="none" strokeWidth={1} vectorEffect="non-scaling-stroke">
-            <circle
-              cx={CX}
-              cy={CY}
-              r={R}
-              {...drawClassName(0)}
-              className={cn("stroke-control-border", drawClassName(0).className)}
-            />
-            {/* The equator's dash pattern is drawn by opacity rather than by
+      <div className="grid gap-8 sm:grid-cols-[minmax(0,300px)_1fr] sm:items-start">
+        <div>
+          <svg
+            viewBox="0 0 260 240"
+            className="block h-auto w-full max-w-[300px]"
+            aria-hidden="true"
+          >
+            <g fill="none" strokeWidth={1} vectorEffect="non-scaling-stroke">
+              <circle
+                cx={CX}
+                cy={CY}
+                r={R}
+                {...drawClassName(0)}
+                className={cn("stroke-control-border", drawClassName(0).className)}
+              />
+              {/* The equator's dash pattern is drawn by opacity rather than by
                 offset, since a dash offset would fight its own dashes. */}
-            <ellipse
-              cx={CX}
-              cy={CY}
-              rx={R}
-              ry={R * TILT}
-              strokeDasharray="3 4"
-              style={animateEntrance ? { transitionDelay: "500ms" } : undefined}
+              <ellipse
+                cx={CX}
+                cy={CY}
+                rx={R}
+                ry={R * TILT}
+                strokeDasharray="3 4"
+                style={animateEntrance ? { transitionDelay: "500ms" } : undefined}
+                className={cn(
+                  "stroke-control-border",
+                  animateEntrance && "transition-opacity duration-400 ease-brand",
+                  built ? "opacity-100" : "opacity-0",
+                )}
+              />
+              <line
+                x1={CX}
+                y1={CY - R}
+                x2={CX}
+                y2={CY + R}
+                {...drawClassName(300)}
+                className={cn("stroke-control-border", drawClassName(300).className)}
+              />
+              <line
+                x1={CX - R}
+                y1={CY}
+                x2={CX + R}
+                y2={CY}
+                {...drawClassName(450)}
+                className={cn("stroke-control-border", drawClassName(450).className)}
+              />
+            </g>
+            <g className="fill-muted-foreground font-mono" fontSize={10}>
+              <text x={CX} y={CY - R - 6} textAnchor="middle">
+                |0⟩
+              </text>
+              <text x={CX} y={CY + R + 14} textAnchor="middle">
+                |1⟩
+              </text>
+              <text x={CX + R + 4} y={CY + 3} textAnchor="start">
+                |+⟩
+              </text>
+              <text x={CX - R - 4} y={CY + 3} textAnchor="end">
+                |−⟩
+              </text>
+            </g>
+            {/* The vector, its drop to the equatorial plane, and the tip. */}
+            <g fill="none" strokeWidth={1} vectorEffect="non-scaling-stroke">
+              <line
+                x1={shadow.x}
+                y1={shadow.y}
+                x2={tip.x}
+                y2={tip.y}
+                className="stroke-iris"
+                strokeDasharray="2 3"
+              />
+              <line
+                x1={CX}
+                y1={CY}
+                x2={tip.x}
+                y2={tip.y}
+                strokeWidth={2}
+                {...drawClassName(600)}
+                className={cn("stroke-iris", behind && "opacity-60", drawClassName(800).className)}
+              />
+            </g>
+            <circle
+              cx={tip.x}
+              cy={tip.y}
+              r={5}
+              style={animateEntrance ? { transitionDelay: "1000ms" } : undefined}
               className={cn(
-                "stroke-control-border",
+                "fill-primary",
+                behind && "opacity-70",
                 animateEntrance && "transition-opacity duration-400 ease-brand",
-                built ? "opacity-100" : "opacity-0",
+                !built && "opacity-0",
               )}
             />
-            <line
-              x1={CX}
-              y1={CY - R}
-              x2={CX}
-              y2={CY + R}
-              {...drawClassName(300)}
-              className={cn("stroke-control-border", drawClassName(300).className)}
-            />
-            <line
-              x1={CX - R}
-              y1={CY}
-              x2={CX + R}
-              y2={CY}
-              {...drawClassName(450)}
-              className={cn("stroke-control-border", drawClassName(450).className)}
-            />
-          </g>
-          <g className="fill-muted-foreground font-mono" fontSize={10}>
-            <text x={CX} y={CY - R - 6} textAnchor="middle">
-              |0⟩
-            </text>
-            <text x={CX} y={CY + R + 14} textAnchor="middle">
-              |1⟩
-            </text>
-            <text x={CX + R + 4} y={CY + 3} textAnchor="start">
-              |+⟩
-            </text>
-            <text x={CX - R - 4} y={CY + 3} textAnchor="end">
-              |−⟩
-            </text>
-          </g>
-          {/* The vector, its drop to the equatorial plane, and the tip. */}
-          <g fill="none" strokeWidth={1} vectorEffect="non-scaling-stroke">
-            <line
-              x1={shadow.x}
-              y1={shadow.y}
-              x2={tip.x}
-              y2={tip.y}
-              className="stroke-iris"
-              strokeDasharray="2 3"
-            />
-            <line
-              x1={CX}
-              y1={CY}
-              x2={tip.x}
-              y2={tip.y}
-              strokeWidth={2}
-              {...drawClassName(600)}
-              className={cn("stroke-iris", behind && "opacity-60", drawClassName(800).className)}
-            />
-          </g>
-          <circle
-            cx={tip.x}
-            cy={tip.y}
-            r={5}
-            style={animateEntrance ? { transitionDelay: "1000ms" } : undefined}
-            className={cn(
-              "fill-primary",
-              behind && "opacity-70",
-              animateEntrance && "transition-opacity duration-400 ease-brand",
-              !built && "opacity-0",
-            )}
-          />
-        </svg>
-
-        <div className="space-y-5">
-          <div>
-            <p className="mb-2 font-mono text-meta uppercase tracking-widest text-muted-foreground">
-              {labels.gates}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {GATE_ORDER.map((name) => (
-                <Button
-                  key={name}
-                  variant="outline"
-                  size="sm"
-                  className="w-11 font-mono"
-                  onClick={() => apply(name)}
-                >
-                  {name}
-                </Button>
-              ))}
-              <Button variant="ghost" size="sm" onClick={reset} disabled={circuit.length === 0}>
-                {labels.reset}
-              </Button>
-            </div>
-          </div>
-          <dl className="space-y-2 text-base">
+          </svg>
+          <dl className="mt-4 space-y-2 text-base">
             <div>
-              <dt className="text-meta uppercase tracking-widest text-muted-foreground">
+              <dt className="font-mono text-meta uppercase tracking-widest text-muted-foreground">
                 {labels.circuit}
               </dt>
               <dd className="mt-1 text-foreground" aria-live="polite">
@@ -260,7 +242,7 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
               </dd>
             </div>
             <div>
-              <dt className="text-meta uppercase tracking-widest text-muted-foreground">
+              <dt className="font-mono text-meta uppercase tracking-widest text-muted-foreground">
                 {labels.state}
               </dt>
               <dd className="mt-1 text-foreground">
@@ -274,8 +256,37 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
             </div>
           </dl>
         </div>
+
+        <div>
+          <p className="mb-2 font-mono text-meta uppercase tracking-widest text-muted-foreground">
+            {labels.gates}
+          </p>
+          {/* Five gates on one row: 40px each with 6px between fits the column
+              beside a 300px sphere. */}
+          <div className="flex flex-wrap gap-1.5">
+            {GATE_ORDER.map((name) => (
+              <Button
+                key={name}
+                variant="outline"
+                className="h-10 w-10 px-0 font-mono"
+                onClick={() => apply(name)}
+              >
+                {name}
+              </Button>
+            ))}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-3"
+            onClick={reset}
+            disabled={circuit.length === 0}
+          >
+            {labels.reset}
+          </Button>
+        </div>
       </div>
-      <figcaption className="mt-4 max-w-[48ch] text-sm text-muted-foreground">
+      <figcaption className="mt-6 text-sm text-muted-foreground">
         <MathText text={labels.caption} />
       </figcaption>
     </figure>
