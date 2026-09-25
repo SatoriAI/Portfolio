@@ -138,11 +138,11 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
 
   return (
     <figure ref={ref} aria-label={labels.figure} className={cn("w-full", className)}>
-      <div className="grid gap-8 sm:grid-cols-[minmax(0,300px)_1fr] sm:items-stretch">
+      <div className="grid gap-8 sm:grid-cols-[minmax(0,260px)_1fr] sm:items-stretch">
         <div>
           <svg
             viewBox="0 0 260 240"
-            className="block h-auto w-full max-w-[300px]"
+            className="block h-auto w-full max-w-[260px]"
             aria-hidden="true"
           >
             <g fill="none" strokeWidth={1} vectorEffect="non-scaling-stroke">
