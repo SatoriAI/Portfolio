@@ -17,8 +17,7 @@ import { cn } from "@/lib/utils";
  *
  * and nothing else. That is the fact the grokking project rests on: an
  * operator that commutes with the shifts cannot mix one mode with another,
- * so it must carry each Fourier component to itself. The phase 2πka/113 is
- * printed, with ka reduced mod 113, which is the arithmetic the model learns.
+ * so it must carry each Fourier component to itself.
  *
  * On first sight the figure assembles itself — the ring draws, the 113
  * elements appear in order round it, the mode draws over them — and then
@@ -255,7 +254,6 @@ const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
   };
 
   const origin = point((2 * Math.PI * shiftDrawn) / N, R);
-  const phaseNumerator = (k * shift) % N;
 
   return (
     <figure ref={ref} aria-label={labels.figure} className={cn("w-full", className)}>
@@ -335,9 +333,8 @@ const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
           </svg>
         </div>
 
-        {/* The controls at the top of the column and the readout at its foot,
-            level with the base of the drawing, so nothing hangs below either. */}
-        <div className="flex flex-col gap-8 sm:min-h-full sm:justify-between">
+        {/* The two steppers, centred on the drawing they act on. */}
+        <div className="flex flex-col gap-8 sm:min-h-full sm:justify-center">
           <div className="space-y-6">
             <Stepper
               heading={labels.mode}
@@ -357,13 +354,6 @@ const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
               downLabel={labels.shiftDown}
               upLabel={labels.shiftUp}
             />
-          </div>
-          <div className="space-y-2 text-base text-foreground" aria-live="polite">
-            <p>
-              <Formula
-                tex={`φ = \\frac{2π · ${k} · ${shift}}{113} = \\frac{2π · ${phaseNumerator}}{113}`}
-              />
-            </p>
           </div>
         </div>
       </div>

@@ -169,7 +169,7 @@ const copy = {
           figure: {
             figure: "The cyclic group of order 113 with one Fourier mode, under a shift",
             caption:
-              "$ℤ_{113}$ as 113 points, with the Fourier mode $k$ drawn over them. A shift by $a$ turns the mode rigidly: $e^{2πik(x+a)/113} = e^{2πika/113} · e^{2πikx/113}$, a change of phase and nothing else. An operator that commutes with shifts therefore cannot mix one mode with another, which is the fact the intertwiner result rests on. The phase is printed with $ka$ reduced $\\text{mod }113$.",
+              "$ℤ_{113}$ as 113 points, with the Fourier mode $k$ drawn over them. A shift by $a$ turns the mode rigidly: $e^{2πik(x+a)/113} = e^{2πika/113} · e^{2πikx/113}$, a change of phase and nothing else. An operator that commutes with shifts therefore cannot mix one mode with another, which is the fact the intertwiner result rests on.",
             shiftGroup: "Shift",
             mode: "Fourier mode",
             modeDown: "Lower mode",
@@ -177,7 +177,7 @@ const copy = {
             shiftDown: "Shift back by one",
             shiftUp: "Shift forward by one",
             notice:
-              "Step the shift and the wave keeps its shape. Only its position moves, and the readout says by exactly how much. Step $k$ and the number of waves changes, never their motion.",
+              "Step the shift and the wave keeps its shape; only its position moves. Step $k$ and the number of waves changes, never their motion.",
           },
         },
         quantum: {
@@ -456,7 +456,7 @@ const copy = {
             figure:
               "Grupa cykliczna rzędu 113 z jedną składową Fouriera, pod działaniem przesunięcia",
             caption:
-              "$ℤ_{113}$ jako 113 punktów, a nad nimi składowa Fouriera $k$. Przesunięcie o $a$ obraca ją sztywno: $e^{2πik(x+a)/113} = e^{2πika/113} · e^{2πikx/113}$, czyli zmienia tylko fazę. Operator przemienny z przesunięciami nie może więc mieszać jednej składowej z drugą i na tym opiera się wynik o operatorach splatających. Faza jest wypisana z $ka$ zredukowanym $\\text{mod }113$.",
+              "$ℤ_{113}$ jako 113 punktów, a nad nimi składowa Fouriera $k$. Przesunięcie o $a$ obraca ją sztywno: $e^{2πik(x+a)/113} = e^{2πika/113} · e^{2πikx/113}$, czyli zmienia tylko fazę. Operator przemienny z przesunięciami nie może więc mieszać jednej składowej z drugą i na tym opiera się wynik o operatorach splatających.",
             shiftGroup: "Przesunięcie",
             mode: "Składowa Fouriera",
             modeDown: "Niższa składowa",
@@ -464,7 +464,7 @@ const copy = {
             shiftDown: "Przesuń wstecz o jeden",
             shiftUp: "Przesuń do przodu o jeden",
             notice:
-              "Przesuwaj, a fala zachowa kształt. Zmienia się tylko jej położenie, a odczyt mówi dokładnie o ile. Zmieniaj $k$, a zmieni się liczba fal, nigdy ich ruch.",
+              "Przesuwaj, a fala zachowa kształt; zmienia się tylko jej położenie. Zmieniaj $k$, a zmieni się liczba fal, nigdy ich ruch.",
           },
         },
         quantum: {
