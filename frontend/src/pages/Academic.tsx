@@ -177,7 +177,7 @@ const Academic = () => {
             </Col>
             <Col spanLg={5} className="lg:row-start-2">
               <Notice id="kernel-notice" label={t.academic.noticeLabel}>
-                {t.academic.figureNotice}
+                <MathText text={t.academic.figureNotice} />
               </Notice>
               <p id="kernel-caption" className="mt-4 max-w-[48ch] text-sm text-muted-foreground">
                 <MathText text={t.academic.figure.caption} />
@@ -253,7 +253,7 @@ const Academic = () => {
             <Card tone="lavender">
               <CardContent className="p-6 pb-20 sm:pb-8 md:p-8 md:pb-8">
                 <Notice label={t.academic.noticeLabel} className="mb-8">
-                  {t.academic.interests.transformers.figure.notice}
+                  <MathText text={t.academic.interests.transformers.figure.notice} />
                 </Notice>
                 <CyclicShiftFigure labels={t.academic.interests.transformers.figure} />
                 <p className="mt-6 text-base text-foreground">{story.transformers.why}</p>
@@ -281,7 +281,7 @@ const Academic = () => {
         <Grid gapY={32} className="lg:items-start">
           <Col as={Reveal} spanLg={6} className="pb-16 sm:pb-0">
             <Notice label={t.academic.noticeLabel} className="mb-8">
-              {t.academic.interests.quantum.figure.notice}
+              <MathText text={t.academic.interests.quantum.figure.notice} />
             </Notice>
             <QubitFigure labels={t.academic.interests.quantum.figure} />
           </Col>
