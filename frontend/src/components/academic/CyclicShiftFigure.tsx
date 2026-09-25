@@ -139,7 +139,7 @@ const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
 
   return (
     <figure ref={ref} aria-label={labels.figure} className={cn("w-full", className)}>
-      <div className="grid gap-8 sm:grid-cols-[minmax(0,300px)_1fr] sm:items-start">
+      <div className="grid gap-8 sm:grid-cols-[minmax(0,300px)_1fr] sm:items-stretch">
         <div>
           <svg
             viewBox={`0 0 ${SIZE} ${SIZE}`}
@@ -213,8 +213,66 @@ const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
               ℤ₁₁₃
             </text>
           </svg>
-          {/* The readout sits with the drawing it reads. */}
-          <div className="mt-4 space-y-2 text-base text-foreground" aria-live="polite">
+        </div>
+
+        {/* The controls at the top of the column and the readout at its foot,
+            level with the base of the drawing, so nothing hangs below either. */}
+        <div className="flex flex-col gap-8 sm:min-h-full sm:justify-between">
+          <div className="space-y-6">
+            <div>
+              <p className="mb-2 font-mono text-meta uppercase tracking-widest text-muted-foreground">
+                {labels.mode}
+              </p>
+              {/* A segmented control: one of three modes is always chosen, and
+                the chosen one is the filled module. */}
+              <div
+                role="group"
+                aria-label={labels.mode}
+                className="inline-flex rounded-xl border border-control-border bg-card p-1"
+              >
+                {MODES.map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    aria-pressed={mode === k}
+                    onClick={() => setK(mode)}
+                    className={cn(
+                      "h-9 min-w-[3.5rem] rounded-lg px-3 font-mono text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-[3px] focus-visible:ring-offset-background",
+                      mode === k
+                        ? "bg-primary text-primary-foreground"
+                        : "text-foreground hover:bg-lavender",
+                    )}
+                  >
+                    k = {mode}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="mb-2 font-mono text-meta uppercase tracking-widest text-muted-foreground">
+                {labels.shiftGroup}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="font-mono"
+                  onClick={() => shiftBy(1)}
+                >
+                  {labels.shift} 1
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="font-mono"
+                  onClick={() => shiftBy(10)}
+                >
+                  {labels.shift} 10
+                </Button>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-2 text-base text-foreground" aria-live="polite">
             <p>
               <Formula tex={`a = ${shift}`} />
             </p>
@@ -223,51 +281,6 @@ const CyclicShiftFigure = ({ labels, className }: CyclicShiftFigureProps) => {
                 tex={`φ = \\frac{2π · ${k} · ${shift}}{113} = \\frac{2π · ${phaseNumerator}}{113}`}
               />
             </p>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div>
-            <p className="mb-2 font-mono text-meta uppercase tracking-widest text-muted-foreground">
-              {labels.mode}
-            </p>
-            {/* A segmented control: one of three modes is always chosen, and
-                the chosen one is the filled module. */}
-            <div
-              role="group"
-              aria-label={labels.mode}
-              className="inline-flex rounded-xl border border-control-border bg-card p-1"
-            >
-              {MODES.map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  aria-pressed={mode === k}
-                  onClick={() => setK(mode)}
-                  className={cn(
-                    "h-9 min-w-[3.5rem] rounded-lg px-3 font-mono text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-[3px] focus-visible:ring-offset-background",
-                    mode === k
-                      ? "bg-primary text-primary-foreground"
-                      : "text-foreground hover:bg-lavender",
-                  )}
-                >
-                  k = {mode}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="mb-2 font-mono text-meta uppercase tracking-widest text-muted-foreground">
-              {labels.shiftGroup}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" className="font-mono" onClick={() => shiftBy(1)}>
-                {labels.shift} 1
-              </Button>
-              <Button variant="outline" size="sm" className="font-mono" onClick={() => shiftBy(10)}>
-                {labels.shift} 10
-              </Button>
-            </div>
           </div>
         </div>
       </div>

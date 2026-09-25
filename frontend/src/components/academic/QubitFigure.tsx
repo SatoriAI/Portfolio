@@ -138,7 +138,7 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
 
   return (
     <figure ref={ref} aria-label={labels.figure} className={cn("w-full", className)}>
-      <div className="grid gap-8 sm:grid-cols-[minmax(0,300px)_1fr] sm:items-start">
+      <div className="grid gap-8 sm:grid-cols-[minmax(0,300px)_1fr] sm:items-stretch">
         <div>
           <svg
             viewBox="0 0 260 240"
@@ -232,7 +232,40 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
               )}
             />
           </svg>
-          <dl className="mt-4 space-y-2 text-base">
+        </div>
+
+        {/* Gates at the top of the column, the state at its foot, level with
+            the base of the sphere. */}
+        <div className="flex flex-col gap-8 sm:min-h-full sm:justify-between">
+          <div>
+            <p className="mb-2 font-mono text-meta uppercase tracking-widest text-muted-foreground">
+              {labels.gates}
+            </p>
+            {/* Five gates on one row: 40px each with 6px between fits the column
+              beside a 300px sphere. */}
+            <div className="flex flex-wrap gap-1.5">
+              {GATE_ORDER.map((name) => (
+                <Button
+                  key={name}
+                  variant="outline"
+                  className="h-10 w-10 px-0 font-mono"
+                  onClick={() => apply(name)}
+                >
+                  {name}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-3"
+              onClick={reset}
+              disabled={circuit.length === 0}
+            >
+              {labels.reset}
+            </Button>
+          </div>
+          <dl className="space-y-2 text-base">
             <div>
               <dt className="font-mono text-meta uppercase tracking-widest text-muted-foreground">
                 {labels.circuit}
@@ -255,35 +288,6 @@ const QubitFigure = ({ labels, className }: QubitFigureProps) => {
               </dd>
             </div>
           </dl>
-        </div>
-
-        <div>
-          <p className="mb-2 font-mono text-meta uppercase tracking-widest text-muted-foreground">
-            {labels.gates}
-          </p>
-          {/* Five gates on one row: 40px each with 6px between fits the column
-              beside a 300px sphere. */}
-          <div className="flex flex-wrap gap-1.5">
-            {GATE_ORDER.map((name) => (
-              <Button
-                key={name}
-                variant="outline"
-                className="h-10 w-10 px-0 font-mono"
-                onClick={() => apply(name)}
-              >
-                {name}
-              </Button>
-            ))}
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-3"
-            onClick={reset}
-            disabled={circuit.length === 0}
-          >
-            {labels.reset}
-          </Button>
         </div>
       </div>
       <figcaption className="mt-6 text-sm text-muted-foreground">
