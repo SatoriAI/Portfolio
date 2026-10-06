@@ -3,25 +3,35 @@ import { typesetDeep } from "@/lib/typography";
 const copy = {
   en: {
     meta: {
-      home: {
-        title: "Dawid Hanrahan — Mathematician by training, engineer by trade",
+      workshop: {
+        title: "In the workshop · Dawid Hanrahan",
         description:
-          "Backend and AI engineer with a PhD in harmonic analysis. Python in production at Nokia, Xperi and CloudFerro.",
+          "Ideas, experiments and conclusions from research and successive prototypes: software in production and mathematics.",
+      },
+      home: {
+        title: "Dawid Hanrahan · Mathematician by training, engineer by trade",
+        description:
+          "Python backend engineer and PhD candidate in harmonic analysis. In production since 2019: Nokia, PeakData, Xperi, CloudFerro. Projects and pieces from the workshop.",
       },
       experience: {
-        title: "Work experience — Dawid Hanrahan",
+        title: "Work experience · Dawid Hanrahan",
         description:
           "Roles, achievements and technologies across Nokia, Xperi, CloudFerro and PeakData.",
       },
       research: {
-        title: "Research and teaching — Dawid Hanrahan",
+        title: "Research · Dawid Hanrahan",
         description:
-          "PhD in harmonic analysis, published papers, and what students say about the teaching.",
+          "Published papers in harmonic analysis and the questions under investigation now.",
+      },
+      education: {
+        title: "Education and teaching · Dawid Hanrahan",
+        description:
+          "A PhD in harmonic analysis, in progress, and what students say about the teaching.",
       },
       notFound: {
-        title: "Page not found — Dawid Hanrahan",
+        title: "Page not found · Dawid Hanrahan",
         description:
-          "Backend and AI engineer with a PhD in harmonic analysis. Python in production at Nokia, Xperi and CloudFerro.",
+          "Python backend engineer and PhD candidate in harmonic analysis. In production since 2019: Nokia, PeakData, Xperi, CloudFerro. Projects and pieces from the workshop.",
       },
     },
     common: {
@@ -31,8 +41,6 @@ const copy = {
       openMenu: "Open navigation menu",
       chatWithVex: "Chat with Vex",
       loading: "Loading…",
-      demo: "Demo",
-      privateProject: "Private, commercial project — the code is not public.",
     },
     chat: {
       prompt: "Ask Vex anything about Dawid.",
@@ -43,7 +51,7 @@ const copy = {
         "Is he available for contract work?",
       ],
       errorFallback:
-        "Vex didn't answer. Email me at dawidhanrahan@gmail.com and I'll reply within a day.",
+        "Vex didn't answer. Email me at dawidhanrahan@gmail.com and I'll reply within a few hours.",
       typing: "Vex is typing",
       clear: "Clear",
       send: "Send",
@@ -51,151 +59,358 @@ const copy = {
     nav: {
       home: "Home",
       about: "About",
-      skills: "Skills",
       projects: "Projects",
       contact: "Contact",
       experience: "Experience",
       academic: "Research",
-      mainPage: "Main Page",
+      education: "Education",
+      workshop: "In the workshop",
+      skipToContent: "Skip to content",
+      mainPage: "Main page",
       pages: "Pages",
-      homeSections: "Home Sections",
-      otherPages: "Other Pages",
+      homeSections: "Home sections",
+      otherPages: "Other pages",
     },
     navDescriptions: {
       home: "Jump to the top of the Home page.",
       about: "Learn more about me on the Home page.",
-      skills: "See my technical skills on the Home page.",
       projects: "View featured projects on the Home page.",
       contact: "Get in touch or chat with Vex on the Home page.",
     },
     hero: {
-      title: "Mathematician by training. Engineer by trade.",
-      subtitle:
-        "A decade of Python, in production at Nokia, Xperi and CloudFerro — alongside a PhD in harmonic analysis. I'm drawn to problems where the maths and the infrastructure both have to be right.",
-      proof: [
-        { value: "2", label: "papers on heat kernels" },
-        { value: "4", label: "production systems" },
-        { value: "GB → MB", label: "memory cut in a Nokia service" },
+      theorem: "Theorem.",
+      statement: ["Mathematician by training", "engineer by trade"],
+      and: "and",
+      proof: "Proof.",
+      proofLines: [
+        {
+          text: "I'm working on a PhD in pure mathematics.",
+          to: "/education",
+          label: "education",
+        },
+        {
+          text: "For almost a decade I've built commercial software.",
+          to: "/experience",
+          label: "experience",
+        },
+        {
+          text: "I build my own products, from idea to deployment.",
+          to: "/#projects",
+          label: "projects",
+        },
       ],
       askAI: "Ask Vex about me",
-      askPlaceholder: "Ask Vex anything about me…",
-      ask: "Ask",
-      viewProjects: "View projects",
-      field: {
-        label: "heat kernel",
-        replay: "Run the heat spread again",
-      },
     },
     about: {
-      title: "About Me",
-      paragraph1:
-        "Mathematics taught me to distrust anything I cannot prove; engineering taught me that a proof nobody can run is worth little. I work in the space between the two: production backends and AI systems built with the care of a research argument, and research questions approached with an engineer's insistence on something that actually works. Teaching sits alongside both — explaining a hard idea simply is the best test of whether you understand it.",
-      paragraph2:
-        "Day to day that means Python — Django, FastAPI, SQLAlchemy — and the infrastructure around it: API design, data modelling, CI/CD and cloud deployments. LLMs, distributed systems and cryptography are where my curiosity currently points.",
-      mark: {
-        toggle: "Show how the mark reads as 0 and 1",
-        zero: "0",
-        one: "1",
-        reading: "→ dh",
+      title: "About me",
+      definition: {
+        label: "Definition.",
+        sentence: "{name} is a mathematician who builds software.",
+        name: "Dawid Hanrahan",
+        book: "Einstein's Cosmos",
+        body: "Mathematics stopped being a school subject for me when, as a teenager, I read Michio Kaku's {book}. Today I'm doing a PhD and teaching. In the software I build, theory pays off: in system architecture, optimisation problems and understanding AI models, and lately in UI/UX too.",
+        properties: [
+          { key: "home", value: "Wrocław" },
+          { key: "after work", value: "boxing, the gym, chess, books" },
+          { key: "superhero", value: "Iron Man, for obvious reasons" },
+        ],
       },
-      markHint: "Binary Axis. Hover or tap: the initials first, the maths second.",
-      philosophy: "Technical Philosophy",
-      philosophyText:
-        "Clarity always outlives shortcuts. Before I trust a system I want to be able to argue that it is correct — a property stated plainly, a test that would fail if it were false, and an invariant the code makes hard to break. That instinct comes from mathematics, and it is the most useful thing I brought from it into engineering.",
+      routes: {
+        experience: "Nokia, PeakData, Xperi, CloudFerro: roles and skills",
+        research: "Heat kernels, the papers, and grokking",
+        education: "Degrees and teaching",
+        workshop: "Latest: {title}",
+      },
     },
     skills: {
-      title: "Technical Skills",
-      subtitle: "One square is a year in production. The filled one is the year still running.",
+      title: "How a request travels",
+      subtitle: "Pick a technology to see where I used it. Or the other way round.",
+      layers: {
+        interfaceApi: "Interface and API",
+        dataServices: "Data and services",
+        platformDelivery: "Platform and delivery",
+        ai: "AI and tools",
+      },
+      roles: "Roles",
+      /** A sidebar circle's name; `{company}` is replaced. */
+      showSkills: "{company}: show the skills",
+      openRole: "More",
+      /** The link's full name; `{company}` is replaced. */
+      openRoleFull: "More about {company}",
+      /** After the first projects, how many more there are. */
+      more: "+{count} more",
+      /** Where a claimed level reaches back before the roles on the axis. */
+      earlier: "earlier",
+      projects: "Projects",
+      /** Beside a skill no role above lists. */
+      outsideRoles: "Outside the roles above",
+      /** A level that is not a count of years, as the backend stores it, said here. */
+      levels: { "Since launch": "Since launch" } as Record<string, string>,
+      /** The row's accessible name when it can be pressed. */
+      show: "{name}: show the roles",
+    },
+    workshop: {
+      title: "In the workshop",
+      /** The workshop page's heading, under its name. */
+      headline: "Every prototype starts as a Mark I",
+      /** Over the text before a piece's first heading, in the margin. */
+      introduction: "Introduction",
+      lead: "Ideas, experiments and conclusions from research and successive prototypes.",
+      all: "all pieces",
+      /** The small figure with a piece on the home page. */
+      figure: {
+        newExamples: "new examples",
+        training: "training",
+        delay: "delay",
+        variants: {
+          old: "Old prompt, literal matching",
+          trim: "Trimming the endings (#144)",
+          new: "New prompt and the short-word rule (#145)",
+          both: "Both approaches together",
+        },
+        hits: "Hits",
+        falseHits: "FA",
+        searchNote: "{n} expected hits · FA = false alarms",
+        heatCaption: "Comparing multiplication before and after diffusion recovers the gradients.",
+      },
+      minutes: "{n} min read",
+      tags: "Topics",
+      /** A piece shown in the language it was written in, keyed by that language. */
+      onlyIn: { pl: "Polish only for now", en: "English only for now" },
+      onlyInLong: {
+        pl: "This piece is in Polish only for now.",
+        en: "This piece is in English only for now.",
+      },
+      empty: "No pieces yet.",
+      copy: "Copy",
+      copied: "Copied",
+      footnotes: "Footnotes",
+      /** A footnote's way back to where it is cited; `{n}` is its number. */
+      backToText: "Back to reference {n}",
+      related: "More on this:",
+      pages: {
+        "/experience": "Experience",
+        "/research": "Research",
+        "/education": "Education",
+        "/#projects": "Projects",
+      } as Record<string, string>,
+      closing: {
+        title: "Got an idea for a piece?",
+        body: "Write, or ask Vex first.",
+        email: "Write to me",
+      },
+      articleClosing: {
+        title: "A question about this piece?",
+        body: "Write, or ask Vex first.",
+        email: "Write to me",
+      },
     },
     projects: {
-      title: "Featured Projects",
-      subtitle:
-        "Backend and AI systems shipped end to end — from the data model to the deployment — for real users.",
-      code: "Code",
-      imageAlt: "{title} — icon",
+      /** When the projects cannot be loaded; no stand-in work is shown. */
+      error: "The projects could not be loaded.",
+      tryAgain: "Try again",
+      title: "Projects",
+      code: "code",
+      codeOnGithub: "Code on GitHub",
+      codePrivate: "private code",
       stack: "Stack",
+      stackNext: "Next technology",
+      proof: {
+        checking: { one: "Checking {n} site…", other: "Checking {n} sites…" },
+        answered: {
+          one: "{n} site answered just now, in {ms}",
+          other: "{n} sites answered just now, in {ms} on average",
+        },
+        none: "No site answered this time.",
+      },
       youAreHere: "you are here",
+      notPublic: "not public yet",
       askVex: "Ask Vex about {title}",
       askVexQuestion: "Tell me about {title}.",
+      quoted: "“{text}”",
+      screenshotAlt: "{title}: screenshot",
+      previous: "Show previous projects",
+      next: "Show more projects",
+      live: {
+        check: "Check it live",
+        again: "Check again",
+        checking: "checking…",
+        answered: "answers · {ms} ms",
+        silent: "no answer",
+        openAria: "Open {host} in a new tab",
+      },
       /** One line under each title in the index, keyed by the backend's title. */
       subtitles: {
-        tURL: "Temporary short links, with a lifetime you can extend",
-        OpenGrant: "Generative AI that drafts and manages R&D grant proposals",
-        AdLume: "AI that runs and tunes ad campaigns",
+        tURL: "Link shortening with a personal touch!",
+        OpenGrant: "GenAI for writing grant applications.",
+        AdLume: "AI marketing around the clock.",
         Portfolio: "This site, with an assistant that has read it",
-        Picko: "A Secret Santa draw with no accounts",
+        Picko: "A Secret Santa draw without the needless complexity.",
+        Slip: "No more keeping receipts in the freezer!",
+        Konfio: "No more dozens of emails! Everything in one place.",
+        Athlo: "Sports competitions, reimagined.",
       } as Record<string, string>,
+      facts: {
+        tURL: { role: "My first project built with AI · 2025" },
+        Picko: { role: "I learned Claude Code and UI/UX intensively · 2025" },
+        Slip: { role: "I developed my UI/UX skills · since 2026" },
+        AdLume: { role: "I co-created the project as an AI engineer · 2025–2026" },
+        Athlo: { role: "Responsible for the technology and UI/UX · since 2026 · before launch" },
+        Konfio: {
+          role: "Co-founder and the only person responsible for the technology · since 2025",
+        },
+        OpenGrant: { role: "Co-founder, responsible for the technology · since 2025" },
+      } as Record<string, { role: string }>,
     },
     contact: {
-      title: "Let's Talk",
-      subtitle2: "Open to backend and AI work — contract or full-time. I reply within a day.",
-      email: "Email",
-      quickMessage: "Chat with Vex",
-      quickMessageDesc:
-        "Vex is my assistant. It answers from this site's content: ask it about my experience, research or availability.",
+      title: "Let's talk",
+      lead: "Any reason to talk is a good one.",
+      list: {
+        email: "Email",
+        reply: "I usually reply within a few hours.",
+        copy: "Copy the email address",
+        copied: "Address copied",
+        vex: "Vex",
+        vexMain: "Ask my assistant",
+        vexLine: "It answers you right away, any time.",
+        github: "GitHub",
+        githubLine: "Browse the code behind my projects.",
+      },
     },
     hints: {
       swipeMore: "Swipe to see more",
     },
     experience: {
-      title: "Work Experience",
-      subtitle:
-        "Every role, drawn to scale. Where two lines overlap, the roles ran at the same time.",
+      title: "I like code that holds up in production",
+      subtitle: "Less magic, more engineering. Though sometimes it's hard to tell.",
+      rolesTitle: "Roles",
       timeline: {
         figure: "Career timeline, to scale",
-        caption: "One tick per January. The dot marks the role still running.",
         now: "now",
       },
-      keyAchievements: "Key Achievements",
+      closing: {
+        title: "A project together? Sure!",
+        body: "Write, or ask Vex first.",
+        email: "Write to me",
+        /** Above the closing: the way on to the next page. */
+        next: { lead: "Beyond engineering:", label: "research" },
+      },
+      dialog: {
+        previous: "Previous role",
+        next: "Next role",
+        close: "Close",
+      },
+      keyAchievements: "Key achievements",
       technologies: "Technologies",
       askVex: "Ask Vex about {company}",
       askVexQuestion: "What did he do at {company}?",
       error: "Failed to load work experience data",
-      tryAgain: "Try Again",
+      tryAgain: "Try again",
       noData: "No work experience data available.",
     },
     academic: {
-      title: "Research and Teaching",
+      title: "I like it when a proof comes together",
+      educationTitle: "I like it when a hard idea turns simple",
+      educationLeadLine: "Intuition first, then proof. Usually in that order.",
+      map: {
+        label: "A map of my research",
+        kernels: "Heat kernels",
+        reasoning: "Reasoning in AI models",
+        quantum: "Quantum algorithm",
+        harmonic: "Harmonic analysis",
+        functional: "Functional analysis and operator theory",
+      },
       subtitle:
         "Heat kernels, since a bachelor's thesis in 2019: sharp estimates on segments, cones and double cones. Two papers. Lately, the algebra inside transformers; next, quantum computing. Teaching analysis and algebra alongside.",
       interests: {
         title: "Research interests",
         transformers: {
-          title: "Mathematical structure in transformers",
-          paragraphs: [
-            "The test case is modular addition over $ℤ_{113}$, a task whose algebra is known, watched through grokking. If the hidden activations begin to encode cyclic shifts as generalisation appears, that structure should be trackable through training and across layers. Across three seeds, after grokking, selected activation subspaces do carry the dynamics of cyclic shifts, most coherently between a late layer and the output.",
-            "The mathematics runs alongside. Exact intertwiners between group representations preserve the isotypic components, and for cyclic groups a bound connects approximate agreement between layers with the transport of Fourier components. How far that explains the experiments is the open question: the strict representation law is not yet established, and nothing shows that the structure causes generalisation.",
-          ],
-          figure: {
-            figure: "The cyclic group of order 113 with one Fourier mode, under a shift",
-            caption:
-              "$ℤ_{113}$ as 113 points, with the Fourier mode $k$ drawn over them. A shift by $a$ turns the mode rigidly: $e^{2πik(x+a)/113} = e^{2πika/113} · e^{2πikx/113}$, a change of phase and nothing else. An operator that commutes with shifts therefore cannot mix one mode with another, which is the fact the intertwiner result rests on.",
-            shiftGroup: "Shift",
-            mode: "Fourier mode",
-            modeDown: "Lower mode",
-            modeUp: "Higher mode",
-            shiftDown: "Shift back by one",
-            shiftUp: "Shift forward by one",
-            notice:
-              "Step the shift and the wave keeps its shape; only its position moves. Step $k$ and the number of waves changes, never their motion.",
+          title: "What changes when a model generalises",
+          stages: {
+            task: "A simple task",
+            result: "First memorisation, then generalisation",
+            clue: "A mathematical clue",
+            open: "What is not yet established",
           },
-        },
-        quantum: {
-          title: "Quantum computing and quantum algorithms",
+          /** Over the chart, which asks before it answers; the finding sits under it. */
+          predictQuestion:
+            "The model already gets every training example right. From which step will it handle new ones too? Move the marker to your guess and check.",
+          /**
+           * The finding, under the chart, with the work the setup reproduces
+           * credited. grokking.test.ts holds the data to its claims.
+           */
+          resultLead:
+            "By step 1,000 the model answered every training example correctly. On the same data, one to two thousand steps later, its accuracy on new ones passed 50% as well. This delayed generalisation is called *grokking*.",
+          /** After the finding: the work the setup reproduces, and where the name comes from; both linked. */
+          resultCredit: {
+            before: "The setup reproduces ",
+            setup: "Nanda et al. (2023)",
+            between: "; the term comes from ",
+            term: "Power et al. (2022)",
+            after: ".",
+          },
+          /** Below the chart's panel: what the result shows, and the question stage 03 takes up. */
+          resultQuestion:
+            "The result shows when the model began to handle new examples. My research question concerns what changed in its internal structure at that point.",
           paragraphs: [
-            "I am building my knowledge of quantum computing from the basic concepts to the theory and implementation of quantum algorithms, along three lines at once: an intuition for qubits and interference, a formal treatment of quantum computation, and practice programming and simulating circuits.",
-            "What draws me is the mathematical structure: states as vectors or operators, unitary evolution, measurement, and the operator theory underneath. Quantum information, error correction and quantum machine learning are the likely directions. For now this is a direction for future research, not a project with results.",
+            "Imagine a student who knows every answer to the practice questions but struggles with a test full of new ones. An AI model can behave similarly. In a task like adding hours on a clock, it may master the examples it trained on and still get unfamiliar ones wrong.",
+            "I’m interested in what changes inside the model at that moment. Can we describe that change mathematically? One clue is patterns that look like waves arranged around a circle. On this kind of clock, adding a number shifts the position by a fixed number of places. Waves give us a mathematical way to describe such shifts.",
+            "The illustration shows a mathematical idea, not a direct view inside the model. Nanda et al. found this structure in the representations of networks of this kind, and I see similar signs of it in my runs. It has not yet been established whether the emergence of that structure causes the improvement on new examples.",
+            "This simple experiment does not yet explain reasoning in large language models, but it helps us ask more precise questions about how they learn rules and apply them in unfamiliar situations.",
           ],
-          figure: {
-            figure: "One qubit on the Bloch sphere, with gates to apply",
+          clock: {
+            label: "Explanatory example",
+            figure: "A 12-hour clock: 7 + 8 = 3",
+            /** The clock can be pressed to count the eight hours again. */
+            replay: "Count again",
             caption:
-              "One qubit, simulated exactly: the buttons apply the unitaries $H$, $X$, $Z$, $S$ and $T$ to the amplitudes, and the vector turns along each gate's true rotation of the Bloch sphere. Press $H$ twice and the state returns to $|0⟩$: interference, in one line of a circuit.",
-            gates: "Gates",
-            reset: "Reset to |0⟩",
-            notice:
-              "One H makes both outcomes equally likely; a second H makes the first certain again.",
-            circuit: "Circuit",
-            state: "State",
+              "On a 12-hour clock, 7\u00a0+\u00a08\u00a0=\u00a03: past twelve, counting starts over. The model learned the same operation on a clock with 113 places.",
+          },
+          chart: {
+            /** Stands in the frame's top edge, as the other figures' labels do. */
+            title: "Accuracy on seen and new examples",
+            /** The guess before the new examples are shown. `{step}` is replaced. */
+            predict: {
+              guess: "Your guess: step {step}",
+              marker: "Your guess",
+              check: "Check",
+              drag: "Drag the marker on the chart",
+              /** The slider's value before the marker has been moved. */
+              none: "No step chosen",
+              how: "Drag the marker on the chart or move it with the left and right arrow keys, then press Enter or Check.",
+              retry: "Try again",
+              verdict: { perfect: "Spot on", almost: "Almost", wrong: "Not this time" },
+              result:
+                "Accuracy on new examples passed 50% between step {from} and step {to}, in all three runs.",
+            },
+            seen: "Examples seen in training",
+            unseen: "New examples",
+            stepAxis: "Training step",
+            accuracyAxis: "Correct answers",
+            step: "Step",
+            run: "Run",
+            caption:
+              "The same type of model was trained three times. Each run used a randomly chosen starting point and a new split of the number pairs: 30% were used for training, while the remaining 70% were held back to check the results. The chart shows measurements taken every 1,000 steps; the lines simply connect them.",
+            /** The selected step in words, one form per shape of its data; see `stepSentence`. */
+            stepNote: {
+              same: "Step {step}: accuracy on both training and new examples is {value} in all three runs.",
+              seenFixed:
+                "Step {step}: accuracy on training examples is {seen} in all three runs, while accuracy on new examples ranges from {unseenMin} to {unseenMax}.",
+              bothVary:
+                "Step {step}: across the three runs, accuracy on training examples ranges from {seenMin} to {seenMax}, and on new examples from {unseenMin} to {unseenMax}.",
+            },
+          },
+          figure: {
+            label: "Illustration of a mathematical principle",
+            figure: "The numbers 0 to 112 on a circle, with a wave drawn over them",
+            prompt:
+              "Shift the numbers and check: does the wave change its shape, or only its position?",
+            waves: "Number of waves: $k = {k}$",
+            add: "Add to the input: $+{a}$",
+            note: "Move the slider: adding the same number to the input moves the wave around the circle but does not change its shape. The points stand for the numbers 0 to 112.",
+            curious: "For the curious",
+            detail:
+              "A wave of frequency $k$ repeats its pattern $k$ times around the circle. Shifting the numbers changes its phase: the place where the pattern begins. In the model, I study whether similar relationships appear among its internal signals.",
           },
         },
       },
@@ -209,75 +424,221 @@ const copy = {
       },
       education: "Academic background",
       story: {
-        lead: "One question runs through the work: how the shape of a space decides what happens in it. For heat, how fast it spreads on a cone and where the estimate is tight. For a trained network, whether the algebra of its task shows up in its activations. Quantum computing is the next place to ask it.",
+        lead: "A hunch says “probably”. Mathematics says “always”.",
         contents: "On this page",
         kernels: {
           title: "Heat kernels",
-          eyebrow: "Established",
-          lead: "A heat kernel says how much heat travels from one point to another in time $t$. On a cone the geometry bends that answer, and the two papers pin it down.",
-          result:
-            "Result: genuinely sharp estimates for Jacobi heat kernels on the cone, its surface and the double cone. The same expression bounds the kernel above and below, exact up to constants.",
-          why: "Why it matters here: the papers bound a kernel like this one, on a cone, from above and below by one expression. That is what sharp means: the picture is known at every point and every time, up to a constant.",
+          leadLine:
+            "How can we describe the spread of heat when the geometry of a space complicates the answer?",
+          stages: {
+            map: "A map of influence",
+            geometry: "Why isn’t distance alone enough?",
+            sharp: "What does my work involve?",
+            why: "Why it matters",
+          },
+          map: "A heat kernel can be thought of as a map of influence. We specify where a pulse of heat begins, where we observe its effect, and how much time has passed. The kernel describes how strong that effect is at the observation point. By varying the locations and time, we see the process as a whole.",
+          geometry:
+            "In the spaces I study, the distance between the pulse and the observation point is not enough on its own. Their position relative to a boundary or a tip matters too. So even at the same distance, the influence of heat can differ. Over time, the importance of these special places changes as well. This makes it harder to find bounds that work for different places and moments.",
+          sharp:
+            "In my work, I derive lower and upper bounds for the value of the heat kernel. Both have the same form and differ only by a constant factor. This is exactly what makes the estimate *sharp*: it shows the right dependence on position and time, even though it does not give the exact value of the kernel.",
+          whyBefore:
+            "These bounds are useful when the kernel’s exact form is too complicated to work with easily. They help us study mathematical models of diffusion and ask new questions. I explore one of them in “",
+          whyLink: "From heat kernels to a quantum algorithm",
+          whyAfter: ".”",
+          influence: {
+            label: "A map of influence on a cone",
+            figure:
+              "A cone with a heated spot and an observation point; the heat spreads as time passes",
+            impulse: "heated spot",
+            observation: "observation point",
+            tip: "tip",
+            boundary: "boundary",
+            time: "Time since heating",
+            start: "just after heating",
+            later: "later",
+            caption:
+              "Move the slider to see how heat spreads from the heated spot towards the observation point.",
+          },
+          bounds: {
+            label: "What a sharp estimate looks like",
+            figure:
+              "A lower and an upper bound of the same shape; the exact value of the kernel lies between them",
+            yAxis: "strength of the influence",
+            xAxis: "distance from the heated spot",
+            upper: "upper bound",
+            between: "the kernel’s value lies between the bounds",
+            lower: "lower bound",
+            time: "Time",
+            start: "earlier",
+            later: "later",
+            caption:
+              "The kernel’s value lies between the lower and upper bounds. Both change by the same rule and differ only by a constant factor.",
+          },
         },
         transformers: {
-          eyebrow: "Current investigation",
-          question: "What changes inside a model at the moment it starts to generalise?",
-          why: "This is the mathematics, not the model. The experiments ask whether a trained network's activations move like this under a shift of the input; the figure shows what like this means.",
+          question:
+            "What can simple sums reveal about how AI models learn to handle unfamiliar examples?",
         },
-        quantum: {
-          eyebrow: "Learning",
-          lead: "A developing interest, not a result. How I learn a subject: build the smallest working instance and press its buttons.",
-          why: "Why it is here: a subject is understood when its smallest example runs. This one does, exactly, in fifty lines.",
+        jacobiQuantum: {
+          title: "From heat kernels to a quantum algorithm",
+          leadLine:
+            "Imagine a long rod. One part of it is hot and the rest is cooler. Can a quantum computer calculate how much heat will be in the marked region A a moment later, without simulating the whole rod?",
+          introTitle: "One number, a new question",
+          intro:
+            "Region A cannot simply be cut out. Heat from other parts of the rod, including distant ones, can change the result. I want to establish how large a neighbourhood has to be included so that the error from leaving out the rest stays within an agreed limit.",
+          clueTitle: "A mathematical clue",
+          clueBeforePaper:
+            "The rod helps picture the problem. In the research I start from a mathematical model of heat spreading called the Jacobi model. In it, the heat kernel works as a map of influence: it describes how strongly one place affects another after some time. ",
+          paper: "The estimates of Nowak, Sjögren and Szarek",
+          clueAfterPaper:
+            " suggest that when little time has passed since the process began, the influence falls off quickly with distance from A. Move the slider to see this intuition in the illustration.",
+          figure: {
+            label: "Schematic of heat spreading",
+            figure:
+              "A horizontal rod: heat from a section that starts hot spreads to the sides and in time reaches region A",
+            hot: "hot at the start",
+            region: "A",
+            time: "Time since the start",
+            start: "start",
+            later: "later",
+            states: {
+              concentrated: "The heat is concentrated in the heated section.",
+              spreading: "The heat spreads to the sides and becomes less concentrated.",
+              reached: "The heat also reaches A.",
+            },
+            caption:
+              "Move the slider to see how heat from the heated section reaches region A. Although only A interests us, the result also depends on what happens in other parts of the rod.",
+          },
+          proofTitle: "What remains to be proved",
+          proof:
+            "The small influence of distant places is only a first hint. It still has to be shown that a calculation on a smaller region gives almost the same result in A, and that the error can be bounded. Only then can a quantum algorithm be built and its full cost counted, from preparing the data to reading out the answer. A comparison with the best classical methods will show whether this approach really helps.",
         },
         teaching: {
           title: "Teaching",
-          eyebrow: "Classes",
-          /** `{courses}`, `{from}` and `{to}` are filled from the testimonials. */
-          intro: "Classes taught: {courses} ({from}–{to}).",
-          approach:
-            "Explaining a hard idea simply is the best test of whether you understand it; the classes are built on that.",
-          showAll: "Show all {count}",
-          showFewer: "Show fewer",
+          /** A paraphrase of Feynman, so it is credited "after" him, not quoted as his. */
+          quote:
+            "If you can't explain something to a first-year student, you don't really understand it.",
+          quoteSource: "after Richard Feynman",
+          themesLabel: "What students noticed",
+          themes: [
+            { key: "clarity", label: "Explains simply" },
+            { key: "prepared", label: "Well prepared" },
+            { key: "beyond", label: "Beyond the syllabus" },
+            { key: "friendly", label: "Friendly classes" },
+          ],
+          /**
+           * Per review (by its id), the words that say each theme, exactly as
+           * the review reads. A phrase that is not in the review is ignored.
+           * Ordered by what a theme says about the teaching, not by count:
+           * friendliness is the most common praise and says the least.
+           */
+          evidence: {
+            "1": {
+              clarity: ["explains issues clearly"],
+              prepared: ["is always prepared for classes and approaches them thoroughly"],
+            },
+            "2": {
+              friendly: ["the classes were enjoyable", "very kind and nice"],
+              beyond: [
+                "how what we were doing related to computer science and where these issues were used",
+              ],
+            },
+            "3": {
+              friendly: ["very friendly, helpful", "a friendly atmosphere"],
+              prepared: ["knowledgeable"],
+              clarity: ["explain the topics in an accessible way"],
+            },
+            "4": {
+              friendly: ["incredibly polite"],
+              prepared: ["extensive knowledge"],
+              beyond: ["interesting additional tasks"],
+            },
+            "5": {
+              clarity: ["explains complex issues in a simple way"],
+              friendly: ["a friendly atmosphere in class"],
+            },
+            "6": {
+              friendly: ["very friendly lecturer", "one of the most enjoyable ones"],
+            },
+          } as Record<string, Record<string, string[]>>,
         },
         closing: {
-          title: "Research, collaboration or teaching?",
+          title: "Any questions about my degrees or classes?",
           body: "Write, or ask Vex first.",
           email: "Write to me",
+          next: { lead: "Theory at work:", label: "in the workshop" },
+        },
+        researchClosing: {
+          title: "Shall we talk science?",
+          body: "Write, or ask Vex first.",
+          email: "Write to me",
+          next: { lead: "Where it started:", label: "degrees and teaching" },
         },
       },
+      /** Over the research page's headline: what the work is. */
+      eyebrow: "Research · PhD",
       stack: "Publications, as a stack of files",
-      established: "What it established",
-      showAbstract: "Show the abstract",
-      hideAbstract: "Hide the abstract",
+      established: "What it shows",
+      author: "Author",
+      authors: "Authors",
+      status: { published: "Published", preprint: "Preprint" },
       more: "More",
       less: "Less",
       /** Two or three sentences per paper, keyed by its link; the abstract sits behind a toggle. */
       publicationSummaries: {
-        "https://ui.adsabs.harvard.edu/abs/2022arXiv221014590H/abstract":
-          "Genuinely sharp two-sided estimates for Jacobi heat kernels on the multidimensional cone and its surface. Xu's Jacobi polynomials on the cone meet the Nowak–Sjögren–Szarek method for the spherical kernel.",
+        "https://doi.org/10.1016/j.jat.2023.105921":
+          "On a cone, the boundary and the tip change the way heat spreads. How can we estimate how much heating one point affects the temperature at another? In this paper we derive lower and upper estimates, separately for the cone and for its surface.",
         "https://arxiv.org/abs/2411.15793":
-          "The sharp estimates extended to the double cone and its surface for the even and odd kernels, and to the hyperboloid for the even one. The paraboloid resists the method, and the paper says where.",
+          "Imagine two cones touching at their tips. How strongly does heat from one point affect another in such a model? In this paper I derive estimates that answer this. I also study related shapes and point out cases where the method does not yet give a complete answer.",
       } as Record<string, string>,
       /** One line worth its own place, keyed by the degree's start date. */
       educationHighlights: {
-        "2019-10-03":
-          "2nd place, Józef Marcinkiewicz Competition for the best master's thesis in mathematics in Poland (PTM).",
+        "2016-10-03": {
+          label: "Wrocław University of Science and Technology",
+          text: "9th place in the TOP 10 competition for the best bachelor's graduates (2019)",
+          href: "https://wmat.pwr.edu.pl/o-wydziale/aktualnosci/laureaci-konkursu-top-10-2019-10960.html",
+        },
+        "2022-10-03": {
+          label: "Wrocław University of Science and Technology",
+          text: "Average grade 4.75 (scale 2–5)",
+        },
+        "2019-10-03": {
+          label: "Polish Mathematical Society",
+          text: "2nd place in the Józef Marcinkiewicz Competition for the best master's thesis in mathematics in Poland",
+          href: "https://www.mat.umk.pl/nauka/konkurs-im-jozefa-marcinkiewicza/",
+        },
+      } as Record<string, { label: string; text: string; href?: string }>,
+      // The degree's topic, lifted from its own research paragraph (the
+      // bachelor's is its thesis title).
+      // What the drawing beside the degrees shows, named under it.
+      degreeSteps: "Degrees",
+      /** Under the degree's drawing: it can be pressed to set heat on it. */
+      heatHint: "Press the shape to heat it",
+      /** Read after a link that opens elsewhere. */
+      newTab: "(opens in a new tab)",
+      domainNames: {
+        "torus-interval": "Torus and interval",
+        cone: "Cone",
+        revolution: "Solid of revolution",
+        "double-cone": "Double cone",
+      },
+      educationHeadlines: {
+        "2016-10-03": "The heat equation on the torus and the interval",
+        "2019-10-03": "The heat equation on the cone",
+        "2022-10-03": "Sharp estimates of Jacobi heat kernels",
       } as Record<string, string>,
-      venue: "Venue",
-      year: "Year",
       publicationsLead:
         "Two papers on sharp estimates for Jacobi heat kernels: on the cone, then on the double cone. Open one.",
       noticeLabel: "What to notice",
       figureNotice:
         "The peak drops fast at first and slowly later, and the whole curve settles onto the dashed mean.",
-      quotes: { open: "“", close: "”" },
-      researchFocus: "Research Focus",
+      researchFocus: "Research focus",
       advisor: "Advisor",
-      researchAreas: "Research Areas",
+      researchAreas: "Research areas",
       publications: "Publications",
-      studentTestimonials: "Student Testimonials",
+      studentTestimonials: "Student testimonials",
       error: "Failed to load academic data",
-      tryAgain: "Try Again",
+      tryAgain: "Try again",
       noData: "No academic data available.",
       view: "View",
       noPublications: "No publications available.",
@@ -291,24 +652,33 @@ const copy = {
   },
   pl: {
     meta: {
-      home: {
-        title: "Dawid Hanrahan — Matematyk z wykształcenia, inżynier z zawodu",
+      workshop: {
+        title: "Z warsztatu · Dawid Hanrahan",
         description:
-          "Inżynier backendu i AI z doktoratem z analizy harmonicznej. Python na produkcji w Nokii, Xperi i CloudFerro.",
+          "Pomysły, eksperymenty i wnioski z badań i kolejnych prototypów: oprogramowanie na produkcji i matematyka.",
+      },
+      home: {
+        title: "Dawid Hanrahan · Matematyk z wykształcenia, inżynier z zawodu",
+        description:
+          "Inżynier backendu w Pythonie, doktorant z analizy harmonicznej. Na produkcji od 2019 roku: Nokia, PeakData, Xperi, CloudFerro. Projekty i teksty z warsztatu.",
       },
       experience: {
-        title: "Doświadczenie zawodowe — Dawid Hanrahan",
+        title: "Doświadczenie zawodowe · Dawid Hanrahan",
         description: "Stanowiska, osiągnięcia i technologie w Nokii, Xperi, CloudFerro i PeakData.",
       },
       research: {
-        title: "Badania i dydaktyka — Dawid Hanrahan",
+        title: "Badania naukowe · Dawid Hanrahan",
+        description: "Publikacje z analizy harmonicznej i pytania, nad którymi pracuję teraz.",
+      },
+      education: {
+        title: "Wykształcenie i dydaktyka · Dawid Hanrahan",
         description:
-          "Doktorat z analizy harmonicznej, publikacje i opinie studentów o prowadzonych zajęciach.",
+          "Doktorat z analizy harmonicznej w toku i opinie studentów o prowadzonych zajęciach.",
       },
       notFound: {
-        title: "Nie znaleziono strony — Dawid Hanrahan",
+        title: "Nie znaleziono strony · Dawid Hanrahan",
         description:
-          "Inżynier backendu i AI z doktoratem z analizy harmonicznej. Python na produkcji w Nokii, Xperi i CloudFerro.",
+          "Inżynier backendu w Pythonie, doktorant z analizy harmonicznej. Na produkcji od 2019 roku: Nokia, PeakData, Xperi, CloudFerro. Projekty i teksty z warsztatu.",
       },
     },
     common: {
@@ -316,21 +686,19 @@ const copy = {
       language: "Język",
       menu: "Menu",
       openMenu: "Otwórz menu nawigacji",
-      chatWithVex: "Porozmawiaj z Vex",
+      chatWithVex: "Porozmawiaj z Vexem",
       loading: "Wczytywanie…",
-      demo: "Demo",
-      privateProject: "Projekt prywatny, komercyjny — kod nie jest publiczny.",
     },
     chat: {
-      prompt: "Zapytaj Vex o cokolwiek o Dawidzie.",
-      inputPlaceholder: "Zapytaj Vex o Dawida…",
+      prompt: "Zapytaj Vexa o Dawida.",
+      inputPlaceholder: "Zapytaj Vexa o Dawida…",
       starters: [
         "Jakie ma doświadczenie z Kubernetesem?",
         "Opowiedz o jego badaniach doktorskich",
         "Czy jest dostępny do pracy kontraktowej?",
       ],
       errorFallback:
-        "Vex nie odpowiedział. Napisz na dawidhanrahan@gmail.com — odpowiem w ciągu dnia.",
+        "Vex nie odpowiedział. Napisz na dawidhanrahan@gmail.com — odpowiem w ciągu kilku godzin.",
       typing: "Vex pisze",
       clear: "Wyczyść",
       send: "Wyślij",
@@ -338,11 +706,13 @@ const copy = {
     nav: {
       home: "Strona główna",
       about: "O mnie",
-      skills: "Umiejętności",
       projects: "Projekty",
       contact: "Kontakt",
       experience: "Doświadczenie",
       academic: "Badania",
+      education: "Wykształcenie",
+      workshop: "Z warsztatu",
+      skipToContent: "Przejdź do treści",
       mainPage: "Strona główna",
       pages: "Strony",
       homeSections: "Sekcje strony głównej",
@@ -351,138 +721,324 @@ const copy = {
     navDescriptions: {
       home: "Przejdź na początek strony głównej.",
       about: "Dowiedz się więcej o mnie na stronie głównej.",
-      skills: "Zobacz moje umiejętności na stronie głównej.",
       projects: "Zobacz wybrane projekty na stronie głównej.",
-      contact: "Skontaktuj się lub porozmawiaj z Vex na stronie głównej.",
+      contact: "Skontaktuj się lub porozmawiaj z Vexem na stronie głównej.",
     },
     hero: {
-      title: "Matematyk z wykształcenia. Inżynier z zawodu.",
-      subtitle:
-        "Dekada Pythona, na produkcji w Nokii, Xperi i CloudFerro — równolegle z doktoratem z analizy harmonicznej. Ciągną mnie problemy, w których i matematyka, i infrastruktura muszą być poprawne.",
-      proof: [
-        { value: "2", label: "artykuły o jądrach ciepła" },
-        { value: "4", label: "systemy produkcyjne" },
-        { value: "GB → MB", label: "mniej pamięci w usłudze Nokii" },
+      theorem: "Twierdzenie.",
+      statement: ["Matematyk z wykształcenia", "inżynier z zawodu"],
+      and: "i",
+      proof: "Dowód.",
+      proofLines: [
+        {
+          text: "Pracuję nad doktoratem z matematyki teoretycznej.",
+          to: "/education",
+          label: "wykształcenie",
+        },
+        {
+          text: "Od prawie dekady tworzę oprogramowanie komercyjne.",
+          to: "/experience",
+          label: "doświadczenie",
+        },
+        {
+          text: "Buduję własne produkty, od pomysłu po wdrożenie.",
+          to: "/#projects",
+          label: "projekty",
+        },
       ],
-      askAI: "Zapytaj Vex o mnie",
-      askPlaceholder: "Zapytaj Vex o cokolwiek…",
-      ask: "Zapytaj",
-      viewProjects: "Zobacz projekty",
-      field: {
-        label: "jądro ciepła",
-        replay: "Uruchom rozchodzenie ciepła ponownie",
-      },
+      askAI: "Zapytaj Vexa o mnie",
     },
     about: {
       title: "O mnie",
-      paragraph1:
-        "Matematyka nauczyła mnie nie ufać niczemu, czego nie potrafię udowodnić; inżynieria — że dowód, którego nikt nie może uruchomić, jest niewiele wart. Pracuję pomiędzy tymi dwoma światami: buduję produkcyjne backendy i systemy AI ze starannością badawczego wywodu, a do pytań naukowych podchodzę z inżynierskim uporem, żeby coś naprawdę działało. Obok tego jest nauczanie — proste wyjaśnienie trudnej idei to najlepszy sprawdzian, czy się ją rozumie.",
-      paragraph2:
-        "Na co dzień oznacza to Pythona — Django, FastAPI, SQLAlchemy — i infrastrukturę wokół niego: projektowanie API, modelowanie danych, CI/CD i wdrożenia w chmurze. Moja ciekawość kieruje się dziś ku LLM-om, systemom rozproszonym i kryptografii.",
-      mark: {
-        toggle: "Pokaż, jak znak czyta się jako 0 i 1",
-        zero: "0",
-        one: "1",
-        reading: "→ dh",
+      definition: {
+        label: "Definicja.",
+        sentence: "{name} to matematyk, który buduje oprogramowanie.",
+        name: "Dawid Hanrahan",
+        book: "Kosmos Einsteina",
+        body: "Matematyka przestała być dla mnie szkolnym przedmiotem, kiedy jako nastolatek przeczytałem {book} Michio Kaku. Dziś piszę doktorat i prowadzę zajęcia ze studentami. Gdy buduję oprogramowanie, teoria procentuje: w architekturze systemów, problemach optymalizacyjnych i rozumieniu modeli AI, a od pewnego czasu również w UI/UX.",
+        properties: [
+          { key: "miasto", value: "Wrocław" },
+          { key: "po pracy", value: "boks, siłownia, szachy, książki" },
+          { key: "superbohater", value: "Iron Man z wiadomych przyczyn" },
+        ],
       },
-      markHint: "Oś binarna. Najedź lub dotknij: najpierw inicjały, potem matematyka.",
-      philosophy: "Podejście techniczne",
-      philosophyText:
-        "Przejrzystość zawsze przeżywa skróty. Zanim zaufam systemowi, chcę umieć uzasadnić, że jest poprawny — własność zapisana wprost, test, który by nie przeszedł, gdyby była fałszywa, i niezmiennik, którego kod nie pozwala łatwo złamać. Ten odruch pochodzi z matematyki i jest najbardziej użyteczną rzeczą, jaką z niej przeniosłem do inżynierii.",
+      routes: {
+        experience: "Nokia, PeakData, Xperi, CloudFerro: role i umiejętności",
+        research: "Jądra ciepła, publikacje i grokking",
+        education: "Studia i nauczanie",
+        workshop: "Najnowszy: {title}",
+      },
     },
     skills: {
-      title: "Umiejętności",
-      subtitle: "Jeden kwadrat to rok na produkcji. Wypełniony to rok, który wciąż trwa.",
+      title: "Jak przechodzi żądanie",
+      subtitle: "Wybierz technologię, a zobaczysz, gdzie jej używałem. Albo odwrotnie.",
+      layers: {
+        interfaceApi: "Interfejs i API",
+        dataServices: "Dane i usługi",
+        platformDelivery: "Platforma i dostarczanie",
+        ai: "AI i narzędzia",
+      },
+      roles: "Role",
+      showSkills: "{company}: pokaż umiejętności",
+      openRole: "Więcej",
+      openRoleFull: "Więcej o {company}",
+      more: "+{count} więcej",
+      earlier: "wcześniej",
+      projects: "Projekty",
+      outsideRoles: "Poza rolami powyżej",
+      levels: { "Since launch": "Od premiery" } as Record<string, string>,
+      show: "{name}: pokaż role",
+    },
+    workshop: {
+      title: "Z warsztatu",
+      headline: "Każdy prototyp zaczyna się od Mark I",
+      introduction: "Wstęp",
+      lead: "Pomysły, eksperymenty i wnioski z badań i kolejnych prototypów.",
+      all: "wszystkie teksty",
+      figure: {
+        newExamples: "nowe przykłady",
+        training: "treningowe",
+        delay: "opóźnienie",
+        variants: {
+          old: "Stary prompt, dopasowanie dosłowne",
+          trim: "Przycinanie końcówek (#144)",
+          new: "Nowy prompt i reguła krótkich słów (#145)",
+          both: "Oba podejścia naraz",
+        },
+        hits: "Traf.",
+        falseHits: "FA",
+        searchNote: "{n} oczekiwanych trafień · FA = fałszywe alarmy",
+        heatCaption: "Porównując mnożenie przed dyfuzją i po niej, odzyskujemy gradienty.",
+      },
+      minutes: "{n} min czytania",
+      tags: "Tematy",
+      onlyIn: { pl: "na razie tylko po polsku", en: "na razie tylko po angielsku" },
+      onlyInLong: {
+        pl: "Ten tekst jest na razie tylko po polsku.",
+        en: "Ten tekst jest na razie tylko po angielsku.",
+      },
+      empty: "Nie ma jeszcze tekstów.",
+      copy: "Kopiuj",
+      copied: "Skopiowano",
+      footnotes: "Przypisy",
+      backToText: "Wróć do odsyłacza {n}",
+      related: "Więcej w tym temacie:",
+      pages: {
+        "/experience": "Doświadczenie",
+        "/research": "Badania",
+        "/education": "Wykształcenie",
+        "/#projects": "Projekty",
+      } as Record<string, string>,
+      closing: {
+        title: "Masz pomysł na tekst?",
+        body: "Napisz albo najpierw zapytaj Vexa.",
+        email: "Napisz do mnie",
+      },
+      articleClosing: {
+        title: "Pytanie o ten tekst?",
+        body: "Napisz albo najpierw zapytaj Vexa.",
+        email: "Napisz do mnie",
+      },
     },
     projects: {
-      title: "Wybrane projekty",
-      subtitle:
-        "Systemy backendowe i AI dostarczone od początku do końca — od modelu danych po wdrożenie — dla prawdziwych użytkowników.",
-      code: "Kod",
-      imageAlt: "{title} — ikona",
+      error: "Nie udało się wczytać projektów.",
+      tryAgain: "Spróbuj ponownie",
+      title: "Projekty",
+      code: "kod",
+      codeOnGithub: "Kod na GitHubie",
+      codePrivate: "kod prywatny",
       stack: "Technologie",
+      stackNext: "Następna technologia",
+      proof: {
+        checking: {
+          one: "Sprawdzam {n} serwis…",
+          few: "Sprawdzam {n} serwisy…",
+          many: "Sprawdzam {n} serwisów…",
+          other: "Sprawdzam {n} serwisów…",
+        },
+        answered: {
+          one: "{n} serwis odpowiedział przed chwilą, w {ms}",
+          few: "{n} serwisy odpowiedziały przed chwilą, średnio w {ms}",
+          many: "{n} serwisów odpowiedziało przed chwilą, średnio w {ms}",
+          other: "{n} serwisów odpowiedziało przed chwilą, średnio w {ms}",
+        },
+        none: "Żaden serwis nie odpowiedział tym razem.",
+      },
       youAreHere: "jesteś tutaj",
-      askVex: "Zapytaj Vex o {title}",
-      askVexQuestion: "Opowiedz o {title}.",
+      notPublic: "jeszcze niepubliczne",
+      askVex: "Zapytaj Vexa o projekt {title}",
+      askVexQuestion: "Opowiedz o projekcie {title}.",
+      quoted: "„{text}”",
+      screenshotAlt: "{title}: zrzut ekranu",
+      previous: "Pokaż poprzednie projekty",
+      next: "Pokaż kolejne projekty",
+      live: {
+        check: "Sprawdź na żywo",
+        again: "Sprawdź ponownie",
+        checking: "sprawdzam…",
+        answered: "odpowiada · {ms} ms",
+        silent: "nie odpowiada",
+        openAria: "Otwórz {host} w nowej karcie",
+      },
       subtitles: {
-        tURL: "Tymczasowe krótkie linki, z ważnością do przedłużenia",
-        OpenGrant: "Generatywna SI, która pisze i prowadzi wnioski grantowe B+R",
-        AdLume: "SI, która prowadzi i stroi kampanie reklamowe",
+        tURL: "Skracanie linków z nutką personalizacji!",
+        OpenGrant: "GenAI w tworzeniu wniosków grantowych.",
+        AdLume: "Marketing AI przez całą dobę.",
         Portfolio: "Ta strona, z asystentem, który ją przeczytał",
-        Picko: "Losowanie prezentów bez zakładania kont",
+        Picko: "Losowanie mikołajkowe bez zbędnej złożoności.",
+        Slip: "Koniec z trzymaniem paragonów w zamrażalce!",
+        Konfio: "Koniec z dziesiątkami maili! Wszystko w jednym miejscu.",
+        Athlo: "Zawody sportowe w nowej odsłonie.",
       } as Record<string, string>,
+      facts: {
+        tURL: { role: "Pierwszy projekt, w którym wykorzystałem AI · 2025" },
+        Picko: { role: "Intensywnie uczyłem się Claude Code’a i UI/UX · 2025" },
+        Slip: { role: "Rozwijałem swoje umiejętności UI/UX · od 2026" },
+        AdLume: { role: "Współtworzyłem projekt jako inżynier AI · 2025–2026" },
+        Athlo: { role: "Odpowiadam za stronę techniczną i UI/UX · od 2026 · przed premierą" },
+        Konfio: {
+          role: "Współzałożyciel projektu i jedyna osoba odpowiedzialna za technologię · od 2025",
+        },
+        OpenGrant: {
+          role: "Współzałożyciel projektu odpowiedzialny za stronę techniczną · od 2025",
+        },
+      } as Record<string, { role: string }>,
     },
     contact: {
       title: "Porozmawiajmy",
-      subtitle2: "Otwarty na pracę backendową i AI — kontrakt lub etat. Odpowiadam w ciągu dnia.",
-      email: "Email",
-      quickMessage: "Porozmawiaj z Vex",
-      quickMessageDesc:
-        "Vex to mój asystent. Odpowiada na podstawie treści tej strony: zapytaj o moje doświadczenie, badania lub dostępność.",
+      lead: "Każdy powód do rozmowy jest dobry.",
+      list: {
+        email: "E-mail",
+        reply: "Odpisuję zwykle w ciągu kilku godzin.",
+        copy: "Skopiuj adres e-mail",
+        copied: "Skopiowano adres",
+        vex: "Vex",
+        vexMain: "Zapytaj mojego asystenta",
+        vexLine: "Odpowie ci od razu, o każdej porze.",
+        github: "GitHub",
+        githubLine: "Zajrzyj do kodu moich projektów.",
+      },
     },
     hints: {
       swipeMore: "Przeciągnij w bok, aby zobaczyć więcej",
     },
     experience: {
-      title: "Doświadczenie zawodowe",
-      subtitle:
-        "Każda rola, narysowana w skali. Tam, gdzie dwie linie się nakładają, role trwały równocześnie.",
+      title: "Lubię, kiedy kod działa na produkcji",
+      subtitle: "Mniej magii, więcej inżynierii. Choć czasem trudno odróżnić.",
+      rolesTitle: "Role",
       timeline: {
         figure: "Oś czasu kariery, w skali",
-        caption: "Jedna kreska na każdy styczeń. Kropka oznacza rolę, która wciąż trwa.",
         now: "teraz",
+      },
+      closing: {
+        title: "Wspólny projekt? Jasne!",
+        body: "Napisz albo najpierw zapytaj Vexa.",
+        email: "Napisz do mnie",
+        next: { lead: "Poza inżynierią:", label: "badania" },
+      },
+      dialog: {
+        previous: "Poprzednia rola",
+        next: "Następna rola",
+        close: "Zamknij",
       },
       keyAchievements: "Kluczowe osiągnięcia",
       technologies: "Technologie",
-      askVex: "Zapytaj Vex o {company}",
+      askVex: "Zapytaj Vexa o firmę {company}",
       askVexQuestion: "Co robił w firmie {company}?",
       error: "Nie udało się załadować danych o doświadczeniu zawodowym",
       tryAgain: "Spróbuj ponownie",
       noData: "Brak dostępnych danych o doświadczeniu zawodowym.",
     },
     academic: {
-      title: "Badania i dydaktyka",
+      title: "Lubię, kiedy dowód się domyka",
+      educationTitle: "Lubię, kiedy trudne staje się proste",
+      educationLeadLine: "Najpierw intuicja, potem dowód. Zwykle w tej kolejności.",
+      map: {
+        label: "Mapa moich badań",
+        kernels: "Jądra ciepła",
+        reasoning: "Rozumowanie modeli AI",
+        quantum: "Algorytm kwantowy",
+        harmonic: "Analiza harmoniczna",
+        functional: "Analiza funkcjonalna i teoria operatorów",
+      },
       subtitle:
         "Jądra ciepła od pracy licencjackiej w 2019 roku: ostre oszacowania na odcinku, stożku i podwójnym stożku. Dwa artykuły. Ostatnio algebra wewnątrz transformerów, dalej obliczenia kwantowe. Obok tego zajęcia z analizy i algebry.",
       interests: {
         title: "Zainteresowania badawcze",
         transformers: {
-          title: "Struktura matematyczna w transformerach",
-          paragraphs: [
-            "Przypadkiem testowym jest dodawanie modularne w $ℤ_{113}$, zadanie o znanej algebrze, obserwowane przez grokking. Jeśli wraz z pojawieniem się generalizacji ukryte aktywacje zaczynają kodować przesunięcia cykliczne, tę strukturę powinno dać się śledzić w trakcie treningu i pomiędzy warstwami. Dla trzech ziaren losowych, po grokkingu, wybrane podprzestrzenie aktywacji rzeczywiście niosą dynamikę przesunięć cyklicznych, najspójniej między jedną z późnych warstw a wyjściem modelu.",
-            "Równolegle idzie matematyka. Dokładne operatory splatające między reprezentacjami grupy zachowują składowe izotypowe, a dla grup cyklicznych oszacowanie wiąże przybliżoną zgodność między warstwami z transportem składowych Fouriera. Na ile to wyjaśnia eksperymenty, pozostaje pytaniem otwartym: ścisłe prawo reprezentacji nie jest jeszcze ustalone, a nic nie pokazuje, że ta struktura jest przyczyną generalizacji.",
-          ],
-          figure: {
-            figure:
-              "Grupa cykliczna rzędu 113 z jedną składową Fouriera, pod działaniem przesunięcia",
-            caption:
-              "$ℤ_{113}$ jako 113 punktów, a nad nimi składowa Fouriera $k$. Przesunięcie o $a$ obraca ją sztywno: $e^{2πik(x+a)/113} = e^{2πika/113} · e^{2πikx/113}$, czyli zmienia tylko fazę. Operator przemienny z przesunięciami nie może więc mieszać jednej składowej z drugą i na tym opiera się wynik o operatorach splatających.",
-            shiftGroup: "Przesunięcie",
-            mode: "Składowa Fouriera",
-            modeDown: "Niższa składowa",
-            modeUp: "Wyższa składowa",
-            shiftDown: "Przesuń wstecz o jeden",
-            shiftUp: "Przesuń do przodu o jeden",
-            notice:
-              "Przesuwaj, a fala zachowa kształt; zmienia się tylko jej położenie. Zmieniaj $k$, a zmieni się liczba fal, nigdy ich ruch.",
+          title: "Co się zmienia, gdy model zaczyna uogólniać",
+          stages: {
+            task: "Proste zadanie",
+            result: "Najpierw zapamiętywanie, potem uogólnianie",
+            clue: "Matematyczny trop",
+            open: "Czego jeszcze nie ustalono",
           },
-        },
-        quantum: {
-          title: "Obliczenia kwantowe i algorytmy kwantowe",
+          predictQuestion:
+            "Model zna już wszystkie przykłady z treningu. Od którego kroku poradzi sobie także z nowymi? Przesuń znacznik na swój typ i sprawdź.",
+          resultLead:
+            "Po 1000 krokach model bezbłędnie rozwiązywał przykłady treningowe. Na tych samych danych, tysiąc do dwóch tysięcy kroków później, przekroczył 50% trafności także na nowych. To opóźnione uogólnienie nazywa się *grokkingiem*.",
+          resultCredit: {
+            before: "Układ odtwarza pracę ",
+            setup: "Nandy i in. (2023)",
+            between: "; nazwę wprowadzili ",
+            term: "Power i in. (2022)",
+            after: ".",
+          },
+          resultQuestion:
+            "Wynik pokazuje, kiedy model zaczął radzić sobie z nowymi przykładami. Moje pytanie badawcze dotyczy tego, co zmieniło się wtedy w jego wewnętrznej strukturze.",
           paragraphs: [
-            "Buduję swoją wiedzę o obliczeniach kwantowych od podstawowych pojęć po teorię i implementację algorytmów kwantowych, trzema torami naraz: intuicja kubitów i interferencji, formalne ujęcie obliczeń kwantowych oraz praktyka w programowaniu i symulowaniu obwodów.",
-            "Przyciąga mnie struktura matematyczna: stany jako wektory lub operatory, ewolucja unitarna, pomiar i stojąca za tym teoria operatorów. Prawdopodobne kierunki to kwantowa teoria informacji, korekcja błędów i kwantowe uczenie maszynowe. Na razie to kierunek przyszłych badań, nie projekt z wynikami.",
+            "Wyobraź sobie ucznia, który zna odpowiedzi na wszystkie ćwiczenia, ale gubi się na sprawdzianie z nowymi zadaniami. Model AI może działać podobnie. W zadaniu przypominającym dodawanie godzin na zegarze potrafi opanować przykłady, na których się uczył, a nadal mylić się przy nowych.",
+            "Interesuje mnie, co zmienia się wtedy wewnątrz modelu. Czy da się opisać tę zmianę matematycznie? Jednym z tropów są wzory przypominające fale ułożone wokół okręgu. Na takim zegarze dodanie liczby oznacza przesunięcie o określoną liczbę pól. Fale pozwalają matematycznie opisać takie przesunięcia.",
+            "Ilustracja pokazuje pomysł matematyczny, a nie bezpośredni obraz pracy modelu. Nanda i in. znaleźli tę strukturę w reprezentacjach sieci tego typu; w moich przebiegach widzę podobne ślady. Nie ustalono jednak, czy jej pojawienie się powoduje poprawę wyników na nowych przykładach.",
+            "Prosty eksperyment nie wyjaśnia jeszcze rozumowania dużych modeli językowych, ale pozwala zadawać dokładniejsze pytania o to, jak uczą się reguł i wykorzystują je w nowych sytuacjach.",
           ],
-          figure: {
-            figure: "Jeden kubit na sferze Blocha, z bramkami do zastosowania",
+          clock: {
+            label: "Przykład objaśniający",
+            figure: "Zegar 12-godzinny: 7 + 8 = 3",
+            replay: "Policz jeszcze raz",
             caption:
-              "Jeden kubit, symulowany dokładnie: przyciski stosują bramki unitarne $H$, $X$, $Z$, $S$ i $T$ do amplitud, a wektor obraca się wzdłuż rzeczywistego obrotu sfery Blocha dla danej bramki. Naciśnij $H$ dwa razy, a stan wróci do $|0⟩$: interferencja w jednej linii obwodu.",
-            gates: "Bramki",
-            reset: "Wróć do |0⟩",
-            notice:
-              "Jedno H czyni oba wyniki równie prawdopodobnymi; drugie H znów czyni pierwszy pewnym.",
-            circuit: "Obwód",
-            state: "Stan",
+              "Na zegarze 12-godzinnym 7\u00a0+\u00a08\u00a0=\u00a03: po dwunastej liczymy od początku. Model uczył się tego samego działania na zegarze ze 113 polami.",
+          },
+          chart: {
+            title: "Trafność na przykładach znanych i nowych",
+            predict: {
+              guess: "Twój typ: krok {step}",
+              marker: "Twój typ",
+              check: "Sprawdź",
+              drag: "Przeciągnij znacznik na wykresie",
+              none: "Nie wybrano kroku",
+              how: "Przeciągnij znacznik na wykresie albo przesuń go strzałkami w lewo i w prawo, potem naciśnij Enter albo Sprawdź.",
+              retry: "Jeszcze raz",
+              verdict: { perfect: "W punkt", almost: "Prawie", wrong: "Nie tym razem" },
+              result:
+                "Trafność na nowych przykładach przekroczyła 50% między krokiem {from} a {to}, we wszystkich trzech przebiegach.",
+            },
+            seen: "Przykłady znane z treningu",
+            unseen: "Nowe przykłady",
+            stepAxis: "Krok treningu",
+            accuracyAxis: "Trafne odpowiedzi",
+            step: "Krok",
+            run: "Trening",
+            caption:
+              "Ten sam typ modelu trenowano trzy razy. Za każdym razem losowano jego ustawienia początkowe oraz podział par liczb: 30% służyło do nauki, a pozostałe 70% do sprawdzenia wyniku. Punkty na wykresie pokazują pomiary co 1000 kroków; odcinki jedynie je łączą.",
+            stepNote: {
+              same: "Krok {step}: we wszystkich trzech przebiegach trafność na przykładach treningowych i nowych wynosi {value}.",
+              seenFixed:
+                "Krok {step}: trafność na przykładach treningowych wynosi {seen} we wszystkich trzech przebiegach, a na nowych {unseen}.",
+              bothVary:
+                "Krok {step}: w trzech przebiegach trafność na przykładach treningowych wynosi {seen}, a na nowych {unseen}.",
+            },
+          },
+          figure: {
+            label: "Ilustracja zasady matematycznej",
+            figure: "Liczby od 0 do 112 na okręgu i fala nad nimi",
+            prompt: "Przesuń liczby i sprawdź: czy fala zmienia kształt, czy tylko położenie?",
+            waves: "Liczba fal: $k = {k}$",
+            add: "Dodaj do wejścia: $+{a}$",
+            note: "Przesuń suwak: dodanie tej samej liczby do wejścia przesuwa falę wokół okręgu, ale nie zmienia jej kształtu. Punkty odpowiadają liczbom od 0 do 112.",
+            curious: "Dla ciekawych",
+            detail:
+              "Fala o częstotliwości $k$ powtarza swój wzór $k$ razy wokół okręgu. Przesunięcie liczb zmienia jej fazę, czyli miejsce, od którego zaczyna się wzór. W modelu badam, czy podobne zależności pojawiają się między jego wewnętrznymi sygnałami.",
           },
         },
       },
@@ -496,65 +1052,202 @@ const copy = {
       },
       education: "Wykształcenie",
       story: {
-        lead: "Przez całą tę pracę biegnie jedno pytanie: jak kształt przestrzeni decyduje o tym, co się w niej dzieje. Dla ciepła: jak szybko rozchodzi się na stożku i gdzie oszacowanie jest ostre. Dla wytrenowanej sieci: czy algebra zadania pojawia się w jej aktywacjach. Obliczenia kwantowe to następne miejsce, w którym warto je zadać.",
+        lead: "Przeczucie mówi „chyba”. Matematyka mówi „zawsze”.",
         contents: "Na tej stronie",
         kernels: {
           title: "Jądra ciepła",
-          eyebrow: "Ukończone",
-          lead: "Jądro ciepła mówi, ile ciepła przechodzi z jednego punktu do drugiego w czasie $t$. Na stożku geometria zmienia tę odpowiedź, a dwa artykuły ją precyzują.",
-          result:
-            "Wynik: rzeczywiście ostre oszacowania jąder ciepła Jacobiego na stożku, jego powierzchni i podwójnym stożku. To samo wyrażenie ogranicza jądro z góry i z dołu, z dokładnością do stałych.",
-          why: "Dlaczego to ważne: artykuły ograniczają takie jądro, na stożku, z góry i z dołu jednym wyrażeniem. To znaczy „ostre”: obraz jest znany w każdym punkcie i w każdej chwili, z dokładnością do stałej.",
+          leadLine:
+            "Jak opisać rozchodzenie się ciepła, gdy kształt przestrzeni komplikuje odpowiedź?",
+          stages: {
+            map: "Mapa wpływu",
+            geometry: "Dlaczego sama odległość nie wystarcza?",
+            sharp: "Na czym polega moja praca?",
+            why: "Po co",
+          },
+          map: "Jądro ciepła można potraktować jak mapę wpływu. Wskazujemy, gdzie pojawia się impuls ciepła, w którym miejscu obserwujemy jego wpływ i ile czasu upłynęło. Jądro opisuje, jak silny jest ten wpływ w punkcie obserwacji. Zmieniając miejsca i czas, otrzymujemy obraz całego procesu.",
+          geometry:
+            "W przestrzeniach, które badam, sama odległość między miejscem impulsu a punktem obserwacji nie wystarcza. Liczy się także ich położenie względem brzegu lub wierzchołka. Dlatego nawet przy tej samej odległości wpływ ciepła może być inny. Z czasem zmienia się też znaczenie tych szczególnych miejsc. To utrudnia znalezienie ograniczeń, które działają dla różnych miejsc i chwil.",
+          sharp:
+            "W moich pracach wyznaczam ograniczenie dolne i górne wartości jądra ciepła. Oba mają tę samą postać i różnią się jedynie stałym mnożnikiem. To właśnie oznacza, że oszacowanie jest *ostre*: pokazuje właściwą zależność od położenia i czasu, choć nie podaje dokładnej wartości jądra.",
+          whyBefore:
+            "Takie ograniczenia są przydatne, gdy dokładna postać jądra jest zbyt skomplikowana, by łatwo z niej korzystać. Pomagają dalej badać matematyczne modele dyfuzji i stawiać nowe pytania. Jedno z nich rozwijam w części „",
+          whyLink: "Od jądra ciepła do algorytmu kwantowego",
+          whyAfter: "”.",
+          influence: {
+            label: "Mapa wpływu na stożku",
+            figure:
+              "Schemat stożka z miejscem ogrzania i punktem obserwacji; ciepło rozchodzi się wraz z czasem",
+            impulse: "miejsce ogrzania",
+            observation: "punkt obserwacji",
+            tip: "wierzchołek",
+            boundary: "brzeg",
+            time: "Czas od ogrzania",
+            start: "tuż po ogrzaniu",
+            later: "później",
+            caption:
+              "Przesuń suwak i zobacz, jak ciepło rozchodzi się od ogrzanego miejsca w stronę punktu obserwacji.",
+          },
+          bounds: {
+            label: "Schemat ostrego oszacowania",
+            figure:
+              "Ograniczenie dolne i górne o tym samym kształcie; dokładna wartość jądra leży między nimi",
+            yAxis: "siła wpływu",
+            xAxis: "odległość od miejsca ogrzania",
+            upper: "ograniczenie górne",
+            between: "wartość jądra leży między ograniczeniami",
+            lower: "ograniczenie dolne",
+            time: "Czas",
+            start: "wcześniej",
+            later: "później",
+            caption:
+              "Wartość jądra leży między ograniczeniem dolnym a górnym. Oba zmieniają się według tej samej reguły i różnią się tylko stałym mnożnikiem.",
+          },
         },
         transformers: {
-          eyebrow: "W toku",
-          question: "Co zmienia się wewnątrz modelu w chwili, gdy zaczyna generalizować?",
-          why: "To matematyka, nie model. Eksperymenty pytają, czy aktywacje wytrenowanej sieci poruszają się tak pod wpływem przesunięcia wejścia; rysunek pokazuje, co znaczy „tak”.",
+          question:
+            "Co proste zadania matematyczne mogą zdradzić o tym, jak modele uczą się radzić sobie z nowymi zadaniami?",
         },
-        quantum: {
-          eyebrow: "Nauka",
-          lead: "Rozwijające się zainteresowanie, nie wynik. Tak uczę się przedmiotu: buduję najmniejszy działający egzemplarz i naciskam jego przyciski.",
-          why: "Dlaczego to tutaj jest: przedmiot jest zrozumiany, gdy jego najmniejszy przykład działa. Ten działa, dokładnie, w pięćdziesięciu liniach.",
+        jacobiQuantum: {
+          title: "Od jądra ciepła do algorytmu kwantowego",
+          leadLine:
+            "Wyobraź sobie długi pręt. Jeden jego fragment jest gorący, a reszta chłodniejsza. Czy komputer kwantowy może obliczyć, ile ciepła znajdzie się po chwili w zaznaczonym obszarze A, bez symulowania całego pręta?",
+          introTitle: "Jedna liczba, nowe pytanie",
+          intro:
+            "Nie można po prostu wyciąć obszaru A. Ciepło z innych części pręta, także odległych, może zmienić wynik. Chcę ustalić, jak duże otoczenie trzeba uwzględnić, aby błąd spowodowany pominięciem reszty mieścił się w przyjętym progu.",
+          clueTitle: "Matematyczna wskazówka",
+          clueBeforePaper:
+            "Pręt pomaga wyobrazić sobie problem. W badaniu zaczynam od matematycznego modelu rozchodzenia się ciepła zwanego modelem Jacobiego. Jądro ciepła działa w nim jak mapa wpływów: opisuje, jak silnie jedno miejsce oddziałuje po pewnym czasie na drugie. ",
+          paper: "Oszacowania Nowaka, Sjögrena i Szarka",
+          clueAfterPaper:
+            " podpowiadają, że gdy od rozpoczęcia procesu minęło niewiele czasu, wpływ szybko maleje wraz z odległością od A. Przesuń suwak, aby zobaczyć tę intuicję na ilustracji.",
+          figure: {
+            label: "Schemat rozchodzenia się ciepła",
+            figure:
+              "Poziomy pręt: ciepło z początkowo gorącego fragmentu rozchodzi się na boki i z czasem dociera do obszaru A",
+            hot: "początkowo gorący",
+            region: "A",
+            time: "Czas od rozpoczęcia",
+            start: "początek",
+            later: "później",
+            states: {
+              concentrated: "Ciepło jest skupione w rozgrzanym fragmencie.",
+              spreading: "Ciepło rozchodzi się na boki, a jego skupienie słabnie.",
+              reached: "Ciepło dociera także do A.",
+            },
+            caption:
+              "Przesuń suwak i zobacz, jak ciepło z rozgrzanego fragmentu dociera do obszaru A. Choć interesuje nas tylko A, na wynik wpływa także to, co dzieje się w innych częściach pręta.",
+          },
+          proofTitle: "Co trzeba jeszcze udowodnić",
+          proof:
+            "Mały wpływ odległych miejsc to dopiero pierwsza wskazówka. Trzeba jeszcze wykazać, że obliczenia prowadzone na mniejszym obszarze dają niemal ten sam wynik w A i że błąd da się ograniczyć. Dopiero potem można zbudować algorytm kwantowy i policzyć cały koszt jego działania, od przygotowania danych po odczyt odpowiedzi. Porównanie z najlepszymi metodami klasycznymi pokaże, czy takie podejście rzeczywiście pomaga.",
         },
         teaching: {
           title: "Dydaktyka",
-          eyebrow: "Zajęcia",
-          intro: "Prowadzone zajęcia: {courses} ({from}–{to}).",
-          approach:
-            "Proste wyjaśnienie trudnej idei to najlepszy sprawdzian, czy się ją rozumie; na tym opierają się zajęcia.",
-          showAll: "Pokaż wszystkie ({count})",
-          showFewer: "Pokaż mniej",
+          quote:
+            "Jeśli nie potrafisz wyjaśnić czegoś studentowi pierwszego roku, to znaczy, że sam tego nie rozumiesz.",
+          quoteSource: "za Richardem Feynmanem",
+          themesLabel: "Co zauważyli studenci",
+          themes: [
+            { key: "clarity", label: "Tłumaczy prosto" },
+            { key: "prepared", label: "Przygotowany" },
+            { key: "beyond", label: "Wychodzi poza program" },
+            { key: "friendly", label: "Przyjazna atmosfera" },
+          ],
+          evidence: {
+            "1": {
+              clarity: ["Zrozumiale tłumaczy zagadnienia"],
+              prepared: ["jest zawsze przygotowany do zajęć i rzetelnie do nich podchodzi"],
+            },
+            "2": {
+              friendly: ["przyjemne były te zajęcia", "bardzo życzliwy i miły"],
+              beyond: [
+                "jak to co robimy przekłada się na informatykę i gdzie tych zagadnień się używa",
+              ],
+            },
+            "3": {
+              friendly: ["bardzo miły, chętny do pomocy", "w przyjaznej atmosferze"],
+              prepared: ["kompetentny"],
+              clarity: ["tłumaczyć zagadnienia w przystępny sposób"],
+            },
+            "4": {
+              friendly: ["Niesamowicie uprzejmy"],
+              prepared: ["z dużą wiedzą"],
+              beyond: ["ciekawe zadania dodatkowe"],
+            },
+            "5": {
+              clarity: ["w prosty sposób wyjaśnia skomplikowane zagadnienia"],
+              friendly: ["przyjazna atmosfera na zajęciach"],
+            },
+            "6": {
+              friendly: [
+                "bardzo sympatycznego prowadzącego",
+                "jednym z najprzyjemniejszych w tym semestrze",
+              ],
+            },
+          } as Record<string, Record<string, string[]>>,
         },
         closing: {
-          title: "Badania, współpraca albo dydaktyka?",
-          body: "Napisz albo najpierw zapytaj Vex.",
+          title: "Masz pytanie o studia albo zajęcia?",
+          body: "Napisz albo najpierw zapytaj Vexa.",
           email: "Napisz do mnie",
+          next: { lead: "Teoria w działaniu:", label: "z warsztatu" },
+        },
+        researchClosing: {
+          title: "Porozmawiamy o nauce?",
+          body: "Napisz albo najpierw zapytaj Vexa.",
+          email: "Napisz do mnie",
+          next: { lead: "Skąd to się wzięło:", label: "studia i dydaktyka" },
         },
       },
-      stack: "Publikacje jako stos akt",
-      established: "Co ustala",
-      showAbstract: "Pokaż abstrakt",
-      hideAbstract: "Ukryj abstrakt",
+      eyebrow: "Badania · doktorat",
+      stack: "Publikacje ułożone w stos",
+      established: "Co pokazuje",
+      author: "Autor",
+      authors: "Autorzy",
+      status: { published: "Opublikowano", preprint: "Preprint" },
       more: "Więcej",
       less: "Mniej",
       publicationSummaries: {
-        "https://ui.adsabs.harvard.edu/abs/2022arXiv221014590H/abstract":
-          "Rzeczywiście ostre obustronne oszacowania jąder ciepła Jacobiego na wielowymiarowym stożku i jego powierzchni. Wielomiany Jacobiego Xu na stożku spotykają się z metodą Nowaka, Sjögrena i Szarka dla jądra sferycznego.",
+        "https://doi.org/10.1016/j.jat.2023.105921":
+          "Na stożku brzeg i wierzchołek zmieniają sposób, w jaki rozchodzi się ciepło. Jak oszacować, na ile ogrzanie jednego punktu wpływa na temperaturę w innym? W tej pracy wyznaczamy oszacowania z dołu i z góry, osobno dla stożka i dla jego powierzchni.",
         "https://arxiv.org/abs/2411.15793":
-          "Ostre oszacowania rozszerzone na podwójny stożek i jego powierzchnię dla jąder parzystego i nieparzystego oraz na hiperboloidę dla parzystego. Paraboloida opiera się tej metodzie, a artykuł mówi gdzie.",
+          "Wyobraź sobie dwa stożki zetknięte wierzchołkami. Jak silnie ciepło z jednego punktu wpływa na inny w takim modelu? W tej pracy wyznaczam oszacowania, które na to odpowiadają. Badam też kształty pokrewne i wskazuję przypadki, w których metoda nie daje jeszcze pełnej odpowiedzi.",
       } as Record<string, string>,
       educationHighlights: {
-        "2019-10-03":
-          "II miejsce w Konkursie im. Józefa Marcinkiewicza na najlepszą pracę magisterską z matematyki w Polsce (PTM).",
+        "2016-10-03": {
+          label: "Wydział Matematyki PWr",
+          text: "9. miejsce w konkursie TOP 10 na najlepszego absolwenta studiów I stopnia (2019)",
+          href: "https://wmat.pwr.edu.pl/o-wydziale/aktualnosci/laureaci-konkursu-top-10-2019-10960.html",
+        },
+        "2022-10-03": {
+          label: "Szkoła Doktorska PWr",
+          text: "Średnia ocen 4,75",
+        },
+        "2019-10-03": {
+          label: "Nagroda PTM",
+          text: "II miejsce w Konkursie im. Józefa Marcinkiewicza na najlepszą pracę magisterską z matematyki w Polsce",
+          href: "https://www.mat.umk.pl/nauka/konkurs-im-jozefa-marcinkiewicza/",
+        },
+      } as Record<string, { label: string; text: string; href?: string }>,
+      degreeSteps: "Stopnie",
+      heatHint: "Kliknij figurę, by ją ogrzać",
+      newTab: "(otwiera się w nowej karcie)",
+      domainNames: {
+        "torus-interval": "Torus i odcinek",
+        cone: "Stożek",
+        revolution: "Bryła obrotowa",
+        "double-cone": "Stożek podwójny",
+      },
+      educationHeadlines: {
+        "2016-10-03": "Równanie ciepła na torusie i odcinku",
+        "2019-10-03": "Równanie ciepła na stożku",
+        "2022-10-03": "Ostre oszacowania jąder ciepła Jacobiego",
       } as Record<string, string>,
-      venue: "Miejsce publikacji",
-      year: "Rok",
       publicationsLead:
         "Dwa artykuły o ostrych oszacowaniach jąder ciepła Jacobiego: na stożku, potem na podwójnym stożku. Otwórz jeden.",
       noticeLabel: "Na co patrzeć",
       figureNotice:
         "Szczyt opada najpierw szybko, potem powoli, a cała krzywa osiada na przerywanej średniej.",
-      quotes: { open: "„", close: "”" },
       researchFocus: "Obszar badań",
       advisor: "Promotor",
       researchAreas: "Obszary badawcze",

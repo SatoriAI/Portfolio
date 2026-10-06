@@ -37,17 +37,31 @@ export type UiSchool = {
 };
 
 // The degree is an untranslated field on the backend; these are the values it
-// holds today, said in Polish. Anything else passes through unchanged.
-const POLISH_DEGREE: Record<string, string> = {
-  "Bachelor's": "Licencjat",
-  "Master's": "Magisterium",
-  "Doctoral Studies": "Studia doktoranckie",
-  PhD: "Doktorat",
-  MSc: "Magisterium",
+// holds today, named the way the site names them. Anything else passes
+// through unchanged. The doctorate is "Doktorat" / "PhD" everywhere, never
+// "Studia doktoranckie", so the page and the site's descriptions agree.
+const DEGREE_NAMES: Record<string, Record<string, string>> = {
+  pl: {
+    "Bachelor's": "Licencjat",
+    "Master's": "Magisterium",
+    "Doctoral Studies": "Doktorat",
+    PhD: "Doktorat",
+    MSc: "Magisterium",
+  },
+  en: { "Doctoral Studies": "PhD" },
 };
 
-const degreeLabel = (degree: string, lang: string) =>
-  lang === "pl" ? (POLISH_DEGREE[degree] ?? degree) : degree;
+const IN_PROGRESS: Record<string, string> = { pl: "w toku", en: "in progress" };
+
+/**
+ * A degree's name in the language, marked as in progress while it has no end
+ * date, so a doctorate still under way never reads as one already awarded.
+ */
+export const degreeLabel = (degree: string, lang: string, ongoing: boolean) => {
+  const name = DEGREE_NAMES[lang]?.[degree] ?? degree;
+  const note = IN_PROGRESS[lang] ?? IN_PROGRESS.en;
+  return ongoing && name ? `${name} (${note})` : name;
+};
 
 export function mapApiSchoolToUi(school: ApiSchool, language: string): UiSchool {
   const lang = language.toLowerCase();
@@ -83,7 +97,7 @@ export function mapApiSchoolToUi(school: ApiSchool, language: string): UiSchool 
     id: school.id,
     study: localized.study || "",
     university: localized.university || "",
-    degree: degreeLabel(school.degree || "", lang),
+    degree: degreeLabel(school.degree || "", lang, !school.end),
     research: localized.research || "",
     advisor: localized.advisor || "",
     areas,

@@ -2,6 +2,7 @@ import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { RangeInput } from "@/components/ui/range-input";
 import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
 import { cn } from "@/lib/utils";
 
@@ -252,22 +253,13 @@ const HeatKernelFigure = ({
         </Button>
         <label className="flex min-w-0 flex-1 items-center gap-3 font-mono text-meta text-muted-foreground">
           <span className="shrink-0">{labels.time}</span>
-          <input
-            type="range"
+          <RangeInput
             min={0}
             max={1}
             step={0.001}
             value={toSlider(t)}
             onChange={onScrub}
-            aria-valuetext={`t = ${format.format(t)}`}
-            className={cn(
-              "h-6 w-full min-w-0 cursor-pointer appearance-none bg-transparent",
-              "[&::-webkit-slider-runnable-track]:h-px [&::-webkit-slider-runnable-track]:bg-control-border",
-              "[&::-webkit-slider-thumb]:-mt-[7px] [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-motif [&::-webkit-slider-thumb]:bg-primary",
-              "[&::-moz-range-track]:h-px [&::-moz-range-track]:bg-control-border",
-              "[&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-motif [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-primary",
-              "focus-visible:outline-none focus-visible:[&::-webkit-slider-thumb]:ring-2 focus-visible:[&::-webkit-slider-thumb]:ring-ring focus-visible:[&::-webkit-slider-thumb]:ring-offset-2",
-            )}
+            valueText={`t = ${format.format(t)}`}
           />
         </label>
       </div>

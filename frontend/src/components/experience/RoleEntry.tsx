@@ -1,5 +1,7 @@
+import { Title } from "@radix-ui/react-dialog";
 import { MessageSquare } from "lucide-react";
 
+import CompanyMark from "@/components/experience/CompanyMark";
 import { Button } from "@/components/ui/button";
 import type { UiExperience } from "@/lib/experiencesService";
 
@@ -7,7 +9,8 @@ import type { UiExperience } from "@/lib/experiencesService";
  * One role, read as an entry rather than a card: the company first, because
  * the kit's voice puts the named fact before the adjective, then the position
  * and dates, then what was built. Achievements carry the kit's small navy
- * square rather than a bullet.
+ * square rather than a bullet. Read inside the role's dialog, so the company
+ * is the dialog's title, and its circle from the timeline heads the entry.
  */
 
 export type RoleEntryLabels = {
@@ -28,20 +31,16 @@ type RoleEntryProps = {
 };
 
 const RoleEntry = ({ experience, labels, onAsk }: RoleEntryProps) => (
-  <article
-    id={`role-${experience.id}`}
-    className="grid scroll-mt-24 grid-cols-4 gap-x-6 gap-y-6 border-t border-border py-10 md:grid-cols-12 md:py-12"
-  >
-    {/* Sticky from md: the facts stay beside the paragraph they describe as it
-        scrolls, and the column no longer sits empty under three lines. */}
-    <header className="col-span-4 md:sticky md:top-24 md:col-span-4 md:self-start">
-      <p className="font-mono text-meta text-iris">
+  <article className="grid grid-cols-4 gap-x-6 gap-y-6 md:grid-cols-12">
+    <header className="col-span-4 md:col-span-5">
+      <CompanyMark company={experience.company} className="size-14 text-sm" />
+      <p className="mt-4 font-mono text-meta text-iris">
         {experience.period}
         {experience.location && ` · ${experience.location}`}
       </p>
-      <h2 className="mt-2 text-card-title-sm font-semibold md:text-card-title">
+      <Title className="mt-2 text-card-title-sm font-semibold md:text-card-title">
         {experience.company}
-      </h2>
+      </Title>
       <p className="mt-1 text-base text-muted-foreground">{experience.position}</p>
       {experience.technologies.length > 0 && (
         <div className="mt-6">
@@ -57,7 +56,7 @@ const RoleEntry = ({ experience, labels, onAsk }: RoleEntryProps) => (
       )}
     </header>
 
-    <div className="col-span-4 space-y-8 md:col-span-8 lg:col-span-7">
+    <div className="col-span-4 space-y-8 md:col-span-7">
       {experience.description && (
         <p className="max-w-[52ch] text-base text-muted-foreground md:text-body-lg">
           {experience.description}
@@ -83,7 +82,7 @@ const RoleEntry = ({ experience, labels, onAsk }: RoleEntryProps) => (
       )}
       <Button
         variant="link"
-        className="h-auto whitespace-normal text-left text-sm font-medium"
+        className="h-auto whitespace-normal px-0 text-left text-sm font-medium"
         onClick={() => onAsk(fill(labels.askVexQuestion, experience.company))}
       >
         <MessageSquare />

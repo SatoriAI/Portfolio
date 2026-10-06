@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildTimeline } from "./timeline";
+import { buildTimeline, companyInitials, companyShortName } from "./timeline";
 
 const NOW = new Date("2026-09-15T00:00:00Z");
 
@@ -34,6 +34,22 @@ describe("buildTimeline", () => {
     expect(timeline.lanes).toBe(3);
   });
 
+  it("gives the upper lane to the longer of two spans that begin together", () => {
+    const { spans } = buildTimeline(
+      [
+        { id: 1, start: "2019-10-01", end: "2021-07-01" },
+        { id: 2, start: "2022-10-01", end: "2025-02-01" },
+        { id: 3, start: "2022-10-01", end: "" },
+      ],
+      new Date("2026-09-01"),
+    );
+    expect(spans.map((span) => [span.id, span.lane])).toEqual([
+      [1, 0],
+      [3, 0],
+      [2, 1],
+    ]);
+  });
+
   it("extends a running role to the month after now and marks it current", () => {
     const timeline = buildTimeline([{ id: 3, start: "2022-09-01", end: "" }], NOW);
     expect(timeline.spans[0]).toMatchObject({ current: true, endMonth: 49 });
@@ -55,5 +71,25 @@ describe("buildTimeline", () => {
       lanes: 0,
       ticks: [],
     });
+  });
+});
+
+describe("companyInitials", () => {
+  it("takes the capitals of the first word, at most two", () => {
+    expect(companyInitials("Nokia Solutions and Networks")).toBe("N");
+    expect(companyInitials("Xperi")).toBe("X");
+    expect(companyInitials("PeakData")).toBe("PD");
+    expect(companyInitials("CloudFerro")).toBe("CF");
+  });
+
+  it("falls back to the first letter of a name without capitals", () => {
+    expect(companyInitials("acme labs")).toBe("A");
+  });
+});
+
+describe("companyShortName", () => {
+  it("keeps the first word, and a one-word name whole", () => {
+    expect(companyShortName("Nokia Solutions and Networks")).toBe("Nokia");
+    expect(companyShortName("CloudFerro")).toBe("CloudFerro");
   });
 });

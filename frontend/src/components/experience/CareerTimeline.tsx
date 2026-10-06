@@ -1,72 +1,169 @@
-import { useScrollReveal } from "@/hooks/use-scroll-reveal";
-import type { UiExperience } from "@/lib/experiencesService";
-import { buildTimeline } from "@/lib/timeline";
+import { type KeyboardEvent, type ReactNode, useLayoutEffect, useRef } from "react";
+
+import { circleControl, circleState } from "@/components/experience/circleStyles";
+import { edgeOffset } from "@/lib/edgeEntrance";
+import { buildTimeline, type TimelineId, type TimelineInput } from "@/lib/timeline";
 import { cn } from "@/lib/utils";
 
 /**
- * The career drawn to scale, in the kit's motif vocabulary.
+ * A career drawn to scale, as a set of entries to choose from: the roles on
+ * Experience, the degrees and the teaching on Education.
  *
- * Each role is a 2px iris line from its first month to its last, with a small
- * navy square at the start; the role still running ends in the navy dot, the
- * module that breaks the rhythm. Ticks are one per January. Roles that ran
- * at the same time stack into lanes, so an overlap is visible as two lines
- * one above the other. This is data, not decoration, and it is labelled as
- * data: every line carries its company, the axis carries its years, and the
- * caption says what the drawing is.
+ * Each entry is a circle holding its mark (a company's logo, a degree's
+ * abbreviation), set on its lane at the entry's first month, with its name
+ * above it. Entries that ran at the same time stack into lanes. The circles
+ * keep still at rest, as the kit asks of anything not answering the reader
+ * (no autoplay loops); a circle lifts a little under the pointer, which is
+ * what says it can be pressed. Choosing a circle draws that entry's line in iris from the circle to its
+ * last month, rings the circle, and lets the page open the entry out of it;
+ * when the entry closes the page clears the choice and the line draws back
+ * into the circle. Only the chosen entry's line is ever shown; one still
+ * running ends in the navy dot and "now". Ticks are one per January.
  *
  * Built as a CSS grid with one column per month rather than as an SVG so the
- * labels stay in CSS pixels at every width; an SVG would scale its text with
- * the viewBox. Each line is a link to the role's entry below. On first sight
- * each line grows from its first month to its last, earliest role first, so
- * the career is drawn in the order it happened.
+ * labels stay in CSS pixels at every width. The circles are buttons: Tab
+ * reaches them, Enter or Space chooses, and the arrow keys move between them
+ * in the order the entries began. With reduced motion nothing lifts and the
+ * line appears at once.
  */
 
 type CareerTimelineLabels = {
   /** Accessible name of the figure. */
   figure: string;
-  caption: string;
-  /** Marks the end of the running role. */
+  /** Marks the end of the entry still running. */
   now: string;
 };
 
-type CareerTimelineProps = {
-  experiences: readonly UiExperience[];
+export type TimelineEntry<Id extends TimelineId> = TimelineInput<Id> & {
+  /** Set above the circle. */
+  label: string;
+  /** Set instead on a phone, where a long label would reach the next entry. */
+  shortLabel?: string;
+  /** The circle's accessible name. */
+  ariaLabel: string;
+  /** What fills the circle; it should fill its box (size-full). */
+  mark: ReactNode;
+};
+
+type CareerTimelineProps<Id extends TimelineId> = {
+  entries: readonly TimelineEntry<Id>[];
   labels: CareerTimelineLabels;
+  /** The entry whose line is drawn in full, or null for none. */
+  selectedId: Id | null;
+  /**
+   * Entries to light up while something elsewhere on the page points at them
+   * (a skill used in these roles): their circles are ringed and the rest
+   * recede. Null when nothing is pointed at.
+   */
+  highlightedIds?: ReadonlySet<Id> | null;
+  /** Told which entry is pointed at or focused, and null when none is. */
+  onPreview?: (id: Id | null) => void;
+  /**
+   * The circles are shown elsewhere: on Experience they fly to a sidebar
+   * beside the skills as the reader scrolls down. A faint trace stays here,
+   * so the timeline never stands empty.
+   */
+  circlesAway?: boolean;
+  /**
+   * On arriving at the page, the circles on screen fly in from its nearer
+   * side and settle on their lanes, in the order the entries began. Once,
+   * and never under reduced motion. A deliberate exception to the kit's 8px
+   * entrance, asked for on Experience.
+   */
+  enterFromEdges?: boolean;
+  onSelect: (id: Id) => void;
   /** Injected so the layout is deterministic in tests and screenshots. */
   now?: Date;
   className?: string;
 };
 
-const LANE_HEIGHT_PX = 44;
+/**
+ * Name above, circle below it, the line through the circle's centre. The
+ * circle is 40px on a phone and 56px from md; its centre is 48px or 56px
+ * down the lane, and the lane leaves room under it before the next name.
+ */
+const LANE_HEIGHT_PX = 100;
 
-const CareerTimeline = ({
-  experiences,
+/** More years than this crowd a phone's width, so every other one is labelled. */
+const DENSE_TICKS = 7;
+
+/** The entrance from the edges: each flight, and the wait between circles. */
+const ENTER_MS = 900;
+const ENTER_STAGGER_MS = 90;
+const EASE_BRAND = "cubic-bezier(0.22, 1, 0.36, 1)";
+
+const CareerTimeline = <Id extends TimelineId>({
+  entries,
   labels,
+  selectedId,
+  highlightedIds = null,
+  onPreview,
+  circlesAway = false,
+  enterFromEdges = false,
+  onSelect,
   now = new Date(),
   className,
-}: CareerTimelineProps) => {
-  const timeline = buildTimeline(experiences, now);
-  const { ref, isRevealed, isInitiallyVisible, prefersReducedMotion } =
-    useScrollReveal<HTMLElement>();
-  const animateEntrance = !prefersReducedMotion && !isInitiallyVisible;
-  const grown = !animateEntrance || isRevealed;
-  if (timeline.spans.length === 0) return null;
+}: CareerTimelineProps<Id>) => {
+  const buttons = useRef<(HTMLButtonElement | null)[]>([]);
+  const timeline = buildTimeline(entries, now);
+  const count = timeline.spans.length;
 
-  const byId = new Map(experiences.map((experience) => [experience.id, experience]));
+  // Before the first paint, so no circle shows in place and then jumps out.
+  const entered = useRef(false);
+  useLayoutEffect(() => {
+    if (!enterFromEdges || entered.current || count === 0) return;
+    entered.current = true;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    buttons.current.forEach((button, index) => {
+      const from =
+        button && edgeOffset(button.getBoundingClientRect(), window.innerWidth, window.innerHeight);
+      if (!button || !from) return;
+      // translate, not transform, so the hover lift is left alone.
+      button.animate([{ translate: `${from.x}px ${from.y}px` }, { translate: "0 0" }], {
+        duration: ENTER_MS,
+        delay: index * ENTER_STAGGER_MS,
+        easing: EASE_BRAND,
+        fill: "backwards",
+      });
+    });
+  }, [enterFromEdges, count]);
+
+  if (count === 0) return null;
+
+  const byId = new Map(entries.map((entry) => [entry.id, entry]));
   const percent = (month: number) => `${(month / timeline.months) * 100}%`;
 
+  // Arrows move between circles in the order the entries began, wrapping round.
+  const onKeyDown = (index: number) => (event: KeyboardEvent<HTMLButtonElement>) => {
+    const step =
+      event.key === "ArrowRight" || event.key === "ArrowDown"
+        ? 1
+        : event.key === "ArrowLeft" || event.key === "ArrowUp"
+          ? -1
+          : 0;
+    if (step === 0) return;
+    event.preventDefault();
+    buttons.current[(index + step + count) % count]?.focus();
+  };
+
   return (
-    <figure ref={ref} aria-label={labels.figure} className={cn("w-full", className)}>
+    <figure aria-label={labels.figure} className={cn("w-full", className)}>
       <div className="relative">
-        {/* Axis: a January tick per year, the year set beside it. */}
+        {/* Axis: a January tick per year, the year set beside it. On a phone
+            a long span labels every other year, so the years never touch. */}
         <div aria-hidden="true" className="relative h-7 border-b border-border">
-          {timeline.ticks.map((tick) => (
+          {timeline.ticks.map((tick, index) => (
             <span
               key={tick.year}
               className="absolute bottom-0 flex flex-col items-start"
               style={{ left: percent(tick.month) }}
             >
-              <span className="mb-1 ml-2 font-mono text-meta text-muted-foreground">
+              <span
+                // Joined by hand: cn would read text-meta as a colour and drop it.
+                className={`mb-1 ml-2 font-mono text-meta text-muted-foreground ${
+                  timeline.ticks.length > DENSE_TICKS && index % 2 === 1 ? "max-sm:invisible" : ""
+                }`}
+              >
                 {tick.year}
               </span>
               <span className="block h-2 w-px bg-iris" />
@@ -74,82 +171,117 @@ const CareerTimeline = ({
           ))}
         </div>
 
+        {/* Gridlines: each January carried down through the lanes, faint and
+            dashed, so a circle can be read against its year. Behind the
+            circles, and never in the way of a press. */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 top-7">
+          {timeline.ticks.map((tick) => (
+            <span
+              key={tick.year}
+              className="absolute inset-y-0 border-l border-dashed border-border"
+              style={{ left: percent(tick.month) }}
+            />
+          ))}
+        </div>
+
         <ol
-          className="grid gap-y-0 pt-4"
+          className="grid gap-y-0 pt-3"
           style={{
             gridTemplateColumns: `repeat(${timeline.months}, minmax(0, 1fr))`,
             gridAutoRows: `${LANE_HEIGHT_PX}px`,
           }}
         >
           {timeline.spans.map((span, index) => {
-            const experience = byId.get(span.id);
-            if (!experience) return null;
-            const delay = animateEntrance ? { transitionDelay: `${index * 80}ms` } : undefined;
+            const entry = byId.get(span.id);
+            if (!entry) return null;
+            const selected = span.id === selectedId;
+            const highlighted = highlightedIds?.has(span.id) ?? false;
+            const receded = highlightedIds !== null && !highlighted;
             return (
               <li
                 key={span.id}
-                className="relative flex items-end"
+                className="relative"
                 style={{
                   gridColumn: `${span.startMonth + 1} / ${span.endMonth + 1}`,
                   gridRow: span.lane + 1,
                 }}
               >
-                <a
-                  href={`#role-${span.id}`}
-                  aria-label={`${experience.company}, ${experience.period}`}
-                  className="group relative block w-full rounded-xl pb-2 pt-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-[3px] focus-visible:ring-offset-background"
+                {/* The line runs from the circle's centre to the entry's end,
+                    and appears only while the entry is chosen. */}
+                <span
+                  aria-hidden="true"
+                  className="absolute left-5 right-0 top-[47px] h-0.5 md:left-7 md:top-[55px]"
                 >
                   <span
-                    style={delay}
                     className={cn(
-                      "absolute left-0 top-0 whitespace-nowrap text-sm font-medium text-foreground transition-[color,opacity] duration-400 ease-brand group-hover:text-iris",
-                      !grown && "opacity-0",
+                      "absolute inset-0 origin-left bg-iris",
+                      "motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-brand",
+                      selected ? "scale-x-100" : "scale-x-0",
                     )}
-                  >
-                    {experience.company}
-                  </span>
-                  <span className="relative block h-0.5 w-full">
+                  />
+                  {span.current && (
                     <span
-                      aria-hidden="true"
-                      style={delay}
                       className={cn(
-                        "absolute inset-0 origin-left bg-iris",
-                        animateEntrance && "transition-transform duration-500 ease-brand",
-                        grown ? "scale-x-100" : "scale-x-0",
+                        "absolute right-0 top-1/2 -translate-y-1/2 motion-safe:transition-opacity motion-safe:duration-300",
+                        // The dot and "now" arrive as the line reaches them.
+                        selected ? "opacity-100 motion-safe:delay-300" : "opacity-0",
                       )}
-                    />
-                    <span
-                      aria-hidden="true"
-                      className="absolute left-0 top-1/2 h-2 w-2 -translate-y-1/2 rounded-motif bg-primary"
-                    />
-                    {span.current && (
-                      <span
-                        aria-hidden="true"
-                        style={
-                          animateEntrance ? { transitionDelay: `${index * 80 + 500}ms` } : undefined
-                        }
-                        className={cn(
-                          "absolute right-0 top-1/2 -translate-y-1/2",
-                          animateEntrance && "transition-opacity duration-400 ease-brand",
-                          !grown && "opacity-0",
-                        )}
-                      >
-                        <span className="block h-3 w-3 rounded-full bg-primary" />
-                        {/* Above the dot rather than after it: after it, the label
-                            would stand outside the content column. */}
-                        <span className="absolute bottom-full right-0 mb-1 font-mono text-meta text-foreground">
-                          {labels.now}
-                        </span>
+                    >
+                      <span className="block h-3 w-3 rounded-full bg-primary" />
+                      {/* Above the dot rather than after it: after it, the label
+                          would stand outside the content column. */}
+                      <span className="absolute bottom-full right-0 mb-1 font-mono text-meta text-foreground">
+                        {labels.now}
                       </span>
-                    )}
-                  </span>
-                </a>
+                    </span>
+                  )}
+                </span>
+
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute left-0 top-0 whitespace-nowrap text-sm font-medium transition-colors duration-200",
+                    // A role a chosen skill passed over greys, but stays legible.
+                    selected ? "text-iris" : receded ? "text-muted-foreground" : "text-foreground",
+                  )}
+                >
+                  {/* Short on a phone, where a long name would reach the next
+                      entry on its lane; whole from sm. */}
+                  <span className="sm:hidden">{entry.shortLabel ?? entry.label}</span>
+                  <span className="hidden sm:inline">{entry.label}</span>
+                </span>
+
+                <button
+                  ref={(element) => {
+                    buttons.current[index] = element;
+                  }}
+                  type="button"
+                  aria-haspopup="dialog"
+                  aria-label={entry.ariaLabel}
+                  // The entry's dialog finds its circle by this, to grow out
+                  // of it and shrink back into it.
+                  data-timeline-circle={span.id}
+                  data-away={circlesAway || undefined}
+                  onClick={() => onSelect(span.id)}
+                  onPointerEnter={() => onPreview?.(span.id)}
+                  onPointerLeave={() => onPreview?.(null)}
+                  onFocus={() => onPreview?.(span.id)}
+                  onBlur={() => onPreview?.(null)}
+                  onKeyDown={onKeyDown(index)}
+                  className={cn(
+                    "group absolute left-0 top-7 size-10 md:size-14",
+                    circleControl,
+                    circleState(selected, highlighted),
+                    circlesAway ? "opacity-30" : receded ? "opacity-40" : "opacity-100",
+                  )}
+                >
+                  {entry.mark}
+                </button>
               </li>
             );
           })}
         </ol>
       </div>
-      <figcaption className="mt-4 text-sm text-muted-foreground">{labels.caption}</figcaption>
     </figure>
   );
 };

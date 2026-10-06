@@ -4,16 +4,19 @@
  * can be tested without a browser.
  */
 
-export type TimelineInput = {
-  id: number;
+/** Ids are numbers for roles and may be strings where entries come from several sources. */
+export type TimelineId = number | string;
+
+export type TimelineInput<Id extends TimelineId = number> = {
+  id: Id;
   /** ISO date. */
   start: string;
   /** ISO date, or empty while the span is still running. */
   end: string;
 };
 
-export type TimelineSpan = {
-  id: number;
+export type TimelineSpan<Id extends TimelineId = number> = {
+  id: Id;
   /** Month offsets from the domain start; the end is exclusive. */
   startMonth: number;
   endMonth: number;
@@ -27,8 +30,8 @@ export type TimelineTick = {
   month: number;
 };
 
-export type Timeline = {
-  spans: TimelineSpan[];
+export type Timeline<Id extends TimelineId = number> = {
+  spans: TimelineSpan<Id>[];
   /** Total months in the domain. */
   months: number;
   lanes: number;
@@ -46,7 +49,10 @@ const monthIndex = (iso: string): number => {
  * running). Spans take the first lane whose previous occupant has ended, so
  * consecutive roles share a lane and concurrent ones stack.
  */
-export function buildTimeline(items: readonly TimelineInput[], now: Date): Timeline {
+export function buildTimeline<Id extends TimelineId = number>(
+  items: readonly TimelineInput<Id>[],
+  now: Date,
+): Timeline<Id> {
   const nowMonth = now.getUTCFullYear() * 12 + now.getUTCMonth();
   const dated = items
     .filter((item) => item.start)
@@ -56,7 +62,10 @@ export function buildTimeline(items: readonly TimelineInput[], now: Date): Timel
       end: item.end ? monthIndex(item.end) + 1 : nowMonth + 1,
       current: !item.end,
     }))
-    .sort((a, b) => a.start - b.start || a.end - b.end);
+    // Of two spans that begin in the same month, the longer takes the lane
+    // first: it is the one that carries on, as a doctorate does beside the
+    // teaching that began with it.
+    .sort((a, b) => a.start - b.start || b.end - a.end);
 
   if (dated.length === 0) return { spans: [], months: 0, lanes: 0, ticks: [] };
 
@@ -83,4 +92,26 @@ export function buildTimeline(items: readonly TimelineInput[], now: Date): Timel
   }
 
   return { spans, months: last - origin, lanes: laneEnds.length, ticks };
+}
+
+/**
+ * A company's initials for its circle on the timeline: the capitals of its
+ * first word, so a two-part name written as one (PeakData, CloudFerro) keeps
+ * both parts and a long name (Nokia Solutions and Networks) keeps its brand.
+ * At most two letters, so they fit the circle.
+ */
+export function companyInitials(company: string): string {
+  const first = company.trim().split(/\s+/)[0] ?? "";
+  const capitals = first.match(/\p{Lu}/gu) ?? [];
+  const letters = capitals.length > 0 ? capitals.join("") : first.charAt(0).toUpperCase();
+  return letters.slice(0, 2);
+}
+
+/**
+ * A company's name as short as it can be and still be recognised: its first
+ * word, for the timeline on a narrow phone, where "Nokia Solutions and
+ * Networks" would run into the next company on its lane.
+ */
+export function companyShortName(company: string): string {
+  return company.trim().split(/\s+/)[0] ?? company;
 }

@@ -2,10 +2,13 @@ import { forwardRef } from "react";
 import { MessageSquare } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type ChatLauncherProps = {
   label: string;
   onClick: () => void;
+  /** Stands aside (faded out, out of the tab order) while text needs the room. */
+  aside?: boolean;
 };
 
 // Warm the Markdown renderer chunk while the visitor is still deciding to open
@@ -15,19 +18,24 @@ const preloadMarkdown = () => {
 };
 
 /** Floating button that opens the Vex chat; sits above the safe area on phones. */
-const ChatLauncher = forwardRef<HTMLButtonElement, ChatLauncherProps>(({ label, onClick }, ref) => (
-  <Button
-    ref={ref}
-    onClick={onClick}
-    onMouseEnter={preloadMarkdown}
-    onFocus={preloadMarkdown}
-    aria-label={label}
-    className="fixed right-6 z-40 h-14 w-14 rounded-xl shadow-float transition-transform duration-200 ease-brand hover:-translate-y-0.5 motion-reduce:transform-none"
-    style={{ bottom: "calc(env(safe-area-inset-bottom) + 1.5rem)" }}
-  >
-    <MessageSquare className="!size-6" />
-  </Button>
-));
+const ChatLauncher = forwardRef<HTMLButtonElement, ChatLauncherProps>(
+  ({ label, onClick, aside = false }, ref) => (
+    <Button
+      ref={ref}
+      onClick={onClick}
+      onMouseEnter={preloadMarkdown}
+      onFocus={preloadMarkdown}
+      aria-label={label}
+      className={cn(
+        "fixed right-6 z-40 h-14 w-14 rounded-xl shadow-float transition-[transform,opacity,visibility] duration-200 ease-brand hover:-translate-y-0.5 motion-reduce:transform-none",
+        aside && "invisible translate-y-2 opacity-0",
+      )}
+      style={{ bottom: "calc(env(safe-area-inset-bottom) + 1.5rem)" }}
+    >
+      <MessageSquare className="!size-6" />
+    </Button>
+  ),
+);
 ChatLauncher.displayName = "ChatLauncher";
 
 export default ChatLauncher;

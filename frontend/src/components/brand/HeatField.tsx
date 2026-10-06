@@ -42,7 +42,7 @@ import { cn } from "@/lib/utils";
  * With prefers-reduced-motion the field renders at rest and ignores the mouse.
  */
 
-export type HeatPlacement = "top" | "corners";
+export type HeatPlacement = "top" | "corners" | "bar";
 
 type Source = {
   /** Position in fractions of the field's width and height. */
@@ -56,8 +56,14 @@ type Source = {
 // Placement matters because the field clips at its own edges. `top` keeps both
 // sources against the top, where the fixed header already draws a hard line,
 // and leaves the lower edge clear to dissolve into what follows. `corners`
-// suits a section that ends the page.
+// suits a section that ends the page. `bar` is the menu bar: a strip a few
+// percent as tall as it is wide, warmed gently from both ends, at peaks low
+// enough that every link and the active iris one keep their contrast.
 const SOURCES: Record<HeatPlacement, readonly Source[]> = {
+  bar: [
+    { x: 0.03, y: 0.5, peak: 0.4, channel: 0 },
+    { x: 0.97, y: 0.5, peak: 0.36, channel: 1 },
+  ],
   top: [
     { x: 0.06, y: 0.0, peak: 0.62, channel: 0 },
     { x: 0.94, y: 0.02, peak: 0.58, channel: 1 },
@@ -93,6 +99,22 @@ const INTRO_START = 0.004;
  * LIFETIME, by which point it is a few percent of the background.
  */
 const POINTER_PEAK = 0.26;
+/**
+ * The menu bar's pointer heat: its links are text set on the field itself.
+ * 0.3 is the strongest peak at which the active iris link keeps 4.5:1 where a
+ * pointer sweeps over it (measured 4.94:1; 0.4 gave 4.63:1).
+ */
+const POINTER_PEAK_IN_BAR = 0.3;
+/**
+ * In the bar a pointer source is sized by the bar's height, not its width: a
+ * kernel scaled to a 1280px-wide strip was born three times taller than the
+ * 80px bar and read as a faint wash rather than heat leaving the pointer.
+ * Born at this e-fold radius, in bar heights, it spreads to about 3.7 times
+ * that over its lifetime.
+ */
+const BAR_BIRTH_RADIUS = 0.4;
+/** Columns of the bar's grid: about 4px cells at 1280, so small kernels stay round. */
+const BAR_COLS = 320;
 const POINTER_SOFTENING = 0.12;
 const POINTER_LIFETIME = 1.6;
 const POINTER_MIN_SPACING = 0.02;
@@ -115,10 +137,27 @@ type FieldState = {
 
 type FieldGeometry = { cols: number; rows: number; aspect: number };
 
-const geometryFor = (width: number, height: number): FieldGeometry => {
+const geometryFor = (width: number, height: number, cols = COLS): FieldGeometry => {
   const aspect = width > 0 ? height / width : 0.5;
-  return { cols: COLS, rows: Math.max(16, Math.min(160, Math.round(COLS * aspect))), aspect };
+  return { cols, rows: Math.max(16, Math.min(160, Math.round(cols * aspect))), aspect };
 };
+
+/**
+ * How pointer heat behaves in a field: its fresh peak, its diffusivity (in
+ * widths² per unit of time), and whether the top and bottom edges are
+ * insulated. An insulated edge reflects heat instead of losing it, which on a
+ * strip is the sum of each source and its mirror images across both edges.
+ */
+type PointerModel = { peak: number; diffusivity: number; insulated: boolean };
+
+const pointerModel = (placement: HeatPlacement, aspect: number): PointerModel =>
+  placement === "bar"
+    ? {
+        peak: POINTER_PEAK_IN_BAR,
+        diffusivity: (BAR_BIRTH_RADIUS * aspect) ** 2 / (4 * POINTER_SOFTENING),
+        insulated: true,
+      }
+    : { peak: POINTER_PEAK, diffusivity: RESTING_SPREAD, insulated: false };
 
 /** One evaluation of the summed kernels onto the canvas. */
 const paint = (
@@ -126,6 +165,7 @@ const paint = (
   geometry: FieldGeometry,
   sources: readonly Source[],
   state: FieldState,
+  model: PointerModel,
 ) => {
   const { cols, rows, aspect } = geometry;
   const image = ctx.createImageData(cols, rows);
@@ -138,9 +178,9 @@ const paint = (
     return {
       x: p.x,
       y: p.y,
-      variance: 4 * RESTING_SPREAD * age,
-      // Q / 4πt, scaled so a fresh source peaks at POINTER_PEAK.
-      peak: (POINTER_PEAK * POINTER_SOFTENING) / age,
+      variance: 4 * model.diffusivity * age,
+      // Q / 4πt, scaled so a fresh source peaks at the placement's peak.
+      peak: (model.peak * POINTER_SOFTENING) / age,
     };
   });
 
@@ -162,8 +202,13 @@ const paint = (
       }
       for (const p of pointers) {
         const dx = x - p.x;
-        const dy = y - p.y * aspect;
-        alpha[0] += p.peak * Math.exp(-(dx * dx + dy * dy) / p.variance);
+        const near = (sourceY: number) =>
+          p.peak * Math.exp(-(dx * dx + (y - sourceY) ** 2) / p.variance);
+        alpha[0] += near(p.y * aspect);
+        if (model.insulated) {
+          // Mirror images across the top (y = 0) and bottom (y = aspect).
+          alpha[0] += near(-p.y * aspect) + near((2 - p.y) * aspect);
+        }
       }
 
       let r = BACKGROUND[0];
@@ -261,7 +306,13 @@ const HeatField = ({
       canvas.width = cols;
       canvas.height = rows;
     }
-    paint(ctx, geometryRef.current, sources, stateRef.current);
+    paint(
+      ctx,
+      geometryRef.current,
+      sources,
+      stateRef.current,
+      pointerModel(placement, geometryRef.current.aspect),
+    );
   };
 
   // One frame of the clock. Runs while the intro plays or pointer heat is
@@ -318,7 +369,7 @@ const HeatField = ({
     if (!canvas) return;
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
-      geometryRef.current = geometryFor(width, height);
+      geometryRef.current = geometryFor(width, height, placement === "bar" ? BAR_COLS : COLS);
       draw();
     });
     observer.observe(canvas);

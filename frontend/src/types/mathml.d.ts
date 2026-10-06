@@ -9,6 +9,8 @@ type MathMLProps = React.HTMLAttributes<HTMLElement> & {
   stretchy?: "true" | "false";
   lspace?: string;
   rspace?: string;
+  /** MathML Core keeps only "normal": an upright single-letter identifier. */
+  mathvariant?: "normal";
 };
 
 declare module "react" {

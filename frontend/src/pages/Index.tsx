@@ -1,103 +1,42 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  ArrowDown,
-  Brain,
-  Code,
-  Database,
-  Github,
-  Mail,
-  MessageSquare,
-  Server,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
-import AskVexBar from "@/components/AskVexBar";
-import BinaryAxisMark from "@/components/brand/BinaryAxisMark";
-import HeatField, { HeatCaption } from "@/components/brand/HeatField";
+import HeaderShapes from "@/components/brand/HeaderShapes";
+import HeatField from "@/components/brand/HeatField";
+import StatusMessage from "@/components/feedback/StatusMessage";
+import AboutDefinition from "@/components/home/AboutDefinition";
+import CheckProof from "@/components/home/CheckProof";
+import Circuit from "@/components/home/Circuit";
+import ContactGraph from "@/components/home/ContactGraph";
+import HeroTheorem from "@/components/home/HeroTheorem";
 import ProjectIndex from "@/components/home/ProjectIndex";
-import SkillYears from "@/components/home/SkillYears";
+import RouteList from "@/components/home/RouteList";
+import WorkshopFeature from "@/components/home/WorkshopFeature";
 import { Col, Grid } from "@/components/layout/Grid";
 import PageLayout from "@/components/layout/PageLayout";
 import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
-import ProofPoints from "@/components/ProofPoints";
 import Reveal from "@/components/Reveal";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { env } from "@/config/env";
+import { EMAIL } from "@/config/contact";
+import { arrangeProjects } from "@/config/projectOrder";
+import { screenshotsFor } from "@/config/projectScreenshots";
+import { projectCard } from "@/content/projects";
+import { showDrafts, workshopArticles } from "@/content/workshop";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useVex } from "@/contexts/VexContext";
+import { useLiveChecks } from "@/hooks/use-live-checks";
 import { usePageMeta } from "@/hooks/use-page-meta";
+import { isThisSite } from "@/lib/projectLinks";
 import type { UiProject } from "@/lib/projectsService";
 import { fetchProjects } from "@/lib/projectsService";
-import type { UiSkill } from "@/lib/skillsService";
-import { fetchSkills } from "@/lib/skillsService";
-import { formatYears } from "@/lib/skillYears";
+import { articlesFor } from "@/lib/workshop";
 import { translations } from "@/utils/translations";
 
 const GITHUB_URL = "https://github.com/SatoriAI";
 
-/** "A. B." → ["A.", "B."]: the brand line's two declaratives, one per line. */
-const clauses = (title: string) => title.match(/[^.]+\.?/g)?.map((c) => c.trim()) ?? [title];
-const SECTION_COUNT = 4;
-const eyebrow = (index: number) =>
-  `${String(index).padStart(2, "0")} / ${String(SECTION_COUNT).padStart(2, "0")}`;
-const EMAIL = "dawidhanrahan@gmail.com";
-
-const sampleSkills: UiSkill[] = [
-  {
-    icon: Code,
-    name: "Python",
-    level: "10+ years of experience",
-    description: "Backend development, APIs, automation",
-  },
-  {
-    icon: Database,
-    name: "Databases",
-    level: "5+ years of experience",
-    description: "PostgreSQL, MongoDB, Redis",
-  },
-  {
-    icon: Brain,
-    name: "LLMs & RAG",
-    level: "3+ years of experience",
-    description: "Pipeline development, vector databases",
-  },
-  {
-    icon: Server,
-    name: "Infrastructure",
-    level: "5+ years of experience",
-    description: "AWS, Docker, Kubernetes",
-  },
-];
-
-const sampleProjects: UiProject[] = [
-  {
-    title: "Intelligent Document RAG System",
-    description:
-      "Built a sophisticated RAG pipeline for document analysis using vector embeddings and LLMs",
-    technologies: ["Python", "LangChain", "ChromaDB", "OpenAI"],
-    github: "#",
-    demo: "#",
-    image: "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?w=400&h=300&fit=crop",
-  },
-  {
-    title: "Scalable Backend Architecture",
-    description: "Designed and implemented microservices architecture handling 1M+ requests daily",
-    technologies: ["Python", "FastAPI", "PostgreSQL", "Redis"],
-    github: "#",
-    demo: "#",
-    image: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=400&h=300&fit=crop",
-  },
-  {
-    title: "Infrastructure Automation Suite",
-    description: "Created comprehensive DevOps pipeline with automated testing and deployment",
-    technologies: ["Python", "Terraform", "AWS", "Docker"],
-    github: "#",
-    demo: "#",
-    image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop",
-  },
-];
+/** How many pieces from the workshop the home page shows, newest first. */
+const WORKSHOP_ON_HOME = 3;
 
 const Index = () => {
   const { askVex } = useVex();
@@ -105,215 +44,228 @@ const Index = () => {
   const t = translations[language];
   usePageMeta(t.meta.home);
 
-  const [projects, setProjects] = useState<UiProject[]>(sampleProjects);
-  const [skills, setSkills] = useState<UiSkill[]>(sampleSkills);
+  // The real projects or nothing: if they cannot be loaded the section says
+  // so and offers a retry. It never stands in invented work.
+  // The workshop's newest pieces; the section is left out while there are none.
+  const pieces = articlesFor(workshopArticles, language, { drafts: showDrafts }).slice(
+    0,
+    WORKSHOP_ON_HOME,
+  );
+  const w = t.workshop;
+  // Sections are numbered as they are shown.
+  const sectionCount = pieces.length > 0 ? 4 : 3;
+  const eyebrow = (index: number) =>
+    `${String(index).padStart(2, "0")} / ${String(sectionCount).padStart(2, "0")}`;
+  const after = pieces.length > 0 ? 1 : 0;
 
-  useEffect(() => {
-    if (env.mock) return;
+  const [projects, setProjects] = useState<UiProject[] | null>(null);
+  // The live checks of the projects' addresses, here so that the sentence
+  // under the heading and the strip of projects read the same results.
+  const liveChecks = useLiveChecks();
+  const checked = useMemo(
+    () => (projects ?? []).filter((project) => project.demo && !isThisSite(project)),
+    [projects],
+  );
+  const { checkAllOnce } = liveChecks;
+  const startChecks = useCallback(
+    () => checkAllOnce(checked.map((project) => project.demo)),
+    [checkAllOnce, checked],
+  );
+  const [failed, setFailed] = useState(false);
+  const loadProjects = useCallback(() => {
+    setFailed(false);
+    setProjects(null);
     fetchProjects(language)
-      .then(setProjects)
+      // Where a project has a document, its summary and stack replace the
+      // backend's description and tags.
+      .then((list) =>
+        setProjects(
+          arrangeProjects(list).map((p) => {
+            const card = projectCard(p.title, language);
+            return card ? { ...p, description: card.summary, technologies: [...card.stack] } : p;
+          }),
+        ),
+      )
       .catch((err) => {
-        console.error("Failed to fetch projects, falling back to sample data:", err);
-        setProjects(sampleProjects);
+        console.error("Failed to fetch projects:", err);
+        setFailed(true);
       });
   }, [language]);
-
-  useEffect(() => {
-    if (env.mock) return;
-    fetchSkills(language)
-      .then(setSkills)
-      .catch((err) => {
-        console.error("Failed to fetch skills, falling back to sample data:", err);
-        setSkills(sampleSkills);
-      });
-  }, [language]);
+  useEffect(loadProjects, [loadProjects]);
 
   const projectLabels = {
     code: t.projects.code,
-    demo: t.common.demo,
-    privateProject: t.common.privateProject,
-    imageAlt: t.projects.imageAlt,
+    codeOnGithub: t.projects.codeOnGithub,
+    codePrivate: t.projects.codePrivate,
     stack: t.projects.stack,
+    stackNext: t.projects.stackNext,
     youAreHere: t.projects.youAreHere,
+    notPublic: t.projects.notPublic,
     askVex: t.projects.askVex,
     askVexQuestion: t.projects.askVexQuestion,
+    quoted: t.projects.quoted,
+    screenshotAlt: t.projects.screenshotAlt,
+    previous: t.projects.previous,
+    next: t.projects.next,
+    live: t.projects.live,
   };
 
   return (
     <PageLayout>
-      {/* Hero. The field behind it is a live heat kernel: two point sources
-          spreading into the kit's colour fields once after load, with the
-          equation and the kernel time printed under the copy. The previous
-          pass ruled that nothing in the hero animates; this is the one thing
-          that earns an exception, because it is the brand line made visible —
-          the mathematics is literally running under the engineering. The
-          heading and copy still do not move.
+      {/* One wire through the page, from the theorem to me (see Circuit). */}
+      <Circuit>
+        {/* Hero. A masthead rather than a stage: the brand line as a theorem,
+            its proof under it (see HeroTheorem), so the projects below
+            are the first screen's real content. The bands alternate from the
+            white Projects band down, so the masthead reads apart from what
+            follows. */}
+        <Section
+          id="hero"
+          className="relative isolate overflow-hidden pb-8 pt-10 md:pb-12 md:pt-10"
+        >
+          <HeaderShapes variant="home" />
+          <HeroTheorem
+            labels={{
+              theorem: t.hero.theorem,
+              statement: t.hero.statement,
+              and: t.hero.and,
+              proof: t.hero.proof,
+              lines: t.hero.proofLines,
+            }}
+          />
+        </Section>
 
-          The primary action is the work, in the kit's solid navy, directly
-          under the introduction; a review of the first cut found it below the
-          fold behind Vex's starter questions. Vex keeps one compact line here
-          and is otherwise a contextual guide beside each project and role. */}
-      <HeatField placement="top" live>
-        <Section id="hero" className="pb-8 pt-12 md:pb-10 md:pt-20">
-          <Grid gapY={48} className="lg:items-end">
-            {/* No max-width here: the column is the measure. The subtitle keeps
-                its own 65ch cap, and a width cap on the column would pull it off
-                the grid axis. */}
-            <Col spanLg={9}>
-              <p className="mb-4 font-mono text-meta uppercase tracking-widest text-iris">
-                Dawid Hanrahan
-              </p>
-              {/* One clause per line: the line is two declaratives, and a wrap
-                  inside a clause broke it into three uneven pieces. */}
-              <h1 className="text-display-sm md:text-display">
-                {clauses(t.hero.title).map((clause) => (
-                  <span key={clause} className="block">
-                    {clause}
-                  </span>
-                ))}
-              </h1>
-              <p className="mt-5 max-w-[52ch] text-base text-muted-foreground md:text-body-lg">
-                {t.hero.subtitle}
-              </p>
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Button size="lg" asChild>
-                  <Link to="/#projects">
-                    {t.hero.viewProjects}
-                    <ArrowDown />
-                  </Link>
-                </Button>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="icon" asChild>
-                    <a
-                      href={GITHUB_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="GitHub"
-                    >
-                      <Github className="!size-5" />
-                    </a>
-                  </Button>
-                  <Button variant="outline" size="icon" asChild>
-                    <a href={`mailto:${EMAIL}`} aria-label={t.contact.email}>
-                      <Mail className="!size-5" />
-                    </a>
-                  </Button>
-                </div>
-              </div>
-              <AskVexBar
-                className="mt-8 max-w-[32rem]"
-                placeholder={t.hero.askPlaceholder}
-                submitLabel={t.hero.ask}
+        {/* Projects come first after the hero, as the kit's structure asks:
+            an index of titles with the selected one opened beside them and read
+            in sequence. The images the backend holds are app icons and are shown
+            at icon size. */}
+        <Section id="projects" tone="surface">
+          <SectionHeading
+            eyebrow={eyebrow(1)}
+            title={t.projects.title}
+            note={
+              checked.length > 0 && (
+                <CheckProof
+                  checks={checked.map((project) => liveChecks.stateOf(project.demo))}
+                  labels={t.projects.proof}
+                  locale={language}
+                  onSeen={startChecks}
+                />
+              )
+            }
+          />
+          {failed ? (
+            <StatusMessage
+              variant="error"
+              message={t.projects.error}
+              onRetry={loadProjects}
+              retryLabel={t.projects.tryAgain}
+            />
+          ) : projects === null ? (
+            <StatusMessage variant="loading" message={t.common.loading} />
+          ) : (
+            <Reveal>
+              <ProjectIndex
+                projects={projects}
+                subtitles={t.projects.subtitles}
+                facts={t.projects.facts}
+                screenshots={screenshotsFor(language)}
+                labels={projectLabels}
                 onAsk={askVex}
+                checks={liveChecks}
+              />
+            </Reveal>
+          )}
+        </Section>
+
+        {/* From the workshop: the heading and its lead beside the newest pieces,
+            the newest set larger, and the way to all of them, so one piece
+            fills the row as well as several do. Left out while there are none. */}
+        {pieces.length > 0 && (
+          <Section id="workshop">
+            <WorkshopFeature
+              articles={pieces}
+              locale={language}
+              labels={{
+                eyebrow: eyebrow(2),
+                title: w.title,
+                lead: w.lead,
+                all: w.all,
+                minutes: w.minutes,
+                figure: w.figure,
+              }}
+            />
+          </Section>
+        )}
+
+        {/* About. Who I am as a definition, as the hero is a theorem, then the
+            four pages that tell the rest, so the page leads on into the full
+            record. On the surface tone after the workshop, so the bands keep
+            alternating. */}
+        <Section id="about" tone={pieces.length > 0 ? "surface" : "default"}>
+          <SectionHeading eyebrow={eyebrow(2 + after)} title={t.about.title} />
+          <Grid gapY={32}>
+            <Col spanLg={7}>
+              <AboutDefinition labels={t.about.definition} />
+            </Col>
+            <Col as={Reveal} spanLg={5}>
+              <RouteList
+                routes={[
+                  {
+                    kind: "experience",
+                    to: "/experience",
+                    name: t.nav.experience,
+                    line: t.about.routes.experience,
+                  },
+                  {
+                    kind: "research",
+                    to: "/research",
+                    name: t.nav.academic,
+                    line: t.about.routes.research,
+                  },
+                  {
+                    kind: "education",
+                    to: "/education",
+                    name: t.nav.education,
+                    line: t.about.routes.education,
+                  },
+                  {
+                    kind: "workshop",
+                    to: "/workshop",
+                    name: t.nav.workshop,
+                    // The newest piece, so the way in says what is new there.
+                    line: pieces[0]
+                      ? t.about.routes.workshop.replace("{title}", pieces[0].title)
+                      : w.lead,
+                  },
+                ]}
               />
             </Col>
-            <Col spanLg={3} align="end">
-              <ProofPoints items={t.hero.proof} />
-            </Col>
-          </Grid>
-          <HeatCaption
-            className="mt-10 block md:mt-12"
-            label={t.hero.field.label}
-            replayLabel={t.hero.field.replay}
-            locale={language}
-          />
-        </Section>
-      </HeatField>
-
-      {/* Projects come first after the hero, as the kit's structure asks:
-          an index of titles with the selected one opened beside them and read
-          in sequence. The images the backend holds are app icons and are shown
-          at icon size. */}
-      <Section id="projects">
-        <SectionHeading eyebrow={eyebrow(1)} title={t.projects.title} lead={t.projects.subtitle} />
-        <Reveal>
-          <ProjectIndex
-            projects={projects}
-            subtitles={t.projects.subtitles}
-            labels={projectLabels}
-            onAsk={askVex}
-          />
-        </Reveal>
-      </Section>
-
-      {/* Skills, as years. Icon tiles said nothing a visitor could weigh; a
-          row of modules per year, with the running year as the kit's single
-          filled module, is the same data made legible. */}
-      <Section id="skills">
-        <SectionHeading eyebrow={eyebrow(2)} title={t.skills.title} lead={t.skills.subtitle} />
-        <SkillYears skills={skills} labels={{ years: (count) => formatYears(count, language) }} />
-      </Section>
-
-      {/* About. The mark, at a size where it can be read, faces the prose: the
-          identity's second layer (0 · 1 → dh) is one hover away, and the copy
-          beside it says the same thing in words. */}
-      <Section id="about">
-        <SectionHeading eyebrow={eyebrow(3)} title={t.about.title} />
-        <Grid gapY={48}>
-          <Col as={Reveal} spanLg={4} className="lg:sticky lg:top-24 lg:self-start">
-            <BinaryAxisMark labels={t.about.mark} />
-            <p className="mt-6 max-w-[28ch] font-mono text-meta text-muted-foreground">
-              {t.about.markHint}
-            </p>
-          </Col>
-          {/* Splits at lg, not md: a half column at md is ~39 characters per
-              line, under the kit's 55-70 range. The text keeps its own 65ch cap
-              inside the 8-column span. */}
-          <Col spanLg={8} className="space-y-6">
-            <p className="max-w-[52ch] text-base text-muted-foreground md:text-body-lg">
-              {t.about.paragraph1}
-            </p>
-            <p className="max-w-[52ch] text-base text-muted-foreground md:text-body-lg">
-              {t.about.paragraph2}
-            </p>
-            <Reveal>
-              <Card tone="lavender">
-                <CardHeader>
-                  <CardTitle className="text-xl md:text-xl">{t.about.philosophy}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="max-w-[52ch] text-muted-foreground">{t.about.philosophyText}</p>
-                </CardContent>
-              </Card>
-            </Reveal>
-          </Col>
-        </Grid>
-      </Section>
-
-      {/* Contact: the same field, at rest, closing the page. No cards: an
-          address set large enough to be the point of the section. */}
-      <HeatField>
-        <Section id="contact" className="py-12 md:py-20">
-          <SectionHeading eyebrow={eyebrow(4)} title={t.contact.title} lead={t.contact.subtitle2} />
-          <Grid gapY={32}>
-            <Col as={Reveal} spanLg={7}>
-              <a
-                href={`mailto:${EMAIL}`}
-                className="inline-block break-all font-mono text-xl leading-tight text-foreground underline decoration-1 underline-offset-8 transition-colors duration-200 hover:text-iris sm:text-2xl md:text-[2rem]"
-              >
-                {EMAIL}
-              </a>
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Button onClick={() => askVex()}>
-                  <MessageSquare />
-                  {t.hero.askAI}
-                </Button>
-                <Button variant="outline" asChild>
-                  <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
-                    <Github />
-                    github.com/SatoriAI
-                  </a>
-                </Button>
-              </div>
-            </Col>
-            <Col as={Reveal} spanLg={5} delayMs={60}>
-              <p className="max-w-[38ch] text-base text-muted-foreground md:text-body-lg">
-                {t.contact.quickMessageDesc}
-              </p>
-            </Col>
           </Grid>
         </Section>
-      </HeatField>
+
+        {/* Contact: the same field, at rest, closing the page. The ways to
+            reach me as a graph around my mark, the nodes being the controls. */}
+        <HeatField>
+          <Section id="contact" className="py-12 md:py-20">
+            <SectionHeading
+              eyebrow={eyebrow(3 + after)}
+              title={t.contact.title}
+              leadLine={t.contact.lead}
+            />
+            <Grid>
+              <Col as={Reveal} spanLg={12}>
+                <ContactGraph
+                  email={EMAIL}
+                  githubUrl={GITHUB_URL}
+                  onAskVex={() => askVex()}
+                  labels={t.contact.list}
+                />
+              </Col>
+            </Grid>
+          </Section>
+        </HeatField>
+      </Circuit>
     </PageLayout>
   );
 };

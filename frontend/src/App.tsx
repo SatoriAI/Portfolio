@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import ScrollToTop from "@/components/ScrollToTop";
@@ -15,6 +15,9 @@ import Index from "./pages/Index";
 // second request; the other routes load when navigated to.
 const Experience = lazy(() => import("./pages/Experience"));
 const Academic = lazy(() => import("./pages/Academic"));
+const Education = lazy(() => import("./pages/Education"));
+const Workshop = lazy(() => import("./pages/Workshop"));
+const WorkshopArticle = lazy(() => import("./pages/WorkshopArticle"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -32,8 +35,13 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/experience" element={<Experience />} />
-                <Route path="/academic" element={<Academic />} />
+                <Route path="/research" element={<Academic />} />
+                {/* The page's old address, kept so shared links still land. */}
+                <Route path="/academic" element={<Navigate to="/research" replace />} />
+                <Route path="/education" element={<Education />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="/workshop" element={<Workshop />} />
+                <Route path="/workshop/:slug" element={<WorkshopArticle />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

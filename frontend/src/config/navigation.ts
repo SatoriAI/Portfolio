@@ -12,7 +12,6 @@ export type NavItem = {
 /** Sections of the home page, in page order. */
 export const homeSections: readonly NavItem[] = [
   { labelKey: "projects", to: "/#projects" },
-  { labelKey: "skills", to: "/#skills" },
   { labelKey: "about", to: "/#about" },
   { labelKey: "contact", to: "/#contact" },
 ];
@@ -20,5 +19,7 @@ export const homeSections: readonly NavItem[] = [
 /** Standalone routes. */
 export const pages: readonly NavItem[] = [
   { labelKey: "experience", to: "/experience" },
-  { labelKey: "academic", to: "/academic" },
+  { labelKey: "academic", to: "/research" },
+  { labelKey: "education", to: "/education" },
+  { labelKey: "workshop", to: "/workshop" },
 ];

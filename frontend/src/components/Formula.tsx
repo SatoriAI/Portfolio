@@ -1,6 +1,6 @@
 import { Fragment, useMemo } from "react";
 
-import { type FormulaNode, parseFormula, splitMath } from "@/lib/formula";
+import { type FormulaNode, parseFormula, splitEmphasis, splitMath } from "@/lib/formula";
 import { cn } from "@/lib/utils";
 
 /**
@@ -19,7 +19,12 @@ const render = (node: FormulaNode, key = 0): JSX.Element => {
     case "row":
       return <mrow key={key}>{node.children.map((child, index) => render(child, index))}</mrow>;
     case "id":
-      return <mi key={key}>{node.value}</mi>;
+      // ∇ is upright, as in print; a single-letter mi is otherwise italic.
+      return (
+        <mi key={key} mathvariant={node.value === "∇" ? "normal" : undefined}>
+          {node.value}
+        </mi>
+      );
     case "num":
       return <mn key={key}>{node.value}</mn>;
     case "op":
@@ -62,9 +67,11 @@ type FormulaProps = {
   /** The formula, e.g. `K_t(x, y)` or `\frac{2π · k · a}{113}`. */
   tex: string;
   className?: string;
+  /** A formula on a line of its own, set at full size rather than inline. */
+  block?: boolean;
 };
 
-export const Formula = ({ tex, className }: FormulaProps) => {
+export const Formula = ({ tex, className, block = false }: FormulaProps) => {
   const tree = useMemo(() => {
     try {
       return parseFormula(tex);
@@ -76,25 +83,36 @@ export const Formula = ({ tex, className }: FormulaProps) => {
 
   if (!tree) return <code className={cn("font-mono", className)}>{tex}</code>;
   return (
-    <math display="inline" className={cn("formula", className)}>
+    <math display={block ? "block" : "inline"} className={cn("formula", className)}>
       {render(tree)}
     </math>
   );
 };
 
 type MathTextProps = {
-  /** Prose with inline formulas between dollar signs: `the kernel $K_t(x, y)$`. */
+  /**
+   * Prose with inline formulas between dollar signs, `the kernel $K_t(x, y)$`,
+   * and emphasis between asterisks, `called *grokking*`.
+   */
   text: string;
 };
 
-/** Prose that may carry formulas; the plain runs are rendered as they are. */
+/** Prose that may carry formulas and emphasis; the plain runs are rendered as they are. */
 export const MathText = ({ text }: MathTextProps) => (
   <>
     {splitMath(text).map((segment, index) =>
       segment.math ? (
         <Formula key={index} tex={segment.value} />
       ) : (
-        <Fragment key={index}>{segment.value}</Fragment>
+        <Fragment key={index}>
+          {splitEmphasis(segment.value).map((run, runIndex) =>
+            run.em ? (
+              <em key={runIndex}>{run.value}</em>
+            ) : (
+              <Fragment key={runIndex}>{run.value}</Fragment>
+            ),
+          )}
+        </Fragment>
       ),
     )}
   </>

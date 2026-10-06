@@ -39,10 +39,20 @@
     --iris: 257 32% 46%; /* #65509A */
     --border: 224 22% 90%; /* #E0E3EB */
     --control-border: 223 10% 56%; /* #848A9A */
+    /* Publication status on the paper cards. Not in the kit, which leaves
+       semantic colours open until a need appears; both keep 5:1 or more on
+       white, and the stamp always carries a word, so colour is never the only
+       signal. */
+    --published: 145 45% 34%; /* #2F7D4F */
+    --preprint: 216 56% 42%; /* #2F5FA8 */
     --primary-hover: 220 38% 26%; /* #293A5C */
     /* Illustration-only tints for the diffusion motif; never text or controls. */
     --lavender-deep: 261 52% 81%; /* #C6B4E7 */
     --blush-deep: 331 54% 85%; /* #EDC2D7 */
+    /* The teaching quotes' sticky notes. Not in the kit: the one surface on
+       the site meant to look like paper. Ink on it keeps well over 12:1. */
+    --note: 53 94% 82%; /* #FCF2A6 */
+    --note-rule: 45 70% 45%; /* #C39B22, the rules, drawn at low alpha */
 
     /* Semantic roles consumed by the ui/ primitives */
     --foreground: var(--ink);
@@ -86,8 +96,19 @@
 
   html,
   body {
-    /* Ensure the app fits the screen width and avoids accidental horizontal scroll */
-    overflow-x: hidden;
+    /* Ensure the app fits the screen width and avoids accidental horizontal
+       scroll. Clip rather than hidden: hidden makes body a scroll container
+       of its own, and every position: sticky inside it then sticks to a box
+       that never scrolls, so nothing stays pinned. */
+    overflow-x: clip;
+  }
+
+  /* The same for a dialog's scroll lock, which sets hidden on body: the
+     sidebar beside the skills would drop out of place behind the dialog.
+     The html in front outranks the lock's own rule; the lock still stops
+     the page, since it also swallows wheel and touch. */
+  html body[data-scroll-locked] {
+    overflow: clip !important;
   }
 
   * {

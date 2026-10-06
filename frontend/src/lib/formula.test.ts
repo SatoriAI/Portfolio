@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseFormula, splitMath } from "./formula";
+import { parseFormula, splitEmphasis, splitMath } from "./formula";
 
 describe("parseFormula", () => {
   it("reads identifiers, numbers and operators into a row", () => {
@@ -10,6 +10,43 @@ describe("parseFormula", () => {
         { type: "id", value: "a" },
         { type: "op", value: "=" },
         { type: "num", value: "17" },
+      ],
+    });
+  });
+
+  it("reads ≤ and ≥ as operators, for two-sided bounds", () => {
+    expect(parseFormula("a ≤ b ≥ c")).toEqual({
+      type: "row",
+      children: [
+        { type: "id", value: "a" },
+        { type: "op", value: "≤" },
+        { type: "id", value: "b" },
+        { type: "op", value: "≥" },
+        { type: "id", value: "c" },
+      ],
+    });
+  });
+
+  it("reads ≡ as an operator, for congruences", () => {
+    expect(parseFormula("a ≡ b")).toEqual({
+      type: "row",
+      children: [
+        { type: "id", value: "a" },
+        { type: "op", value: "≡" },
+        { type: "id", value: "b" },
+      ],
+    });
+  });
+
+  it("reads ∇ like ∂, set tight against what it differentiates", () => {
+    expect(parseFormula("∇b · ∇u")).toEqual({
+      type: "row",
+      children: [
+        { type: "id", value: "∇" },
+        { type: "id", value: "b" },
+        { type: "op", value: "·" },
+        { type: "id", value: "∇" },
+        { type: "id", value: "u" },
       ],
     });
   });
@@ -70,5 +107,33 @@ describe("splitMath", () => {
 
   it("leaves an unmatched dollar as text", () => {
     expect(splitMath("costs $5")).toEqual([{ math: false, value: "costs $5" }]);
+  });
+});
+
+describe("splitEmphasis", () => {
+  it("separates emphasised runs from plain ones", () => {
+    expect(splitEmphasis("Researchers call this *grokking*.")).toEqual([
+      { em: false, value: "Researchers call this " },
+      { em: true, value: "grokking" },
+      { em: false, value: "." },
+    ]);
+  });
+
+  it("handles emphasis at either end and several runs", () => {
+    expect(splitEmphasis("*one* and *two words*")).toEqual([
+      { em: true, value: "one" },
+      { em: false, value: " and " },
+      { em: true, value: "two words" },
+    ]);
+  });
+
+  it("leaves a lone or spaced asterisk as text", () => {
+    expect(splitEmphasis("a * b")).toEqual([{ em: false, value: "a * b" }]);
+    expect(splitEmphasis("5 * 3 * 4")).toEqual([{ em: false, value: "5 * 3 * 4" }]);
+    expect(splitEmphasis("footnote*")).toEqual([{ em: false, value: "footnote*" }]);
+  });
+
+  it("returns no segments for empty text", () => {
+    expect(splitEmphasis("")).toEqual([]);
   });
 });

@@ -24,9 +24,9 @@ type Token =
 
 const NUMBER = /^\d+(?:[.,]\d+)?/;
 // A letter of any script counts as an identifier: Latin, Greek, blackboard,
-// and ∂, which sets tight against what it differentiates like a letter does.
-const LETTER = /^[\p{L}ℤℝℂℕ∂∞]/u;
-const OPERATOR = /^(?:→|←|·|×|±|−|[-+=<>,;:()[\]|/!'.]|⟨|⟩|∑|∫)/u;
+// and ∂ and ∇, which set tight against what they differentiate as a letter does.
+const LETTER = /^[\p{L}ℤℝℂℕ∂∇∞]/u;
+const OPERATOR = /^(?:→|←|·|×|±|−|≤|≥|≡|[-+=<>,;:()[\]|/!'.]|⟨|⟩|∑|∫)/u;
 
 const tokenize = (source: string): Token[] => {
   const tokens: Token[] = [];
@@ -149,3 +149,15 @@ export const splitMath = (text: string): { math: boolean; value: string }[] => {
   if (last < text.length) segments.push({ math: false, value: text.slice(last) });
   return segments;
 };
+
+/**
+ * Splits a run of prose on `*…*` into plain and emphasised segments. The
+ * asterisks must hug the words, so a lone `*` or `5 * 3 * 4` stays text.
+ * Meant for the plain runs `splitMath` returns: emphasis and formulas do not
+ * nest.
+ */
+export const splitEmphasis = (text: string): { em: boolean; value: string }[] =>
+  text
+    .split(/\*(\S(?:[^*]*\S)?)\*/)
+    .map((value, index) => ({ em: index % 2 === 1, value }))
+    .filter((segment) => segment.value !== "");
