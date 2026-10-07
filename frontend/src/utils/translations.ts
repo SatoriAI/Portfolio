@@ -69,7 +69,6 @@ const copy = {
       mainPage: "Main page",
       pages: "Pages",
       homeSections: "Home sections",
-      otherPages: "Other pages",
     },
     navDescriptions: {
       home: "Jump to the top of the Home page.",
@@ -277,9 +276,6 @@ const copy = {
         githubLine: "Browse the code behind my projects.",
       },
     },
-    hints: {
-      swipeMore: "Swipe to see more",
-    },
     experience: {
       title: "I like code that holds up in production",
       subtitle: "Less magic, more engineering. Though sometimes it's hard to tell.",
@@ -312,14 +308,6 @@ const copy = {
       title: "I like it when a proof comes together",
       educationTitle: "I like it when a hard idea turns simple",
       educationLeadLine: "Intuition first, then proof. Usually in that order.",
-      map: {
-        label: "A map of my research",
-        kernels: "Heat kernels",
-        reasoning: "Reasoning in AI models",
-        quantum: "Quantum algorithm",
-        harmonic: "Harmonic analysis",
-        functional: "Functional analysis and operator theory",
-      },
       subtitle:
         "Heat kernels, since a bachelor's thesis in 2019: sharp estimates on segments, cones and double cones. Two papers. Lately, the algebra inside transformers; next, quantum computing. Teaching analysis and algebra alongside.",
       interests: {
@@ -627,16 +615,9 @@ const copy = {
         "2019-10-03": "The heat equation on the cone",
         "2022-10-03": "Sharp estimates of Jacobi heat kernels",
       } as Record<string, string>,
-      publicationsLead:
-        "Two papers on sharp estimates for Jacobi heat kernels: on the cone, then on the double cone. Open one.",
-      noticeLabel: "What to notice",
-      figureNotice:
-        "The peak drops fast at first and slowly later, and the whole curve settles onto the dashed mean.",
-      researchFocus: "Research focus",
       advisor: "Advisor",
       researchAreas: "Research areas",
       publications: "Publications",
-      studentTestimonials: "Student testimonials",
       error: "Failed to load academic data",
       tryAgain: "Try again",
       noData: "No academic data available.",
@@ -716,7 +697,6 @@ const copy = {
       mainPage: "Strona główna",
       pages: "Strony",
       homeSections: "Sekcje strony głównej",
-      otherPages: "Pozostałe strony",
     },
     navDescriptions: {
       home: "Przejdź na początek strony głównej.",
@@ -919,9 +899,6 @@ const copy = {
         githubLine: "Zajrzyj do kodu moich projektów.",
       },
     },
-    hints: {
-      swipeMore: "Przeciągnij w bok, aby zobaczyć więcej",
-    },
     experience: {
       title: "Lubię, kiedy kod działa na produkcji",
       subtitle: "Mniej magii, więcej inżynierii. Choć czasem trudno odróżnić.",
@@ -953,14 +930,6 @@ const copy = {
       title: "Lubię, kiedy dowód się domyka",
       educationTitle: "Lubię, kiedy trudne staje się proste",
       educationLeadLine: "Najpierw intuicja, potem dowód. Zwykle w tej kolejności.",
-      map: {
-        label: "Mapa moich badań",
-        kernels: "Jądra ciepła",
-        reasoning: "Rozumowanie modeli AI",
-        quantum: "Algorytm kwantowy",
-        harmonic: "Analiza harmoniczna",
-        functional: "Analiza funkcjonalna i teoria operatorów",
-      },
       subtitle:
         "Jądra ciepła od pracy licencjackiej w 2019 roku: ostre oszacowania na odcinku, stożku i podwójnym stożku. Dwa artykuły. Ostatnio algebra wewnątrz transformerów, dalej obliczenia kwantowe. Obok tego zajęcia z analizy i algebry.",
       interests: {
@@ -1243,16 +1212,9 @@ const copy = {
         "2019-10-03": "Równanie ciepła na stożku",
         "2022-10-03": "Ostre oszacowania jąder ciepła Jacobiego",
       } as Record<string, string>,
-      publicationsLead:
-        "Dwa artykuły o ostrych oszacowaniach jąder ciepła Jacobiego: na stożku, potem na podwójnym stożku. Otwórz jeden.",
-      noticeLabel: "Na co patrzeć",
-      figureNotice:
-        "Szczyt opada najpierw szybko, potem powoli, a cała krzywa osiada na przerywanej średniej.",
-      researchFocus: "Obszar badań",
       advisor: "Promotor",
       researchAreas: "Obszary badawcze",
       publications: "Publikacje",
-      studentTestimonials: "Opinie studentów",
       error: "Nie udało się załadować danych akademickich",
       tryAgain: "Spróbuj ponownie",
       noData: "Brak dostępnych danych akademickich.",
@@ -1279,4 +1241,3 @@ export const translations = {
 };
 
 export type Language = keyof typeof translations;
-export type TranslationKey = keyof typeof translations.en;

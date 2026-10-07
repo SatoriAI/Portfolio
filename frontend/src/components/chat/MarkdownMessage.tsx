@@ -1,3 +1,4 @@
+import type { ComponentPropsWithoutRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -17,7 +18,9 @@ const MarkdownMessage = ({ text }: MarkdownMessageProps) => (
     remarkPlugins={[remarkGfm]}
     className="text-sm leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
     components={{
-      a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+      a: ({ node: _node, ...props }: ComponentPropsWithoutRef<"a"> & { node?: unknown }) => (
+        <a {...props} target="_blank" rel="noopener noreferrer" />
+      ),
     }}
   >
     {normalizeMarkdown(text)}

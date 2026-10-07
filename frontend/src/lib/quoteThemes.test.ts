@@ -44,7 +44,7 @@ describe("segmentQuote", () => {
 
 describe("themeCounts", () => {
   it("counts a quote once per theme it says, and only by phrases found", () => {
-    const quotes = [
+    const quotes: { text: string; phrases: Record<string, string[]> }[] = [
       { text, phrases: { clarity: ["explains issues clearly"], handwriting: ["legible"] } },
       {
         text: "Very kind and clear.",

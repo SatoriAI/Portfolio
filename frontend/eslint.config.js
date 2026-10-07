@@ -25,7 +25,17 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
-      "@typescript-eslint/no-unused-vars": "off",
+      // Unused code is an error: it builds up quietly otherwise. A leading
+      // underscore marks a binding kept on purpose (a destructured prop left out).
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrors: "none",
+          ignoreRestSiblings: true,
+        },
+      ],
       "@typescript-eslint/no-empty-object-type": "off",
       "@typescript-eslint/no-explicit-any": "warn",
       "simple-import-sort/imports": [

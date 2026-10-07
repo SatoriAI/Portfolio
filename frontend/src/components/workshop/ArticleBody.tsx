@@ -244,7 +244,7 @@ const ArticleBody = ({ markdown, labels, figureLabels, language = "en" }: Articl
     // set in tabular digits so they line up.
     th: ({ children, style }) => (
       <th
-        style={style}
+        style={style as CSSProperties | undefined}
         className="border-b border-border py-2 pr-4 align-bottom font-mono text-meta font-normal text-muted-foreground"
       >
         {children}
@@ -270,7 +270,7 @@ const ArticleBody = ({ markdown, labels, figureLabels, language = "en" }: Articl
     },
     td: ({ children, style }) => (
       <td
-        style={style}
+        style={style as CSSProperties | undefined}
         className={cn(
           "border-b border-border/60 py-2 pr-4 align-top",
           (style as CSSProperties | undefined)?.textAlign === "right" &&
@@ -290,7 +290,7 @@ const ArticleBody = ({ markdown, labels, figureLabels, language = "en" }: Articl
         remarkPlugins={[remarkGfm]}
         remarkRehypeOptions={{
           footnoteLabel: labels.footnotes,
-          footnoteBackLabel: (index) => labels.backToText.replace("{n}", String(index + 1)),
+          footnoteBackLabel: (index: number) => labels.backToText.replace("{n}", String(index + 1)),
         }}
         components={components}
       >

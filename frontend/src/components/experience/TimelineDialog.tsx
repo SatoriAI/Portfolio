@@ -118,7 +118,7 @@ const TimelineDialog = <Id extends TimelineId>({
   labels,
   children,
 }: TimelineDialogProps<Id>) => {
-  const content = useRef<HTMLDivElement>(null);
+  const content = useRef<HTMLDivElement | null>(null);
   const overlay = useRef<HTMLDivElement>(null);
   const body = useRef<HTMLDivElement>(null);
   const closing = useRef(false);

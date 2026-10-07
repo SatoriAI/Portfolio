@@ -10,7 +10,6 @@ import PageClosing from "@/components/layout/PageClosing";
 import PageLayout from "@/components/layout/PageLayout";
 import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
-import Reveal from "@/components/Reveal";
 import { useSettings } from "@/contexts/SettingsContext";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { UiSchool, useSchools } from "@/lib/schoolsService";

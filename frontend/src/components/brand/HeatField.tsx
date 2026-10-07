@@ -1,16 +1,11 @@
 import {
-  createContext,
   type CSSProperties,
   type HTMLAttributes,
   type PointerEvent,
-  useContext,
   useEffect,
-  useMemo,
   useRef,
-  useState,
 } from "react";
 
-import { Formula } from "@/components/Formula";
 import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +20,7 @@ import { cn } from "@/lib/utils";
  * nearly zero to one once after mount, so the page opens on two points of
  * colour spreading into the kit's soft fields; a mouse moving over it adds
  * further sources, each a kernel born where the pointer was, which spread and
- * fade the same way. The caption prints the equation and the actual t.
+ * fade the same way.
  *
  * This is the site's one piece of decoration that is also a true statement:
  * the doctoral work is on sharp estimates of heat kernels, and the hero shows
@@ -42,7 +37,7 @@ import { cn } from "@/lib/utils";
  * With prefers-reduced-motion the field renders at rest and ignores the mouse.
  */
 
-export type HeatPlacement = "top" | "corners" | "bar";
+export type HeatPlacement = "corners" | "bar";
 
 type Source = {
   /** Position in fractions of the field's width and height. */
@@ -53,9 +48,7 @@ type Source = {
   channel: 0 | 1;
 };
 
-// Placement matters because the field clips at its own edges. `top` keeps both
-// sources against the top, where the fixed header already draws a hard line,
-// and leaves the lower edge clear to dissolve into what follows. `corners`
+// Placement matters because the field clips at its own edges. `corners`
 // suits a section that ends the page. `bar` is the menu bar: a strip a few
 // percent as tall as it is wide, warmed gently from both ends, at peaks low
 // enough that every link and the active iris one keep their contrast.
@@ -63,10 +56,6 @@ const SOURCES: Record<HeatPlacement, readonly Source[]> = {
   bar: [
     { x: 0.03, y: 0.5, peak: 0.4, channel: 0 },
     { x: 0.97, y: 0.5, peak: 0.36, channel: 1 },
-  ],
-  top: [
-    { x: 0.06, y: 0.0, peak: 0.62, channel: 0 },
-    { x: 0.94, y: 0.02, peak: 0.58, channel: 1 },
   ],
   corners: [
     { x: 0.08, y: 1.0, peak: 0.75, channel: 0 },
@@ -245,47 +234,26 @@ const grainStyle: CSSProperties = {
   mixBlendMode: "multiply",
 };
 
-type HeatFieldContextValue = {
-  /** Kernel time of the main sources, in units of the resting time. */
-  tau: number;
-  /** Whether the field moves at all; false at rest or under reduced motion. */
-  animated: boolean;
-  replay: () => void;
-};
-
-const HeatFieldContext = createContext<HeatFieldContextValue | null>(null);
-
 type HeatFieldProps = HTMLAttributes<HTMLDivElement> & {
   placement?: HeatPlacement;
   /** Spread from the sources once on mount and take heat from the mouse. */
   live?: boolean;
-  /**
-   * Kernel time under outside control, in units of the resting time (0, 1].
-   * Given, the field plays no intro and simply shows this time — the
-   * Research page's kernel figure drives its header's field this way, so the
-   * plot and the background are one equation at one t.
-   */
-  time?: number;
 };
-
-const clampTau = (tau: number) => Math.max(INTRO_START, Math.min(1, tau));
 
 const HeatField = ({
   placement = "corners",
   live = false,
-  time,
   className,
   children,
   ...props
 }: HeatFieldProps) => {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const controlled = time !== undefined;
   const animated = live && !prefersReducedMotion;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const geometryRef = useRef<FieldGeometry>(geometryFor(16, 9));
   const stateRef = useRef<FieldState>({
-    tau: controlled ? clampTau(time) : animated ? INTRO_START : 1,
+    tau: animated ? INTRO_START : 1,
     pointer: [],
     clock: 0,
   });
@@ -293,8 +261,6 @@ const HeatField = ({
   const introStartRef = useRef<number | null>(null);
   const lastFrameRef = useRef<number | null>(null);
   const lastPointerRef = useRef<{ x: number; y: number } | null>(null);
-  // Mirrors stateRef.tau for the caption; the field itself never re-renders.
-  const [displayedTau, setDisplayedTau] = useState(stateRef.current.tau);
   const sources = SOURCES[placement];
 
   const draw = () => {
@@ -328,7 +294,6 @@ const HeatField = ({
     if (introStartRef.current !== null) {
       const progress = Math.min(1, (now - introStartRef.current) / INTRO_MS);
       state.tau = INTRO_START + (1 - INTRO_START) * easeOut(progress);
-      setDisplayedTau(state.tau);
       if (progress >= 1) introStartRef.current = null;
     }
     state.pointer = state.pointer.filter((p) => state.clock - p.bornAt < POINTER_LIFETIME);
@@ -343,24 +308,6 @@ const HeatField = ({
 
   const schedule = () => {
     if (frameRef.current === null) frameRef.current = requestAnimationFrame(step);
-  };
-
-  // An outside time is drawn as it arrives; the pointer loop, if running,
-  // picks it up on its next frame anyway.
-  useEffect(() => {
-    if (!controlled) return;
-    stateRef.current.tau = clampTau(time);
-    setDisplayedTau(stateRef.current.tau);
-    if (frameRef.current === null) draw();
-    // draw reads refs only.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [controlled, time]);
-
-  const replay = () => {
-    if (!animated || controlled) return;
-    introStartRef.current = performance.now();
-    stateRef.current.tau = INTRO_START;
-    schedule();
   };
 
   // Size the grid to the element's aspect and paint; repaint on resize.
@@ -379,15 +326,12 @@ const HeatField = ({
   }, [placement]);
 
   useEffect(() => {
-    if (controlled) {
-      draw();
-    } else if (animated) {
+    if (animated) {
       introStartRef.current = performance.now();
       stateRef.current.tau = INTRO_START;
       schedule();
     } else {
       stateRef.current = { tau: 1, pointer: [], clock: 0 };
-      setDisplayedTau(1);
       draw();
     }
     return () => {
@@ -395,7 +339,7 @@ const HeatField = ({
       frameRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [animated, controlled, placement]);
+  }, [animated, placement]);
 
   // A mouse over the field is a moving heat source. Touch is excluded: on a
   // phone the same gesture is a scroll.
@@ -415,83 +359,24 @@ const HeatField = ({
     schedule();
   };
 
-  const context = useMemo(
-    () => ({ tau: displayedTau, animated: animated && !controlled, replay }),
-    // replay reads refs only.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [displayedTau, animated, controlled],
-  );
-
   return (
-    <HeatFieldContext.Provider value={context}>
-      <div
-        className={cn("relative isolate overflow-hidden bg-background", className)}
-        onPointerMove={onPointerMove}
-        {...props}
-      >
-        <canvas
-          ref={canvasRef}
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 h-full w-full"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10"
-          style={grainStyle}
-        />
-        {children}
-      </div>
-    </HeatFieldContext.Provider>
-  );
-};
-
-type HeatCaptionProps = {
-  /** Name of the object, e.g. "heat kernel"; the equation and time follow it. */
-  label: string;
-  /** Accessible name of the caption button, which replays the spread. */
-  replayLabel: string;
-  /** BCP 47 tag for the time's decimal separator. */
-  locale: string;
-  className?: string;
-};
-
-/**
- * The equation and the kernel time of the enclosing field, set as a figure
- * caption. It is placed in the page flow rather than pinned to the field's
- * corner so it sits on the content axis with the text above it. Pressing it
- * runs the spread again; at rest or under reduced motion it is plain text.
- */
-export const HeatCaption = ({ label, replayLabel, locale, className }: HeatCaptionProps) => {
-  const field = useContext(HeatFieldContext);
-  if (!field) throw new Error("HeatCaption must be used inside a HeatField");
-
-  const time = new Intl.NumberFormat(locale, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(field.tau);
-  // Set as a formula, not as characters that look like one.
-  const text = (
-    <>
-      {label} · <Formula tex="∂_t u = Δu" /> · <Formula tex={`t = ${time}`} />
-    </>
-  );
-  const textClassName = "font-mono text-meta text-muted-foreground";
-
-  if (!field.animated) return <p className={cn(textClassName, className)}>{text}</p>;
-
-  return (
-    <button
-      type="button"
-      onClick={field.replay}
-      aria-label={replayLabel}
-      className={cn(
-        textClassName,
-        "rounded-md text-left transition-colors duration-200 hover:text-foreground",
-        className,
-      )}
+    <div
+      className={cn("relative isolate overflow-hidden bg-background", className)}
+      onPointerMove={onPointerMove}
+      {...props}
     >
-      <span aria-hidden="true">{text}</span>
-    </button>
+      <canvas
+        ref={canvasRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={grainStyle}
+      />
+      {children}
+    </div>
   );
 };
 
