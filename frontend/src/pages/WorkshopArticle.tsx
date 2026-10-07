@@ -69,17 +69,17 @@ const WorkshopArticle = () => {
     { watch: sections },
   );
 
+  // Stable, so the memoised body is not rebuilt as the section being read changes.
+  const bodyLabels = useMemo(
+    () => ({ copy: w.copy, copied: w.copied, footnotes: w.footnotes, backToText: w.backToText }),
+    [w],
+  );
+
   if (!article) return <NotFound />;
   const relatedName = article.related ? w.pages[article.related] : undefined;
   // The figure opens the piece only when the piece asks for it; otherwise
   // the text sets it where it belongs (`/figure/<name>` images).
   const exhibit = article.showcase && article.figure ? EXHIBITS[article.figure] : undefined;
-  const bodyLabels = {
-    copy: w.copy,
-    copied: w.copied,
-    footnotes: w.footnotes,
-    backToText: w.backToText,
-  };
   let numbered = 0;
 
   return (

@@ -253,6 +253,7 @@ const Experience = () => {
                 <Reveal>
                   <CareerTimeline<number>
                     entries={entries}
+                    timeline={career}
                     labels={timelineLabels}
                     selectedId={selectedId}
                     onSelect={select}

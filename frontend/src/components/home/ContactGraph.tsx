@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { ArrowRight, ArrowUpRight, Check, Copy, Mail, MessageSquare } from "lucide-react";
 
+import CopiedAnnouncement from "@/components/feedback/CopiedAnnouncement";
 import { useCircuit } from "@/components/home/circuitContext";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useElementSize } from "@/hooks/use-element-size";
@@ -292,9 +293,7 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
             <Copy aria-hidden="true" className="size-4" />
           )}
         </button>
-        <span aria-live="polite" className="sr-only">
-          {copied ? labels.copied : ""}
-        </span>
+        <CopiedAnnouncement copied={copied} message={labels.copied} />
       </span>
       <span className={LINE}>{labels.reply}</span>
     </div>,

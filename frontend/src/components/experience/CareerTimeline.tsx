@@ -5,7 +5,7 @@ import { TimelineAxis, TimelineGridlines } from "@/components/experience/Timelin
 import { edgeOffset } from "@/lib/edgeEntrance";
 import { prefersReducedMotion } from "@/lib/media";
 import { EASE_BRAND } from "@/lib/motion";
-import { buildTimeline, type TimelineId, type TimelineInput } from "@/lib/timeline";
+import { type Timeline, type TimelineId, type TimelineInput } from "@/lib/timeline";
 import { cn } from "@/lib/utils";
 
 /**
@@ -75,8 +75,11 @@ type CareerTimelineProps<Id extends TimelineId> = {
    */
   enterFromEdges?: boolean;
   onSelect: (id: Id) => void;
-  /** Injected so the layout is deterministic in tests and screenshots. */
-  now?: Date;
+  /**
+   * The entries laid out on their axis (lib/timeline's buildTimeline), built
+   * once by the page and shared with whatever else reads the same scale.
+   */
+  timeline: Timeline<Id>;
   className?: string;
 };
 
@@ -100,11 +103,10 @@ const CareerTimeline = <Id extends TimelineId>({
   circlesAway = false,
   enterFromEdges = false,
   onSelect,
-  now = new Date(),
+  timeline,
   className,
 }: CareerTimelineProps<Id>) => {
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
-  const timeline = buildTimeline(entries, now);
   const count = timeline.spans.length;
 
   // Before the first paint, so no circle shows in place and then jumps out.

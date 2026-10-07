@@ -93,7 +93,9 @@ const BuildLine = ({ technologies, active, label, nextLabel }: BuildLineProps) =
   // Keyboard focus on the row's controls holds it too, as a resting pointer
   // does, so stepping with "next" is not raced by the timer.
   const [focused, setFocused] = useState(false);
-  const slot = useRef<HTMLDivElement>(null);
+  // In state, not a ref: the slot is drawn only with motion allowed, and can
+  // appear mid-visit, when the in-view hook must see it.
+  const [slot, setSlot] = useState<HTMLDivElement | null>(null);
   const bolt = useRef<SVGSVGElement>(null);
 
   // On screen, and the page in front: the only time it is worth running.
@@ -108,7 +110,7 @@ const BuildLine = ({ technologies, active, label, nextLabel }: BuildLineProps) =
   const pending = useRef(0);
   const joltAt = useRef(-Infinity);
   const jolt = useCallback(() => {
-    const element = slot.current;
+    const element = slot;
     if (!element || parts.length < 2) return;
     element.animate(
       [
@@ -142,7 +144,7 @@ const BuildLine = ({ technologies, active, label, nextLabel }: BuildLineProps) =
       () => setIndex((at) => (at + 1) % parts.length),
       JOLT_MS / 2,
     );
-  }, [parts.length]);
+  }, [parts.length, slot]);
   useEffect(() => () => window.clearTimeout(pending.current), []);
 
   useEffect(() => {
@@ -158,7 +160,7 @@ const BuildLine = ({ technologies, active, label, nextLabel }: BuildLineProps) =
     if (!running) return;
     let timer = 0;
     const crackle = () => {
-      const element = slot.current;
+      const element = slot;
       if (element && !document.hidden && performance.now() - joltAt.current > JOLT_MS) {
         const dx = Math.random() < 0.5 ? -1 : 1;
         element.animate(
@@ -185,7 +187,7 @@ const BuildLine = ({ technologies, active, label, nextLabel }: BuildLineProps) =
     };
     timer = window.setTimeout(crackle, CRACKLE_MIN_MS);
     return () => window.clearTimeout(timer);
-  }, [running]);
+  }, [running, slot]);
 
   const at = index % Math.max(parts.length, 1);
   const part = parts[at];
@@ -233,7 +235,7 @@ const BuildLine = ({ technologies, active, label, nextLabel }: BuildLineProps) =
             onClick={jolt}
             className="flex min-w-0 cursor-pointer select-none max-sm:basis-full sm:flex-1"
           >
-            <div ref={slot} className="flex min-w-0 items-baseline gap-2">
+            <div ref={setSlot} className="flex min-w-0 items-baseline gap-2">
               <TechMark tag={part} markRef={bolt} className="size-5 shrink-0 self-center" />
               <span className="truncate font-mono text-base text-foreground">{part}</span>
             </div>

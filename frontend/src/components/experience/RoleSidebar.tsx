@@ -58,7 +58,7 @@ const RoleSidebar = ({
       >
         {labels.list}
       </p>
-      <ol className="flex gap-4 md:flex-col md:items-center md:gap-5">
+      <ol className="group/circles flex gap-4 md:flex-col md:items-center md:gap-5">
         {roles.map((role) => {
           const selected = role.id === selectedId;
           const highlighted = highlightedIds?.has(role.id) ?? false;
@@ -77,7 +77,12 @@ const RoleSidebar = ({
                   "block size-11 md:size-12",
                   circleControl,
                   circleState(selected, highlighted),
-                  circlesHidden && "invisible",
+                  // Faded rather than hidden while the circles are in flight,
+                  // so the keyboard can still reach them; focus brings them back.
+                  // At once, not faded in, so a landing copy hands over cleanly.
+                  "motion-safe:transition-transform",
+                  circlesHidden &&
+                    "pointer-events-none opacity-0 group-focus-within/circles:pointer-events-auto group-focus-within/circles:opacity-100",
                 )}
               >
                 <CompanyMark

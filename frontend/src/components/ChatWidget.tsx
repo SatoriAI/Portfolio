@@ -151,7 +151,11 @@ const ChatWidget = ({
     }
   };
 
+  // Each load is numbered, so a slow one from an earlier open never lands
+  // over the latest.
+  const hydration = useRef(0);
   const hydrateMessagesIfNeeded = async () => {
+    const run = ++hydration.current;
     const storedKey = localStorage.getItem("vex_chat_session_key");
     sessionKeyRef.current = storedKey;
     if (!storedKey || env.mock) {
@@ -180,12 +184,12 @@ const ChatWidget = ({
             timestamp: new Date(ts),
           };
         });
-        setMessages(mapped);
+        if (run === hydration.current) setMessages(mapped);
       }
     } catch (err) {
       console.error("Failed to hydrate chat history", err);
     } finally {
-      setHydrated(true);
+      if (run === hydration.current) setHydrated(true);
     }
   };
 
@@ -196,6 +200,10 @@ const ChatWidget = ({
     // Ensure the first scroll after opening is instant (no animation)
     initialScrollDoneRef.current = false;
 
+    // Every open reloads the history (an answer cut off by closing comes back
+    // whole), and a question handed over waits for it: sent first, it would
+    // be overwritten by the history arriving after it.
+    setHydrated(false);
     hydrateMessagesIfNeeded();
     return () => {
       // Close stream when widget closes

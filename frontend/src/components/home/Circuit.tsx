@@ -9,7 +9,7 @@ import {
 } from "react";
 
 import { CircuitContext } from "@/components/home/circuitContext";
-import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { useMediaQuery, usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { MEDIA } from "@/lib/media";
 import { clamp01 } from "@/lib/motion";
 
@@ -86,12 +86,12 @@ const Circuit = ({ children }: PropsWithChildren) => {
 
   // Measure the points the wire joins, relative to the wrapper, and again
   // whenever the page's height or width changes (a section loading, a resize).
+  const wide = useMediaQuery(MEDIA.xl);
   useLayoutEffect(() => {
     const element = root.current;
     if (!element) return;
-    const wide = window.matchMedia(MEDIA.xl);
+    if (!wide) return setLayout(null);
     const measure = () => {
-      if (!wide.matches) return setLayout(null);
       const box = element.getBoundingClientRect();
       const local = (rect: DOMRect) => ({
         x: rect.left - box.left,
@@ -132,12 +132,8 @@ const Circuit = ({ children }: PropsWithChildren) => {
     observer.observe(element);
     // A width change resizes the wrapper, so the observer sees it; a change
     // of height alone moves nothing the wire joins.
-    wide.addEventListener("change", measure);
-    return () => {
-      observer.disconnect();
-      wide.removeEventListener("change", measure);
-    };
-  }, []);
+    return () => observer.disconnect();
+  }, [wide]);
 
   const current = useRef<SVGPathElement>(null);
   const echo = useRef<SVGPathElement>(null);
