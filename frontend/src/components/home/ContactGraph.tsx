@@ -18,15 +18,17 @@ import { cn } from "@/lib/utils";
  * the GitHub node opens the profile. Pointing at or focusing a node lights
  * its edge in iris and sends a pulse along it from the hub to the node. The
  * first time the graph is in view the hub appears; then each edge is drawn
- * out in turn and its node appears as the edge lands. Where the page's
- * circuit runs (from xl up), the graph runs on it: it lights up each time the
- * current reaches the hub and closes the circuit, and switches off again,
- * nodes first and then the edges drawn back into the hub, when the reader
- * scrolls up and the current draws back. Keyboard focus on a node keeps it
- * lit. Elsewhere it follows the hub straight away, once. While lit the
- * edges wave gently, each on its own rhythm, and each carries its own current,
- * a spark running out along it on an irregular beat, the edge shivering as it
- * passes, for as long as the graph is on screen and the page is visible: a
+ * out in turn and its node lights as the edge lands. Where the page's circuit
+ * runs (from xl up), the graph runs on its power: the nodes are there from
+ * the first sight, dimmed and grey but readable and pressable, and light up
+ * each time the current reaches the hub and closes the circuit; when the
+ * reader scrolls back up and it opens, the power goes again, the nodes
+ * dimming (the last first) and then the edges drawing back into the hub.
+ * Keyboard focus on a node powers the graph at once. Elsewhere it lights
+ * with the hub, once. While powered the edges wave gently, each on its own
+ * rhythm, and each carries its own current, a spark running out along it on
+ * an irregular beat, the edge shivering as it passes, for as long as the
+ * graph is on screen and the page is visible: a
  * named exception in the kit. Under reduced motion it is all simply there,
  * still.
  *
@@ -84,14 +86,26 @@ const JOLT_MS = 300;
 const JOLT_PX = 3;
 /** A spark's length, in pixels. */
 const SPARK_PX = 28;
-/** When an edge starts drawing, and when its node appears. */
-const edgeAt = (index: number) => HUB_MS / 2 + index * STAGGER_MS;
-const nodeAt = (index: number) => edgeAt(index) + EDGE_MS * 0.65;
-/** Switching off: the nodes go, the last first, then each edge draws back into the hub. */
+/**
+ * When an edge starts drawing, and when its node lights. On the first
+ * arrival the edges wait half the hub's own entrance; powered again later,
+ * the hub is long there, so they start at once.
+ */
+const edgeAt = (index: number, afterHub: boolean) =>
+  (afterHub ? HUB_MS / 2 : 0) + index * STAGGER_MS;
+const nodeAt = (index: number, afterHub: boolean) => edgeAt(index, afterHub) + EDGE_MS * 0.65;
+/** How long a node takes to light. */
+const NODE_ON_MS = 500;
+/**
+ * Losing power: the nodes dim, the last first, each over NODE_OFF_MS, and
+ * once they all have, each edge draws back into the hub over EDGE_OFF_MS.
+ */
+const NODE_OFF_MS = 200;
 const OFF_STAGGER_MS = 60;
 const EDGE_OFF_MS = 400;
 const nodeOffAt = (index: number) => (STAR.length - 1 - index) * OFF_STAGGER_MS;
-const edgeOffAt = (index: number) => nodeOffAt(0) + 200 + nodeOffAt(index);
+const nodesOffBy = nodeOffAt(0) + NODE_OFF_MS;
+const edgeOffAt = (index: number) => nodesOffBy + nodeOffAt(index);
 
 /** The waving: how far an edge's middle swings, and each edge's period. */
 const WAVE_PX = 7;
@@ -145,15 +159,22 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
   useOnceInView(box, () => setSeen(true), { threshold: 0.4 });
 
   // Where the page's circuit is drawn (from xl up, in motion; see Circuit),
-  // the edges and nodes run on it: lit while the circuit is closed, off when
-  // it opens, so the contact switches on and off with the current. A node
-  // with keyboard focus keeps the graph lit, so focus never lands on a card
-  // that cannot be seen. Elsewhere they arrive with the hub, and stay.
+  // the graph runs on its power: powered while the circuit is closed, and
+  // otherwise its nodes are dimmed but there, never hidden from a reader
+  // looking for them. Keyboard focus on a node powers it at once, without
+  // the arrival, so focus never lands on a dimmed card. Elsewhere the graph
+  // is powered with the hub, and stays.
   const circuit = useCircuit();
-  const [focusWithin, setFocusWithin] = useState(false);
-  const drawn = circuit.wired ? circuit.closed || focusWithin : seen;
+  const [keyboardFocus, setKeyboardFocus] = useState(false);
+  const powered = circuit.wired ? circuit.closed || keyboardFocus : seen;
   const hubShown = seen || prefersReducedMotion;
-  const shown = drawn || prefersReducedMotion;
+  /** The nodes are there from the first sight, lit or dimmed. */
+  const present = hubShown;
+  const lit = powered || prefersReducedMotion;
+  /** Powered by focus alone: at once, no arrival. */
+  const instant = circuit.wired && keyboardFocus && !circuit.closed;
+  /** The first arrival waits for the hub's entrance; a later powering does not. */
+  const afterHub = !circuit.wired;
 
   // The star's box in pixels, so its edges can be drawn as curves.
   const star = useRef<HTMLDivElement>(null);
@@ -191,7 +212,7 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
   const echoes = useRef<(SVGPathElement | null)[]>([]);
   const sparkAt = useRef<number[]>([-Infinity, -Infinity, -Infinity]);
   const spark = (index: number) => {
-    if (!shown || prefersReducedMotion) return;
+    if (!lit || prefersReducedMotion) return;
     sparkAt.current[index] = performance.now();
     const run = [{ strokeDashoffset: SPARK_PX }, { strokeDashoffset: -lengthOf(index) }];
     // Linear, as current runs: an eased spark would spend its time hidden
@@ -205,14 +226,18 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
   // visible; the paths are moved directly, frame by frame,
   // without re-rendering.
   const onScreen = useInView(box);
-  const waving = drawn && onScreen && !prefersReducedMotion && size.width > 0;
+  const waving = powered && onScreen && !prefersReducedMotion && size.width > 0;
+  // When the wave began, kept across power cuts, so powering up again
+  // carries the edges on from where they stopped rather than jumping.
+  const waveStart = useRef<number | null>(null);
   // Read through refs, so a resize redraws the curves without restarting
   // the wave or the beats.
   const latestCurve = useLatest(curve);
   useEffect(() => {
     if (!waving) return;
     let frame = 0;
-    const start = performance.now();
+    const start = (waveStart.current ??= performance.now());
+    const sparks = [...pulses.current, ...echoes.current];
     const step = (now: number) => {
       if (!document.hidden) {
         STAR.forEach((_, index) => {
@@ -243,6 +268,11 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
     return () => {
       cancelAnimationFrame(frame);
       timers.forEach((timer) => window.clearTimeout(timer));
+      // A spark under way goes with the power, rather than outrun its edge
+      // as the edge draws back.
+      for (const path of sparks) {
+        path?.getAnimations().forEach((animation) => animation.cancel());
+      }
     };
   }, [waving, latestCurve, latestSpark]);
 
@@ -351,26 +381,37 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
   ];
 
   const edge = (index: number) => (hot === index ? "stroke-iris" : "stroke-control-border");
-  // Before the arrival, and as it plays: each node fades and rises in. When
-  // the power goes, the reverse, and quicker: the nodes go first, the last
-  // one first, then the edges draw back into the hub (see edgeDelay).
+  // Each node in one of three states. Before the first sight it is not yet
+  // there; powered, it is lit, lighting as its edge lands (at once when
+  // focus powered it); unpowered, it is dimmed and grey but readable and
+  // pressable, dimming the last first and before the edges draw back.
   const arrive = (index: number) => ({
     className: cn(
-      "transition-[opacity,translate] ease-brand",
-      shown
-        ? "opacity-100 duration-500 [translate:0_0]"
-        : "pointer-events-none opacity-0 duration-200 [translate:0_8px]",
+      "transition-[opacity,translate,filter] ease-brand",
+      !present
+        ? "pointer-events-none opacity-0 [translate:0_8px]"
+        : lit
+          ? "opacity-100 [translate:0_0]"
+          : "opacity-[0.72] grayscale [translate:0_0]",
     ),
-    style: { transitionDelay: `${shown ? nodeAt(index) : nodeOffAt(index)}ms` },
+    style: {
+      transitionDuration: `${lit || !present ? NODE_ON_MS : NODE_OFF_MS}ms`,
+      transitionDelay: `${lit ? (instant ? 0 : nodeAt(index, afterHub)) : nodeOffAt(index)}ms`,
+    },
   });
-  const edgeDelay = (index: number) => (shown ? edgeAt(index) : edgeOffAt(index));
+  const edgeDelay = (index: number) =>
+    lit ? (instant ? 0 : edgeAt(index, afterHub)) : edgeOffAt(index);
 
   return (
     <div
       ref={box}
-      onFocus={() => setFocusWithin(true)}
+      // Keyboard focus only: a click also focuses what it presses, and must
+      // not keep the graph powered after the reader has scrolled away.
+      onFocus={(event) => {
+        if (event.target.matches(":focus-visible")) setKeyboardFocus(true);
+      }}
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setFocusWithin(false);
+        if (!event.currentTarget.contains(event.relatedTarget)) setKeyboardFocus(false);
       }}
     >
       {/* The star, from lg up. */}
@@ -386,11 +427,11 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
                 d={curve(index, swings.current[index])}
                 fill="none"
                 strokeDasharray={lengthOf(index)}
-                strokeDashoffset={shown ? 0 : lengthOf(index)}
+                strokeDashoffset={lit ? 0 : lengthOf(index)}
                 strokeWidth={hot === index ? 2 : 1.5}
                 className={edge(index)}
                 style={{
-                  transition: `stroke-dashoffset ${shown ? EDGE_MS : EDGE_OFF_MS}ms ${EASE_BRAND} ${edgeDelay(index)}ms, stroke 200ms, stroke-width 200ms`,
+                  transition: `stroke-dashoffset ${lit ? EDGE_MS : EDGE_OFF_MS}ms ${EASE_BRAND} ${edgeDelay(index)}ms, stroke 200ms, stroke-width 200ms`,
                 }}
               />
             ))}
@@ -435,7 +476,8 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
           data-circuit-end
           className={cn(
             "absolute grid size-36 -translate-x-1/2 -translate-y-1/2 place-items-center overflow-hidden rounded-full bg-lavender shadow-[0_0_0_10px_hsl(var(--iris)/0.12)] transition-[opacity,scale,box-shadow] ease-brand",
-            circuit.closed && "shadow-[0_0_0_10px_hsl(var(--iris)/0.28)]",
+            // Bright while the graph is powered by the circuit or by focus.
+            (circuit.closed || instant) && "shadow-[0_0_0_10px_hsl(var(--iris)/0.28)]",
             hubShown ? "opacity-100 [scale:1]" : "opacity-0 [scale:0.85]",
           )}
           style={{ left: `${HUB.x}%`, top: `${HUB.y}%`, transitionDuration: `${HUB_MS}ms` }}

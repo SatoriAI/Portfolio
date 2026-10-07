@@ -10,6 +10,7 @@ import {
 
 import { CircuitContext } from "@/components/home/circuitContext";
 import { useMediaQuery, usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { holdsAtHub } from "@/lib/circuit";
 import { MEDIA } from "@/lib/media";
 import { clamp01 } from "@/lib/motion";
 
@@ -65,9 +66,10 @@ const FADE_MS = 220;
 /** How near the bottom of the page counts as the bottom. */
 const CLOSE_WITHIN = 12;
 /**
- * Once closed, the circuit stays closed until the reader has scrolled this
- * far back up from the foot of the page: the contact graph runs on it (see
- * ContactGraph), so a small scroll there must not switch it off and on.
+ * Once closed, the circuit stays closed, the current held at the hub, until
+ * the reader has scrolled this far back up from the foot of the page (see
+ * holdsAtHub): the contact graph runs on it (see ContactGraph), so a small
+ * scroll there must not switch it off and on.
  */
 const STAY_CLOSED_PX = 160;
 
@@ -88,6 +90,9 @@ const Circuit = ({ children }: PropsWithChildren) => {
   // Where the current is shown, kept across re-layouts so that a page growing
   // or a resize never empties the wire and starts it again.
   const shownRef = useRef<number | null>(null);
+  // Whether the current has closed the circuit and is held there, kept
+  // across re-layouts likewise, so a resize near the foot keeps it closed.
+  const heldRef = useRef(false);
   const [closed, setClosed] = useState(false);
 
   // Measure the points the wire joins, relative to the wrapper, and again
@@ -215,10 +220,10 @@ const Circuit = ({ children }: PropsWithChildren) => {
       halo.current?.setAttribute("r", String(6 + live * (2 + 3 * breath)));
       if (sheen.current) sheen.current.style.opacity = String(live);
       if (aura.current) aura.current.style.opacity = String(live * (0.4 + 0.6 * breath));
-      // Closed when the current reaches the hub; open again only once the
-      // reader has scrolled clearly back up (see STAY_CLOSED_PX).
-      const foot = document.documentElement.scrollHeight - window.innerHeight;
-      const closed = atHub || (wasClosed && window.scrollY >= foot - STAY_CLOSED_PX);
+      // Closed while the current is at the hub, where the hold keeps it
+      // (see targetFor), so the wire and the graph always agree.
+      const closed = atHub;
+      if (closed) heldRef.current = true;
       if (closed !== wasClosed) {
         wasClosed = closed;
         setClosed(closed);
@@ -236,11 +241,14 @@ const Circuit = ({ children }: PropsWithChildren) => {
     // over the last stretch of scroll instead, closing the circuit at the
     // bottom of the page.
     const targetFor = () => {
+      const to = document.documentElement.scrollHeight - window.innerHeight;
+      // A closed circuit holds the current at the hub near the foot.
+      heldRef.current = holdsAtHub(heldRef.current, window.scrollY, to, STAY_CLOSED_PX);
+      if (heldRef.current) return total;
       const top = element.getBoundingClientRect().top + window.scrollY;
       const reading = window.scrollY + window.innerHeight * READ_AT - top;
       if (reading < lastY) return Math.min(lengthAt(reading), lastNode);
       const from = lastY + top - window.innerHeight * READ_AT;
-      const to = document.documentElement.scrollHeight - window.innerHeight;
       // Within a few pixels of the bottom counts as the bottom: scroll
       // anchoring and rounding can stop the page just short of it.
       const share =
