@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { CheckState } from "@/components/home/LiveCheck";
-import { checkHost } from "@/lib/liveCheck";
+import { checkHost, type CheckState } from "@/lib/liveCheck";
 
 /**
  * The live checks of the projects' addresses, kept by address so the panel

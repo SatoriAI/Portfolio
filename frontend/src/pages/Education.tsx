@@ -2,11 +2,9 @@ import type { DomainKind } from "@/components/academic/DomainGlyph";
 import QuoteWall from "@/components/academic/QuoteWall";
 import ResearchThread from "@/components/academic/ResearchThread";
 import HeaderShapes from "@/components/brand/HeaderShapes";
-import HeatField from "@/components/brand/HeatField";
 import { queryStatus } from "@/components/feedback/queryStatus";
 import StatusMessage from "@/components/feedback/StatusMessage";
 import PageClosing from "@/components/layout/PageClosing";
-import PageLayout from "@/components/layout/PageLayout";
 import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -63,7 +61,7 @@ const Education = () => {
   };
 
   return (
-    <PageLayout>
+    <>
       <Section className="relative isolate overflow-hidden md:py-10">
         <HeaderShapes variant="education" />
         <SectionHeading
@@ -131,19 +129,8 @@ const Education = () => {
       </Section>
 
       {/* How the page ends, as every subpage does, on the colour field. */}
-      {/* Pushed to the foot of a short page, so it closes the page right
-          above the footer rather than leaving a gap under it. */}
-      <HeatField className="mt-auto">
-        <Section className="py-12 md:py-20">
-          <PageClosing
-            title={story.closing.title}
-            body={story.closing.body}
-            labels={{ email: story.closing.email, askVex: t.hero.askAI }}
-            next={{ ...story.closing.next, to: "/workshop" }}
-          />
-        </Section>
-      </HeatField>
-    </PageLayout>
+      <PageClosing copy={story.closing} next={{ ...story.closing.next, to: "/workshop" }} />
+    </>
   );
 };
 

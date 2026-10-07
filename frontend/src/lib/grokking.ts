@@ -59,6 +59,12 @@ export const GROKKING_RUNS: readonly GrokkingRun[] = [
 /** The evaluated steps, shared by every run. */
 export const GROKKING_STEPS: readonly number[] = GROKKING_RUNS[0].points.map((p) => p.step);
 
+/** The last measured step, where the step axis ends. */
+export const STEP_MAX = GROKKING_STEPS[GROKKING_STEPS.length - 1];
+
+/** The chart's sequence: the reader's guess, the new examples drawing in, all drawn. */
+export type GuessPhase = "guess" | "drawing" | "drawn";
+
 /** The value at `step` in each run, in run order. */
 export const valuesAt = (runs: readonly GrokkingRun[], step: number, metric: Metric): number[] =>
   runs.flatMap((run) => {
@@ -85,6 +91,9 @@ export const crossingRange = (runs: readonly GrokkingRun[], level = 0.5): Spread
     max: Math.max(...crossings.map((crossing) => crossing.after)),
   };
 };
+
+/** Where every run passed 50% on new examples: what a guess is graded against. */
+export const GROKKING_CROSSING = crossingRange(GROKKING_RUNS);
 
 /** How a reader's guess of that step compares with the measured range. */
 export type GuessVerdict = "perfect" | "almost" | "wrong";

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import type { CheckState } from "@/components/home/LiveCheck";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import type { CheckState } from "@/lib/liveCheck";
 import { EASE_BRAND } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 

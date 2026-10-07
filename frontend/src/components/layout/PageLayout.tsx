@@ -1,4 +1,5 @@
-import { type PropsWithChildren, type RefObject, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
+import { Outlet } from "react-router-dom";
 
 import ChatLauncher from "@/components/ChatLauncher";
 import ChatWidget from "@/components/ChatWidget";
@@ -7,21 +8,19 @@ import SiteHeader from "@/components/layout/SiteHeader";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useVex } from "@/contexts/VexContext";
 import { useInView } from "@/hooks/use-in-view";
-import { cn } from "@/lib/utils";
+import { LauncherAsideProvider, useLauncherAsideTarget } from "@/hooks/use-launcher-aside";
 import { translations } from "@/utils/translations";
-
-type PageLayoutProps = PropsWithChildren<{
-  className?: string;
-  /** Text the floating chat button stands aside for while it is in view. */
-  launcherClearOf?: RefObject<HTMLElement>;
-}>;
 
 /**
  * Header, main content offset below the fixed header, footer, and Vex. The
  * chat used to exist on the home page only; a visitor reading a role on the
  * Experience page had nobody to ask about it. It now travels with the layout.
+ *
+ * The layout is the route around every page, so the header, the footer and
+ * the chat stay mounted from page to page (a conversation survives a
+ * click), and a page that is still loading fills only the main area.
  */
-const PageLayout = ({ className, launcherClearOf, children }: PageLayoutProps) => {
+const PageLayout = () => {
   const { language } = useSettings();
   const t = translations[language];
   const { isOpen, pendingQuestion, askVex, closeVex, consumeQuestion } = useVex();
@@ -39,7 +38,9 @@ const PageLayout = ({ className, launcherClearOf, children }: PageLayoutProps) =
   // page's own closing offers Vex once the text is past.
   // Only the strip at the foot of the screen, where the launcher sits:
   // once the text's last line has risen above it, the launcher is back.
-  const launcherAside = useInView(launcherClearOf, { rootMargin: "-88% 0px 0px 0px" });
+  // A page names that text through useLauncherAside.
+  const launcherClearOf = useLauncherAsideTarget();
+  const launcherAside = useInView(launcherClearOf.target, { rootMargin: "-88% 0px 0px 0px" });
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -51,12 +52,12 @@ const PageLayout = ({ className, launcherClearOf, children }: PageLayoutProps) =
         {t.nav.skipToContent}
       </a>
       <SiteHeader />
-      <main
-        id="content"
-        tabIndex={-1}
-        className={cn("flex flex-1 flex-col pt-16 outline-none md:pt-20", className)}
-      >
-        {children}
+      <main id="content" tabIndex={-1} className="flex flex-1 flex-col pt-16 outline-none md:pt-20">
+        <LauncherAsideProvider value={launcherClearOf.register}>
+          <Suspense fallback={<div className="flex-1" />}>
+            <Outlet />
+          </Suspense>
+        </LauncherAsideProvider>
       </main>
       {/* The footer keeps clear of the floating launcher. */}
       <SiteFooter className="pb-24 sm:pb-8" />

@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 
 import HeaderShapes from "@/components/brand/HeaderShapes";
-import HeatField from "@/components/brand/HeatField";
 import CareerTimeline, { type TimelineEntry } from "@/components/experience/CareerTimeline";
 import CircleFlight, { type FlightPhase } from "@/components/experience/CircleFlight";
 import { circleState } from "@/components/experience/circleStyles";
@@ -13,7 +12,6 @@ import TimelineDialog from "@/components/experience/TimelineDialog";
 import { queryStatus } from "@/components/feedback/queryStatus";
 import StatusMessage from "@/components/feedback/StatusMessage";
 import PageClosing from "@/components/layout/PageClosing";
-import PageLayout from "@/components/layout/PageLayout";
 import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
 import Reveal from "@/components/Reveal";
@@ -221,7 +219,7 @@ const Experience = () => {
   };
 
   return (
-    <PageLayout>
+    <>
       {/* Every subpage opens the same way: the header alone on the page
           background, then its first section on white, the sections after
           it alternating, and the closing on the colour field. */}
@@ -366,19 +364,11 @@ const Experience = () => {
 
       {/* How the page ends, as every subpage does: a question in its own
           terms and two ways to answer it. */}
-      {/* Pushed to the foot of a short page, so it closes the page right
-          above the footer rather than leaving a gap under it. */}
-      <HeatField className="mt-auto">
-        <Section className="py-12 md:py-20">
-          <PageClosing
-            title={t.experience.closing.title}
-            body={t.experience.closing.body}
-            labels={{ email: t.experience.closing.email, askVex: t.hero.askAI }}
-            next={{ ...t.experience.closing.next, to: "/research" }}
-          />
-        </Section>
-      </HeatField>
-    </PageLayout>
+      <PageClosing
+        copy={t.experience.closing}
+        next={{ ...t.experience.closing.next, to: "/research" }}
+      />
+    </>
   );
 };
 
