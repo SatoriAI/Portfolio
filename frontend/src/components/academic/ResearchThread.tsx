@@ -194,14 +194,16 @@ const slugOf = (school: UiSchool) => school.startDate.slice(0, 4);
 
 /**
  * Where each stop's dot sits in the road's column from lg: across as a share
- * of the column (closer together until xl, so the last name clears the card),
- * down in pixels. Three degrees, three places; a fourth would
- * need one more.
+ * of the column (closer together until xl), down in pixels. The steps are
+ * gentle enough that the last name keeps to the road's column beside the
+ * card; a stop is also never wider than the room left to the column's right
+ * edge, so a longer name wraps there rather than run under the card. Three
+ * degrees, three places; a fourth would need one more.
  */
 const STOPS = [
   { x: "12%", xl: "14%", y: 136 },
-  { x: "29%", xl: "36%", y: 340 },
-  { x: "46%", xl: "58%", y: 544 },
+  { x: "27%", xl: "32%", y: 340 },
+  { x: "42%", xl: "50%", y: 544 },
 ] as const;
 /** The road's column: tall enough for the last stop's name under its dot. */
 const ROAD_HEIGHT = 620;
@@ -450,7 +452,7 @@ const ResearchThread = ({
                   arrive.className,
                   // From lg a stop is its drawing over its dot, the name beside
                   // the dot, all one box, so the focus ring takes in all three.
-                  "lg:absolute lg:left-[calc(var(--x)-60px)] lg:top-[calc(var(--y)-124px)] lg:mb-0 lg:grid lg:w-max lg:grid-cols-[120px_auto] lg:items-start lg:p-0 xl:left-[calc(var(--x-xl)-60px)]",
+                  "lg:absolute lg:left-[calc(var(--x)-60px)] lg:top-[calc(var(--y)-124px)] lg:mb-0 lg:grid lg:w-max lg:max-w-[calc(100%-var(--x)+60px)] lg:grid-cols-[120px_auto] lg:items-start lg:p-0 xl:left-[calc(var(--x-xl)-60px)] xl:max-w-[calc(100%-var(--x-xl)+60px)]",
                   STOP_ORDER[index],
                   "lg:order-none",
                 )}
