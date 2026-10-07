@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
 import HeaderShapes from "@/components/brand/HeaderShapes";
 import HeatField from "@/components/brand/HeatField";
-import StatusMessage from "@/components/feedback/StatusMessage";
+import { queryStatus } from "@/components/feedback/queryStatus";
 import AboutDefinition from "@/components/home/AboutDefinition";
 import CheckProof from "@/components/home/CheckProof";
 import Circuit from "@/components/home/Circuit";
@@ -26,8 +26,7 @@ import { useVex } from "@/contexts/VexContext";
 import { useLiveChecks } from "@/hooks/use-live-checks";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { isThisSite } from "@/lib/projectLinks";
-import type { UiProject } from "@/lib/projectsService";
-import { fetchProjects } from "@/lib/projectsService";
+import { useProjects } from "@/lib/queries";
 import { articlesFor } from "@/lib/workshop";
 import { translations } from "@/utils/translations";
 
@@ -42,8 +41,6 @@ const Index = () => {
   const t = translations[language];
   usePageMeta(t.meta.home);
 
-  // The real projects or nothing: if they cannot be loaded the section says
-  // so and offers a retry. It never stands in invented work.
   // The workshop's newest pieces; the section is left out while there are none.
   const pieces = articlesFor(workshopArticles, language, { drafts: showDrafts }).slice(
     0,
@@ -56,12 +53,24 @@ const Index = () => {
     `${String(index).padStart(2, "0")} / ${String(sectionCount).padStart(2, "0")}`;
   const after = pieces.length > 0 ? 1 : 0;
 
-  const [projects, setProjects] = useState<UiProject[] | null>(null);
+  // The real projects or nothing: if they cannot be loaded the section says
+  // so and offers a retry. It never stands in invented work.
+  const projectsQuery = useProjects();
+  // Where a project has a document, its summary and stack replace the
+  // backend's description and tags.
+  const projects = useMemo(
+    () =>
+      arrangeProjects(projectsQuery.data ?? []).map((p) => {
+        const card = projectCard(p.title, language);
+        return card ? { ...p, description: card.summary, technologies: [...card.stack] } : p;
+      }),
+    [projectsQuery.data, language],
+  );
   // The live checks of the projects' addresses, here so that the sentence
   // under the heading and the strip of projects read the same results.
   const liveChecks = useLiveChecks();
   const checked = useMemo(
-    () => (projects ?? []).filter((project) => project.demo && !isThisSite(project)),
+    () => projects.filter((project) => project.demo && !isThisSite(project)),
     [projects],
   );
   const { checkAllOnce } = liveChecks;
@@ -69,27 +78,6 @@ const Index = () => {
     () => checkAllOnce(checked.map((project) => project.demo)),
     [checkAllOnce, checked],
   );
-  const [failed, setFailed] = useState(false);
-  const loadProjects = useCallback(() => {
-    setFailed(false);
-    setProjects(null);
-    fetchProjects(language)
-      // Where a project has a document, its summary and stack replace the
-      // backend's description and tags.
-      .then((list) =>
-        setProjects(
-          arrangeProjects(list).map((p) => {
-            const card = projectCard(p.title, language);
-            return card ? { ...p, description: card.summary, technologies: [...card.stack] } : p;
-          }),
-        ),
-      )
-      .catch((err) => {
-        console.error("Failed to fetch projects:", err);
-        setFailed(true);
-      });
-  }, [language]);
-  useEffect(loadProjects, [loadProjects]);
 
   const projectLabels = {
     code: t.projects.code,
@@ -152,16 +140,11 @@ const Index = () => {
               )
             }
           />
-          {failed ? (
-            <StatusMessage
-              variant="error"
-              message={t.projects.error}
-              onRetry={loadProjects}
-              retryLabel={t.projects.tryAgain}
-            />
-          ) : projects === null ? (
-            <StatusMessage variant="loading" message={t.common.loading} />
-          ) : (
+          {queryStatus([projectsQuery], {
+            loading: t.common.loading,
+            error: t.projects.error,
+            retry: t.projects.tryAgain,
+          }) ?? (
             <Reveal>
               <ProjectIndex
                 projects={projects}

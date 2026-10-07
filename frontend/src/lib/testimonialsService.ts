@@ -1,6 +1,5 @@
 import { endpoints } from "../config/endpoints";
 import { env } from "../config/env";
-import { useSettings } from "../contexts/SettingsContext";
 
 import { apiFetch } from "./apiClient";
 
@@ -168,9 +167,4 @@ export async function fetchTestimonials(language: string): Promise<UiTestimonial
     headers: { "Accept-Language": language },
   });
   return data.map((t) => mapApiTestimonialToUi(t, language));
-}
-
-export function useTestimonials() {
-  const { language } = useSettings();
-  return { fetch: () => fetchTestimonials(language) };
 }

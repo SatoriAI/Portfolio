@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 
 import ScrollToTop from "@/components/ScrollToTop";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { VexProvider } from "@/contexts/VexContext";
+import { queryClient } from "@/lib/queries";
 
 import Index from "./pages/Index";
 
@@ -19,8 +20,6 @@ const Education = lazy(() => import("./pages/Education"));
 const Workshop = lazy(() => import("./pages/Workshop"));
 const WorkshopArticle = lazy(() => import("./pages/WorkshopArticle"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-
-const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

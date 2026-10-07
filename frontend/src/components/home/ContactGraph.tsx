@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { ArrowRight, ArrowUpRight, Check, Copy, Mail, MessageSquare } from "lucide-react";
 
+import { useCircuit } from "@/components/home/circuitContext";
 import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
 import { cn } from "@/lib/utils";
 
@@ -151,33 +152,14 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
     return () => observer.disconnect();
   }, [seen]);
 
-  // Where the page's circuit runs (from xl up, in motion; see Circuit), the
-  // edges and nodes wait for it: they arrive the first time the current
+  // Where the page's circuit is drawn (from xl up, in motion; see Circuit),
+  // the edges and nodes wait for it: they arrive the first time the current
   // reaches the hub and closes the circuit, and stay. Elsewhere they arrive
   // with the hub.
-  const hub = useRef<HTMLSpanElement>(null);
-  const [wired, setWired] = useState(false);
-  useEffect(() => {
-    const wide = window.matchMedia("(min-width: 1280px)");
-    const update = () => setWired(wide.matches && !prefersReducedMotion);
-    update();
-    wide.addEventListener("change", update);
-    return () => wide.removeEventListener("change", update);
-  }, [prefersReducedMotion]);
-  const [closed, setClosed] = useState(false);
-  useEffect(() => {
-    const element = hub.current;
-    if (!element || !wired || closed) return;
-    const check = () => {
-      if (element.hasAttribute("data-circuit-closed")) setClosed(true);
-    };
-    check();
-    const observer = new MutationObserver(check);
-    observer.observe(element, { attributes: true, attributeFilter: ["data-circuit-closed"] });
-    return () => observer.disconnect();
-  }, [wired, closed]);
-
-  const drawn = wired ? closed : seen;
+  const circuit = useCircuit();
+  const [everClosed, setEverClosed] = useState(false);
+  if (circuit.closed && !everClosed) setEverClosed(true);
+  const drawn = circuit.wired ? everClosed : seen;
   const hubShown = seen || prefersReducedMotion;
   const shown = drawn || prefersReducedMotion;
 
@@ -463,9 +445,9 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
           // Where the home page's circuit ends; its ring brightens when the
           // circuit closes (see Circuit).
           data-circuit-end
-          ref={hub}
           className={cn(
-            "absolute grid size-36 -translate-x-1/2 -translate-y-1/2 place-items-center overflow-hidden rounded-full bg-lavender shadow-[0_0_0_10px_hsl(var(--iris)/0.12)] transition-[opacity,scale,box-shadow] ease-brand data-[circuit-closed]:shadow-[0_0_0_10px_hsl(var(--iris)/0.28)]",
+            "absolute grid size-36 -translate-x-1/2 -translate-y-1/2 place-items-center overflow-hidden rounded-full bg-lavender shadow-[0_0_0_10px_hsl(var(--iris)/0.12)] transition-[opacity,scale,box-shadow] ease-brand",
+            circuit.closed && "shadow-[0_0_0_10px_hsl(var(--iris)/0.28)]",
             hubShown ? "opacity-100 [scale:1]" : "opacity-0 [scale:0.85]",
           )}
           style={{ left: `${HUB.x}%`, top: `${HUB.y}%`, transitionDuration: `${HUB_MS}ms` }}

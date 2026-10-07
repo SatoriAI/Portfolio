@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 
 import HeatField from "@/components/brand/HeatField";
@@ -10,7 +11,7 @@ import Section from "@/components/layout/Section";
 import ArticleBody from "@/components/workshop/ArticleBody";
 import { EXHIBITS } from "@/components/workshop/exhibitRegistry";
 import MetaLine from "@/components/workshop/MetaLine";
-import { showDrafts, workshopArticles } from "@/content/workshop";
+import { loadArticleBody, showDrafts, workshopArticles } from "@/content/workshop";
 import { useSettings } from "@/contexts/SettingsContext";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { cn } from "@/lib/utils";
@@ -49,16 +50,26 @@ const WorkshopArticle = () => {
       : t.meta.workshop,
   );
 
-  const sections = useMemo(() => (article ? splitSections(article.body) : []), [article]);
+  // The text is its own chunk, fetched once per piece and language; the head
+  // stands while it arrives.
+  const { data: body } = useQuery({
+    queryKey: ["workshop-text", article?.slug, article?.language],
+    queryFn: () => loadArticleBody(article!),
+    enabled: article !== undefined,
+  });
+  const sections = useMemo(() => (body ? splitSections(body) : []), [body]);
 
   // The section being read: the last one whose top has passed a third of
-  // the way down the screen. Colour only; nothing moves.
+  // the way down the screen. Colour only; nothing moves. Measured at most
+  // once a frame, however often the scroll fires.
   const [current, setCurrent] = useState(0);
   useEffect(() => {
     const element = articleRef.current;
     if (!element) return;
     const parts = [...element.querySelectorAll<HTMLElement>("[data-section]")];
+    let frame = 0;
     const update = () => {
+      frame = 0;
       const line = window.innerHeight / 3;
       let at = 0;
       parts.forEach((part, index) => {
@@ -66,12 +77,16 @@ const WorkshopArticle = () => {
       });
       setCurrent(at);
     };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
     update();
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
     return () => {
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
     };
   }, [sections]);
 

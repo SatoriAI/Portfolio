@@ -1,6 +1,5 @@
 import { endpoints } from "../config/endpoints";
 import { env } from "../config/env";
-import { useSettings } from "../contexts/SettingsContext";
 
 import { apiFetch } from "./apiClient";
 
@@ -125,9 +124,4 @@ export async function fetchPublications(language: string): Promise<UiPublication
     headers: { "Accept-Language": language },
   });
   return data.map((p) => mapApiPublicationToUi(p, language));
-}
-
-export function usePublications() {
-  const { language } = useSettings();
-  return { fetch: () => fetchPublications(language) };
 }

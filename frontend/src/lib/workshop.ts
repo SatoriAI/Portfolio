@@ -56,6 +56,12 @@ export type WorkshopArticle = {
   minutes: number;
 };
 
+/**
+ * A piece without its text: what the lists show, and all a page needs before
+ * the text itself loads (see src/content/workshop/index.ts).
+ */
+export type ArticleHeader = Omit<WorkshopArticle, "body">;
+
 /** A reading pace for technical prose, in words a minute. */
 const WORDS_PER_MINUTE = 200;
 const FORMATS: readonly WorkshopFormat[] = ["figure", "production", "proof"];
@@ -119,18 +125,18 @@ export const parseArticle = (path: string, raw: string): WorkshopArticle => {
 };
 
 /** A piece as a reader in `language` sees it, and whether it is in theirs. */
-export type ShownArticle = WorkshopArticle & { inOtherLanguage: boolean };
+export type ShownArticle = ArticleHeader & { inOtherLanguage: boolean };
 
 /**
  * The pieces a reader sees, newest first: each in their language where it
  * exists, otherwise in the one it was written in. Drafts only when asked for.
  */
-export const articlesFor = (
-  all: readonly WorkshopArticle[],
+export const articlesFor = <T extends ArticleHeader>(
+  all: readonly T[],
   language: WorkshopLanguage,
   { drafts = false } = {},
-): ShownArticle[] => {
-  const bySlug = new Map<string, WorkshopArticle[]>();
+): (T & { inOtherLanguage: boolean })[] => {
+  const bySlug = new Map<string, T[]>();
   for (const article of all) {
     if (article.draft && !drafts) continue;
     bySlug.set(article.slug, [...(bySlug.get(article.slug) ?? []), article]);

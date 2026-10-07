@@ -1,6 +1,5 @@
 import { endpoints } from "../config/endpoints";
 import { env } from "../config/env";
-import { useSettings } from "../contexts/SettingsContext";
 
 import { apiFetch } from "./apiClient";
 
@@ -185,9 +184,4 @@ export async function fetchExperiences(language: string): Promise<UiExperience[]
     headers: { "Accept-Language": language },
   });
   return data.map((e) => mapApiExperienceToUi(e, language));
-}
-
-export function useExperiences() {
-  const { language } = useSettings();
-  return { fetch: () => fetchExperiences(language) };
 }

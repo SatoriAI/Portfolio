@@ -113,10 +113,15 @@ const QuoteWall = ({ testimonials, themes, evidence, labels, className }: QuoteW
       frame = 0;
       const height = window.innerHeight;
       const columns = getComputedStyle(wall).gridTemplateColumns.split(" ").length;
-      [...wall.children].forEach((slot, index) => {
+      // Every slot is measured before any is changed, so the frame lays the
+      // page out once rather than once per note.
+      const slots = [...wall.children].map((slot) => ({
+        slot,
+        top: slot.getBoundingClientRect().top,
+      }));
+      slots.forEach(({ slot, top }, index) => {
         const note = slot.firstElementChild as HTMLElement | null;
         if (!(slot instanceof HTMLElement) || !note) return;
-        const top = slot.getBoundingClientRect().top;
         const raw = (height - top) / (height * PIN_RANGE) - (index % columns) * PIN_STAGGER;
         const pinned = easeOut(clamp(raw));
         const tilt = Number(note.dataset.tilt ?? 0);

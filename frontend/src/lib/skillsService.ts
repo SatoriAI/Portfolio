@@ -13,7 +13,6 @@ import {
 
 import { endpoints } from "../config/endpoints";
 import { env } from "../config/env";
-import { useSettings } from "../contexts/SettingsContext";
 
 import { apiClient } from "./apiClient";
 
@@ -99,9 +98,4 @@ export async function fetchSkills(language: string): Promise<UiSkill[]> {
   if (env.mock) return mockSkills;
   const data = await apiClient.get<ApiSkill[]>(endpoints.work.skills.list);
   return data.map((s) => mapApiSkillToUi(s, language));
-}
-
-export function useSkills() {
-  const { language } = useSettings();
-  return { fetch: () => fetchSkills(language) };
 }

@@ -1,6 +1,5 @@
 import { endpoints } from "../config/endpoints";
 import { env } from "../config/env";
-import { useSettings } from "../contexts/SettingsContext";
 
 import { apiFetch } from "./apiClient";
 
@@ -191,9 +190,4 @@ export async function fetchSchools(language: string): Promise<UiSchool[]> {
     headers: { "Accept-Language": language },
   });
   return data.map((s) => mapApiSchoolToUi(s, language));
-}
-
-export function useSchools() {
-  const { language } = useSettings();
-  return { fetch: () => fetchSchools(language) };
 }

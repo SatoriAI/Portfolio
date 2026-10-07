@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import HeaderShapes from "@/components/brand/HeaderShapes";
 import HeatField from "@/components/brand/HeatField";
@@ -10,6 +10,7 @@ import RoleEntry from "@/components/experience/RoleEntry";
 import RoleSidebar from "@/components/experience/RoleSidebar";
 import SkillLanes, { type SkillLane } from "@/components/experience/SkillLanes";
 import TimelineDialog from "@/components/experience/TimelineDialog";
+import { queryStatus } from "@/components/feedback/queryStatus";
 import StatusMessage from "@/components/feedback/StatusMessage";
 import PageClosing from "@/components/layout/PageClosing";
 import PageLayout from "@/components/layout/PageLayout";
@@ -26,11 +27,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
 import { useTimelineSelection } from "@/hooks/use-timeline-selection";
-import { UiExperience, useExperiences } from "@/lib/experiencesService";
-import { fetchProjects, type UiProject } from "@/lib/projectsService";
+import { useExperiences, useProjects, useSkills } from "@/lib/queries";
 import { claimsEarlier, laneSegments } from "@/lib/skillLanes";
 import { rolesForSkill } from "@/lib/skillRoles";
-import { fetchSkills, type UiSkill } from "@/lib/skillsService";
 import { formatYears, parseYears } from "@/lib/skillYears";
 import { buildTimeline, companyShortName } from "@/lib/timeline";
 import { translations } from "@/utils/translations";
@@ -48,10 +47,7 @@ const eyebrow = (index: number) =>
   `${String(index).padStart(2, "0")} / ${String(SECTION_COUNT).padStart(2, "0")}`;
 
 const Experience = () => {
-  const [experiences, setExperiences] = useState<UiExperience[]>([]);
-  const [skills, setSkills] = useState<UiSkill[]>([]);
   const [chosenSkill, setChosenSkill] = useState<number | null>(null);
-  const [projects, setProjects] = useState<UiProject[]>([]);
   const [previewRole, setPreviewRole] = useState<number | null>(null);
   // A role chosen in the sidebar beside the skills: its skills light up.
   const [sidebarRole, setSidebarRole] = useState<number | null>(null);
@@ -61,33 +57,12 @@ const Experience = () => {
   const sidebar = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const prefersReducedMotion = usePrefersReducedMotion();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { language } = useSettings();
   const { askVex } = useVex();
   const t = translations[language];
   usePageMeta(t.meta.experience);
-  const experiencesService = useExperiences();
-
-  const loadExperiences = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await experiencesService.fetch();
-      setExperiences(data);
-    } catch (err) {
-      console.error("Failed to fetch experiences:", err);
-      setError("Failed to load work experience data");
-    } finally {
-      setLoading(false);
-    }
-    // The service closes over the current language; that is the only input.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language]);
-
-  useEffect(() => {
-    loadExperiences();
-  }, [loadExperiences]);
+  const experiencesQuery = useExperiences();
+  const experiences = useMemo(() => experiencesQuery.data ?? [], [experiencesQuery.data]);
 
   // The roles in the order they began, as the timeline lays them out, each
   // with its circle and its name in the address.
@@ -129,29 +104,21 @@ const Experience = () => {
   const { selectedId, open, select, close } = useTimelineSelection(items);
 
   // The skills, with the roles each was used in: a skill counts as used in a
-  // role when the role's own technologies name one that proves it. A skill
-  // that fails to load leaves the section out rather than the page broken.
-  useEffect(() => {
-    fetchSkills(language)
-      .then((loaded) =>
-        setSkills(loaded.map((skill) => ({ ...skill, icon: skillIcons[skill.id] ?? skill.icon }))),
-      )
-      .catch((err) => {
-        console.error("Failed to fetch skills:", err);
-        setSkills([]);
-      });
-  }, [language]);
-
-  // Projects count as evidence too, by their tags; without them the lanes
-  // simply list none.
-  useEffect(() => {
-    fetchProjects(language)
-      .then(setProjects)
-      .catch((err) => {
-        console.error("Failed to fetch projects:", err);
-        setProjects([]);
-      });
-  }, [language]);
+  // role when the role's own technologies name one that proves it. Skills
+  // that fail to load leave the section out rather than the page broken;
+  // projects count as evidence too, by their tags, and without them the
+  // lanes simply list none.
+  const skillsQuery = useSkills();
+  const skills = useMemo(
+    () =>
+      (skillsQuery.data ?? []).map((skill) => ({
+        ...skill,
+        icon: skillIcons[skill.id] ?? skill.icon,
+      })),
+    [skillsQuery.data],
+  );
+  const projectsQuery = useProjects();
+  const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data]);
 
   const rolesBySkill = useMemo(
     () =>
@@ -274,57 +241,53 @@ const Experience = () => {
 
       <Section id="roles" tone="surface">
         <SectionHeading eyebrow={eyebrow(1)} title={t.experience.rolesTitle} />
-        {loading ? (
-          <StatusMessage variant="loading" message={t.common.loading} />
-        ) : error ? (
-          <StatusMessage
-            variant="error"
-            message={t.experience.error}
-            onRetry={loadExperiences}
-            retryLabel={t.experience.tryAgain}
-          />
-        ) : experiences.length === 0 ? (
-          <StatusMessage variant="empty" message={t.experience.noData} />
-        ) : (
-          <>
-            <div ref={timelineArea}>
-              <Reveal>
-                <CareerTimeline<number>
-                  entries={entries}
-                  labels={timelineLabels}
-                  selectedId={selectedId}
-                  onSelect={select}
-                  highlightedIds={highlighted}
-                  onPreview={setPreviewRole}
-                  circlesAway={flight && phase !== "timeline"}
-                  enterFromEdges
-                />
-              </Reveal>
-            </div>
-            <TimelineDialog
-              items={items}
-              selectedId={selectedId}
-              open={open}
-              onSelect={select}
-              onClose={close}
-              labels={t.experience.dialog}
-            >
-              {(id, closeDialog) => {
-                const role = roles.find((candidate) => candidate.entry.id === id);
-                return (
-                  role && (
-                    <RoleEntry
-                      experience={role.experience}
-                      labels={entryLabels}
-                      // Shrink the entry away first, so the chat opens on the page.
-                      onAsk={(question) => closeDialog(() => askVex(question))}
-                    />
-                  )
-                );
-              }}
-            </TimelineDialog>
-          </>
-        )}
+        {queryStatus([experiencesQuery], {
+          loading: t.common.loading,
+          error: t.experience.error,
+          retry: t.experience.tryAgain,
+        }) ??
+          (experiences.length === 0 ? (
+            <StatusMessage variant="empty" message={t.experience.noData} />
+          ) : (
+            <>
+              <div ref={timelineArea}>
+                <Reveal>
+                  <CareerTimeline<number>
+                    entries={entries}
+                    labels={timelineLabels}
+                    selectedId={selectedId}
+                    onSelect={select}
+                    highlightedIds={highlighted}
+                    onPreview={setPreviewRole}
+                    circlesAway={flight && phase !== "timeline"}
+                    enterFromEdges
+                  />
+                </Reveal>
+              </div>
+              <TimelineDialog
+                items={items}
+                selectedId={selectedId}
+                open={open}
+                onSelect={select}
+                onClose={close}
+                labels={t.experience.dialog}
+              >
+                {(id, closeDialog) => {
+                  const role = roles.find((candidate) => candidate.entry.id === id);
+                  return (
+                    role && (
+                      <RoleEntry
+                        experience={role.experience}
+                        labels={entryLabels}
+                        // Shrink the entry away first, so the chat opens on the page.
+                        onAsk={(question) => closeDialog(() => askVex(question))}
+                      />
+                    )
+                  );
+                }}
+              </TimelineDialog>
+            </>
+          ))}
       </Section>
 
       {/* The skills on the timeline's axis, with the roles beside them as a

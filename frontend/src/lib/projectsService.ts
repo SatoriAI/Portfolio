@@ -1,5 +1,4 @@
 import { endpoints } from "../config/endpoints";
-import { useSettings } from "../contexts/SettingsContext";
 
 import { apiClient } from "./apiClient";
 
@@ -41,10 +40,4 @@ export function mapApiProjectToUi(project: ApiProject, language: string): UiProj
 export async function fetchProjects(language: string): Promise<UiProject[]> {
   const data = await apiClient.get<ApiProject[]>(endpoints.work.projects.list);
   return data.map((p) => mapApiProjectToUi(p, language));
-}
-
-// Optional React hook for convenience
-export function useProjects() {
-  const { language } = useSettings();
-  return { fetch: () => fetchProjects(language) };
 }

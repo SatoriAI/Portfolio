@@ -1,5 +1,14 @@
-import { type PropsWithChildren, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import {
+  type PropsWithChildren,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
+import { CircuitContext } from "@/components/home/circuitContext";
 import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
 
 /**
@@ -15,7 +24,8 @@ import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
  *
  * The points it joins mark themselves: `data-circuit-start` (where it
  * begins), `data-circuit-node` (each section number) and `data-circuit-end`
- * (the hub, which gets `data-circuit-closed` when the current arrives).
+ * (the hub). Whether the wire is drawn, and whether the current has reached
+ * the hub, reach the hub through CircuitContext.
  *
  * Only from xl up, where the margin has room for it (at lg it would run
  * 16px from the edge of the screen). Under reduced motion the
@@ -71,6 +81,7 @@ const Circuit = ({ children }: PropsWithChildren) => {
   // Where the current is shown, kept across re-layouts so that a page growing
   // or a resize never empties the wire and starts it again.
   const shownRef = useRef<number | null>(null);
+  const [closed, setClosed] = useState(false);
 
   // Measure the points the wire joins, relative to the wrapper, and again
   // whenever the page's height or width changes (a section loading, a resize).
@@ -147,7 +158,6 @@ const Circuit = ({ children }: PropsWithChildren) => {
     const element = root.current;
     const path = current.current;
     if (!element || !path || !layout) return;
-    const hub = element.querySelector<HTMLElement>("[data-circuit-end]");
     const total = path.getTotalLength();
 
     // The length along the wire at each point, sampled once, so a scroll
@@ -181,6 +191,8 @@ const Circuit = ({ children }: PropsWithChildren) => {
     // The bands of light run only down the straight run, which has its own length.
     const run = sheenPaths.current[0]?.getTotalLength() ?? 0;
     for (const stroke of sheenPaths.current) stroke?.setAttribute("stroke-dasharray", String(run));
+    // Told only when it changes, so the hub re-renders twice, not per frame.
+    let wasClosed = false;
     const paint = (filled: number, live: number, breath: number) => {
       for (const stroke of lit) {
         stroke?.setAttribute("stroke-dashoffset", String(total - filled));
@@ -200,15 +212,15 @@ const Circuit = ({ children }: PropsWithChildren) => {
       halo.current?.setAttribute("r", String(6 + live * (2 + 3 * breath)));
       if (sheen.current) sheen.current.style.opacity = String(live);
       if (aura.current) aura.current.style.opacity = String(live * (0.4 + 0.6 * breath));
-      if (hub) {
-        if (closed) hub.setAttribute("data-circuit-closed", "");
-        else hub.removeAttribute("data-circuit-closed");
+      if (closed !== wasClosed) {
+        wasClosed = closed;
+        setClosed(closed);
       }
     };
 
     if (prefersReducedMotion) {
       paint(total, 0, 0);
-      return () => hub?.removeAttribute("data-circuit-closed");
+      return () => setClosed(false);
     }
 
     // Where the current should be for the page's scroll position. Down the
@@ -276,13 +288,18 @@ const Circuit = ({ children }: PropsWithChildren) => {
       cancelAnimationFrame(frame);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
-      hub?.removeAttribute("data-circuit-closed");
+      setClosed(false);
     };
   }, [layout, prefersReducedMotion]);
 
+  const circuit = useMemo(
+    () => ({ wired: layout !== null && !prefersReducedMotion, closed }),
+    [layout, prefersReducedMotion, closed],
+  );
+
   return (
     <div ref={root} className="relative">
-      {children}
+      <CircuitContext.Provider value={circuit}>{children}</CircuitContext.Provider>
       {layout && (
         <svg
           aria-hidden="true"

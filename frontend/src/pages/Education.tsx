@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
-
 import type { DomainKind } from "@/components/academic/DomainGlyph";
 import QuoteWall from "@/components/academic/QuoteWall";
 import ResearchThread from "@/components/academic/ResearchThread";
 import HeaderShapes from "@/components/brand/HeaderShapes";
 import HeatField from "@/components/brand/HeatField";
+import { queryStatus } from "@/components/feedback/queryStatus";
 import StatusMessage from "@/components/feedback/StatusMessage";
 import PageClosing from "@/components/layout/PageClosing";
 import PageLayout from "@/components/layout/PageLayout";
@@ -12,8 +11,8 @@ import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
 import { useSettings } from "@/contexts/SettingsContext";
 import { usePageMeta } from "@/hooks/use-page-meta";
-import { UiSchool, useSchools } from "@/lib/schoolsService";
-import { UiTestimonial, useTestimonials } from "@/lib/testimonialsService";
+import { useSchools, useTestimonials } from "@/lib/queries";
+import type { UiSchool } from "@/lib/schoolsService";
 import { translations } from "@/utils/translations";
 
 // The degrees read forward, earliest first: three steps of one line of work.
@@ -37,40 +36,14 @@ const DEGREE_DOMAINS: Record<string, DomainKind> = {
 
 /** The degrees, the teaching, and a way to write. */
 const Education = () => {
-  const [schools, setSchools] = useState<UiSchool[]>([]);
-  const [testimonials, setTestimonials] = useState<UiTestimonial[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { language } = useSettings();
   const t = translations[language];
   const story = t.academic.story;
   usePageMeta(t.meta.education);
-  const schoolsService = useSchools();
-  const testimonialsService = useTestimonials();
-
-  const loadEducationData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const [schoolsData, testimonialsData] = await Promise.all([
-        schoolsService.fetch(),
-        testimonialsService.fetch(),
-      ]);
-      setSchools(schoolsData);
-      setTestimonials(testimonialsData);
-    } catch (err) {
-      console.error("Failed to fetch education data:", err);
-      setError("Failed to load education data");
-    } finally {
-      setLoading(false);
-    }
-    // The services close over the current language; that is the only input.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language]);
-
-  useEffect(() => {
-    loadEducationData();
-  }, [loadEducationData]);
+  const schoolsQuery = useSchools();
+  const testimonialsQuery = useTestimonials();
+  const schools = schoolsQuery.data ?? [];
+  const testimonials = testimonialsQuery.data ?? [];
 
   const threadLabels = {
     advisor: t.academic.advisor,
@@ -82,17 +55,12 @@ const Education = () => {
     newTab: t.academic.newTab,
   };
 
-  // Both lists share one request, so they share one status block.
-  const status = loading ? (
-    <StatusMessage variant="loading" message={t.common.loading} />
-  ) : error ? (
-    <StatusMessage
-      variant="error"
-      message={t.academic.error}
-      onRetry={loadEducationData}
-      retryLabel={t.academic.tryAgain}
-    />
-  ) : null;
+  // The two lists load together and share one status block.
+  const status = queryStatus([schoolsQuery, testimonialsQuery], {
+    loading: t.common.loading,
+    error: t.academic.error,
+    retry: t.academic.tryAgain,
+  });
 
   return (
     <PageLayout>

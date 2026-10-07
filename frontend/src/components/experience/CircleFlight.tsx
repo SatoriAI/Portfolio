@@ -73,18 +73,26 @@ const CircleFlight = ({ roles, section, from, to, onPhase }: CircleFlightProps) 
         tell.current(next);
       }
 
-      roles.forEach((role, index) => {
+      // Every circle is measured before any copy is moved, so the frame lays
+      // the page out once rather than once per role.
+      const ends = roles.map((role) => {
+        if (next !== "flying") return null;
+        const origin = from.current?.querySelector(`[data-timeline-circle="${role.id}"]`);
+        const target = to.current?.querySelector(`[data-sidebar-circle="${role.id}"]`);
+        return origin && target
+          ? { a: origin.getBoundingClientRect(), b: target.getBoundingClientRect() }
+          : null;
+      });
+      roles.forEach((_role, index) => {
         const copy = copies.current[index];
         if (!copy) return;
         if (next !== "flying") {
           copy.style.visibility = "hidden";
           return;
         }
-        const origin = from.current?.querySelector(`[data-timeline-circle="${role.id}"]`);
-        const target = to.current?.querySelector(`[data-sidebar-circle="${role.id}"]`);
-        if (!origin || !target) return;
-        const a = origin.getBoundingClientRect();
-        const b = target.getBoundingClientRect();
+        const measured = ends[index];
+        if (!measured) return;
+        const { a, b } = measured;
         const span = 1 - STAGGER * (roles.length - 1);
         const t = easeInOut(clamp((progress - STAGGER * index) / span));
         const size = a.width + (b.width - a.width) * t;

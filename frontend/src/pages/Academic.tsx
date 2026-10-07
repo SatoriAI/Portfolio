@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 
 import ClockExample from "@/components/academic/ClockExample";
 import CyclicShiftFigure, {
@@ -13,6 +13,7 @@ import SharpBoundsFigure, { SharpBoundsControls } from "@/components/academic/Sh
 import StageHeading from "@/components/academic/StageHeading";
 import HeaderShapes from "@/components/brand/HeaderShapes";
 import HeatField from "@/components/brand/HeatField";
+import { queryStatus } from "@/components/feedback/queryStatus";
 import StatusMessage from "@/components/feedback/StatusMessage";
 import { MathText } from "@/components/Formula";
 import { Col, Grid } from "@/components/layout/Grid";
@@ -26,7 +27,8 @@ import { useDemoRun } from "@/hooks/use-demo-run";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
 import { BOUNDS_START, INFLUENCE_START } from "@/lib/kernelFigures";
-import { UiPublication, usePublications } from "@/lib/publicationsService";
+import type { UiPublication } from "@/lib/publicationsService";
+import { usePublications } from "@/lib/queries";
 import { translations } from "@/utils/translations";
 
 /**
@@ -56,9 +58,6 @@ const eyebrow = (index: number) =>
  * their own.
  */
 const Academic = () => {
-  const [publications, setPublications] = useState<UiPublication[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   // The shift figure's number of waves and the amount added to every number:
   // the figure draws them, and its controls, set beside it, change them.
   const [waveK, setWaveK] = useState(K_DEFAULT);
@@ -89,26 +88,8 @@ const Academic = () => {
   const transformers = t.academic.interests.transformers;
   const [hook, clue, limits, outlook] = transformers.paragraphs;
   usePageMeta(t.meta.research);
-  const publicationsService = usePublications();
-
-  const loadAcademicData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      setPublications(await publicationsService.fetch());
-    } catch (err) {
-      console.error("Failed to fetch academic data:", err);
-      setError("Failed to load academic data");
-    } finally {
-      setLoading(false);
-    }
-    // The service closes over the current language; that is the only input.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language]);
-
-  useEffect(() => {
-    loadAcademicData();
-  }, [loadAcademicData]);
+  const publicationsQuery = usePublications();
+  const publications = publicationsQuery.data ?? [];
 
   const publicationLabels = {
     view: t.academic.view,
@@ -125,16 +106,11 @@ const Academic = () => {
     (a, b) => Number(isPreprint(a)) - Number(isPreprint(b)) || b.year - a.year,
   );
 
-  const status = loading ? (
-    <StatusMessage variant="loading" message={t.common.loading} />
-  ) : error ? (
-    <StatusMessage
-      variant="error"
-      message={t.academic.error}
-      onRetry={loadAcademicData}
-      retryLabel={t.academic.tryAgain}
-    />
-  ) : null;
+  const status = queryStatus([publicationsQuery], {
+    loading: t.common.loading,
+    error: t.academic.error,
+    retry: t.academic.tryAgain,
+  });
 
   return (
     <PageLayout>
