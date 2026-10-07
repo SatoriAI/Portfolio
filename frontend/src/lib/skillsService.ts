@@ -63,39 +63,39 @@ export function mapApiSkillToUi(skill: ApiSkill, language: string): UiSkill {
 }
 
 /** Shown in mock mode, where there is no backend; ids match skillEvidence. */
-const mockSkills: UiSkill[] = [
-  {
-    id: 1,
-    icon: Code,
-    name: "Python",
-    level: "10+ years of experience",
-    description: "Backend development, APIs, automation",
-  },
-  {
-    id: 2,
-    icon: Database,
-    name: "PostgreSQL",
-    level: "5+ years of experience",
-    description: "Schemas, queries, migrations",
-  },
-  {
-    id: 5,
-    icon: Brain,
-    name: "LLMs & RAG",
-    level: "3+ years of experience",
-    description: "Pipeline development, vector databases",
-  },
-  {
-    id: 6,
-    icon: Server,
-    name: "Kubernetes",
-    level: "3+ years of experience",
-    description: "Helm, deployments, services",
-  },
+const mockSkill = (
+  id: number,
+  icon: ApiSkill["icon"],
+  name: string,
+  level: string,
+  description: string,
+): ApiSkill => ({
+  id,
+  icon,
+  level,
+  translations: { en: { name, description } },
+  created_at: "",
+  updated_at: "",
+});
+const mockSkills: ApiSkill[] = [
+  mockSkill(
+    1,
+    "Code",
+    "Python",
+    "10+ years of experience",
+    "Backend development, APIs, automation",
+  ),
+  mockSkill(2, "Database", "PostgreSQL", "5+ years of experience", "Schemas, queries, migrations"),
+  mockSkill(
+    5,
+    "Brain",
+    "LLMs & RAG",
+    "3+ years of experience",
+    "Pipeline development, vector databases",
+  ),
+  mockSkill(6, "Server", "Kubernetes", "3+ years of experience", "Helm, deployments, services"),
 ];
 
-export async function fetchSkills(language: string): Promise<UiSkill[]> {
-  if (env.mock) return mockSkills;
-  const data = await apiClient.get<ApiSkill[]>(endpoints.work.skills.list);
-  return data.map((s) => mapApiSkillToUi(s, language));
-}
+/** Every translation at once: the page picks its language (see lib/queries.ts). */
+export const fetchSkills = (): Promise<ApiSkill[]> =>
+  env.mock ? Promise.resolve(mockSkills) : apiClient.get<ApiSkill[]>(endpoints.work.skills.list);

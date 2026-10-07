@@ -1,7 +1,7 @@
 import { endpoints } from "../config/endpoints";
 import { env } from "../config/env";
 
-import { apiFetch } from "./apiClient";
+import { apiClient } from "./apiClient";
 
 export type ApiSchool = {
   id: number;
@@ -179,15 +179,8 @@ const mockSchools: ApiSchool[] = [
   },
 ];
 
-export async function fetchSchools(language: string): Promise<UiSchool[]> {
-  if (env.mock) {
-    // Use mock data when VITE_MOCK=true
-    return mockSchools.map((s) => mapApiSchoolToUi(s, language));
-  }
-
-  const data = await apiFetch<ApiSchool[]>(endpoints.education.schools.list, {
-    method: "GET",
-    headers: { "Accept-Language": language },
-  });
-  return data.map((s) => mapApiSchoolToUi(s, language));
-}
+/** Every translation at once: the page picks its language (see lib/queries.ts). */
+export const fetchSchools = (): Promise<ApiSchool[]> =>
+  env.mock
+    ? Promise.resolve(mockSchools)
+    : apiClient.get<ApiSchool[]>(endpoints.education.schools.list);

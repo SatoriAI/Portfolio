@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 
 import HeatField from "@/components/brand/HeatField";
+import { queryStatus } from "@/components/feedback/queryStatus";
 import { Col, Grid } from "@/components/layout/Grid";
 import PageClosing from "@/components/layout/PageClosing";
 import PageLayout from "@/components/layout/PageLayout";
@@ -11,9 +11,11 @@ import Section from "@/components/layout/Section";
 import ArticleBody from "@/components/workshop/ArticleBody";
 import { EXHIBITS } from "@/components/workshop/exhibitRegistry";
 import MetaLine from "@/components/workshop/MetaLine";
-import { loadArticleBody, showDrafts, workshopArticles } from "@/content/workshop";
+import { showDrafts, workshopArticles } from "@/content/workshop";
 import { useSettings } from "@/contexts/SettingsContext";
 import { usePageMeta } from "@/hooks/use-page-meta";
+import { useScrollFrame } from "@/hooks/use-scroll-frame";
+import { useArticleText } from "@/lib/queries";
 import { fillTemplate, pad2 } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { articlesFor, splitSections } from "@/lib/workshop";
@@ -48,45 +50,24 @@ const WorkshopArticle = () => {
       : t.meta.workshop,
   );
 
-  // The text is its own chunk, fetched once per piece and language; the head
-  // stands while it arrives.
-  const { data: body } = useQuery({
-    queryKey: ["workshop-text", article?.slug, article?.language],
-    queryFn: () => loadArticleBody(article!),
-    enabled: article !== undefined,
-  });
-  const sections = useMemo(() => (body ? splitSections(body) : []), [body]);
+  const text = useArticleText(article);
+  const sections = useMemo(() => (text.data ? splitSections(text.data) : []), [text.data]);
 
   // The section being read: the last one whose top has passed a third of
-  // the way down the screen. Colour only; nothing moves. Measured at most
-  // once a frame, however often the scroll fires.
+  // the way down the screen. Colour only; nothing moves.
   const [current, setCurrent] = useState(0);
-  useEffect(() => {
-    const element = articleRef.current;
-    if (!element) return;
-    const parts = [...element.querySelectorAll<HTMLElement>("[data-section]")];
-    let frame = 0;
-    const update = () => {
-      frame = 0;
+  useScrollFrame(
+    () => {
+      const parts = articleRef.current?.querySelectorAll<HTMLElement>("[data-section]") ?? [];
       const line = window.innerHeight / 3;
       let at = 0;
       parts.forEach((part, index) => {
         if (part.getBoundingClientRect().top <= line) at = index;
       });
       setCurrent(at);
-    };
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-    };
-  }, [sections]);
+    },
+    { watch: [sections] },
+  );
 
   if (!article) return <NotFound />;
   const relatedName = article.related ? w.pages[article.related] : undefined;
@@ -156,6 +137,12 @@ const WorkshopArticle = () => {
             )}
           </Grid>
 
+          {/* The head stands while the text arrives. */}
+          {queryStatus([text], {
+            loading: t.common.loading,
+            error: w.textError,
+            retry: w.tryAgain,
+          })}
           <article lang={article.language} className="mt-12 md:mt-16">
             {sections.map((section, index) => {
               const number = section.heading ? ++numbered : 0;

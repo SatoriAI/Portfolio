@@ -5,6 +5,7 @@ import CyclicShiftFigure, {
   CyclicShiftControls,
   K_DEFAULT,
 } from "@/components/academic/CyclicShiftFigure";
+import DemoStage from "@/components/academic/DemoStage";
 import GrokkingChart from "@/components/academic/GrokkingChart";
 import HeatRodFigure from "@/components/academic/HeatRodFigure";
 import InfluenceMapFigure, { InfluenceMapControls } from "@/components/academic/InfluenceMapFigure";
@@ -23,7 +24,6 @@ import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
 import Reveal from "@/components/Reveal";
 import { useSettings } from "@/contexts/SettingsContext";
-import { useDemoRun } from "@/hooks/use-demo-run";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { BOUNDS_START, INFLUENCE_START } from "@/lib/kernelFigures";
@@ -49,6 +49,7 @@ const INFLUENCE_DEMO = demoTo(INFLUENCE_START);
 const BOUNDS_DEMO = demoTo(BOUNDS_START);
 /** The circle the wave rides: 0 to 112, and 113 is 0 again. */
 const CYCLE = 113;
+const SHIFT_DEMO = { from: 0, to: CYCLE, durationMs: 3000, delayMs: 1000 };
 const eyebrow = (index: number) => formatCounter(index, SECTION_COUNT);
 
 /**
@@ -58,29 +59,13 @@ const eyebrow = (index: number) => formatCounter(index, SECTION_COUNT);
  * their own.
  */
 const Academic = () => {
-  // The shift figure's number of waves and the amount added to every number:
-  // the figure draws them, and its controls, set beside it, change them.
+  // The shift figure's number of waves: the reader's choice, kept here.
+  // Each figure's own value, which its demo moves frame by frame, lives in
+  // its DemoStage, so a run renders that stage alone. The heat-kernel
+  // figures start at the start of time where their slider will run; with
+  // reduced motion nothing runs and they rest where they are clearest.
   const [waveK, setWaveK] = useState(K_DEFAULT);
-  const [waveShift, setWaveShift] = useState(0);
-  // The two heat-kernel figures, whose controls sit beside the prose.
-  // They start at the start of time where their slider will run, so the run
-  // begins where the figure already is; with reduced motion, nothing runs and
-  // they rest where they are clearest.
   const prefersReducedMotion = usePrefersReducedMotion();
-  const [influenceTime, setInfluenceTime] = useState(prefersReducedMotion ? INFLUENCE_START : 0);
-  const [boundsTime, setBoundsTime] = useState(prefersReducedMotion ? BOUNDS_START : 0);
-  // Each figure shows what its slider does by running it once, start to end,
-  // the first time it is seen; the reader has the slider from then on. The
-  // wave goes once round the circle, back to where it began, after it has
-  // drawn itself.
-  const influenceDemo = useDemoRun<HTMLDivElement>(setInfluenceTime, INFLUENCE_DEMO);
-  const boundsDemo = useDemoRun<HTMLDivElement>(setBoundsTime, BOUNDS_DEMO);
-  const shiftDemo = useDemoRun<HTMLDivElement>((value) => setWaveShift(Math.round(value) % CYCLE), {
-    from: 0,
-    to: CYCLE,
-    durationMs: 3000,
-    delayMs: 1000,
-  });
   const { language } = useSettings();
   const t = translations[language];
   const story = t.academic.story;
@@ -145,26 +130,20 @@ const Academic = () => {
                 height by the flexible rows around them; the figure in 7–12.
                 The figure comes second in the markup, so on a phone it sits
                 between the prose and the controls it answers to. */}
-            <Grid gapY={24} className="lg:grid-rows-[1fr_auto_auto_1fr]">
-              <Col spanLg={6} className="lg:col-start-1 lg:row-start-2">
-                <p className={STORY_PROSE}>{kernels.map}</p>
-              </Col>
-              <Col as={Reveal} spanLg={6} className="lg:col-start-7 lg:row-span-4 lg:row-start-1">
-                <div ref={influenceDemo.ref}>
-                  <InfluenceMapFigure labels={kernels.influence} position={influenceTime} />
-                </div>
-              </Col>
-              <Col spanLg={6} className="lg:col-start-1 lg:row-start-3 lg:pt-4">
+            <DemoStage
+              placement="right"
+              initial={prefersReducedMotion ? INFLUENCE_START : 0}
+              demo={INFLUENCE_DEMO}
+              prose={<p className={STORY_PROSE}>{kernels.map}</p>}
+              figure={(time) => <InfluenceMapFigure labels={kernels.influence} position={time} />}
+              controls={(time, setTime) => (
                 <InfluenceMapControls
                   labels={kernels.influence}
-                  position={influenceTime}
-                  onPositionChange={(value) => {
-                    influenceDemo.stop();
-                    setInfluenceTime(value);
-                  }}
+                  position={time}
+                  onPositionChange={setTime}
                 />
-              </Col>
-            </Grid>
+              )}
+            />
           </div>
 
           <div>
@@ -177,28 +156,24 @@ const Academic = () => {
             {/* Mirrored from the first stage: the figure on the left from lg,
                 the prose and its control on the right. A phone keeps the
                 markup's order: prose, figure, control. */}
-            <Grid gapY={24} className="lg:grid-rows-[1fr_auto_auto_1fr]">
-              <Col spanLg={6} className="lg:col-start-7 lg:row-start-2">
+            <DemoStage
+              placement="left"
+              initial={prefersReducedMotion ? BOUNDS_START : 0}
+              demo={BOUNDS_DEMO}
+              prose={
                 <p className={STORY_PROSE}>
                   <MathText text={kernels.sharp} />
                 </p>
-              </Col>
-              <Col as={Reveal} spanLg={6} className="lg:col-start-1 lg:row-span-4 lg:row-start-1">
-                <div ref={boundsDemo.ref}>
-                  <SharpBoundsFigure labels={kernels.bounds} position={boundsTime} />
-                </div>
-              </Col>
-              <Col spanLg={6} className="lg:col-start-7 lg:row-start-3 lg:pt-4">
+              }
+              figure={(time) => <SharpBoundsFigure labels={kernels.bounds} position={time} />}
+              controls={(time, setTime) => (
                 <SharpBoundsControls
                   labels={kernels.bounds}
-                  position={boundsTime}
-                  onPositionChange={(value) => {
-                    boundsDemo.stop();
-                    setBoundsTime(value);
-                  }}
+                  position={time}
+                  onPositionChange={setTime}
                 />
-              </Col>
-            </Grid>
+              )}
+            />
           </div>
 
           <div>
@@ -311,46 +286,47 @@ const Academic = () => {
             <p className="mb-8 text-base text-foreground/80">
               <MathText text={clue} />
             </p>
-            <Grid gapY={24} className="lg:grid-rows-[1fr_auto_auto_1fr]">
-              <Col spanLg={5} className="lg:col-start-8 lg:row-start-2 lg:pl-6">
+            <DemoStage
+              placement="left-wide"
+              initial={0}
+              demo={SHIFT_DEMO}
+              fromDemo={(value) => Math.round(value) % CYCLE}
+              prose={
                 <p
                   id="shift-prompt"
                   className="text-base font-medium text-foreground md:text-body-lg"
                 >
                   {transformers.figure.prompt}
                 </p>
-              </Col>
-              <Col as={Reveal} spanLg={7} className="lg:col-start-1 lg:row-span-4 lg:row-start-1">
-                <div ref={shiftDemo.ref}>
-                  <CyclicShiftFigure
-                    labels={transformers.figure}
-                    k={waveK}
-                    add={waveShift}
-                    describedBy="shift-prompt"
-                  />
-                </div>
-              </Col>
-              <Col spanLg={5} className="lg:col-start-8 lg:row-start-3 lg:pl-6">
-                <CyclicShiftControls
+              }
+              figure={(add) => (
+                <CyclicShiftFigure
                   labels={transformers.figure}
                   k={waveK}
-                  add={waveShift}
-                  onKChange={setWaveK}
-                  onAddChange={(value) => {
-                    shiftDemo.stop();
-                    setWaveShift(value);
-                  }}
+                  add={add}
+                  describedBy="shift-prompt"
                 />
-                <div className="mt-8 border-t border-border pt-6">
-                  <p className="mb-2 font-mono text-meta uppercase tracking-widest text-iris">
-                    {transformers.figure.curious}
-                  </p>
-                  <p className="text-base text-foreground/80">
-                    <MathText text={transformers.figure.detail} />
-                  </p>
-                </div>
-              </Col>
-            </Grid>
+              )}
+              controls={(add, setAdd) => (
+                <>
+                  <CyclicShiftControls
+                    labels={transformers.figure}
+                    k={waveK}
+                    add={add}
+                    onKChange={setWaveK}
+                    onAddChange={setAdd}
+                  />
+                  <div className="mt-8 border-t border-border pt-6">
+                    <p className="mb-2 font-mono text-meta uppercase tracking-widest text-iris">
+                      {transformers.figure.curious}
+                    </p>
+                    <p className="text-base text-foreground/80">
+                      <MathText text={transformers.figure.detail} />
+                    </p>
+                  </div>
+                </>
+              )}
+            />
           </div>
 
           {/* The limits of the conclusion close the section across its full

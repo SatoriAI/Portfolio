@@ -1,6 +1,8 @@
-import { type ReactNode, type RefObject, useEffect, useRef } from "react";
+import { type ReactNode, type RefObject, useRef } from "react";
 import { createPortal } from "react-dom";
 
+import { useLatest } from "@/hooks/use-latest";
+import { useScrollFrame } from "@/hooks/use-scroll-frame";
 import { clamp01, easeInOutCubic } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -52,14 +54,12 @@ const CircleFlight = ({ roles, section, from, to, onPhase }: CircleFlightProps) 
   const copies = useRef<(HTMLDivElement | null)[]>([]);
   const phase = useRef<FlightPhase | null>(null);
   // Read through a ref, so a new callback each render does not restart the loop.
-  const tell = useRef(onPhase);
-  tell.current = onPhase;
+  const tell = useLatest(onPhase);
 
-  useEffect(() => {
-    let frame = 0;
-
-    const place = () => {
-      frame = 0;
+  // The class of each circle changes as roles are chosen; only how many
+  // there are moves anything.
+  useScrollFrame(
+    () => {
       const sectionTop = section.current?.getBoundingClientRect().top;
       if (sectionTop === undefined) return;
       const start = window.innerHeight * START_AT;
@@ -101,20 +101,9 @@ const CircleFlight = ({ roles, section, from, to, onPhase }: CircleFlightProps) 
           a.top + (b.top - a.top) * t
         }px)`;
       });
-    };
-
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(place);
-    };
-    place();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-    };
-  }, [roles, section, from, to]);
+    },
+    { watch: [roles.length] },
+  );
 
   return createPortal(
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-30">

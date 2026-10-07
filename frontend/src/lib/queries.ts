@@ -1,19 +1,23 @@
+import { useCallback } from "react";
 import { QueryClient, useQuery } from "@tanstack/react-query";
 
+import { loadArticleBody } from "@/content/workshop";
 import { useSettings } from "@/contexts/SettingsContext";
 
-import { fetchExperiences } from "./experiencesService";
-import { fetchProjects } from "./projectsService";
-import { fetchPublications } from "./publicationsService";
-import { fetchSchools } from "./schoolsService";
-import { fetchSkills } from "./skillsService";
-import { fetchTestimonials } from "./testimonialsService";
+import { fetchExperiences, mapApiExperienceToUi } from "./experiencesService";
+import { fetchProjects, mapApiProjectToUi } from "./projectsService";
+import { fetchPublications, mapApiPublicationToUi } from "./publicationsService";
+import { fetchSchools, mapApiSchoolToUi } from "./schoolsService";
+import { fetchSkills, mapApiSkillToUi } from "./skillsService";
+import { fetchTestimonials, mapApiTestimonialToUi } from "./testimonialsService";
+import type { ArticleHeader } from "./workshop";
 
 /**
- * The backend's lists, one query each, keyed by the resource and the language
- * they are shown in. Switching language is a new key rather than a refetch
- * into the same state, so a slow answer for the old language can never
- * overwrite the new one, and switching back is instant from the cache.
+ * The backend's lists, one query each. The backend sends every translation
+ * in one answer, so a list is fetched once and keyed by the resource alone;
+ * the reader's language is picked when it is read. Switching language
+ * re-reads the cache rather than fetching again, so nothing on the page
+ * blanks or loses its place.
  */
 
 export const queryClient = new QueryClient({
@@ -28,14 +32,36 @@ export const queryClient = new QueryClient({
   },
 });
 
-const useListQuery = <T>(resource: string, fetcher: (language: string) => Promise<T[]>) => {
+const useListQuery = <Api, Ui>(
+  resource: string,
+  fetcher: () => Promise<Api[]>,
+  map: (item: Api, language: string) => Ui,
+) => {
   const { language } = useSettings();
-  return useQuery({ queryKey: [resource, language], queryFn: () => fetcher(language) });
+  const select = useCallback(
+    (items: Api[]) => items.map((item) => map(item, language)),
+    [map, language],
+  );
+  return useQuery({ queryKey: [resource], queryFn: fetcher, select });
 };
 
-export const useProjects = () => useListQuery("projects", fetchProjects);
-export const useExperiences = () => useListQuery("experiences", fetchExperiences);
-export const useSkills = () => useListQuery("skills", fetchSkills);
-export const usePublications = () => useListQuery("publications", fetchPublications);
-export const useSchools = () => useListQuery("schools", fetchSchools);
-export const useTestimonials = () => useListQuery("testimonials", fetchTestimonials);
+export const useProjects = () => useListQuery("projects", fetchProjects, mapApiProjectToUi);
+export const useExperiences = () =>
+  useListQuery("experiences", fetchExperiences, mapApiExperienceToUi);
+export const useSkills = () => useListQuery("skills", fetchSkills, mapApiSkillToUi);
+export const usePublications = () =>
+  useListQuery("publications", fetchPublications, mapApiPublicationToUi);
+export const useSchools = () => useListQuery("schools", fetchSchools, mapApiSchoolToUi);
+export const useTestimonials = () =>
+  useListQuery("testimonials", fetchTestimonials, mapApiTestimonialToUi);
+
+/**
+ * A workshop piece's text, its own chunk, fetched once per piece and
+ * language; idle until the piece is known.
+ */
+export const useArticleText = (article: ArticleHeader | undefined) =>
+  useQuery({
+    queryKey: ["workshop-text", article?.slug, article?.language, article?.draft],
+    queryFn: () => loadArticleBody(article as ArticleHeader),
+    enabled: article !== undefined,
+  });

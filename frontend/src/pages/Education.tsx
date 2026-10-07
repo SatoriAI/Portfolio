@@ -55,12 +55,12 @@ const Education = () => {
     newTab: t.academic.newTab,
   };
 
-  // The two lists load together and share one status block.
-  const status = queryStatus([schoolsQuery, testimonialsQuery], {
+  // Each list has its own status, so one failing leaves the other standing.
+  const statusLabels = {
     loading: t.common.loading,
     error: t.academic.error,
     retry: t.academic.tryAgain,
-  });
+  };
 
   return (
     <PageLayout>
@@ -82,7 +82,7 @@ const Education = () => {
           space. */}
       <Section id="education" tone="surface">
         <SectionHeading eyebrow={eyebrow(1)} title={t.academic.education} />
-        {status ??
+        {queryStatus([schoolsQuery], statusLabels) ??
           (schools.length === 0 ? (
             <StatusMessage variant="empty" message={t.academic.noData} />
           ) : (
@@ -117,7 +117,7 @@ const Education = () => {
             </figure>
           }
         />
-        {status ??
+        {queryStatus([testimonialsQuery], statusLabels) ??
           (testimonials.length === 0 ? (
             <StatusMessage variant="empty" message={t.academic.noTestimonials} />
           ) : (

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useOnceInView } from "@/hooks/use-in-view";
+import { useLatest } from "@/hooks/use-latest";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { easeInOutQuad } from "@/lib/motion";
 
@@ -15,7 +17,7 @@ import { easeInOutQuad } from "@/lib/motion";
  * by the reader, is watched from the moment it appears.
  */
 
-type DemoRun = {
+export type DemoRun = {
   from: number;
   to: number;
   durationMs: number;
@@ -36,45 +38,41 @@ export function useDemoRun<T extends Element>(
   const prefersReducedMotion = usePrefersReducedMotion();
   const stopped = useRef(false);
   const frame = useRef(0);
+  const timer = useRef(0);
   // Read through a ref, so a new callback each render does not restart the run.
-  const set = useRef(onValue);
-  set.current = onValue;
+  const set = useLatest(onValue);
 
-  useEffect(() => {
-    if (!element || prefersReducedMotion || stopped.current) return;
-    let timer = 0;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        observer.disconnect();
-        timer = window.setTimeout(() => {
-          let begin: number | null = null;
-          const total = durationMs + (rest === undefined ? 0 : RETURN_MS);
-          const step = (now: number) => {
-            if (stopped.current) return;
-            begin ??= now;
-            const elapsed = now - begin;
-            if (elapsed <= durationMs || rest === undefined) {
-              set.current(from + (to - from) * easeInOutQuad(Math.min(1, elapsed / durationMs)));
-            } else {
-              const back = easeInOutQuad(Math.min(1, (elapsed - durationMs) / RETURN_MS));
-              set.current(to + (rest - to) * back);
-            }
-            if (elapsed < total) frame.current = requestAnimationFrame(step);
-            else stopped.current = true;
-          };
-          frame.current = requestAnimationFrame(step);
-        }, delayMs);
-      },
-      { threshold: 0.6 },
-    );
-    observer.observe(element);
-    return () => {
-      observer.disconnect();
-      window.clearTimeout(timer);
+  useOnceInView(
+    element,
+    () => {
+      timer.current = window.setTimeout(() => {
+        let begin: number | null = null;
+        const total = durationMs + (rest === undefined ? 0 : RETURN_MS);
+        const step = (now: number) => {
+          if (stopped.current) return;
+          begin ??= now;
+          const elapsed = now - begin;
+          if (elapsed <= durationMs || rest === undefined) {
+            set.current(from + (to - from) * easeInOutQuad(Math.min(1, elapsed / durationMs)));
+          } else {
+            const back = easeInOutQuad(Math.min(1, (elapsed - durationMs) / RETURN_MS));
+            set.current(to + (rest - to) * back);
+          }
+          if (elapsed < total) frame.current = requestAnimationFrame(step);
+          else stopped.current = true;
+        };
+        frame.current = requestAnimationFrame(step);
+      }, delayMs);
+    },
+    { threshold: 0.6, enabled: !prefersReducedMotion },
+  );
+  useEffect(
+    () => () => {
+      window.clearTimeout(timer.current);
       cancelAnimationFrame(frame.current);
-    };
-  }, [element, prefersReducedMotion, from, to, durationMs, delayMs, rest]);
+    },
+    [],
+  );
 
   const stop = useCallback(() => {
     stopped.current = true;

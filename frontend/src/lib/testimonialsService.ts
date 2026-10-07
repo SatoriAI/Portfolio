@@ -1,7 +1,7 @@
 import { endpoints } from "../config/endpoints";
 import { env } from "../config/env";
 
-import { apiFetch } from "./apiClient";
+import { apiClient } from "./apiClient";
 
 export type ApiTestimonial = {
   id: number;
@@ -156,15 +156,8 @@ const mockTestimonials: ApiTestimonial[] = [
   },
 ];
 
-export async function fetchTestimonials(language: string): Promise<UiTestimonial[]> {
-  if (env.mock) {
-    // Use mock data when VITE_MOCK=true
-    return mockTestimonials.map((t) => mapApiTestimonialToUi(t, language));
-  }
-
-  const data = await apiFetch<ApiTestimonial[]>(endpoints.education.testimonials.list, {
-    method: "GET",
-    headers: { "Accept-Language": language },
-  });
-  return data.map((t) => mapApiTestimonialToUi(t, language));
-}
+/** Every translation at once: the page picks its language (see lib/queries.ts). */
+export const fetchTestimonials = (): Promise<ApiTestimonial[]> =>
+  env.mock
+    ? Promise.resolve(mockTestimonials)
+    : apiClient.get<ApiTestimonial[]>(endpoints.education.testimonials.list);

@@ -184,6 +184,9 @@ const copy = {
       copy: "Copy",
       copied: "Copied",
       footnotes: "Footnotes",
+      /** When a piece's text could not be loaded. */
+      textError: "The text could not be loaded.",
+      tryAgain: "Try again",
       /** A footnote's way back to where it is cited; `{n}` is its number. */
       backToText: "Back to reference {n}",
       related: "More on this:",
@@ -801,6 +804,8 @@ const copy = {
       copy: "Kopiuj",
       copied: "Skopiowano",
       footnotes: "Przypisy",
+      textError: "Nie udało się wczytać tekstu.",
+      tryAgain: "Spróbuj ponownie",
       backToText: "Wróć do odsyłacza {n}",
       related: "Więcej w tym temacie:",
       pages: {

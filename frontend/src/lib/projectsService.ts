@@ -37,7 +37,6 @@ export function mapApiProjectToUi(project: ApiProject, language: string): UiProj
   };
 }
 
-export async function fetchProjects(language: string): Promise<UiProject[]> {
-  const data = await apiClient.get<ApiProject[]>(endpoints.work.projects.list);
-  return data.map((p) => mapApiProjectToUi(p, language));
-}
+/** Every translation at once: the page picks its language (see lib/queries.ts). */
+export const fetchProjects = (): Promise<ApiProject[]> =>
+  apiClient.get<ApiProject[]>(endpoints.work.projects.list);

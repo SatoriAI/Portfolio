@@ -1,4 +1,12 @@
-import { type RefObject, useEffect, useRef, useState } from "react";
+import { type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react";
+
+import { useLatest } from "@/hooks/use-latest";
+
+/**
+ * What to watch: a ref, or the element itself, held in state through a
+ * callback ref, for an element that may mount after the hook first runs.
+ */
+export type InViewTarget = RefObject<Element | null> | Element | null | undefined;
 
 export type InViewOptions = {
   /** How much of the element must show, 0 to 1. */
@@ -8,14 +16,17 @@ export type InViewOptions = {
   enabled?: boolean;
 };
 
+const elementOf = (target: InViewTarget) =>
+  target && "current" in target ? target.current : (target ?? null);
+
 /** Whether the element is on screen, kept up to date as it scrolls in and out. */
 export function useInView(
-  ref: RefObject<Element | null> | undefined,
+  target: InViewTarget,
   { threshold = 0, rootMargin, enabled = true }: InViewOptions = {},
 ) {
   const [inView, setInView] = useState(false);
   useEffect(() => {
-    const element = ref?.current;
+    const element = elementOf(target);
     if (!element || !enabled) return;
     const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), {
       threshold,
@@ -23,35 +34,53 @@ export function useInView(
     });
     observer.observe(element);
     return () => observer.disconnect();
-  }, [ref, threshold, rootMargin, enabled]);
+  }, [target, threshold, rootMargin, enabled]);
   return inView;
 }
 
 /**
- * Calls `onSeen` once, the first time the element is in view, and stops
- * watching. The latest `onSeen` is the one called, so it need not be stable.
+ * Calls `onSeen` once, the first time the element is in view, and never
+ * again, whatever its options do after. The latest `onSeen` is the one
+ * called, so it need not be stable.
  */
 export function useOnceInView(
-  ref: RefObject<Element | null>,
+  target: InViewTarget,
   onSeen: () => void,
   { threshold = 0, rootMargin, enabled = true }: InViewOptions = {},
 ) {
-  const callback = useRef(onSeen);
+  const callback = useLatest(onSeen);
+  const fired = useRef(false);
   useEffect(() => {
-    callback.current = onSeen;
-  });
-  useEffect(() => {
-    const element = ref.current;
-    if (!element || !enabled) return;
+    const element = elementOf(target);
+    if (!element || !enabled || fired.current) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
         observer.disconnect();
+        fired.current = true;
         callback.current();
       },
       { threshold, rootMargin },
     );
     observer.observe(element);
     return () => observer.disconnect();
-  }, [ref, threshold, rootMargin, enabled]);
+  }, [target, threshold, rootMargin, enabled, callback]);
+}
+
+/**
+ * Whether the element was already on screen when it mounted, read before the
+ * first paint: an entrance for something the reader is already looking at
+ * would show it and then hide it, so such an element is simply shown.
+ */
+export function useOnScreenAtMount(target: InViewTarget) {
+  const [onScreen, setOnScreen] = useState(false);
+  const measured = useRef(false);
+  useLayoutEffect(() => {
+    const element = elementOf(target);
+    if (!element || measured.current) return;
+    measured.current = true;
+    const box = element.getBoundingClientRect();
+    if (box.top < window.innerHeight && box.bottom > 0) setOnScreen(true);
+  }, [target]);
+  return onScreen;
 }

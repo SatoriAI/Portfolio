@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef } from "react";
 
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { prefersReducedMotion } from "@/lib/media";
@@ -160,8 +160,6 @@ const SkillLanes = ({
 }: SkillLanesProps) => {
   const percent = (month: number) => `${(month / axis.months) * 100}%`;
   const { ref: revealRef, isRevealed, prefersReducedMotion } = useScrollReveal<HTMLDivElement>();
-  // Whether the request has set off down the layers.
-  const [sent, setSent] = useState(false);
 
   const byId = new Map(skills.map((skill) => [skill.id, skill]));
   const placed = new Set(layers.flatMap((layer) => layer.skills));
@@ -174,12 +172,9 @@ const SkillLanes = ({
     { key: "other", label: "", items: skills.filter((skill) => !placed.has(skill.id)) },
   ].filter((group) => group.items.length > 0);
 
-  // The whole chart fits a screen, so the request runs once, as it comes into view.
-  useEffect(() => {
-    if (isRevealed && !prefersReducedMotion) setSent(true);
-  }, [isRevealed, prefersReducedMotion]);
-
-  const shown = sent || prefersReducedMotion;
+  // The whole chart fits a screen, so the request sets off down the layers
+  // once, as it comes into view.
+  const shown = isRevealed;
   // Each layer waits for the one above it.
   const transition = (property: string, duration: number, layer: number, after = 0) =>
     prefersReducedMotion

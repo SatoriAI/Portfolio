@@ -11,7 +11,7 @@ import { ArrowUpRight, Award } from "lucide-react";
 
 import DomainGlyph, { type DomainKind } from "@/components/academic/DomainGlyph";
 import { Button } from "@/components/ui/button";
-import { useOnceInView } from "@/hooks/use-in-view";
+import { useOnceInView, useOnScreenAtMount } from "@/hooks/use-in-view";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { matchesMedia, MEDIA } from "@/lib/media";
 import type { UiSchool } from "@/lib/schoolsService";
@@ -311,6 +311,9 @@ const ResearchThread = ({
     threshold: 0.3,
     enabled: arrival === "waiting",
   });
+  // Already on screen when it mounts (a link to #cone, say): simply there.
+  const onScreenAtMount = useOnScreenAtMount(root);
+  if (onScreenAtMount && arrival === "waiting") setArrival("done");
   useEffect(() => {
     if (arrival !== "walking") return;
     const timer = window.setTimeout(() => setArrival("done"), last * STEP_MS + RISE_MS + 200);

@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 
 import { useDismissOutside } from "@/hooks/use-dismiss-outside";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { useScrollFrame } from "@/hooks/use-scroll-frame";
 import { clamp01, easeOutCubic } from "@/lib/motion";
 import { segmentQuote, themeCounts, type ThemePhrases, themesIn } from "@/lib/quoteThemes";
 import type { UiTestimonial } from "@/lib/testimonialsService";
@@ -104,12 +105,10 @@ const QuoteWall = ({ testimonials, themes, evidence, labels, className }: QuoteW
   // The notes stuck up with the scroll. Each slot is measured and left still;
   // the note inside it moves, so the measure never chases the motion. Before
   // the first paint, so a note below never shows and then vanishes.
-  useLayoutEffect(() => {
-    const wall = grid.current;
-    if (!wall || prefersReducedMotion) return;
-    let frame = 0;
-    const place = () => {
-      frame = 0;
+  useScrollFrame(
+    () => {
+      const wall = grid.current;
+      if (!wall) return;
       const height = window.innerHeight;
       const columns = getComputedStyle(wall).gridTemplateColumns.split(" ").length;
       // Every slot is measured before any is changed, so the frame lays the
@@ -130,27 +129,22 @@ const QuoteWall = ({ testimonials, themes, evidence, labels, className }: QuoteW
         // Against the note's own tilt, so it comes in square and turns.
         note.style.rotate = `${(-tilt * (1 - pinned)).toFixed(3)}deg`;
       });
-    };
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(place);
-    };
-    place();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      [...wall.children].forEach((slot) => {
-        if (!(slot instanceof HTMLElement)) return;
-        slot.style.opacity = "";
-        const note = slot.firstElementChild as HTMLElement | null;
-        note?.style.removeProperty("translate");
-        note?.style.removeProperty("scale");
-        note?.style.removeProperty("rotate");
-      });
-    };
-  }, [prefersReducedMotion, testimonials]);
+    },
+    { watch: [testimonials], enabled: !prefersReducedMotion },
+  );
+  // Turned off mid-visit, reduced motion leaves every note where it belongs.
+  useLayoutEffect(() => {
+    const wall = grid.current;
+    if (!wall || !prefersReducedMotion) return;
+    [...wall.children].forEach((slot) => {
+      if (!(slot instanceof HTMLElement)) return;
+      slot.style.opacity = "";
+      const note = slot.firstElementChild as HTMLElement | null;
+      note?.style.removeProperty("translate");
+      note?.style.removeProperty("scale");
+      note?.style.removeProperty("rotate");
+    });
+  }, [prefersReducedMotion]);
 
   // While a theme is chosen, a press anywhere but on the themes clears it.
   useDismissOutside(selected !== null, group, () => setSelected(null));

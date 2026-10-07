@@ -10,8 +10,6 @@ type RevealProps = PropsWithChildren<{
   delayMs?: number;
   /** Distance travelled while fading in. The kit specifies 8px. */
   offset?: number;
-  /** If true, reveal only once */
-  once?: boolean;
 }>;
 
 /**
@@ -25,11 +23,10 @@ export default function Reveal({
   className,
   delayMs = 0,
   offset = 8,
-  once = true,
   children,
 }: RevealProps) {
   const { ref, isRevealed, isInitiallyVisible, prefersReducedMotion } =
-    useScrollReveal<HTMLElement>({ once });
+    useScrollReveal<HTMLElement>();
 
   const skipAnimation = prefersReducedMotion || isInitiallyVisible;
   const visible = skipAnimation || isRevealed;

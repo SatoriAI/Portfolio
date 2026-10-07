@@ -5,7 +5,7 @@ import { ExternalLink } from "lucide-react";
 import DomainGlyph, { domainFor } from "@/components/academic/DomainGlyph";
 import { Button } from "@/components/ui/button";
 import { publicationDetails, type PublicationStatus } from "@/config/publications";
-import { useOnceInView } from "@/hooks/use-in-view";
+import { useOnceInView, useOnScreenAtMount } from "@/hooks/use-in-view";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { EASE_BRAND } from "@/lib/motion";
 import type { UiPublication } from "@/lib/publicationsService";
@@ -205,12 +205,8 @@ const PublicationStack = ({
 
   // Already on screen when the page opens (a link to #publications, say):
   // shown as it is, before the first paint, rather than hidden and filed.
-  useLayoutEffect(() => {
-    const element = root.current;
-    if (element && element.getBoundingClientRect().top < window.innerHeight) {
-      setFiling((now) => (now === "waiting" ? "filed" : now));
-    }
-  }, []);
+  const onScreenAtMount = useOnScreenAtMount(root);
+  if (onScreenAtMount && filing === "waiting") setFiling("filed");
 
   // Before the first paint of the filing, so nothing shows in place and then
   // jumps away.
