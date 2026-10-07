@@ -11,6 +11,7 @@ import {
 import { CircuitContext } from "@/components/home/circuitContext";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { MEDIA } from "@/lib/media";
+import { clamp01 } from "@/lib/motion";
 
 /**
  * One wire through the home page, from the theorem at the top to me at the
@@ -129,12 +130,12 @@ const Circuit = ({ children }: PropsWithChildren) => {
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
+    // A width change resizes the wrapper, so the observer sees it; a change
+    // of height alone moves nothing the wire joins.
     wide.addEventListener("change", measure);
-    window.addEventListener("resize", measure);
     return () => {
       observer.disconnect();
       wide.removeEventListener("change", measure);
-      window.removeEventListener("resize", measure);
     };
   }, []);
 
@@ -179,7 +180,7 @@ const Circuit = ({ children }: PropsWithChildren) => {
     const pointAt = (at: number) => {
       const index = Math.min(samples.length - 2, Math.floor(at / STEP));
       const [a, b] = [samples[index], samples[index + 1]];
-      const share = Math.min(1, Math.max(0, (at - a.at) / (b.at - a.at || 1)));
+      const share = clamp01((at - a.at) / (b.at - a.at || 1));
       return { x: a.x + share * (b.x - a.x), y: a.y + share * (b.y - a.y) };
     };
     const nodeLengths = layout.nodes.map((node) => lengthAt(node.y));
@@ -240,7 +241,7 @@ const Circuit = ({ children }: PropsWithChildren) => {
         to - from < 1 || window.scrollY >= to - CLOSE_WITHIN
           ? 1
           : (window.scrollY - from) / (to - from);
-      return lastNode + Math.min(1, Math.max(0, share)) * (total - lastNode);
+      return lastNode + clamp01(share) * (total - lastNode);
     };
 
     let target = targetFor();

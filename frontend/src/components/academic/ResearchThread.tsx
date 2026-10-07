@@ -13,6 +13,7 @@ import DomainGlyph, { type DomainKind } from "@/components/academic/DomainGlyph"
 import { Button } from "@/components/ui/button";
 import { useOnceInView, useOnScreenAtMount } from "@/hooks/use-in-view";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { linkedSlug, replaceHash } from "@/lib/hash";
 import { matchesMedia, MEDIA } from "@/lib/media";
 import type { UiSchool } from "@/lib/schoolsService";
 import { splitSentences } from "@/lib/sentences";
@@ -249,7 +250,7 @@ const ResearchThread = ({
 }: ResearchThreadProps) => {
   const [first] = schools;
   const [selected, setSelected] = useState(() => {
-    const linked = schools.find((school) => slugOf(school) === window.location.hash.slice(1));
+    const linked = schools.find((school) => slugOf(school) === linkedSlug());
     return String((linked ?? first)?.id ?? "");
   });
 
@@ -296,11 +297,7 @@ const ResearchThread = ({
         }),
       );
     }
-    window.history.replaceState(
-      window.history.state,
-      "",
-      `${window.location.pathname}${window.location.search}#${slugOf(school)}`,
-    );
+    replaceHash(slugOf(school));
   };
   // Nothing waits under reduced motion: the road is simply there.
   const prefersReducedMotion = usePrefersReducedMotion();

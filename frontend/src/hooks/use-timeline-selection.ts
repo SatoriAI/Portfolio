@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { linkedSlug, replaceHash } from "@/lib/hash";
 import type { TimelineId } from "@/lib/timeline";
 
 /**
@@ -24,13 +25,6 @@ import type { TimelineId } from "@/lib/timeline";
  */
 const LINE_LEAD_MS = 300;
 
-const setHash = (hash: string) =>
-  window.history.replaceState(
-    window.history.state,
-    "",
-    `${window.location.pathname}${window.location.search}${hash}`,
-  );
-
 export function useTimelineSelection<Id extends TimelineId>(
   entries: readonly { id: Id; slug: string }[],
 ) {
@@ -53,7 +47,7 @@ export function useTimelineSelection<Id extends TimelineId>(
   useEffect(() => () => clearTimeout(opening.current), []);
 
   useEffect(() => {
-    const slug = window.location.hash.slice(1).toLowerCase();
+    const slug = linkedSlug();
     const linked = slug && entries.find((entry) => entry.slug === slug);
     if (linked) openEntry(linked.id);
   }, [entries, openEntry]);
@@ -61,14 +55,14 @@ export function useTimelineSelection<Id extends TimelineId>(
   const select = (id: Id) => {
     openEntry(id);
     const entry = entries.find((candidate) => candidate.id === id);
-    if (entry) setHash(`#${entry.slug}`);
+    if (entry) replaceHash(entry.slug);
   };
 
   // Called once the dialog has shrunk into its circle: the line follows it.
   const close = () => {
     setOpen(false);
     setSelectedId(null);
-    setHash("");
+    replaceHash(null);
   };
 
   return { selectedId, open, select, close };

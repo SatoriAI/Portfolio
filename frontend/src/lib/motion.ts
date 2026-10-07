@@ -11,6 +11,9 @@ export const EASE_EXIT = "cubic-bezier(0.4, 0, 1, 1)";
 /** A symmetric ease, for something that travels from one place to another. */
 export const EASE_TRAVEL = "cubic-bezier(0.45, 0, 0.55, 1)";
 
+/** A firm press, even in and out: a stamp coming down. */
+export const EASE_PRESS = "cubic-bezier(0.3, 0, 0.3, 1)";
+
 export const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
 /** Ease-out, in the spirit of EASE_BRAND, for progress driven frame by frame. */

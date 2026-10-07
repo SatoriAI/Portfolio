@@ -713,10 +713,8 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
           <span
             ref={markerTag}
             aria-hidden="true"
-            // The size joined by hand: cn would read text-meta as a colour
-            // beside text-white and drop it.
-            className={`font-mono text-meta ${cn(
-              "pointer-events-none absolute whitespace-nowrap rounded-lg border px-2 py-0.5 transition-colors duration-200",
+            className={cn(
+              "pointer-events-none absolute whitespace-nowrap rounded-lg border px-2 py-0.5 font-mono text-meta transition-colors duration-200",
               !answered
                 ? "border-iris bg-card text-iris"
                 : grade === "perfect"
@@ -724,7 +722,7 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
                   : grade === "almost"
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-muted-foreground bg-muted-foreground text-white",
-            )}`}
+            )}
             style={{
               left: x(guess),
               top: 6,

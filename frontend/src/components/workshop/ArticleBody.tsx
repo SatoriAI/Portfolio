@@ -1,4 +1,4 @@
-import { Children, type CSSProperties, type ReactNode, useState } from "react";
+import { Children, type CSSProperties, type ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import { Link } from "react-router-dom";
 import { Check, Copy } from "lucide-react";
@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import { Formula, MathText } from "@/components/Formula";
 import { EXHIBITS } from "@/components/workshop/exhibitRegistry";
 import type { ExhibitLabels } from "@/components/workshop/exhibits";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { fillTemplate } from "@/lib/text";
 import { typeset } from "@/lib/typography";
 import { cn } from "@/lib/utils";
@@ -74,7 +75,7 @@ const CodeBlock = ({
   children: ReactNode;
   labels: ArticleBodyProps["labels"];
 }) => {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard(1600);
   const text = Children.toArray(children)
     .map((child) =>
       typeof child === "object" && child !== null && "props" in child
@@ -82,11 +83,6 @@ const CodeBlock = ({
         : String(child),
     )
     .join("");
-  const copy = () =>
-    navigator.clipboard?.writeText(text.replace(/\n$/, "")).then(() => {
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
-    });
   return (
     <div className="relative my-8">
       {/* The top padding keeps the code's first line clear of the button. */}
@@ -95,7 +91,7 @@ const CodeBlock = ({
       </pre>
       <button
         type="button"
-        onClick={copy}
+        onClick={() => copy(text.replace(/\n$/, ""))}
         className="absolute right-2 top-2 flex items-center gap-1.5 rounded-lg px-2 py-1 font-mono text-meta text-muted-foreground transition-colors duration-200 hover:text-foreground"
       >
         {copied ? (

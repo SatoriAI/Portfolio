@@ -1,6 +1,6 @@
 import { useCallback, useSyncExternalStore } from "react";
 
-import { matchesMedia, MEDIA } from "@/lib/media";
+import { matchesMedia, MEDIA, mediaList } from "@/lib/media";
 
 /**
  * Whether a media query matches, kept in sync as it changes. Read
@@ -9,7 +9,7 @@ import { matchesMedia, MEDIA } from "@/lib/media";
 export function useMediaQuery(query: string) {
   const subscribe = useCallback(
     (onChange: () => void) => {
-      const list = window.matchMedia(query);
+      const list = mediaList(query);
       list.addEventListener("change", onChange);
       return () => list.removeEventListener("change", onChange);
     },

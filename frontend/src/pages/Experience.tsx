@@ -23,16 +23,14 @@ import { skillLayers } from "@/config/skillLayers";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useVex } from "@/contexts/VexContext";
 import { useDismissOutside } from "@/hooks/use-dismiss-outside";
-import { useIsMobile } from "@/hooks/use-media-query";
-import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { useIsMobile, usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { useTimelineSelection } from "@/hooks/use-timeline-selection";
 import { useExperiences, useProjects, useSkills } from "@/lib/queries";
 import { claimsEarlier, laneSegments } from "@/lib/skillLanes";
 import { rolesForSkill } from "@/lib/skillRoles";
 import { formatYears, parseYears } from "@/lib/skillYears";
-import { fillTemplate } from "@/lib/text";
-import { formatCounter } from "@/lib/text";
+import { fillTemplate, formatCounter } from "@/lib/text";
 import { buildTimeline, companyShortName } from "@/lib/timeline";
 import { translations } from "@/utils/translations";
 

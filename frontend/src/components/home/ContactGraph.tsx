@@ -2,8 +2,10 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { ArrowRight, ArrowUpRight, Check, Copy, Mail, MessageSquare } from "lucide-react";
 
 import { useCircuit } from "@/components/home/circuitContext";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useElementSize } from "@/hooks/use-element-size";
 import { useInView, useOnceInView } from "@/hooks/use-in-view";
+import { useLatest } from "@/hooks/use-latest";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { EASE_BRAND } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -124,17 +126,9 @@ const NodeBody = ({
 const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [hot, setHot] = useState<number | null>(null);
-  const [copied, setCopied] = useState(false);
-  useEffect(() => {
-    if (!copied) return;
-    const reset = window.setTimeout(() => setCopied(false), COPIED_MS);
-    return () => window.clearTimeout(reset);
-  }, [copied]);
-  const copy = () =>
-    void navigator.clipboard.writeText(email).then(
-      () => setCopied(true),
-      () => undefined,
-    );
+  const clipboard = useCopyToClipboard(COPIED_MS);
+  const copied = clipboard.copied;
+  const copy = () => clipboard.copy(email);
 
   // The hub appears the first time the graph is well in view.
   const box = useRef<HTMLDivElement>(null);
@@ -182,50 +176,6 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
   // draws it where it is rather than snapping it straight.
   const swings = useRef<number[]>([0, 0, 0]);
 
-  // The waving runs only while the graph is on screen and the page is
-  // visible; the paths are moved directly, frame by frame,
-  // without re-rendering.
-  const onScreen = useInView(box);
-  const waving = drawn && onScreen && !prefersReducedMotion && size.width > 0;
-  useEffect(() => {
-    if (!waving) return;
-    let frame = 0;
-    const start = performance.now();
-    const step = (now: number) => {
-      if (!document.hidden) {
-        STAR.forEach((_, index) => {
-          const since = now - sparkAt.current[index];
-          const jolt = since < JOLT_MS ? JOLT_PX * Math.sin(now / 16) * (1 - since / JOLT_MS) : 0;
-          const swing =
-            WAVE_PX * Math.sin(((now - start) / WAVE_MS[index]) * 2 * Math.PI + index * 1.7) + jolt;
-          swings.current[index] = swing;
-          const d = curve(index, swing);
-          edges.current[index]?.setAttribute("d", d);
-          pulses.current[index]?.setAttribute("d", d);
-          echoes.current[index]?.setAttribute("d", d);
-        });
-      }
-      frame = requestAnimationFrame(step);
-    };
-    frame = requestAnimationFrame(step);
-    // The current: every edge sparks on its own irregular beat, the first
-    // ones staggered so they do not all leave the hub together.
-    const timers = STAR.map(() => 0);
-    const beat = (index: number, wait: number) => {
-      timers[index] = window.setTimeout(() => {
-        if (!document.hidden) spark(index);
-        beat(index, sparkGap());
-      }, wait);
-    };
-    STAR.forEach((_, index) => beat(index, index * (SPARK_MIN_MS / 2)));
-    return () => {
-      cancelAnimationFrame(frame);
-      timers.forEach((timer) => window.clearTimeout(timer));
-    };
-    // curve reads size, which is in the dependencies; spark reads only refs.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [waving, size]);
-
   // A spark sent along an edge, from the hub to its node: a short dash of
   // iris with a blush echo a beat behind, and the edge shivering as it goes.
   const pulses = useRef<(SVGPathElement | null)[]>([]);
@@ -240,6 +190,53 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
     pulses.current[index]?.animate(run, { duration: PULSE_MS, easing: "linear" });
     echoes.current[index]?.animate(run, { duration: PULSE_MS, delay: 40, easing: "linear" });
   };
+  const latestSpark = useLatest(spark);
+
+  // The waving runs only while the graph is on screen and the page is
+  // visible; the paths are moved directly, frame by frame,
+  // without re-rendering.
+  const onScreen = useInView(box);
+  const waving = drawn && onScreen && !prefersReducedMotion && size.width > 0;
+  // Read through refs, so a resize redraws the curves without restarting
+  // the wave or the beats.
+  const latestCurve = useLatest(curve);
+  useEffect(() => {
+    if (!waving) return;
+    let frame = 0;
+    const start = performance.now();
+    const step = (now: number) => {
+      if (!document.hidden) {
+        STAR.forEach((_, index) => {
+          const since = now - sparkAt.current[index];
+          const jolt = since < JOLT_MS ? JOLT_PX * Math.sin(now / 16) * (1 - since / JOLT_MS) : 0;
+          const swing =
+            WAVE_PX * Math.sin(((now - start) / WAVE_MS[index]) * 2 * Math.PI + index * 1.7) + jolt;
+          swings.current[index] = swing;
+          const d = latestCurve.current(index, swing);
+          edges.current[index]?.setAttribute("d", d);
+          pulses.current[index]?.setAttribute("d", d);
+          echoes.current[index]?.setAttribute("d", d);
+        });
+      }
+      frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    // The current: every edge sparks on its own irregular beat, the first
+    // ones staggered so they do not all leave the hub together.
+    const timers = STAR.map(() => 0);
+    const beat = (index: number, wait: number) => {
+      timers[index] = window.setTimeout(() => {
+        if (!document.hidden) latestSpark.current(index);
+        beat(index, sparkGap());
+      }, wait);
+    };
+    STAR.forEach((_, index) => beat(index, index * (SPARK_MIN_MS / 2)));
+    return () => {
+      cancelAnimationFrame(frame);
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, [waving, latestCurve, latestSpark]);
+
   const pulse = spark;
 
   // Each node with what lights its edge, the same in the star and the tree.

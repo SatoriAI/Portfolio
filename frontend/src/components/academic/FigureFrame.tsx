@@ -43,10 +43,11 @@ const FigureFrame = ({ kind, label, children }: FigureFrameProps) => (
       frameClassName[kind],
     )}
   >
-    {/* Joined by hand, not with cn: tailwind-merge reads `text-meta` and
-        `text-iris` as two colours and drops the size. */}
     <legend
-      className={`ml-[-0.25rem] px-2 font-mono text-meta uppercase tracking-widest max-sm:float-left max-sm:mb-3 max-sm:ml-0 max-sm:w-full max-sm:px-0 ${labelClassName[kind]}`}
+      className={cn(
+        "ml-[-0.25rem] px-2 font-mono text-meta uppercase tracking-widest max-sm:float-left max-sm:mb-3 max-sm:ml-0 max-sm:w-full max-sm:px-0",
+        labelClassName[kind],
+      )}
     >
       {label}
     </legend>

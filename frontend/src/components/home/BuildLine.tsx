@@ -115,17 +115,17 @@ const BuildLine = ({ technologies, active, label, nextLabel }: BuildLineProps) =
         { translate: "0 0", textShadow: "none" },
         {
           translate: "-2px 0",
-          textShadow: "-2px 0 hsl(var(--iris)), 2px 0 #EDC2D7",
+          textShadow: "-2px 0 hsl(var(--iris)), 2px 0 hsl(var(--blush-deep))",
           offset: 0.2,
         },
         {
           translate: "2px -1px",
-          textShadow: "2px 0 hsl(var(--iris)), -2px 0 #EDC2D7",
+          textShadow: "2px 0 hsl(var(--iris)), -2px 0 hsl(var(--blush-deep))",
           offset: 0.4,
         },
         {
           translate: "-1px 1px",
-          textShadow: "-1px 0 hsl(var(--iris)), 1px 0 #EDC2D7",
+          textShadow: "-1px 0 hsl(var(--iris)), 1px 0 hsl(var(--blush-deep))",
           offset: 0.6,
         },
         { translate: "0 0", textShadow: "none" },
@@ -166,7 +166,7 @@ const BuildLine = ({ technologies, active, label, nextLabel }: BuildLineProps) =
             { translate: "0 0", textShadow: "none" },
             {
               translate: `${dx}px 0`,
-              textShadow: `${dx}px 0 hsl(var(--iris) / 0.6), ${-dx}px 0 #EDC2D7`,
+              textShadow: `${dx}px 0 hsl(var(--iris) / 0.6), ${-dx}px 0 hsl(var(--blush-deep))`,
               offset: 0.5,
             },
             { translate: "0 0", textShadow: "none" },

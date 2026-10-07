@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { RotateCcw } from "lucide-react";
 
 import FigureFrame from "@/components/academic/FigureFrame";
@@ -76,6 +76,7 @@ const ClockExample = ({ labels, className }: ClockExampleProps) => {
   };
   // Before the first count the arc and the answer wait, unless nothing moves.
   const shown = !animated || landed;
+  const arrowId = `clock-arrow-${useId().replace(/:/g, "")}`;
   const clock = (
     <svg
       viewBox={`0 0 ${SIZE} ${SIZE}`}
@@ -84,7 +85,7 @@ const ClockExample = ({ labels, className }: ClockExampleProps) => {
     >
       <defs>
         <marker
-          id="clock-example-arrow"
+          id={arrowId}
           viewBox="0 0 8 8"
           refX="6"
           refY="4"
@@ -142,7 +143,7 @@ const ClockExample = ({ labels, className }: ClockExampleProps) => {
         pathLength={1}
         strokeDasharray={1}
         strokeDashoffset={animated && run === 0 ? 1 : 0}
-        markerEnd={shown ? "url(#clock-example-arrow)" : undefined}
+        markerEnd={shown ? `url(#${arrowId})` : undefined}
         className={cn("stroke-iris", animated && run > 0 && "animate-draw")}
         style={
           animated && run > 0

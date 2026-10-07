@@ -1,5 +1,6 @@
 import { type PointerEvent, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 
+import { useLatest } from "@/hooks/use-latest";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { heatPulseKeyframes } from "@/lib/heatPulse";
 import { cn } from "@/lib/utils";
@@ -114,8 +115,7 @@ const HeatSource = ({
   onDone: () => void;
 }) => {
   const circle = useRef<SVGCircleElement>(null);
-  const done = useRef(onDone);
-  done.current = onDone;
+  const done = useLatest(onDone);
   useLayoutEffect(() => {
     const spread = circle.current?.animate(heatPulseKeyframes(HEAT_PEAK), {
       duration: HEAT_MS,
@@ -123,7 +123,7 @@ const HeatSource = ({
     });
     if (spread) spread.onfinish = () => done.current();
     return () => spread?.cancel();
-  }, []);
+  }, [done]);
   return (
     <circle
       ref={circle}

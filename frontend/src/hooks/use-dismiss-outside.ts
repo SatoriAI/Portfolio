@@ -1,4 +1,6 @@
-import { type RefObject, useEffect, useRef } from "react";
+import { type RefObject, useEffect } from "react";
+
+import { useLatest } from "@/hooks/use-latest";
 
 /**
  * While `active`, a press anywhere outside `ref`, or Escape, calls
@@ -13,8 +15,7 @@ export function useDismissOutside(
   onDismiss: () => void,
 ) {
   // Read through a ref, so a new callback each render does not re-attach.
-  const dismiss = useRef(onDismiss);
-  dismiss.current = onDismiss;
+  const dismiss = useLatest(onDismiss);
 
   useEffect(() => {
     if (!active) return;
@@ -31,5 +32,5 @@ export function useDismissOutside(
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [active, ref]);
+  }, [active, ref, dismiss]);
 }

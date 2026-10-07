@@ -6,6 +6,7 @@ import tseslint from "typescript-eslint";
 import prettier from "eslint-config-prettier";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 import react from "eslint-plugin-react";
+import importPlugin from "eslint-plugin-import";
 
 export default tseslint.config(
   { ignores: ["dist"] },
@@ -20,11 +21,14 @@ export default tseslint.config(
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
       "simple-import-sort": simpleImportSort,
+      import: importPlugin,
       react,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      // One import per module: a type and a value from one module share it.
+      "import/no-duplicates": ["error", { "prefer-inline": true }],
       // Unused code is an error: it builds up quietly otherwise. A leading
       // underscore marks a binding kept on purpose (a destructured prop left out).
       "@typescript-eslint/no-unused-vars": [

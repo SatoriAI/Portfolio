@@ -241,6 +241,7 @@ const HeatField = ({
   live = false,
   className,
   children,
+  onPointerMove: onPointerMoveProp,
   ...props
 }: HeatFieldProps) => {
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -342,7 +343,9 @@ const HeatField = ({
 
   // A mouse over the field is a moving heat source. Touch is excluded: on a
   // phone the same gesture is a scroll.
+  // A caller's own handler runs as well, never instead.
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    onPointerMoveProp?.(event);
     if (!animated || event.pointerType !== "mouse") return;
     const rect = event.currentTarget.getBoundingClientRect();
     const x = (event.clientX - rect.left) / rect.width;

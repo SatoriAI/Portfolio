@@ -1,4 +1,3 @@
-import { Title } from "@radix-ui/react-dialog";
 import { MessageSquare } from "lucide-react";
 
 import CompanyMark from "@/components/experience/CompanyMark";
@@ -37,9 +36,9 @@ const RoleEntry = ({ experience, labels, onAsk }: RoleEntryProps) => (
         {experience.period}
         {experience.location && ` · ${experience.location}`}
       </p>
-      <Title className="mt-2 text-card-title-sm font-semibold md:text-card-title">
+      <h3 className="mt-2 text-card-title-sm font-semibold md:text-card-title">
         {experience.company}
-      </Title>
+      </h3>
       <p className="mt-1 text-base text-muted-foreground">{experience.position}</p>
       {experience.technologies.length > 0 && (
         <div className="mt-6">

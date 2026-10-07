@@ -27,8 +27,7 @@ import { useLiveChecks } from "@/hooks/use-live-checks";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { isThisSite } from "@/lib/projectLinks";
 import { useProjects } from "@/lib/queries";
-import { fillTemplate } from "@/lib/text";
-import { formatCounter } from "@/lib/text";
+import { fillTemplate, formatCounter } from "@/lib/text";
 import { articlesFor } from "@/lib/workshop";
 import { translations } from "@/utils/translations";
 
@@ -155,6 +154,7 @@ const Index = () => {
                 labels={projectLabels}
                 onAsk={askVex}
                 checks={liveChecks}
+                onSeen={startChecks}
               />
             </Reveal>
           )}

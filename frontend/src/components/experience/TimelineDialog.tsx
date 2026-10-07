@@ -195,6 +195,8 @@ const TimelineDialog = <Id extends TimelineId>({
 
           {item && (
             <>
+              {/* The dialog names itself, whatever its content sets as a heading. */}
+              <DialogPrimitive.Title className="sr-only">{item.name}</DialogPrimitive.Title>
               <div ref={body} className="overflow-y-auto px-6 pb-8 pt-6 sm:px-8 sm:pt-8">
                 {/* Keyed, so a step to another entry fades the new one in. */}
                 <div

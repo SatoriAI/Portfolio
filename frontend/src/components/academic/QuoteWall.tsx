@@ -184,11 +184,11 @@ const QuoteWall = ({ testimonials, themes, evidence, labels, className }: QuoteW
                   )}
                 >
                   {theme.label}
-                  {/* Joined by hand: cn would read text-meta as a colour and drop it. */}
                   <span
-                    className={`font-mono text-meta ${
-                      pressed ? "text-primary-foreground/70" : "text-muted-foreground"
-                    }`}
+                    className={cn(
+                      "font-mono text-meta",
+                      pressed ? "text-primary-foreground/70" : "text-muted-foreground",
+                    )}
                   >
                     {counts[theme.key]}
                   </span>

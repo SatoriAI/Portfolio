@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { publicationDetails, type PublicationStatus } from "@/config/publications";
 import { useOnceInView, useOnScreenAtMount } from "@/hooks/use-in-view";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
-import { EASE_BRAND } from "@/lib/motion";
+import { EASE_BRAND, EASE_PRESS } from "@/lib/motion";
 import type { UiPublication } from "@/lib/publicationsService";
 import { cn } from "@/lib/utils";
 
@@ -244,7 +244,7 @@ const PublicationStack = ({
           {
             duration: STAMP_MS,
             delay: deepest * FILE_STAGGER_MS + FILE_MS,
-            easing: "cubic-bezier(0.3, 0, 0.3, 1)",
+            easing: EASE_PRESS,
             fill: "backwards",
           },
         ),

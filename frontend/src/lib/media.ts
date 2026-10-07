@@ -11,10 +11,23 @@ export const MEDIA = {
   reducedMotion: "(prefers-reduced-motion: reduce)",
 } as const;
 
+// One list per query, made once: a hook reads it on every render.
+const lists = new Map<string, MediaQueryList>();
+
+/** The query's MediaQueryList, shared by everything asking the same query. */
+export const mediaList = (query: string) => {
+  let list = lists.get(query);
+  if (!list) {
+    list = window.matchMedia(query);
+    lists.set(query, list);
+  }
+  return list;
+};
+
 /** Whether a query matches now: for code that runs once, in a handler or an effect. */
 export const matchesMedia = (query: string) =>
   typeof window !== "undefined" && typeof window.matchMedia === "function"
-    ? window.matchMedia(query).matches
+    ? mediaList(query).matches
     : false;
 
 /** The reduced-motion preference now; components that render by it use the hook. */

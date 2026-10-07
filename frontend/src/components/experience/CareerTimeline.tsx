@@ -1,6 +1,7 @@
 import { type KeyboardEvent, type ReactNode, useLayoutEffect, useRef } from "react";
 
 import { circleControl, circleState } from "@/components/experience/circleStyles";
+import { TimelineAxis, TimelineGridlines } from "@/components/experience/TimelineAxis";
 import { edgeOffset } from "@/lib/edgeEntrance";
 import { prefersReducedMotion } from "@/lib/media";
 import { EASE_BRAND } from "@/lib/motion";
@@ -86,9 +87,6 @@ type CareerTimelineProps<Id extends TimelineId> = {
  */
 const LANE_HEIGHT_PX = 100;
 
-/** More years than this crowd a phone's width, so every other one is labelled. */
-const DENSE_TICKS = 7;
-
 /** The entrance from the edges: each flight, and the wait between circles. */
 const ENTER_MS = 900;
 const ENTER_STAGGER_MS = 90;
@@ -132,7 +130,6 @@ const CareerTimeline = <Id extends TimelineId>({
   if (count === 0) return null;
 
   const byId = new Map(entries.map((entry) => [entry.id, entry]));
-  const percent = (month: number) => `${(month / timeline.months) * 100}%`;
 
   // Arrows move between circles in the order the entries began, wrapping round.
   const onKeyDown = (index: number) => (event: KeyboardEvent<HTMLButtonElement>) => {
@@ -150,40 +147,12 @@ const CareerTimeline = <Id extends TimelineId>({
   return (
     <figure aria-label={labels.figure} className={cn("w-full", className)}>
       <div className="relative">
-        {/* Axis: a January tick per year, the year set beside it. On a phone
-            a long span labels every other year, so the years never touch. */}
-        <div aria-hidden="true" className="relative h-7 border-b border-border">
-          {timeline.ticks.map((tick, index) => (
-            <span
-              key={tick.year}
-              className="absolute bottom-0 flex flex-col items-start"
-              style={{ left: percent(tick.month) }}
-            >
-              <span
-                // Joined by hand: cn would read text-meta as a colour and drop it.
-                className={`mb-1 ml-2 font-mono text-meta text-muted-foreground ${
-                  timeline.ticks.length > DENSE_TICKS && index % 2 === 1 ? "max-sm:invisible" : ""
-                }`}
-              >
-                {tick.year}
-              </span>
-              <span className="block h-2 w-px bg-iris" />
-            </span>
-          ))}
-        </div>
-
-        {/* Gridlines: each January carried down through the lanes, faint and
-            dashed, so a circle can be read against its year. Behind the
-            circles, and never in the way of a press. */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 top-7">
-          {timeline.ticks.map((tick) => (
-            <span
-              key={tick.year}
-              className="absolute inset-y-0 border-l border-dashed border-border"
-              style={{ left: percent(tick.month) }}
-            />
-          ))}
-        </div>
+        <TimelineAxis ticks={timeline.ticks} months={timeline.months} />
+        <TimelineGridlines
+          ticks={timeline.ticks}
+          months={timeline.months}
+          className="inset-x-0 bottom-0 top-7"
+        />
 
         <ol
           className="grid gap-y-0 pt-3"

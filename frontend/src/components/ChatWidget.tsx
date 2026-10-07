@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { buildUrl, endpoints } from "@/config/endpoints";
 import { env } from "@/config/env";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useLatest } from "@/hooks/use-latest";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { apiClient, apiFetch } from "@/lib/apiClient";
 import { decodeStreamData, finalizeMarkdown } from "@/lib/streamMarkdown";
@@ -423,13 +424,12 @@ const ChatWidget = ({
   // "ask Vex about this") goes out the moment history has loaded, so it lands
   // after any earlier conversation rather than before it. The handler is read
   // through a ref because it closes over state and is recreated every render.
-  const sendRef = useRef(handleSendMessage);
-  sendRef.current = handleSendMessage;
+  const sendRef = useLatest(handleSendMessage);
   useEffect(() => {
     if (!isOpen || !hydrated || !initialQuestion) return;
     onInitialQuestionSent?.();
     void sendRef.current(initialQuestion);
-  }, [isOpen, hydrated, initialQuestion, onInitialQuestionSent]);
+  }, [isOpen, hydrated, initialQuestion, onInitialQuestionSent, sendRef]);
 
   const handleClearChat = () => {
     try {

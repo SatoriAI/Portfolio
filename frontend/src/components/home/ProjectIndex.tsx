@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { ArrowUp, ChevronLeft, ChevronRight, CodeXml, ExternalLink, Lock } from "lucide-react";
 
@@ -268,6 +268,8 @@ type ProjectIndexProps = {
   onAsk: (question: string) => void;
   /** The live checks of the projects' addresses, shared with the page. */
   checks: LiveChecks;
+  /** Starts the checks; the page owns which addresses are checked. */
+  onSeen: () => void;
   className?: string;
 };
 
@@ -279,6 +281,7 @@ const ProjectIndex = ({
   labels,
   onAsk,
   checks,
+  onSeen,
   className,
 }: ProjectIndexProps) => {
   const [value, setValue] = useState(projects[0]?.title ?? "");
@@ -286,20 +289,14 @@ const ProjectIndex = ({
     ? value
     : (projects[0]?.title ?? "");
 
-  const { stateOf, check, checkAllOnce } = checks;
-  const checkable = useMemo(
-    () => projects.filter((project) => project.demo && !isThisSite(project)),
-    [projects],
-  );
+  const { stateOf, check } = checks;
 
   // Every address is checked once, in turn, the first time the section is
   // mostly in view (or its sentence under the heading is; see the page), so
   // the answers are there without a press and the open frame's page paints
   // in as its answer arrives.
   const root = useRef<HTMLDivElement>(null);
-  useOnceInView(root, () => checkAllOnce(checkable.map((project) => project.demo)), {
-    threshold: 0.3,
-  });
+  useOnceInView(root, onSeen, { threshold: 0.3 });
 
   // The pressed well: one shape laid under the strip that slides to the
   // chosen tab. It lives inside the strip, so when the strip scrolls on a

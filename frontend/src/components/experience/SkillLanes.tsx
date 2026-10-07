@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useLayoutEffect, useRef } from "react";
 
+import { TimelineAxis, TimelineGridlines } from "@/components/experience/TimelineAxis";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { prefersReducedMotion } from "@/lib/media";
 import { EASE_BRAND } from "@/lib/motion";
@@ -195,37 +196,12 @@ const SkillLanes = ({
 
   return (
     <div ref={revealRef} className={cn("relative", className)}>
-      {/* Axis: a January tick per year, as on the timeline above. */}
-      <div aria-hidden="true" className="relative h-7 border-b border-border">
-        {axis.ticks.map((tick, index) => (
-          <span
-            key={tick.year}
-            className="absolute bottom-0 flex flex-col items-start"
-            style={{ left: percent(tick.month) }}
-          >
-            {/* Joined by hand: cn would read text-meta as a colour and drop it. */}
-            <span
-              className={`mb-1 ml-2 font-mono text-meta text-muted-foreground ${
-                axis.ticks.length > 7 && index % 2 === 1 ? "max-sm:invisible" : ""
-              }`}
-            >
-              {tick.year}
-            </span>
-            <span className="block h-2 w-px bg-iris" />
-          </span>
-        ))}
-      </div>
+      {/* The axis, as on the timeline above. */}
+      <TimelineAxis ticks={axis.ticks} months={axis.months} />
 
       <div className="relative">
         {/* Gridlines through every row, and the band of the role pointed at. */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          {axis.ticks.map((tick) => (
-            <span
-              key={tick.year}
-              className="absolute inset-y-0 border-l border-dashed border-border"
-              style={{ left: percent(tick.month) }}
-            />
-          ))}
+        <TimelineGridlines ticks={axis.ticks} months={axis.months} className="inset-0">
           {band && (
             <Band
               key={band.id}
@@ -233,7 +209,7 @@ const SkillLanes = ({
               width={percent(band.endMonth - band.startMonth)}
             />
           )}
-        </div>
+        </TimelineGridlines>
 
         {groups.map((group, layer) => (
           <section key={group.key} aria-label={group.label || undefined} className="relative pt-3">
@@ -284,9 +260,11 @@ const SkillLanes = ({
                         >
                           <Icon className="size-4" />
                         </span>
-                        {/* Joined by hand: cn would drop text-sm beside a colour. */}
                         <h4
-                          className={`truncate text-sm font-medium transition-colors duration-200 ${tone}`}
+                          className={cn(
+                            "truncate text-sm font-medium transition-colors duration-200",
+                            tone,
+                          )}
                         >
                           {skill.name}
                         </h4>
