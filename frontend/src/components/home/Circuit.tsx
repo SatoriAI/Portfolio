@@ -200,18 +200,15 @@ const Circuit = ({ children }: PropsWithChildren) => {
       nodeLengths.forEach((at, index) => {
         dots.current[index]?.setAttribute("data-lit", String(filled >= at - 0.5));
       });
-      const atHub = filled >= total - 0.5;
+      const closed = filled >= total - 0.5;
       if (head.current) {
         const point = pointAt(filled);
         head.current.setAttribute("transform", `translate(${point.x} ${point.y})`);
-        head.current.style.opacity = atHub || filled <= 0 ? "0" : "1";
+        head.current.style.opacity = closed || filled <= 0 ? "0" : "1";
       }
       halo.current?.setAttribute("r", String(6 + live * (2 + 3 * breath)));
       if (sheen.current) sheen.current.style.opacity = String(live);
       if (aura.current) aura.current.style.opacity = String(live * (0.4 + 0.6 * breath));
-      // Closed while the current is at the hub, so the wire and the contact
-      // graph (which runs on it; see ContactGraph) always agree.
-      const closed = atHub;
       if (closed !== wasClosed) {
         wasClosed = closed;
         setClosed(closed);
@@ -229,11 +226,11 @@ const Circuit = ({ children }: PropsWithChildren) => {
     // over the last stretch of scroll instead, closing the circuit at the
     // bottom of the page.
     const targetFor = () => {
-      const to = document.documentElement.scrollHeight - window.innerHeight;
       const top = element.getBoundingClientRect().top + window.scrollY;
       const reading = window.scrollY + window.innerHeight * READ_AT - top;
       if (reading < lastY) return Math.min(lengthAt(reading), lastNode);
       const from = lastY + top - window.innerHeight * READ_AT;
+      const to = document.documentElement.scrollHeight - window.innerHeight;
       // Within a few pixels of the bottom counts as the bottom: scroll
       // anchoring and rounding can stop the page just short of it.
       const share =
