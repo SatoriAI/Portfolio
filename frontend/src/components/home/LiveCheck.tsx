@@ -3,7 +3,7 @@ import { ExternalLink } from "lucide-react";
 
 import Bolt from "@/components/brand/Bolt";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
-import { type CheckResult, hostOf } from "@/lib/liveCheck";
+import { type CheckResult, type CheckState, hostOf } from "@/lib/liveCheck";
 import { EASE_BRAND } from "@/lib/motion";
 import { fillTemplate } from "@/lib/text";
 import { cn } from "@/lib/utils";
@@ -22,11 +22,6 @@ import { cn } from "@/lib/utils";
  * address; under reduced motion nothing moves at all and only the words
  * change.
  */
-
-export type CheckState =
-  | { phase: "idle" }
-  | { phase: "checking" }
-  | { phase: "done"; result: CheckResult };
 
 export type LiveCheckLabels = {
   /** The bar's word before any check, and its accessible name's start. */

@@ -1,9 +1,9 @@
 import { Fragment, useEffect, useRef } from "react";
 
 import Bolt from "@/components/brand/Bolt";
-import type { CheckState } from "@/components/home/LiveCheck";
 import { useOnceInView } from "@/hooks/use-in-view";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import type { CheckState } from "@/lib/liveCheck";
 import { cn } from "@/lib/utils";
 
 /** One wording per plural category of the count (see Intl.PluralRules). */

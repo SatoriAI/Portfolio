@@ -1,18 +1,17 @@
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
-import HeatField from "@/components/brand/HeatField";
 import { queryStatus } from "@/components/feedback/queryStatus";
 import { Col, Grid } from "@/components/layout/Grid";
 import PageClosing from "@/components/layout/PageClosing";
-import PageLayout from "@/components/layout/PageLayout";
 import Section from "@/components/layout/Section";
 import ArticleBody from "@/components/workshop/ArticleBody";
 import { EXHIBITS } from "@/components/workshop/exhibitRegistry";
 import MetaLine from "@/components/workshop/MetaLine";
 import { showDrafts, workshopArticles } from "@/content/workshop";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useLauncherAside } from "@/hooks/use-launcher-aside";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { useScrollFrame } from "@/hooks/use-scroll-frame";
 import { useArticleText } from "@/lib/queries";
@@ -40,7 +39,16 @@ const WorkshopArticle = () => {
   const { language } = useSettings();
   const t = translations[language];
   const w = t.workshop;
-  const articleRef = useRef<HTMLDivElement>(null);
+  const articleRef = useRef<HTMLDivElement | null>(null);
+  // The chat button stands aside over the text (see PageLayout).
+  const asideRef = useLauncherAside();
+  const setArticle = useCallback(
+    (element: HTMLDivElement | null) => {
+      articleRef.current = element;
+      asideRef(element);
+    },
+    [asideRef],
+  );
   const article = articlesFor(workshopArticles, language, { drafts: showDrafts }).find(
     (piece) => piece.slug === slug,
   );
@@ -83,10 +91,10 @@ const WorkshopArticle = () => {
   let numbered = 0;
 
   return (
-    <PageLayout launcherClearOf={articleRef}>
+    <>
       <Section className="md:py-10">
         {/* The chat button stands aside over all of this, the evidence card included. */}
-        <div ref={articleRef}>
+        <div ref={setArticle}>
           <Grid gapY={24}>
             <Col spanLg={3}>
               <Link
@@ -194,25 +202,17 @@ const WorkshopArticle = () => {
         </div>
       </Section>
 
-      {/* Pushed to the foot of a short page, so it closes the page right
-          above the footer rather than leaving a gap under it. */}
-      <HeatField className="mt-auto">
-        <Section className="py-12 md:py-20">
-          <PageClosing
-            split={4}
-            subject={article.title}
-            title={w.articleClosing.title}
-            body={w.articleClosing.body}
-            labels={{ email: w.articleClosing.email, askVex: t.hero.askAI }}
-            next={
-              article.related && relatedName
-                ? { lead: w.related, label: relatedName, to: article.related }
-                : { lead: w.related, label: w.all, to: "/workshop" }
-            }
-          />
-        </Section>
-      </HeatField>
-    </PageLayout>
+      <PageClosing
+        split={4}
+        subject={article.title}
+        copy={w.articleClosing}
+        next={
+          article.related && relatedName
+            ? { lead: w.related, label: relatedName, to: article.related }
+            : { lead: w.related, label: w.all, to: "/workshop" }
+        }
+      />
+    </>
   );
 };
 

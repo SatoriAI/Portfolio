@@ -12,7 +12,6 @@ import ProjectIndex from "@/components/home/ProjectIndex";
 import RouteList from "@/components/home/RouteList";
 import WorkshopFeature from "@/components/home/WorkshopFeature";
 import { Col, Grid } from "@/components/layout/Grid";
-import PageLayout from "@/components/layout/PageLayout";
 import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
 import Reveal from "@/components/Reveal";
@@ -97,7 +96,7 @@ const Index = () => {
   };
 
   return (
-    <PageLayout>
+    <>
       {/* One wire through the page, from the theorem to me (see Circuit). */}
       <Circuit>
         {/* Hero. A masthead rather than a stage: the brand line as a theorem,
@@ -248,7 +247,7 @@ const Index = () => {
           </Section>
         </HeatField>
       </Circuit>
-    </PageLayout>
+    </>
   );
 };
 

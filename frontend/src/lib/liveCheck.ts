@@ -12,6 +12,12 @@
 
 export type CheckResult = { answered: true; ms: number } | { answered: false };
 
+/** Where one address's check is: not asked yet, under way, or answered. */
+export type CheckState =
+  | { phase: "idle" }
+  | { phase: "checking" }
+  | { phase: "done"; result: CheckResult };
+
 /** How long a check waits before it calls the address silent. */
 export const CHECK_TIMEOUT_MS = 8000;
 

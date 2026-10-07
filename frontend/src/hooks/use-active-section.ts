@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
  * Scroll-spy: returns the id of the section currently occupying the middle
  * band of the viewport. When the page is scrolled to the very bottom the last
  * section wins, since a short final section may never reach that band.
+ * The sections are looked up again whenever `page` changes, since the
+ * caller (the header) outlives the page that holds them.
  */
-export function useActiveSection(ids: readonly string[]) {
+export function useActiveSection(ids: readonly string[], page: string) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,8 +44,9 @@ export function useActiveSection(ids: readonly string[]) {
     return () => {
       observer.disconnect();
       window.removeEventListener("scroll", pickActive);
+      setActiveId(null);
     };
-  }, [ids]);
+  }, [ids, page]);
 
   return activeId;
 }

@@ -21,7 +21,11 @@ export type InViewOptions = {
 const elementOf = (target: InViewTarget) =>
   target && "current" in target ? target.current : (target ?? null);
 
-/** Whether the element is on screen, kept up to date as it scrolls in and out. */
+/**
+ * Whether the element is on screen, kept up to date as it scrolls in and
+ * out; false again as soon as it is no longer watched (gone, or disabled),
+ * so a value never outlives its element.
+ */
 export function useInView(
   target: InViewTarget,
   { threshold = 0, rootMargin, enabled = true }: InViewOptions = {},
@@ -35,7 +39,10 @@ export function useInView(
       rootMargin,
     });
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      setInView(false);
+    };
   }, [target, threshold, rootMargin, enabled]);
   return inView;
 }
