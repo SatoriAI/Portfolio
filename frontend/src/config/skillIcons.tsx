@@ -1,7 +1,7 @@
 import { Cloud, Infinity as InfinityIcon, Network, Sparkles } from "lucide-react";
 
 import BrandMark from "@/components/brand/BrandMark";
-import { TECH_ICONS } from "@/config/techIcons";
+import { TECH_ICONS, type TechName } from "@/config/techIcons";
 import type { SkillIcon } from "@/lib/skillsService";
 
 /**
@@ -17,10 +17,9 @@ import type { SkillIcon } from "@/lib/skillsService";
  * the kit's Icons section).
  */
 
-/** A technology's mark (config/techIcons) as an icon component; a name with no mark fails at load. */
-const brandMark = (name: string): SkillIcon => {
+/** A technology's mark (config/techIcons) as an icon component. */
+const brandMark = (name: TechName): SkillIcon => {
   const icon = TECH_ICONS[name];
-  if (!icon) throw new Error(`No mark for ${name} in config/techIcons`);
   const Mark: SkillIcon = ({ className }) => <BrandMark icon={icon} className={className} />;
   Mark.displayName = `${name}Mark`;
   return Mark;

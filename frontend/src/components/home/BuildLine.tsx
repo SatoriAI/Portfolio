@@ -47,7 +47,7 @@ const TechMark = ({
       <Box ref={markRef} aria-hidden="true" className={cn("text-muted-foreground", className)} />
     );
   }
-  return <BrandMark icon={icon} className={className} markRef={markRef} />;
+  return <BrandMark ref={markRef} icon={icon} className={className} />;
 };
 
 /** The next control: a 44px target, quiet until pointed at. */

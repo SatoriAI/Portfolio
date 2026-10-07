@@ -3,10 +3,10 @@ import {
   type KeyboardEvent,
   type PointerEvent,
   type RefObject,
-  useEffect,
   useState,
 } from "react";
 
+import { STEP_MAX } from "@/components/academic/grokking/geometry";
 import { GROKKING_STEPS, nearestStep } from "@/lib/grokking";
 
 /**
@@ -23,32 +23,25 @@ import { GROKKING_STEPS, nearestStep } from "@/lib/grokking";
  * with Escape putting the tooltip away.
  *
  * This hook holds that sequence and the plot's pointer and keyboard
- * handling; the chart draws it.
+ * handling; the chart draws it, and the plot draws the new examples in,
+ * calling `drawn` when they are.
  */
 
-const DRAW_MS = 2800;
 /** The guess moves in half-thousands: finer than the measurements, no finer. */
 const GUESS_STEP = 500;
 /** The step read out first, the gap the section is about. */
-export const OPENING_STEP = 1000;
+const OPENING_STEP = 1000;
 
 export type GuessPhase = "guess" | "drawing" | "drawn";
 
 export function useGuessAndRead({
   plotRef,
-  drawRef,
-  stepMax,
   stepAt,
-  prefersReducedMotion,
 }: {
   /** The plot, focused by Check and Retry so the answer is heard in the chart. */
   plotRef: RefObject<HTMLElement>;
-  /** The clip rect whose sweep draws the new examples in. */
-  drawRef: RefObject<SVGRectElement>;
-  stepMax: number;
   /** The step under a pointer's x in the plot. */
   stepAt: (x: number) => number;
-  prefersReducedMotion: boolean;
 }) {
   const [step, setStep] = useState(OPENING_STEP);
   const [showTip, setShowTip] = useState(false);
@@ -63,25 +56,10 @@ export function useGuessAndRead({
   const [moved, setMoved] = useState(false);
   const guessing = phase === "guess";
 
-  useEffect(() => {
-    if (phase !== "drawing") return;
-    const sweep = prefersReducedMotion
-      ? null
-      : drawRef.current?.animate([{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], {
-          duration: DRAW_MS,
-          easing: "linear",
-          fill: "forwards",
-        });
-    if (!sweep) {
-      setPhase("drawn");
-      return;
-    }
-    sweep.onfinish = () => setPhase("drawn");
-    return () => sweep.cancel();
-  }, [phase, prefersReducedMotion, drawRef]);
+  const drawn = () => setPhase("drawn");
 
   const toGuess = (value: number) =>
-    Math.min(stepMax, Math.max(0, Math.round(value / GUESS_STEP) * GUESS_STEP));
+    Math.min(STEP_MAX, Math.max(0, Math.round(value / GUESS_STEP) * GUESS_STEP));
 
   // Check keeps focus in the chart, which it is about to answer, and stands
   // the crosshair at the guess.
@@ -146,7 +124,7 @@ export function useGuessAndRead({
       event.preventDefault();
       // From the latest guess, however fast the keys come.
       setGuess((now) =>
-        event.key === "Home" ? 0 : event.key === "End" ? stepMax : toGuess(now + notch),
+        event.key === "Home" ? 0 : event.key === "End" ? STEP_MAX : toGuess(now + notch),
       );
       setPicked(true);
       return;
@@ -179,6 +157,7 @@ export function useGuessAndRead({
     showTip,
     check,
     retry,
+    drawn,
     plotHandlers: {
       onPointerMove: onPointer,
       onPointerDown: onPointer,

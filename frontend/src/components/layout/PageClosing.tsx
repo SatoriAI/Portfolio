@@ -37,7 +37,6 @@ type PageClosingProps = {
   subject?: string;
   /** How many of the twelve columns the page's left part takes above. */
   split?: 4 | 5;
-  className?: string;
 };
 
 /** The split as literal classes, so Tailwind finds them. */
@@ -51,7 +50,6 @@ const PageClosing = ({
   next,
   subject,
   split = 5,
-  className,
 }: PageClosingProps) => {
   const { askVex } = useVex();
   const { language } = useSettings();
@@ -60,7 +58,7 @@ const PageClosing = ({
   return (
     <HeatField className="mt-auto">
       <Section className="py-12 md:py-20">
-        <Reveal className={cn("grid grid-cols-1 gap-y-3 lg:grid-cols-12 lg:gap-x-6", className)}>
+        <Reveal className="grid grid-cols-1 gap-y-3 lg:grid-cols-12 lg:gap-x-6">
           <h2 className={cn("text-balance text-card-title-sm md:text-h2-sm", SPLIT[split].left)}>
             {title}
           </h2>

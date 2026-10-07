@@ -1,29 +1,27 @@
-import { useId, useLayoutEffect, useRef, useState } from "react";
+import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { RotateCcw } from "lucide-react";
 
 import FigureFrame from "@/components/academic/FigureFrame";
-import { MARGIN } from "@/components/academic/grokking/geometry";
+import { MARGIN, plotGeometry, STEP_MAX } from "@/components/academic/grokking/geometry";
 import GrokkingDataTable from "@/components/academic/grokking/GrokkingDataTable";
 import GrokkingKey from "@/components/academic/grokking/GrokkingKey";
 import GrokkingPlot from "@/components/academic/grokking/GrokkingPlot";
-import { MarkSwatch } from "@/components/academic/grokking/marks";
-import { useGuessAndRead } from "@/components/academic/grokking/useGuessAndRead";
+import GrokkingTooltip from "@/components/academic/grokking/GrokkingTooltip";
+import { useGuessAndRead } from "@/components/academic/grokking/use-guess-and-read";
 import { Button } from "@/components/ui/button";
 import { useElementSize } from "@/hooks/use-element-size";
 import { useOnceInView } from "@/hooks/use-in-view";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import {
   type Box,
-  crossingRange,
+  GROKKING_CROSSING,
   GROKKING_RUNS,
   GROKKING_STEPS,
   type GuessVerdict,
   guessVerdict,
-  linearScale,
   type Metric,
   percentFormat,
   placeBeside,
-  readoutAt,
   runSegments,
   type StepDescription,
   stepSentence,
@@ -139,23 +137,14 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
   const [keyBox, setKeyBox] = useState<Box | null>(null);
   const [tipSize, setTipSize] = useState<{ width: number; height: number } | null>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
-  const drawId = `${useId().replace(/:/g, "")}-draw`;
-  const drawRef = useRef<SVGRectElement>(null);
   const markerLine = useRef<SVGLineElement>(null);
   const markerTag = useRef<HTMLSpanElement>(null);
 
-  const stepMax = GROKKING_STEPS[GROKKING_STEPS.length - 1];
-  const x = linearScale(0, stepMax, MARGIN.left, width - MARGIN.right);
-  // Wide and low across the section; a little taller on a phone, where the
-  // plot is narrow and a flat one would bury the rise.
-  const plotHeight = width < 640 ? 272 : 252;
-  const y = linearScale(0, 1, plotHeight - MARGIN.bottom, MARGIN.top);
-  const stepAt = linearScale(MARGIN.left, width - MARGIN.right, 0, stepMax);
-  // Every other step when a phone leaves too little room between labels.
-  const tickEvery = x(GROKKING_STEPS[1]) - x(GROKKING_STEPS[0]) < 48 ? 2 : 1;
+  const geometry = useMemo(() => plotGeometry(width), [width]);
+  const { height: plotHeight, x, y } = geometry;
 
-  const { phase, step, guess, picked, moved, showTip, check, retry, plotHandlers } =
-    useGuessAndRead({ plotRef: ref, drawRef, stepMax, stepAt, prefersReducedMotion });
+  const { phase, step, guess, picked, moved, showTip, check, retry, drawn, plotHandlers } =
+    useGuessAndRead({ plotRef: ref, stepAt: geometry.stepAt });
   const guessing = phase === "guess";
   const answered = phase === "drawn";
 
@@ -215,8 +204,7 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
     },
     { threshold: 0.6, enabled: !prefersReducedMotion && !picked },
   );
-  const crossing = crossingRange(GROKKING_RUNS);
-  const grade = guessVerdict(guess, crossing);
+  const grade = guessVerdict(guess, GROKKING_CROSSING);
   // While guessing, the name says it can be moved.
   const markerName = answered
     ? `${labels.predict.marker} · ${labels.predict.verdict[grade]}`
@@ -225,9 +213,9 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
   // The slider itself says each step while the reader chooses; this voice
   // gives only the grade, so nothing is heard twice.
   const heard = answered
-    ? `${labels.predict.verdict[grade]}. ${fillTemplate(labels.predict.result, { from: formatStep(crossing.min), to: formatStep(crossing.max) })}`
+    ? `${labels.predict.verdict[grade]}. ${fillTemplate(labels.predict.result, { from: formatStep(GROKKING_CROSSING.min), to: formatStep(GROKKING_CROSSING.max) })}`
     : "";
-  const howId = `${drawId}-how`;
+  const howId = `${useId().replace(/:/g, "")}-how`;
   // Every read-out the row can show, laid under it unseen, so the row is as
   // tall as the longest of them at this width and never grows.
   const allNotes = GROKKING_STEPS.map((tick) =>
@@ -341,7 +329,7 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
           role={guessing ? "slider" : "group"}
           aria-label={guessing ? labels.predict.marker : labels.title}
           aria-valuemin={guessing ? 0 : undefined}
-          aria-valuemax={guessing ? stepMax : undefined}
+          aria-valuemax={guessing ? STEP_MAX : undefined}
           aria-valuenow={guessing ? guess : undefined}
           aria-valuetext={guessing ? (picked ? guessText : labels.predict.none) : undefined}
           aria-describedby={guessing ? howId : undefined}
@@ -359,19 +347,13 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
           )}
         >
           <GrokkingPlot
-            width={width}
-            height={plotHeight}
-            x={x}
-            y={y}
+            geometry={geometry}
             step={step}
             guess={guess}
             phase={phase}
-            crossing={crossing}
-            tickEvery={tickEvery}
+            onDrawn={drawn}
             formatStep={formatStep}
             formatPercent={formatPercent}
-            drawId={drawId}
-            drawRef={drawRef}
             markerRef={markerLine}
           />
 
@@ -396,9 +378,9 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
               left: x(guess),
               top: 6,
               transform:
-                guess < stepMax * 0.2
+                guess < STEP_MAX * 0.2
                   ? "translateX(-12px)"
-                  : guess > stepMax * 0.8
+                  : guess > STEP_MAX * 0.8
                     ? "translateX(calc(-100% + 12px))"
                     : "translateX(-50%)",
             }}
@@ -416,35 +398,14 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
             }}
           />
 
-          {/* The values at the marked step, one per run, marked as the key
-              marks them. The step itself is on the axis under the crosshair
-              and in the sentence above, which also says the values in words
-              to a screen reader. Set at the tick labels' size: it is chart
-              text, and small enough to fit between the lines where the runs
-              part, at steps 1000 and 2000. It fades in once, then jumps
-              with the crosshair: `duration-200` alone would also tween its
-              position, sliding it over the marks it must keep clear of. */}
           {showTip && (
-            <div
+            <GrokkingTooltip
               ref={tipRef}
-              aria-hidden="true"
-              className="pointer-events-none absolute z-10 space-y-1 rounded-xl border border-border bg-card px-3 py-2 shadow-md transition-none duration-200 animate-in fade-in-0 motion-reduce:animate-none"
-              style={
-                tipAt
-                  ? { left: tipAt.left, top: tipAt.top }
-                  : { left: 0, top: 0, visibility: "hidden" }
-              }
-            >
-              {series.map(({ metric }) => (
-                <p
-                  key={metric}
-                  className="flex items-center gap-2 whitespace-nowrap font-mono text-[11px] tabular-nums leading-4 text-foreground"
-                >
-                  <MarkSwatch metric={metric} />
-                  {readoutAt(GROKKING_RUNS, step, metric, formatPercent).join(" · ")}
-                </p>
-              ))}
-            </div>
+              step={step}
+              metrics={series.map(({ metric }) => metric)}
+              at={tipAt}
+              formatPercent={formatPercent}
+            />
           )}
         </div>
         <p className="mt-1 text-right font-mono text-meta text-muted-foreground" aria-hidden="true">

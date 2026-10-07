@@ -1,55 +1,69 @@
-import type { Ref } from "react";
+import { type Ref, useEffect, useId, useRef } from "react";
 
-import { MARGIN } from "@/components/academic/grokking/geometry";
+import { MARGIN, type PlotGeometry } from "@/components/academic/grokking/geometry";
 import { SeenMark, UnseenMark } from "@/components/academic/grokking/marks";
-import { GROKKING_RUNS, GROKKING_STEPS, measuredPath } from "@/lib/grokking";
+import type { GuessPhase } from "@/components/academic/grokking/use-guess-and-read";
+import { useLatest } from "@/hooks/use-latest";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { GROKKING_CROSSING, GROKKING_RUNS, GROKKING_STEPS, measuredPath } from "@/lib/grokking";
 
 /**
  * The plot itself, drawn in CSS pixels at the measured width: the accuracy
  * gridlines, the step axis, the band where every run passed 50% on new
  * examples (once answered), the crosshair at the read step, the reader's
  * dashed guess, and the three runs with their marks. The new examples are
- * clipped away until the reader has guessed, then drawn in left to right
- * (the chart animates the clip's rect through `drawRef`).
+ * hidden until the reader has guessed; while the phase is "drawing" the plot
+ * draws them in, left to right at an even pace over the steps, so the delay,
+ * which is the finding, passes as time (at once under reduced motion), and
+ * calls `onDrawn` when they are.
  */
 
+const DRAW_MS = 2800;
+
 type GrokkingPlotProps = {
-  width: number;
-  height: number;
-  x: (step: number) => number;
-  y: (accuracy: number) => number;
+  geometry: PlotGeometry;
   /** The step read out; its marks grow and its label is inked. */
   step: number;
   guess: number;
-  phase: "guess" | "drawing" | "drawn";
-  /** The steps between which every run passed 50% on new examples. */
-  crossing: { min: number; max: number };
-  /** 2 on a phone, where every other step label is left out. */
-  tickEvery: number;
+  phase: GuessPhase;
+  onDrawn: () => void;
   formatStep: (step: number) => string;
   formatPercent: (value: number) => string;
-  /** The id of the clip that hides the new examples while guessing. */
-  drawId: string;
-  drawRef: Ref<SVGRectElement>;
+  /** The guess's dashed line, which the chart nudges once to show it moves. */
   markerRef: Ref<SVGLineElement>;
 };
 
 const GrokkingPlot = ({
-  width,
-  height,
-  x,
-  y,
+  geometry: { width, height, x, y, tickEvery },
   step,
   guess,
   phase,
-  crossing,
-  tickEvery,
+  onDrawn,
   formatStep,
   formatPercent,
-  drawId,
-  drawRef,
   markerRef,
 }: GrokkingPlotProps) => {
+  const drawId = `${useId().replace(/:/g, "")}-draw`;
+  const drawRef = useRef<SVGRectElement>(null);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const done = useLatest(onDrawn);
+  useEffect(() => {
+    if (phase !== "drawing") return;
+    const sweep = prefersReducedMotion
+      ? null
+      : drawRef.current?.animate([{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], {
+          duration: DRAW_MS,
+          easing: "linear",
+          fill: "forwards",
+        });
+    if (!sweep) {
+      done.current();
+      return;
+    }
+    sweep.onfinish = () => done.current();
+    return () => sweep.cancel();
+  }, [phase, prefersReducedMotion, done]);
+
   const guessing = phase === "guess";
   const answered = phase === "drawn";
   return (
@@ -89,7 +103,7 @@ const GrokkingPlot = ({
         (tick, index) =>
           index % tickEvery === 0 ||
           tick === step ||
-          (answered && (tick === crossing.min || tick === crossing.max)),
+          (answered && (tick === GROKKING_CROSSING.min || tick === GROKKING_CROSSING.max)),
       ).map((tick) => (
         <text
           key={tick}
@@ -111,9 +125,9 @@ const GrokkingPlot = ({
           is graded against, drawn once the lines are. */}
       {answered && (
         <rect
-          x={x(crossing.min)}
+          x={x(GROKKING_CROSSING.min)}
           y={MARGIN.top}
-          width={x(crossing.max) - x(crossing.min)}
+          width={x(GROKKING_CROSSING.max) - x(GROKKING_CROSSING.min)}
           height={height - MARGIN.bottom - MARGIN.top}
           className="fill-iris/10 duration-400 animate-in fade-in-0 motion-reduce:animate-none"
         />
