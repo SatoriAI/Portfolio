@@ -173,8 +173,6 @@ Use real interface captures for applications, clear architecture diagrams for ba
 
 Nothing about the mark, the typography, the spacing scale, the layout grid, the motifs or the motion spec changed in this revision. Implementations tokenised against version 5 need no retokenising beyond one colour.
 
-Since 5.1 the motion spec has one change: from xl up the contact graph runs on the page's circuit, shown while it is closed and switched off while it is open (see Motion, Home).
-
 - `control-border` moved from `#8B91A0` to `#848A9A`. The old value measured 2.997:1 against `background`, which misses the 3:1 that WCAG 1.4.11 requires of a control boundary; it passed only on `surface`. The new value clears both.
 - The `symbol/` masters moved from a 100 × 100 canvas to 104 × 104. The artwork itself is untouched — same path data, same stroke, same proportions — but it had been sitting 2.25 units left and 2.5 units above centre, with only 9.25 units of clear space on the left against the 13.5 the kit requires. Anything that cropped the file to a square or a circle cropped it off-centre.
 - The mark inside `favicon/favicon.svg` was centred in its tile; it had been 8 units from the left edge and 12 from the right.
@@ -182,6 +180,11 @@ Since 5.1 the motion spec has one change: from xl up the contact graph runs on t
 - The kit has a voice section, which it had never had. For a personal brand that was the largest gap in it: the mark and the palette are a third of the identity and the writing is the rest.
 - The positioning line is now the one the site already leads with, “Mathematician by training. Engineer by trade.”, in place of the hedged suggestion carried since version 1.
 - Elevation, an icon specification, the radius scale, the column gutter, the breakpoints and the heading tracking values are now written down. All six were already decided in the implementation and simply undocumented, so these entries record existing practice rather than changing it.
+
+
+## Changes since 5.1
+
+- Motion: from xl up the contact graph runs on the page's circuit, shown while it is closed and switched off while it is open (see Motion, Home).
 
 ## Scope and limitations
 

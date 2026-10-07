@@ -27,9 +27,8 @@ import { cn } from "@/lib/utils";
  * shown the edges wave gently, each on its own rhythm, and each carries its
  * own current, a spark running out along it on an irregular beat, the edge
  * shivering as it passes, for as long as the graph is on screen and the
- * page is visible: a
- * named exception in the kit. Under reduced motion it is all simply there,
- * still.
+ * page is visible: a named exception in the kit. Under reduced motion it is
+ * all simply there, still.
  *
  * From lg up it is a star across the content width; below, where a star has
  * no room, it is a tree: the hub on top and a line down past the nodes.
@@ -161,8 +160,8 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
   // Where the page's circuit is drawn (from xl up, in motion; see Circuit),
   // the graph runs on its power: shown while the circuit is closed, off when
   // it opens. Keyboard focus on a node shows it at once, without the
-  // stagger, so focus never lands on a card that cannot be seen. Elsewhere
-  // the graph appears with the hub, and stays.
+  // stagger, so with the circuit open focus never lands on a card that
+  // cannot be seen. Elsewhere the graph appears with the hub, and stays.
   const circuit = useCircuit();
   const [keyboardFocus, setKeyboardFocus] = useState(false);
   const hubShown = seen || prefersReducedMotion;
@@ -275,8 +274,8 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
       spark(index);
     },
     onPointerLeave: () => setHot(null),
-    // Focus that switches the graph on sends no spark: its edge is still
-    // drawing out, and the sparks start with the wave once it is shown.
+    // spark() does nothing while the graph is hidden, so the focus that
+    // shows it sends none; the beat starts with the wave.
     onFocus: () => {
       setHot(index);
       spark(index);
