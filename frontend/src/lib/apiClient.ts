@@ -90,7 +90,9 @@ export const apiClient = {
    * every translation included, and the few labels the backend would
    * translate itself (a degree, a season, a skill's level) left in English
    * for the site to translate. Fetched once, it serves both languages
-   * (see lib/queries.ts).
+   * (see lib/queries.ts). This rests on the backend's English label for a
+   * choice being the stored value itself ("Doctoral Studies", "Winter"),
+   * which is what the site's own maps key on.
    */
   getList: <T>(path: string) =>
     apiFetch<T>(path, { method: "GET", headers: { "Accept-Language": "en" } }),

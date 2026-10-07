@@ -133,7 +133,7 @@ const mockSchools: ApiSchool[] = [
     updated_at: "2024-01-01T00:00:00Z",
     start: "2021-10-01",
     end: "",
-    degree: "PhD",
+    degree: "Doctoral Studies",
   },
   {
     id: 2,
@@ -164,7 +164,7 @@ const mockSchools: ApiSchool[] = [
     updated_at: "2021-06-30T00:00:00Z",
     start: "2016-10-01",
     end: "2021-06-30",
-    degree: "MSc",
+    degree: "Master's",
   },
 ];
 

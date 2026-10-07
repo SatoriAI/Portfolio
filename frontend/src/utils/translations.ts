@@ -657,7 +657,7 @@ const copy = {
       education: {
         title: "Wykształcenie i dydaktyka · Dawid Hanrahan",
         description:
-          "Doktorat z analizy harmonicznej w toku i opinie studentów o prowadzonych zajęciach.",
+          "Studia doktoranckie z analizy harmonicznej w toku i opinie studentów o prowadzonych zajęciach.",
       },
       notFound: {
         title: "Nie znaleziono strony · Dawid Hanrahan",
