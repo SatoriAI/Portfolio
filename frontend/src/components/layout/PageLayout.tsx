@@ -1,4 +1,4 @@
-import { type RefObject, Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Outlet } from "react-router-dom";
 
 import ChatLauncher from "@/components/ChatLauncher";
@@ -39,7 +39,7 @@ const PageLayout = () => {
   // Only the strip at the foot of the screen, where the launcher sits:
   // once the text's last line has risen above it, the launcher is back.
   // A page names that text through useLauncherAside.
-  const [launcherClearOf, setLauncherClearOf] = useState<RefObject<HTMLElement> | null>(null);
+  const [launcherClearOf, setLauncherClearOf] = useState<HTMLElement | null>(null);
   const launcherAside = useInView(launcherClearOf, { rootMargin: "-88% 0px 0px 0px" });
 
   return (

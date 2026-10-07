@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
@@ -39,9 +39,16 @@ const WorkshopArticle = () => {
   const { language } = useSettings();
   const t = translations[language];
   const w = t.workshop;
-  const articleRef = useRef<HTMLDivElement>(null);
+  const articleRef = useRef<HTMLDivElement | null>(null);
   // The chat button stands aside over the text (see PageLayout).
-  useLauncherAside(articleRef);
+  const asideRef = useLauncherAside();
+  const setArticle = useCallback(
+    (element: HTMLDivElement | null) => {
+      articleRef.current = element;
+      asideRef(element);
+    },
+    [asideRef],
+  );
   const article = articlesFor(workshopArticles, language, { drafts: showDrafts }).find(
     (piece) => piece.slug === slug,
   );
@@ -87,7 +94,7 @@ const WorkshopArticle = () => {
     <>
       <Section className="md:py-10">
         {/* The chat button stands aside over all of this, the evidence card included. */}
-        <div ref={articleRef}>
+        <div ref={setArticle}>
           <Grid gapY={24}>
             <Col spanLg={3}>
               <Link

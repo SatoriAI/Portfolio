@@ -29,7 +29,8 @@ const SiteHeader = () => {
   const { pathname, hash } = useLocation();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   // Sections only exist on the home page; elsewhere the spy simply finds none.
-  const activeSection = useActiveSection(sectionIds);
+  // The header stays mounted across pages, so the spy looks again on each.
+  const activeSection = useActiveSection(sectionIds, pathname);
 
   const isSectionActive = (item: NavItem) =>
     pathname === "/" && (activeSection ? `/#${activeSection}` === item.to : `/${hash}` === item.to);
