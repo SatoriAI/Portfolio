@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
 
 import { EXHIBITS } from "@/components/workshop/exhibitRegistry";
 import type { ExhibitLabels } from "@/components/workshop/exhibits";
+import KeepWithLastWord, { TitleArrow } from "@/components/workshop/KeepWithLastWord";
 import MetaLine from "@/components/workshop/MetaLine";
+import { fillTemplate } from "@/lib/text";
 import type { ShownArticle, WorkshopLanguage } from "@/lib/workshop";
 
 /**
@@ -49,7 +50,7 @@ const WorkshopIndex = ({ articles, locale, labels }: WorkshopIndexProps) => (
             <MetaLine
               date={article.date}
               locale={locale}
-              minutes={labels.minutes.replace("{n}", String(article.minutes))}
+              minutes={fillTemplate(labels.minutes, { n: article.minutes })}
               tags={article.tags}
               tagsLabel={labels.tags}
             />
@@ -58,14 +59,9 @@ const WorkshopIndex = ({ articles, locale, labels }: WorkshopIndexProps) => (
                 to={`/workshop/${article.slug}`}
                 className="rounded-sm text-foreground underline-offset-4 outline-none transition-colors duration-200 hover:text-iris hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background group-focus-within/piece:text-iris group-hover/piece:text-iris"
               >
-                {article.title.slice(0, article.title.lastIndexOf(" ") + 1)}
-                <span className="whitespace-nowrap">
-                  {article.title.slice(article.title.lastIndexOf(" ") + 1)}
-                  <ArrowRight
-                    aria-hidden="true"
-                    className="ml-2 inline size-5 -translate-y-px align-middle text-iris transition-transform duration-200 group-hover/piece:translate-x-0.5 md:size-[22px]"
-                  />
-                </span>
+                <KeepWithLastWord text={article.title}>
+                  <TitleArrow className="size-5 group-hover/piece:translate-x-0.5 md:size-[22px]" />
+                </KeepWithLastWord>
               </Link>
             </h2>
             {article.summary && (

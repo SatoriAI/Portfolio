@@ -3,6 +3,7 @@ import { MathText } from "@/components/Formula";
 import { RangeInput } from "@/components/ui/range-input";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { modePath, ringPoint } from "@/lib/cyclicShift";
+import { fillTemplate } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
 /**
@@ -203,7 +204,7 @@ export const CyclicShiftControls = ({
   <div>
     <label className="block">
       <span className="text-sm text-foreground">
-        <MathText text={labels.waves.replace("{k}", String(k))} />
+        <MathText text={fillTemplate(labels.waves, { k })} />
       </span>
       <RangeInput
         min={K_MIN}
@@ -216,7 +217,7 @@ export const CyclicShiftControls = ({
     </label>
     <label className="mt-3 block">
       <span className="text-sm text-foreground">
-        <MathText text={labels.add.replace("{a}", String(add))} />
+        <MathText text={fillTemplate(labels.add, { a: add })} />
       </span>
       <RangeInput
         min={0}

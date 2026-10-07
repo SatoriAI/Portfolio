@@ -24,11 +24,12 @@ import SectionHeading from "@/components/layout/SectionHeading";
 import Reveal from "@/components/Reveal";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useDemoRun } from "@/hooks/use-demo-run";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { usePageMeta } from "@/hooks/use-page-meta";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
 import { BOUNDS_START, INFLUENCE_START } from "@/lib/kernelFigures";
 import type { UiPublication } from "@/lib/publicationsService";
 import { usePublications } from "@/lib/queries";
+import { formatCounter } from "@/lib/text";
 import { translations } from "@/utils/translations";
 
 /**
@@ -48,8 +49,7 @@ const INFLUENCE_DEMO = demoTo(INFLUENCE_START);
 const BOUNDS_DEMO = demoTo(BOUNDS_START);
 /** The circle the wave rides: 0 to 112, and 113 is 0 again. */
 const CYCLE = 113;
-const eyebrow = (index: number) =>
-  `${String(index).padStart(2, "0")} / ${String(SECTION_COUNT).padStart(2, "0")}`;
+const eyebrow = (index: number) => formatCounter(index, SECTION_COUNT);
 
 /**
  * Research, told in the order of the work's standing: the established work

@@ -1,6 +1,7 @@
 import { type ReactNode, type RefObject, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
+import { clamp01, easeInOutCubic } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 /**
@@ -47,9 +48,6 @@ const END_AT = 0.65;
 /** How much later each circle leaves than the one before, as progress. */
 const STAGGER = 0.08;
 
-const clamp = (value: number) => Math.min(1, Math.max(0, value));
-const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
-
 const CircleFlight = ({ roles, section, from, to, onPhase }: CircleFlightProps) => {
   const copies = useRef<(HTMLDivElement | null)[]>([]);
   const phase = useRef<FlightPhase | null>(null);
@@ -66,7 +64,7 @@ const CircleFlight = ({ roles, section, from, to, onPhase }: CircleFlightProps) 
       if (sectionTop === undefined) return;
       const start = window.innerHeight * START_AT;
       const end = window.innerHeight * END_AT;
-      const progress = clamp((start - sectionTop) / (start - end));
+      const progress = clamp01((start - sectionTop) / (start - end));
       const next: FlightPhase = progress <= 0 ? "timeline" : progress >= 1 ? "sidebar" : "flying";
       if (next !== phase.current) {
         phase.current = next;
@@ -94,7 +92,7 @@ const CircleFlight = ({ roles, section, from, to, onPhase }: CircleFlightProps) 
         if (!measured) return;
         const { a, b } = measured;
         const span = 1 - STAGGER * (roles.length - 1);
-        const t = easeInOut(clamp((progress - STAGGER * index) / span));
+        const t = easeInOutCubic(clamp01((progress - STAGGER * index) / span));
         const size = a.width + (b.width - a.width) * t;
         copy.style.visibility = "visible";
         copy.style.width = `${size}px`;

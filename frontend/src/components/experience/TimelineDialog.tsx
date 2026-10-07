@@ -4,6 +4,8 @@ import { ArrowLeft, ArrowRight, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { DialogOverlay, DialogPortal } from "@/components/ui/dialog";
+import { prefersReducedMotion } from "@/lib/media";
+import { EASE_BRAND, EASE_EXIT } from "@/lib/motion";
 import { revealFromCircle } from "@/lib/reveal";
 import type { TimelineId } from "@/lib/timeline";
 
@@ -57,8 +59,8 @@ type TimelineDialogProps<Id extends TimelineId> = {
  * than 8 px. Closing is quicker and accelerates, because the visitor has
  * already decided to leave.
  */
-const OPEN = { duration: 420, easing: "cubic-bezier(0.22, 1, 0.36, 1)" };
-const CLOSE = { duration: 280, easing: "cubic-bezier(0.4, 0, 1, 1)" };
+const OPEN = { duration: 420, easing: EASE_BRAND };
+const CLOSE = { duration: 280, easing: EASE_EXIT };
 const FADE_MS = 200;
 
 // An entry may have more than one circle on the page (the timeline's, and
@@ -76,8 +78,6 @@ const circleOf = (id: TimelineId) => {
   );
 };
 
-const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
 /**
  * The panel's animation out of, or back into, the circle of the entry it
  * shows; a fade where motion is reduced or the circle cannot be found.
@@ -94,7 +94,7 @@ const play = (
   const fade = { opacity: opening ? [0, 1] : [1, 0] };
   scrim?.animate(fade, { duration: timing.duration, fill: "forwards" });
   const circle = id === null ? null : circleOf(id);
-  if (reducedMotion() || !circle) {
+  if (prefersReducedMotion() || !circle) {
     return panel.animate(fade, { duration: FADE_MS, fill: "forwards" }).finished;
   }
   const { from, to } = revealFromCircle(

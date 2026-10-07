@@ -13,6 +13,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { useSchools, useTestimonials } from "@/lib/queries";
 import type { UiSchool } from "@/lib/schoolsService";
+import { formatCounter } from "@/lib/text";
 import { translations } from "@/utils/translations";
 
 // The degrees read forward, earliest first: three steps of one line of work.
@@ -20,8 +21,7 @@ const chronological = (schools: readonly UiSchool[]) =>
   [...schools].sort((a, b) => a.startDate.localeCompare(b.startDate));
 
 const SECTION_COUNT = 2;
-const eyebrow = (index: number) =>
-  `${String(index).padStart(2, "0")} / ${String(SECTION_COUNT).padStart(2, "0")}`;
+const eyebrow = (index: number) => formatCounter(index, SECTION_COUNT);
 
 /**
  * The space each degree's work was set on, keyed by its start date: the

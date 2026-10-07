@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 
 export type ScrollRevealOptions = {
   root?: Element | null;

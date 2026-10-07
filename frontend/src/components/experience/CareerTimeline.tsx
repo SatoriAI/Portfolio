@@ -2,6 +2,8 @@ import { type KeyboardEvent, type ReactNode, useLayoutEffect, useRef } from "rea
 
 import { circleControl, circleState } from "@/components/experience/circleStyles";
 import { edgeOffset } from "@/lib/edgeEntrance";
+import { prefersReducedMotion } from "@/lib/media";
+import { EASE_BRAND } from "@/lib/motion";
 import { buildTimeline, type TimelineId, type TimelineInput } from "@/lib/timeline";
 import { cn } from "@/lib/utils";
 
@@ -90,7 +92,6 @@ const DENSE_TICKS = 7;
 /** The entrance from the edges: each flight, and the wait between circles. */
 const ENTER_MS = 900;
 const ENTER_STAGGER_MS = 90;
-const EASE_BRAND = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 const CareerTimeline = <Id extends TimelineId>({
   entries,
@@ -113,7 +114,7 @@ const CareerTimeline = <Id extends TimelineId>({
   useLayoutEffect(() => {
     if (!enterFromEdges || entered.current || count === 0) return;
     entered.current = true;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (prefersReducedMotion()) return;
     buttons.current.forEach((button, index) => {
       const from =
         button && edgeOffset(button.getBoundingClientRect(), window.innerWidth, window.innerHeight);

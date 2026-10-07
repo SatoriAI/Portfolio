@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { easeInOutQuad } from "@/lib/motion";
 
 /**
  * A figure that shows what its slider does by moving it once: the first time
@@ -26,8 +27,6 @@ type DemoRun = {
 
 /** How long the way back to `rest` takes. */
 const RETURN_MS = 900;
-
-const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 
 export function useDemoRun<T extends Element>(
   onValue: (value: number) => void,
@@ -56,9 +55,9 @@ export function useDemoRun<T extends Element>(
             begin ??= now;
             const elapsed = now - begin;
             if (elapsed <= durationMs || rest === undefined) {
-              set.current(from + (to - from) * easeInOut(Math.min(1, elapsed / durationMs)));
+              set.current(from + (to - from) * easeInOutQuad(Math.min(1, elapsed / durationMs)));
             } else {
-              const back = easeInOut(Math.min(1, (elapsed - durationMs) / RETURN_MS));
+              const back = easeInOutQuad(Math.min(1, (elapsed - durationMs) / RETURN_MS));
               set.current(to + (rest - to) * back);
             }
             if (elapsed < total) frame.current = requestAnimationFrame(step);

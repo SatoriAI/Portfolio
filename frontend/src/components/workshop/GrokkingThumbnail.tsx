@@ -1,5 +1,6 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useRef } from "react";
 
+import { useElementSize } from "@/hooks/use-element-size";
 import { GROKKING_RUNS, GROKKING_STEPS } from "@/lib/grokking";
 import { cn } from "@/lib/utils";
 
@@ -32,14 +33,7 @@ export type GrokkingThumbnailLabels = {
 
 const GrokkingThumbnail = ({ labels }: { labels: GrokkingThumbnailLabels }) => {
   const box = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(0);
-  useLayoutEffect(() => {
-    const element = box.current;
-    if (!element) return;
-    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
+  const { width } = useElementSize(box);
 
   const x = (step: number) => PAD.left + ((width - PAD.left - PAD.right) * step) / LAST_STEP;
   const y = (value: number) => PAD.top + (HEIGHT - PAD.top - PAD.bottom) * (1 - value);

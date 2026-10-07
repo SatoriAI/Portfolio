@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { buildUrl, endpoints } from "@/config/endpoints";
 import { env } from "@/config/env";
 import { useSettings } from "@/contexts/SettingsContext";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { apiClient, apiFetch } from "@/lib/apiClient";
 import { decodeStreamData, finalizeMarkdown } from "@/lib/streamMarkdown";
 import { translations } from "@/utils/translations";

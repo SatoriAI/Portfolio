@@ -3,7 +3,8 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import FigureFrame from "@/components/academic/FigureFrame";
 import { RangeInput } from "@/components/ui/range-input";
 import { useDemoRun } from "@/hooks/use-demo-run";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { useElementSize } from "@/hooks/use-element-size";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import {
   HOT,
   REACHED_POSITION,
@@ -73,18 +74,8 @@ const HeatRodFigure = ({ labels }: Props) => {
   const rodRef = useRef<HTMLDivElement>(null);
   const baseRef = useRef<SVGPathElement>(null);
   const heatRef = useRef<SVGPathElement>(null);
-  const [size, setSize] = useState({ width: 0, height: 0 });
-
   // The outline is drawn in px, so the ripples keep their shape at any width.
-  useEffect(() => {
-    const rod = rodRef.current;
-    if (!rod) return;
-    const observer = new ResizeObserver(([entry]) =>
-      setSize({ width: entry.contentRect.width, height: entry.contentRect.height }),
-    );
-    observer.observe(rod);
-    return () => observer.disconnect();
-  }, []);
+  const size = useElementSize(rodRef);
 
   // Each frame rewrites the path directly: only the ripple's phase changes,
   // so React need not render sixty times a second. It runs for a moment

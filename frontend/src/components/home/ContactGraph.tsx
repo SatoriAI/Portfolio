@@ -2,7 +2,10 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { ArrowRight, ArrowUpRight, Check, Copy, Mail, MessageSquare } from "lucide-react";
 
 import { useCircuit } from "@/components/home/circuitContext";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { useElementSize } from "@/hooks/use-element-size";
+import { useInView, useOnceInView } from "@/hooks/use-in-view";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { EASE_BRAND } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 /**
@@ -75,7 +78,6 @@ const JOLT_MS = 300;
 const JOLT_PX = 3;
 /** A spark's length, in pixels. */
 const SPARK_PX = 28;
-const EASE = "cubic-bezier(.22,1,.36,1)";
 /** When an edge starts drawing, and when its node appears. */
 const edgeAt = (index: number) => HUB_MS / 2 + index * STAGGER_MS;
 const nodeAt = (index: number) => edgeAt(index) + EDGE_MS * 0.65;
@@ -137,20 +139,7 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
   // The hub appears the first time the graph is well in view.
   const box = useRef<HTMLDivElement>(null);
   const [seen, setSeen] = useState(false);
-  useEffect(() => {
-    const element = box.current;
-    if (!element || seen) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        observer.disconnect();
-        setSeen(true);
-      },
-      { threshold: 0.4 },
-    );
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [seen]);
+  useOnceInView(box, () => setSeen(true), { threshold: 0.4 });
 
   // Where the page's circuit is drawn (from xl up, in motion; see Circuit),
   // the edges and nodes wait for it: they arrive the first time the current
@@ -165,16 +154,7 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
 
   // The star's box in pixels, so its edges can be drawn as curves.
   const star = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  useEffect(() => {
-    const element = star.current;
-    if (!element) return;
-    const observer = new ResizeObserver(([entry]) =>
-      setSize({ width: entry.contentRect.width, height: entry.contentRect.height }),
-    );
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
+  const size = useElementSize(star);
 
   // Each edge as a curve from the hub to its node; `swing` bends its middle
   // sideways, in pixels.
@@ -205,14 +185,7 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
   // The waving runs only while the graph is on screen and the page is
   // visible; the paths are moved directly, frame by frame,
   // without re-rendering.
-  const [onScreen, setOnScreen] = useState(false);
-  useEffect(() => {
-    const element = box.current;
-    if (!element) return;
-    const observer = new IntersectionObserver(([entry]) => setOnScreen(entry.isIntersecting));
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
+  const onScreen = useInView(box);
   const waving = drawn && onScreen && !prefersReducedMotion && size.width > 0;
   useEffect(() => {
     if (!waving) return;
@@ -402,7 +375,7 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
                 strokeWidth={hot === index ? 2 : 1.5}
                 className={edge(index)}
                 style={{
-                  transition: `stroke-dashoffset ${EDGE_MS}ms ${EASE} ${edgeAt(index)}ms, stroke 200ms, stroke-width 200ms`,
+                  transition: `stroke-dashoffset ${EDGE_MS}ms ${EASE_BRAND} ${edgeAt(index)}ms, stroke 200ms, stroke-width 200ms`,
                 }}
               />
             ))}

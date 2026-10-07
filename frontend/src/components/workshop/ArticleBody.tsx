@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import { Formula, MathText } from "@/components/Formula";
 import { EXHIBITS } from "@/components/workshop/exhibitRegistry";
 import type { ExhibitLabels } from "@/components/workshop/exhibits";
+import { fillTemplate } from "@/lib/text";
 import { typeset } from "@/lib/typography";
 import { cn } from "@/lib/utils";
 
@@ -290,7 +291,7 @@ const ArticleBody = ({ markdown, labels, figureLabels, language = "en" }: Articl
         remarkPlugins={[remarkGfm]}
         remarkRehypeOptions={{
           footnoteLabel: labels.footnotes,
-          footnoteBackLabel: (index: number) => labels.backToText.replace("{n}", String(index + 1)),
+          footnoteBackLabel: (index: number) => fillTemplate(labels.backToText, { n: index + 1 }),
         }}
         components={components}
       >

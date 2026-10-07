@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { CheckState } from "@/components/home/LiveCheck";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { EASE_BRAND } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 /**
@@ -18,7 +19,6 @@ import { cn } from "@/lib/utils";
 
 /** How long the page takes to paint in, top to bottom. */
 const PAINT_MS = 480;
-const EASE = "cubic-bezier(.22,1,.36,1)";
 
 type ProjectWindowProps = {
   screenshot?: string;
@@ -55,7 +55,7 @@ const ProjectWindow = ({
     if (was !== "checking" || prefersReducedMotion || !image.current) return;
     const paint = image.current.animate(
       [{ clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0% 0)" }],
-      { duration: PAINT_MS, easing: EASE },
+      { duration: PAINT_MS, easing: EASE_BRAND },
     );
     return () => paint.cancel();
   }, [checkState, prefersReducedMotion]);

@@ -1,4 +1,4 @@
-import { type PropsWithChildren, type RefObject, useEffect, useRef, useState } from "react";
+import { type PropsWithChildren, type RefObject, useEffect, useRef } from "react";
 
 import ChatLauncher from "@/components/ChatLauncher";
 import ChatWidget from "@/components/ChatWidget";
@@ -6,6 +6,7 @@ import SiteFooter from "@/components/layout/SiteFooter";
 import SiteHeader from "@/components/layout/SiteHeader";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useVex } from "@/contexts/VexContext";
+import { useInView } from "@/hooks/use-in-view";
 import { cn } from "@/lib/utils";
 import { translations } from "@/utils/translations";
 
@@ -36,18 +37,9 @@ const PageLayout = ({ className, launcherClearOf, children }: PageLayoutProps) =
 
   // Over a piece of reading the launcher would cover the ends of lines; the
   // page's own closing offers Vex once the text is past.
-  const [launcherAside, setLauncherAside] = useState(false);
-  useEffect(() => {
-    const target = launcherClearOf?.current;
-    if (!target) return;
-    // Only the strip at the foot of the screen, where the launcher sits:
-    // once the text's last line has risen above it, the launcher is back.
-    const observer = new IntersectionObserver(([entry]) => setLauncherAside(entry.isIntersecting), {
-      rootMargin: "-88% 0px 0px 0px",
-    });
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, [launcherClearOf]);
+  // Only the strip at the foot of the screen, where the launcher sits:
+  // once the text's last line has risen above it, the launcher is back.
+  const launcherAside = useInView(launcherClearOf, { rootMargin: "-88% 0px 0px 0px" });
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">

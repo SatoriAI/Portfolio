@@ -1,6 +1,8 @@
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
+import { prefersReducedMotion } from "@/lib/media";
+import { EASE_BRAND } from "@/lib/motion";
 import type { LaneSegment } from "@/lib/skillLanes";
 import type { UiSkill } from "@/lib/skillsService";
 import { parseYears } from "@/lib/skillYears";
@@ -72,7 +74,6 @@ type SkillLanesProps = {
 const LAYER_STEP_MS = 220;
 /** How long a bar takes to draw, as the timeline's own line does. */
 const DRAW_MS = 500;
-const EASE_BRAND = "cubic-bezier(0.22, 1, 0.36, 1)";
 /** Projects named in the detail before the rest are counted. */
 const PROJECTS_SHOWN = 3;
 
@@ -80,7 +81,7 @@ const PROJECTS_SHOWN = 3;
 const Band = ({ left, width }: { left: string; width: string }) => {
   const band = useRef<HTMLSpanElement>(null);
   useLayoutEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (prefersReducedMotion()) return;
     band.current?.animate([{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], {
       duration: 200,
       easing: EASE_BRAND,

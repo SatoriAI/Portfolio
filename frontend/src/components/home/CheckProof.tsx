@@ -2,7 +2,8 @@ import { Fragment, useEffect, useRef } from "react";
 
 import Bolt from "@/components/brand/Bolt";
 import type { CheckState } from "@/components/home/LiveCheck";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { useOnceInView } from "@/hooks/use-in-view";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 
 /** One wording per plural category of the count (see Intl.PluralRules). */
@@ -43,20 +44,7 @@ const CheckProof = ({ checks, labels, locale, onSeen, className }: CheckProofPro
   // It says the sites are being checked, so it starts the checks when it is
   // read, not only when the projects below it come into view.
   const line = useRef<HTMLParagraphElement>(null);
-  useEffect(() => {
-    const element = line.current;
-    if (!element || !onSeen) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        observer.disconnect();
-        onSeen();
-      },
-      { threshold: 1 },
-    );
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [onSeen]);
+  useOnceInView(line, () => onSeen?.(), { threshold: 1, enabled: onSeen !== undefined });
   const plural = new Intl.PluralRules(locale);
   const pick = (forms: PluralForms, n: number) => forms[plural.select(n)] ?? forms.other;
 

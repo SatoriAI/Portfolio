@@ -1,11 +1,13 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { ExternalLink } from "lucide-react";
 
 import DomainGlyph, { domainFor } from "@/components/academic/DomainGlyph";
 import { Button } from "@/components/ui/button";
 import { publicationDetails, type PublicationStatus } from "@/config/publications";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { useOnceInView } from "@/hooks/use-in-view";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { EASE_BRAND } from "@/lib/motion";
 import type { UiPublication } from "@/lib/publicationsService";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +45,6 @@ const FILE_DROP_PX = 40;
 const FILE_MS = 460;
 const FILE_STAGGER_MS = 160;
 const STAMP_MS = 380;
-const EASE_BRAND = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 type PublicationStackLabels = {
   view: string;
@@ -197,25 +198,10 @@ const PublicationStack = ({
     prefersReducedMotion ? "filed" : "waiting",
   );
 
-  useEffect(() => {
-    const element = root.current;
-    if (!element || filing !== "waiting") return;
-    // No way to tell when it is seen: show it as it is.
-    if (typeof IntersectionObserver === "undefined") {
-      setFiling("filed");
-      return;
-    }
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        observer.disconnect();
-        setFiling("filing");
-      },
-      { threshold: 0.3 },
-    );
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [filing]);
+  useOnceInView(root, () => setFiling("filing"), {
+    threshold: 0.3,
+    enabled: filing === "waiting",
+  });
 
   // Already on screen when the page opens (a link to #publications, say):
   // shown as it is, before the first paint, rather than hidden and filed.

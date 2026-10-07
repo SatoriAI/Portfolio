@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { RotateCcw } from "lucide-react";
 
 import FigureFrame from "@/components/academic/FigureFrame";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { useOnceInView } from "@/hooks/use-in-view";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { ringPoint } from "@/lib/cyclicShift";
 import { cn } from "@/lib/utils";
 
@@ -67,20 +68,7 @@ const ClockExample = ({ labels, className }: ClockExampleProps) => {
   const frame = useRef<HTMLElement>(null);
   const animated = !prefersReducedMotion;
 
-  useEffect(() => {
-    const element = frame.current;
-    if (!element || !animated) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        observer.disconnect();
-        setRun(1);
-      },
-      { threshold: 0.6 },
-    );
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [animated]);
+  useOnceInView(frame, () => setRun(1), { threshold: 0.6, enabled: animated });
 
   const count = () => {
     setLanded(false);

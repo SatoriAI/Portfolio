@@ -2,7 +2,7 @@ import { useEffect, useId, useRef } from "react";
 
 import FigureFrame from "@/components/academic/FigureFrame";
 import { RangeInput } from "@/components/ui/range-input";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { discStops, heatRadius, spreadAt, strengthAt, wavyRim } from "@/lib/kernelFigures";
 
 type FigureLabels = {

@@ -23,14 +23,16 @@ import { skillLayers } from "@/config/skillLayers";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useVex } from "@/contexts/VexContext";
 import { useDismissOutside } from "@/hooks/use-dismiss-outside";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-media-query";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { usePageMeta } from "@/hooks/use-page-meta";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
 import { useTimelineSelection } from "@/hooks/use-timeline-selection";
 import { useExperiences, useProjects, useSkills } from "@/lib/queries";
 import { claimsEarlier, laneSegments } from "@/lib/skillLanes";
 import { rolesForSkill } from "@/lib/skillRoles";
 import { formatYears, parseYears } from "@/lib/skillYears";
+import { fillTemplate } from "@/lib/text";
+import { formatCounter } from "@/lib/text";
 import { buildTimeline, companyShortName } from "@/lib/timeline";
 import { translations } from "@/utils/translations";
 
@@ -43,8 +45,7 @@ import { translations } from "@/utils/translations";
  */
 
 const SECTION_COUNT = 2;
-const eyebrow = (index: number) =>
-  `${String(index).padStart(2, "0")} / ${String(SECTION_COUNT).padStart(2, "0")}`;
+const eyebrow = (index: number) => formatCounter(index, SECTION_COUNT);
 
 const Experience = () => {
   const [chosenSkill, setChosenSkill] = useState<number | null>(null);
@@ -322,9 +323,9 @@ const Experience = () => {
                 circlesHidden={flight && phase !== "sidebar"}
                 labels={{
                   list: t.skills.roles,
-                  show: (company) => t.skills.showSkills.replace("{company}", company),
+                  show: (company) => fillTemplate(t.skills.showSkills, { company }),
                   open: t.skills.openRole,
-                  openFull: (company) => t.skills.openRoleFull.replace("{company}", company),
+                  openFull: (company) => fillTemplate(t.skills.openRoleFull, { company }),
                 }}
               />
             </div>
@@ -339,12 +340,12 @@ const Experience = () => {
               labels={{
                 years: (count) => formatYears(count, language),
                 level: (level) => t.skills.levels[level] ?? level,
-                show: (name) => t.skills.show.replace("{name}", name),
+                show: (name) => fillTemplate(t.skills.show, { name }),
                 outsideRoles: t.skills.outsideRoles,
                 earlier: t.skills.earlier,
                 projects: t.skills.projects,
                 roles: t.skills.roles,
-                more: (count) => t.skills.more.replace("{count}", String(count)),
+                more: (count) => fillTemplate(t.skills.more, { count }),
               }}
               selectedId={chosenSkill}
               onSelect={setChosenSkill}

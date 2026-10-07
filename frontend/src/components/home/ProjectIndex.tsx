@@ -7,11 +7,13 @@ import LiveCheck, { type CheckState, type LiveCheckLabels } from "@/components/h
 import ProjectWindow from "@/components/home/ProjectWindow";
 import { Button } from "@/components/ui/button";
 import { projectIcons } from "@/config/projectIcons";
+import { useOnceInView } from "@/hooks/use-in-view";
 import type { LiveChecks } from "@/hooks/use-live-checks";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { hostOf } from "@/lib/liveCheck";
 import { isThisSite } from "@/lib/projectLinks";
 import type { UiProject } from "@/lib/projectsService";
+import { fillTemplate } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
 /**
@@ -65,8 +67,6 @@ export type ProjectIndexLabels = {
   next: string;
   live: LiveCheckLabels;
 };
-
-const fill = (template: string, title: string) => template.replace("{title}", title);
 
 /** Decorative: the name stands beside it, so the icon says nothing more. */
 const ProjectIcon = ({ project, className }: { project: UiProject; className?: string }) => {
@@ -194,7 +194,7 @@ const ProjectFrame = ({
 
         <ProjectWindow
           screenshot={screenshot}
-          alt={fill(labels.screenshotAlt, project.title)}
+          alt={fillTemplate(labels.screenshotAlt, { title: project.title })}
           icon={<ProjectIcon project={project} className="size-16 rounded-card md:size-20" />}
           subtitle={subtitle}
           checkState={checkState}
@@ -232,15 +232,17 @@ const ProjectFrame = ({
             it ends level with the frame beside it when the text is shorter. */}
         <button
           type="button"
-          aria-label={fill(labels.askVex, project.title)}
-          onClick={() => onAsk(fill(labels.askVexQuestion, project.title))}
+          aria-label={fillTemplate(labels.askVex, { title: project.title })}
+          onClick={() => onAsk(fillTemplate(labels.askVexQuestion, { title: project.title }))}
           className="group flex min-h-11 w-full items-center gap-3 rounded-lg border border-control-border bg-background py-1.5 pl-4 pr-1.5 text-left outline-none transition-colors duration-200 hover:border-iris focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background max-sm:w-[calc(100%-4rem)] sm:w-fit sm:self-center lg:mt-auto"
         >
           <span className="shrink-0 font-mono text-meta text-iris">Vex</span>
           {/* On a phone the pill makes room for the chat button, so the
               question wraps rather than losing the project's name. */}
           <span className="min-w-0 flex-1 text-sm text-muted-foreground transition-colors duration-200 group-hover:text-foreground sm:truncate">
-            {labels.quoted.replace("{text}", fill(labels.askVexQuestion, project.title))}
+            {fillTemplate(labels.quoted, {
+              text: fillTemplate(labels.askVexQuestion, { title: project.title }),
+            })}
           </span>
           <span
             aria-hidden="true"
@@ -295,20 +297,9 @@ const ProjectIndex = ({
   // the answers are there without a press and the open frame's page paints
   // in as its answer arrives.
   const root = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const element = root.current;
-    if (!element) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        observer.disconnect();
-        checkAllOnce(checkable.map((project) => project.demo));
-      },
-      { threshold: 0.3 },
-    );
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [checkAllOnce, checkable]);
+  useOnceInView(root, () => checkAllOnce(checkable.map((project) => project.demo)), {
+    threshold: 0.3,
+  });
 
   // The pressed well: one shape laid under the strip that slides to the
   // chosen tab. It lives inside the strip, so when the strip scrolls on a

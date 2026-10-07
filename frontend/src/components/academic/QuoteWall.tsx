@@ -1,7 +1,8 @@
 import { useLayoutEffect, useRef, useState } from "react";
 
 import { useDismissOutside } from "@/hooks/use-dismiss-outside";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { clamp01, easeOutCubic } from "@/lib/motion";
 import { segmentQuote, themeCounts, type ThemePhrases, themesIn } from "@/lib/quoteThemes";
 import type { UiTestimonial } from "@/lib/testimonialsService";
 import { cn } from "@/lib/utils";
@@ -67,8 +68,6 @@ type QuoteWallProps = {
  */
 const PIN_RANGE = 0.3;
 const PIN_STAGGER = 0.2;
-const clamp = (value: number) => Math.min(1, Math.max(0, value));
-const easeOut = (t: number) => 1 - (1 - t) ** 3;
 
 /**
  * A highlighter over the lower part of the words, drawn once across them:
@@ -123,9 +122,9 @@ const QuoteWall = ({ testimonials, themes, evidence, labels, className }: QuoteW
         const note = slot.firstElementChild as HTMLElement | null;
         if (!(slot instanceof HTMLElement) || !note) return;
         const raw = (height - top) / (height * PIN_RANGE) - (index % columns) * PIN_STAGGER;
-        const pinned = easeOut(clamp(raw));
+        const pinned = easeOutCubic(clamp01(raw));
         const tilt = Number(note.dataset.tilt ?? 0);
-        slot.style.opacity = String(clamp(raw * 1.6));
+        slot.style.opacity = String(clamp01(raw * 1.6));
         note.style.translate = `0 ${(-14 * (1 - pinned)).toFixed(2)}px`;
         note.style.scale = String(1 + 0.05 * (1 - pinned));
         // Against the note's own tilt, so it comes in square and turns.

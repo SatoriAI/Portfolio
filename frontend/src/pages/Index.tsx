@@ -27,6 +27,8 @@ import { useLiveChecks } from "@/hooks/use-live-checks";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { isThisSite } from "@/lib/projectLinks";
 import { useProjects } from "@/lib/queries";
+import { fillTemplate } from "@/lib/text";
+import { formatCounter } from "@/lib/text";
 import { articlesFor } from "@/lib/workshop";
 import { translations } from "@/utils/translations";
 
@@ -49,8 +51,7 @@ const Index = () => {
   const w = t.workshop;
   // Sections are numbered as they are shown.
   const sectionCount = pieces.length > 0 ? 4 : 3;
-  const eyebrow = (index: number) =>
-    `${String(index).padStart(2, "0")} / ${String(sectionCount).padStart(2, "0")}`;
+  const eyebrow = (index: number) => formatCounter(index, sectionCount);
   const after = pieces.length > 0 ? 1 : 0;
 
   // The real projects or nothing: if they cannot be loaded the section says
@@ -216,7 +217,7 @@ const Index = () => {
                     name: t.nav.workshop,
                     // The newest piece, so the way in says what is new there.
                     line: pieces[0]
-                      ? t.about.routes.workshop.replace("{title}", pieces[0].title)
+                      ? fillTemplate(t.about.routes.workshop, { title: pieces[0].title })
                       : w.lead,
                   },
                 ]}

@@ -4,6 +4,7 @@ import { MessageSquare } from "lucide-react";
 import CompanyMark from "@/components/experience/CompanyMark";
 import { Button } from "@/components/ui/button";
 import type { UiExperience } from "@/lib/experiencesService";
+import { fillTemplate } from "@/lib/text";
 
 /**
  * One role, read as an entry rather than a card: the company first, because
@@ -21,8 +22,6 @@ export type RoleEntryLabels = {
   /** The question sent when it is pressed; `{company}` is replaced. */
   askVexQuestion: string;
 };
-
-const fill = (template: string, company: string) => template.replace("{company}", company);
 
 type RoleEntryProps = {
   experience: UiExperience;
@@ -83,10 +82,10 @@ const RoleEntry = ({ experience, labels, onAsk }: RoleEntryProps) => (
       <Button
         variant="link"
         className="h-auto whitespace-normal px-0 text-left text-sm font-medium"
-        onClick={() => onAsk(fill(labels.askVexQuestion, experience.company))}
+        onClick={() => onAsk(fillTemplate(labels.askVexQuestion, { company: experience.company }))}
       >
         <MessageSquare />
-        {fill(labels.askVex, experience.company)}
+        {fillTemplate(labels.askVex, { company: experience.company })}
       </Button>
     </div>
   </article>

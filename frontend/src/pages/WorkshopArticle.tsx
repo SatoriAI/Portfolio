@@ -14,13 +14,11 @@ import MetaLine from "@/components/workshop/MetaLine";
 import { loadArticleBody, showDrafts, workshopArticles } from "@/content/workshop";
 import { useSettings } from "@/contexts/SettingsContext";
 import { usePageMeta } from "@/hooks/use-page-meta";
+import { fillTemplate, pad2 } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { articlesFor, splitSections } from "@/lib/workshop";
 import NotFound from "@/pages/NotFound";
 import { translations } from "@/utils/translations";
-
-/** Two digits, as the section numbers are elsewhere on the site. */
-const pad = (n: number) => String(n).padStart(2, "0");
 
 /**
  * One piece from the workshop, set as a test log. The head: the date,
@@ -124,7 +122,7 @@ const WorkshopArticle = () => {
                 <MetaLine
                   date={article.date}
                   locale={language}
-                  minutes={w.minutes.replace("{n}", String(article.minutes))}
+                  minutes={fillTemplate(w.minutes, { n: article.minutes })}
                   tags={article.tags}
                   tagsLabel={w.tags}
                 />
@@ -184,7 +182,7 @@ const WorkshopArticle = () => {
                         )}
                       >
                         {section.heading
-                          ? [article.stamp, pad(number)].filter(Boolean).join(" ")
+                          ? [article.stamp, pad2(number)].filter(Boolean).join(" ")
                           : w.introduction}
                       </p>
                       {section.heading && (

@@ -11,7 +11,9 @@ import { ArrowUpRight, Award } from "lucide-react";
 
 import DomainGlyph, { type DomainKind } from "@/components/academic/DomainGlyph";
 import { Button } from "@/components/ui/button";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { useOnceInView } from "@/hooks/use-in-view";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { matchesMedia, MEDIA } from "@/lib/media";
 import type { UiSchool } from "@/lib/schoolsService";
 import { splitSentences } from "@/lib/sentences";
 import { cn } from "@/lib/utils";
@@ -286,7 +288,7 @@ const ResearchThread = ({
     if (!school) return;
     // Below lg the open card sits under its stop, so choosing a later one
     // closes a long card above it; bring the chosen stop back to the top.
-    if (!window.matchMedia("(min-width: 1024px)").matches) {
+    if (!matchesMedia(MEDIA.lg)) {
       window.requestAnimationFrame(() =>
         stops.current[index]?.scrollIntoView({
           block: "start",
@@ -305,20 +307,10 @@ const ResearchThread = ({
   const [arrival, setArrival] = useState<Arrival>(prefersReducedMotion ? "done" : "waiting");
   const root = useRef<HTMLDivElement>(null);
   const last = schools.length - 1;
-  useEffect(() => {
-    const element = root.current;
-    if (!element || arrival !== "waiting") return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        observer.disconnect();
-        setArrival("walking");
-      },
-      { threshold: 0.3 },
-    );
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [arrival]);
+  useOnceInView(root, () => setArrival("walking"), {
+    threshold: 0.3,
+    enabled: arrival === "waiting",
+  });
   useEffect(() => {
     if (arrival !== "walking") return;
     const timer = window.setTimeout(() => setArrival("done"), last * STEP_MS + RISE_MS + 200);

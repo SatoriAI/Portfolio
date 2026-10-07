@@ -9,7 +9,8 @@ import {
 } from "react";
 
 import { CircuitContext } from "@/components/home/circuitContext";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { MEDIA } from "@/lib/media";
 
 /**
  * One wire through the home page, from the theorem at the top to me at the
@@ -62,7 +63,6 @@ const LINGER_MS = 500;
 const FADE_MS = 220;
 /** How near the bottom of the page counts as the bottom. */
 const CLOSE_WITHIN = 12;
-const WIDE = "(min-width: 1280px)";
 
 type Layout = {
   d: string;
@@ -88,7 +88,7 @@ const Circuit = ({ children }: PropsWithChildren) => {
   useLayoutEffect(() => {
     const element = root.current;
     if (!element) return;
-    const wide = window.matchMedia(WIDE);
+    const wide = window.matchMedia(MEDIA.xl);
     const measure = () => {
       if (!wide.matches) return setLayout(null);
       const box = element.getBoundingClientRect();

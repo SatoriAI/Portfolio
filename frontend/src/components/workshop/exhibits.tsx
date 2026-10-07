@@ -1,5 +1,6 @@
 import { Formula } from "@/components/Formula";
 import { EXPECTED_HITS, SEARCH_VARIANTS, type SearchVariant } from "@/lib/searchEvaluation";
+import { fillTemplate } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
 /**
@@ -71,7 +72,7 @@ export const SearchBars = ({ labels }: { labels: ExhibitLabels }) => (
       })}
     </ul>
     <p className="mt-3 font-mono text-meta text-muted-foreground">
-      {labels.searchNote.replace("{n}", String(EXPECTED_HITS))}
+      {fillTemplate(labels.searchNote, { n: EXPECTED_HITS })}
     </p>
   </div>
 );

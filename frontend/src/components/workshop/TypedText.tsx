@@ -1,6 +1,9 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import KeepWithLastWord from "@/components/workshop/KeepWithLastWord";
+import { useOnceInView } from "@/hooks/use-in-view";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { splitLastWord } from "@/lib/text";
 
 /** One letter's time, shortened for a long title so no title types for longer than the cap. */
 const LETTER_MS = 40;
@@ -24,20 +27,10 @@ const TypedText = ({ text, after }: { text: string; after?: ReactNode }) => {
   const [started, setStarted] = useState(false);
   const done = prefersReducedMotion || typed >= text.length;
 
-  useEffect(() => {
-    const element = line.current;
-    if (!element || prefersReducedMotion) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        observer.disconnect();
-        setStarted(true);
-      },
-      { threshold: 0.6 },
-    );
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [prefersReducedMotion]);
+  useOnceInView(line, () => setStarted(true), {
+    threshold: 0.6,
+    enabled: !prefersReducedMotion,
+  });
 
   useEffect(() => {
     if (!started || done) return;
@@ -46,28 +39,12 @@ const TypedText = ({ text, after }: { text: string; after?: ReactNode }) => {
     return () => window.clearInterval(tick);
   }, [started, done, text.length]);
 
-  const at = after ? text.lastIndexOf(" ") + 1 : text.length;
-  const head = text.slice(0, at);
-  const tail = (
-    <span className="whitespace-nowrap">
-      {text.slice(at)}
-      {after}
-    </span>
-  );
-  if (done) {
-    return (
-      <>
-        {head}
-        {tail}
-      </>
-    );
-  }
+  const whole = <KeepWithLastWord text={text}>{after}</KeepWithLastWord>;
+  if (done) return whole;
+  const at = splitLastWord(text)[0].length;
   return (
     <span ref={line} className="relative">
-      <span className="text-transparent">
-        {head}
-        {tail}
-      </span>
+      <span className="text-transparent">{whole}</span>
       <span aria-hidden="true" className="absolute inset-0">
         {text.slice(0, Math.min(typed, at))}
         <span className="whitespace-nowrap">

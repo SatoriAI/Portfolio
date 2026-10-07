@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { ExternalLink } from "lucide-react";
 
 import Bolt from "@/components/brand/Bolt";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { type CheckResult, hostOf } from "@/lib/liveCheck";
+import { EASE_BRAND } from "@/lib/motion";
+import { fillTemplate } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
 /**
@@ -40,7 +42,6 @@ export type LiveCheckLabels = {
 
 /** The strike's run along the hairline. */
 const STRIKE_MS = 360;
-const EASE = "cubic-bezier(.22,1,.36,1)";
 
 /** The strike's path across a 100-wide box: twelve zigs, level at both ends. */
 const ZIGZAG = `M0 0 ${Array.from({ length: 11 }, (_, at) => `L${(at + 1) * (100 / 12)} ${at % 2 ? 4 : -4}`).join(" ")} L100 0`;
@@ -95,7 +96,7 @@ const LiveCheck = ({ url, state, onCheck, labels, className }: LiveCheckProps) =
       flight.current?.cancel();
       flight.current = bolt.animate(
         [{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }],
-        { duration: STRIKE_MS, easing: EASE, fill: "forwards" },
+        { duration: STRIKE_MS, easing: EASE_BRAND, fill: "forwards" },
       );
       return;
     }
@@ -118,7 +119,7 @@ const LiveCheck = ({ url, state, onCheck, labels, className }: LiveCheckProps) =
   const status = busy
     ? labels.checking
     : shown?.answered
-      ? labels.answered.replace("{ms}", String(shown.ms))
+      ? fillTemplate(labels.answered, { ms: shown.ms })
       : silent
         ? labels.silent
         : labels.check;
@@ -140,7 +141,7 @@ const LiveCheck = ({ url, state, onCheck, labels, className }: LiveCheckProps) =
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={labels.openAria.replace("{host}", host)}
+          aria-label={fillTemplate(labels.openAria, { host })}
           title={host}
           // A long host gives way first, cut with an ellipsis, so the time
           // at the bar's end always keeps its room.

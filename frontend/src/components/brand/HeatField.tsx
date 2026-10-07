@@ -6,7 +6,8 @@ import {
   useRef,
 } from "react";
 
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { easeOutCubic } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 /**
@@ -107,11 +108,6 @@ const BAR_COLS = 320;
 const POINTER_SOFTENING = 0.12;
 const POINTER_LIFETIME = 1.6;
 const POINTER_MIN_SPACING = 0.02;
-
-// An ease-out in the spirit of the kit's entrance curve, cubic-bezier(.22,1,
-// .36,1), but a degree gentler: a Gaussian's visible edge grows with √t, so a
-// steeper curve spends the whole spread in the first half second.
-const easeOut = (x: number) => 1 - (1 - x) ** 3;
 
 type PointerSource = { x: number; y: number; bornAt: number };
 
@@ -293,7 +289,10 @@ const HeatField = ({
 
     if (introStartRef.current !== null) {
       const progress = Math.min(1, (now - introStartRef.current) / INTRO_MS);
-      state.tau = INTRO_START + (1 - INTRO_START) * easeOut(progress);
+      // A cubic ease-out, a degree gentler than the kit's entrance curve: a
+      // Gaussian's visible edge grows with √t, so a steeper curve spends the
+      // whole spread in the first half second.
+      state.tau = INTRO_START + (1 - INTRO_START) * easeOutCubic(progress);
       if (progress >= 1) introStartRef.current = null;
     }
     state.pointer = state.pointer.filter((p) => state.clock - p.bornAt < POINTER_LIFETIME);

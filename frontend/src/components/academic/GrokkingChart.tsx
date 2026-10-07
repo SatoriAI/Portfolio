@@ -12,7 +12,9 @@ import { RotateCcw } from "lucide-react";
 
 import FigureFrame from "@/components/academic/FigureFrame";
 import { Button } from "@/components/ui/button";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { useElementSize } from "@/hooks/use-element-size";
+import { useOnceInView } from "@/hooks/use-in-view";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import {
   type Box,
   crossingRange,
@@ -32,6 +34,8 @@ import {
   stepSentence,
   valuesAt,
 } from "@/lib/grokking";
+import { EASE_TRAVEL } from "@/lib/motion";
+import { fillTemplate } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
 /**
@@ -157,21 +161,6 @@ type GrokkingChartProps = {
   className?: string;
 };
 
-/** The plot's width in CSS pixels, so text in the SVG stays at its set size. */
-const useWidth = <T extends HTMLElement>(fallback: number) => {
-  const ref = useRef<T>(null);
-  const [width, setWidth] = useState(fallback);
-  useLayoutEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
-    observer.observe(element);
-    setWidth(element.getBoundingClientRect().width);
-    return () => observer.disconnect();
-  }, []);
-  return { ref, width };
-};
-
 type MarkProps = {
   x: number;
   y: number;
@@ -208,7 +197,9 @@ const UnseenMark = ({ x, y, active = false }: MarkProps) => (
 );
 
 const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
-  const { ref, width } = useWidth<HTMLDivElement>(560);
+  // The plot's width in CSS pixels, so text in the SVG stays at its set size.
+  const ref = useRef<HTMLDivElement>(null);
+  const { width } = useElementSize(ref, { width: 560, height: 0 });
   const [step, setStep] = useState(OPENING_STEP);
   const [showTip, setShowTip] = useState(false);
   const keyRef = useRef<HTMLUListElement>(null);
@@ -366,46 +357,38 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
   // lean right and come back, once, so the reader sees they can be moved.
   // Not after a move, and not under reduced motion.
   const nudged = useRef(false);
-  useEffect(() => {
-    const plot = ref.current;
-    if (!plot || prefersReducedMotion || picked || nudged.current) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        observer.disconnect();
-        nudged.current = true;
-        const lean = { duration: NUDGE_MS, delay: 300, easing: "cubic-bezier(0.45, 0, 0.55, 1)" };
-        markerLine.current?.animate(
-          [
-            { transform: "translateX(0)" },
-            { transform: `translateX(${NUDGE_PX}px)` },
-            { transform: "translateX(0)" },
-          ],
-          lean,
-        );
-        markerTag.current?.animate(
-          [{ translate: "0 0" }, { translate: `${NUDGE_PX}px 0` }, { translate: "0 0" }],
-          lean,
-        );
-      },
-      { threshold: 0.6 },
-    );
-    observer.observe(plot);
-    return () => observer.disconnect();
-  }, [ref, prefersReducedMotion, picked]);
+  useOnceInView(
+    ref,
+    () => {
+      if (nudged.current) return;
+      nudged.current = true;
+      const lean = { duration: NUDGE_MS, delay: 300, easing: EASE_TRAVEL };
+      markerLine.current?.animate(
+        [
+          { transform: "translateX(0)" },
+          { transform: `translateX(${NUDGE_PX}px)` },
+          { transform: "translateX(0)" },
+        ],
+        lean,
+      );
+      markerTag.current?.animate(
+        [{ translate: "0 0" }, { translate: `${NUDGE_PX}px 0` }, { translate: "0 0" }],
+        lean,
+      );
+    },
+    { threshold: 0.6, enabled: !prefersReducedMotion && !picked },
+  );
   const crossing = crossingRange(GROKKING_RUNS);
   const grade = guessVerdict(guess, crossing);
   // While guessing, the name says it can be moved.
   const markerName = answered
     ? `${labels.predict.marker} · ${labels.predict.verdict[grade]}`
     : `↔ ${labels.predict.marker}`;
-  const guessText = labels.predict.guess.replace("{step}", formatStep(guess));
+  const guessText = fillTemplate(labels.predict.guess, { step: formatStep(guess) });
   // The slider itself says each step while the reader chooses; this voice
   // gives only the grade, so nothing is heard twice.
   const heard = answered
-    ? `${labels.predict.verdict[grade]}. ${labels.predict.result
-        .replace("{from}", formatStep(crossing.min))
-        .replace("{to}", formatStep(crossing.max))}`
+    ? `${labels.predict.verdict[grade]}. ${fillTemplate(labels.predict.result, { from: formatStep(crossing.min), to: formatStep(crossing.max) })}`
     : "";
   // Check keeps focus in the chart, which it is about to answer, and stands
   // the crosshair at the guess.

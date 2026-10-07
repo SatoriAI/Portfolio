@@ -3,7 +3,9 @@ import { Box, ChevronRight, Sparkles } from "lucide-react";
 
 import { groupTechnologies, techGroupOf } from "@/config/techGroups";
 import { techIcon } from "@/config/techIcons";
-import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
+import { useInView } from "@/hooks/use-in-view";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { formatCounter } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
 /**
@@ -51,9 +53,6 @@ const TechMark = ({
   );
 };
 
-/** A position in the stack, two digits as the section numbers are. */
-const pad = (n: number) => String(n).padStart(2, "0");
-
 /** The next control: a 44px target, quiet until pointed at. */
 const CONTROL =
   "grid size-11 shrink-0 place-items-center rounded-full text-muted-foreground outline-none transition-colors duration-200 hover:bg-background hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
@@ -94,18 +93,11 @@ const BuildLine = ({ technologies, active, label, nextLabel }: BuildLineProps) =
   // Keyboard focus on the row's controls holds it too, as a resting pointer
   // does, so stepping with "next" is not raced by the timer.
   const [focused, setFocused] = useState(false);
-  const [visible, setVisible] = useState(false);
   const slot = useRef<HTMLDivElement>(null);
   const bolt = useRef<SVGSVGElement>(null);
 
   // On screen, and the page in front: the only time it is worth running.
-  useEffect(() => {
-    const element = slot.current;
-    if (!element) return;
-    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting));
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
+  const visible = useInView(slot);
 
   const running =
     active && visible && !held && !focused && !prefersReducedMotion && parts.length > 1;
@@ -252,7 +244,7 @@ const BuildLine = ({ technologies, active, label, nextLabel }: BuildLineProps) =
             aria-hidden="true"
             className="mr-auto shrink-0 font-mono text-meta tabular-nums text-muted-foreground sm:mr-0"
           >
-            {pad(at + 1)} / {pad(parts.length)}
+            {formatCounter(at + 1, parts.length)}
           </span>
           <button
             type="button"
