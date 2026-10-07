@@ -1,8 +1,7 @@
 import { endpoints } from "../config/endpoints";
 import { env } from "../config/env";
-import { useSettings } from "../contexts/SettingsContext";
 
-import { apiFetch } from "./apiClient";
+import { apiClient } from "./apiClient";
 
 export type ApiTestimonial = {
   id: number;
@@ -28,6 +27,18 @@ export type UiTestimonial = {
   rating: number; // We'll generate ratings since no rating field in API
   text: string;
 };
+
+// The season is a fixed English enum on the backend; the Polish academic
+// calendar knows two semesters, so autumn and spring fold into them.
+const POLISH_SEASON: Record<ApiTestimonial["season"], string> = {
+  Winter: "sem. zimowy",
+  Fall: "sem. zimowy",
+  Spring: "sem. letni",
+  Summer: "sem. letni",
+};
+
+const seasonLabel = (season: ApiTestimonial["season"], lang: string) =>
+  lang === "pl" ? (POLISH_SEASON[season] ?? season) : season;
 
 export function mapApiTestimonialToUi(
   testimonial: ApiTestimonial,
@@ -58,7 +69,7 @@ export function mapApiTestimonialToUi(
     id: testimonial.id,
     name,
     course: localized.course || "",
-    semester: `${testimonial.season} ${testimonial.semester}`,
+    semester: `${seasonLabel(testimonial.season, lang)} ${testimonial.semester}`,
     season: testimonial.season,
     rating,
     text: localized.content || "",
@@ -145,20 +156,8 @@ const mockTestimonials: ApiTestimonial[] = [
   },
 ];
 
-export async function fetchTestimonials(language: string): Promise<UiTestimonial[]> {
-  if (env.mock) {
-    // Use mock data when VITE_MOCK=true
-    return mockTestimonials.map((t) => mapApiTestimonialToUi(t, language));
-  }
-
-  const data = await apiFetch<ApiTestimonial[]>(endpoints.education.testimonials.list, {
-    method: "GET",
-    headers: { "Accept-Language": language },
-  });
-  return data.map((t) => mapApiTestimonialToUi(t, language));
-}
-
-export function useTestimonials() {
-  const { language } = useSettings();
-  return { fetch: () => fetchTestimonials(language) };
-}
+/** Every translation at once: the page picks its language (see lib/queries.ts). */
+export const fetchTestimonials = (): Promise<ApiTestimonial[]> =>
+  env.mock
+    ? Promise.resolve(mockTestimonials)
+    : apiClient.get<ApiTestimonial[]>(endpoints.education.testimonials.list);

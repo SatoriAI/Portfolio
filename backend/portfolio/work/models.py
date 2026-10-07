@@ -11,7 +11,7 @@ from work.choices import Icons, Levels
 
 class Skill(TranslatableModel, TimestampedModel, DescriptiveModel):
     level = models.CharField(choices=Levels, default=Levels.INTERMEDIATE)
-    icon = models.CharField(choices=Icons, default=Icons.CODE, max_length=8)
+    icon = models.CharField(choices=Icons, default=Icons.CODE, max_length=16)
 
     translations = TranslatedFields(
         name=models.CharField(_("Name"), max_length=128),

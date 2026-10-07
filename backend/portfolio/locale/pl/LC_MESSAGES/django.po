@@ -243,6 +243,9 @@ msgstr "5+ lat doświadczenia"
 msgid "10+ years of experience"
 msgstr "10+ lat doświadczenia"
 
+msgid "Since launch"
+msgstr "Od premiery"
+
 #: work/models.py:17
 msgid "Name"
 msgstr "Nazwa"

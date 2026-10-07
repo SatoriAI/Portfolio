@@ -1,311 +1,384 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Briefcase, Building, Calendar, MapPin, Menu, Settings } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 
+import HeaderShapes from "@/components/brand/HeaderShapes";
+import HeatField from "@/components/brand/HeatField";
+import CareerTimeline, { type TimelineEntry } from "@/components/experience/CareerTimeline";
+import CircleFlight, { type FlightPhase } from "@/components/experience/CircleFlight";
+import { circleState } from "@/components/experience/circleStyles";
+import CompanyMark from "@/components/experience/CompanyMark";
+import RoleEntry from "@/components/experience/RoleEntry";
+import RoleSidebar from "@/components/experience/RoleSidebar";
+import SkillLanes, { type SkillLane } from "@/components/experience/SkillLanes";
+import TimelineDialog from "@/components/experience/TimelineDialog";
+import { queryStatus } from "@/components/feedback/queryStatus";
+import StatusMessage from "@/components/feedback/StatusMessage";
+import PageClosing from "@/components/layout/PageClosing";
+import PageLayout from "@/components/layout/PageLayout";
+import Section from "@/components/layout/Section";
+import SectionHeading from "@/components/layout/SectionHeading";
 import Reveal from "@/components/Reveal";
-import SettingsPanel from "@/components/SettingsPanel";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { skillEvidence } from "@/config/skillEvidence";
+import { skillIcons } from "@/config/skillIcons";
+import { skillLayers } from "@/config/skillLayers";
 import { useSettings } from "@/contexts/SettingsContext";
-import { useScrollGradient } from "@/hooks/use-scroll-gradient";
-import { UiExperience, useExperiences } from "@/lib/experiencesService";
+import { useVex } from "@/contexts/VexContext";
+import { useDismissOutside } from "@/hooks/use-dismiss-outside";
+import { useIsMobile, usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { usePageMeta } from "@/hooks/use-page-meta";
+import { useTimelineSelection } from "@/hooks/use-timeline-selection";
+import { useExperiences, useProjects, useSkills } from "@/lib/queries";
+import { claimsEarlier, laneSegments } from "@/lib/skillLanes";
+import { rolesForSkill } from "@/lib/skillRoles";
+import { formatYears, parseYears } from "@/lib/skillYears";
+import { fillTemplate, formatCounter } from "@/lib/text";
+import { buildTimeline, companyShortName } from "@/lib/timeline";
 import { translations } from "@/utils/translations";
 
+/**
+ * The career as a drawing to scale, and one role at a time out of it. The
+ * timeline is what a stack of cards could never show: how long each role ran
+ * and which ones ran together. Choosing a company's circle opens its entry
+ * out of the circle, over the timeline rather than below the fold. The open
+ * role is in the address as `#company`, so a link can open it.
+ */
+
+const SECTION_COUNT = 2;
+const eyebrow = (index: number) => formatCounter(index, SECTION_COUNT);
+
 const Experience = () => {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const [experiences, setExperiences] = useState<UiExperience[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { language, theme } = useSettings();
+  const [chosenSkill, setChosenSkill] = useState<number | null>(null);
+  const [previewRole, setPreviewRole] = useState<number | null>(null);
+  // A role chosen in the sidebar beside the skills: its skills light up.
+  const [sidebarRole, setSidebarRole] = useState<number | null>(null);
+  const [phase, setPhase] = useState<FlightPhase>("timeline");
+  const skillList = useRef<HTMLDivElement>(null);
+  const timelineArea = useRef<HTMLDivElement>(null);
+  const sidebar = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const { language } = useSettings();
+  const { askVex } = useVex();
   const t = translations[language];
-  const experiencesService = useExperiences();
+  usePageMeta(t.meta.experience);
+  const experiencesQuery = useExperiences();
+  const experiences = useMemo(() => experiencesQuery.data ?? [], [experiencesQuery.data]);
 
-  useEffect(() => {
-    const loadExperiences = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await experiencesService.fetch();
-        setExperiences(data);
-      } catch (err) {
-        console.error("Failed to fetch experiences:", err);
-        setError("Failed to load work experience data");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // The roles in the order they began, as the timeline lays them out, each
+  // with its circle and its name in the address.
+  // The career on its axis, shared by the timeline's order and the skill lanes.
+  const career = useMemo(() => buildTimeline(experiences, new Date()), [experiences]);
 
-    loadExperiences();
-  }, [language]);
+  const roles = useMemo(() => {
+    const byId = new Map(experiences.map((experience) => [experience.id, experience]));
+    return career.spans.flatMap((span) => {
+      const experience = byId.get(span.id);
+      if (!experience) return [];
+      const shortName = companyShortName(experience.company);
+      const entry: TimelineEntry<number> = {
+        id: experience.id,
+        start: experience.start,
+        end: experience.end,
+        label: experience.company,
+        shortLabel: shortName,
+        ariaLabel: `${experience.company}, ${experience.period}`,
+        // The button's rim edges the circle, so the mark needs no hairline.
+        mark: (
+          <CompanyMark
+            company={experience.company}
+            className="size-full text-xs ring-0 md:text-sm"
+          />
+        ),
+      };
+      return [
+        { experience, entry, name: experience.company, shortName, slug: shortName.toLowerCase() },
+      ];
+    });
+  }, [experiences, career]);
+  const entries = useMemo(() => roles.map((role) => role.entry), [roles]);
+  const items = useMemo(
+    () =>
+      roles.map(({ entry, name, shortName, slug }) => ({ id: entry.id, name, shortName, slug })),
+    [roles],
+  );
+  const { selectedId, open, select, close } = useTimelineSelection(items);
 
-  const gradients = useScrollGradient(
-    { from: "hsla(30,40%,99%,1)", via: "hsla(40,90%,96%,1)", to: "hsla(35,70%,90%,1)" },
-    { from: "hsla(222,84%,5%,1)", via: "hsla(220,70%,18%,1)", to: "hsla(222,60%,12%,1)" },
+  // The skills, with the roles each was used in: a skill counts as used in a
+  // role when the role's own technologies name one that proves it. Skills
+  // that fail to load leave the section out rather than the page broken;
+  // projects count as evidence too, by their tags, and without them the
+  // lanes simply list none.
+  const skillsQuery = useSkills();
+  const skills = useMemo(
+    () =>
+      (skillsQuery.data ?? []).map((skill) => ({
+        ...skill,
+        icon: skillIcons[skill.id] ?? skill.icon,
+      })),
+    [skillsQuery.data],
+  );
+  const projectsQuery = useProjects();
+  const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data]);
+
+  const rolesBySkill = useMemo(
+    () =>
+      new Map(
+        skills.map((skill) => [
+          skill.id,
+          rolesForSkill(skillEvidence[skill.id] ?? [], experiences),
+        ]),
+      ),
+    [skills, experiences],
+  );
+  const highlighted = useMemo(
+    () => (chosenSkill === null ? null : new Set(rolesBySkill.get(chosenSkill) ?? [])),
+    [chosenSkill, rolesBySkill],
+  );
+  // A skill and a sidebar role are chosen independently, so a role's band
+  // stays while its skills are looked at one by one; a press anywhere else
+  // lets go of both.
+  const chooseRole = (id: number) => setSidebarRole((now) => (now === id ? null : id));
+  useDismissOutside(chosenSkill !== null || sidebarRole !== null, skillList, () => {
+    setChosenSkill(null);
+    setSidebarRole(null);
+  });
+
+  // Each skill's lane: the months of the roles that prove it, the roles
+  // themselves as small marks, and the projects whose tags name it.
+  const lanes = useMemo(() => {
+    const spans = new Map(career.spans.map((span) => [span.id, span]));
+    const tagged = projects.map((project) => ({
+      id: project.title,
+      technologies: project.technologies,
+    }));
+    return new Map<number, SkillLane>(
+      skills.map((skill) => {
+        const roleIds = rolesBySkill.get(skill.id) ?? [];
+        const segments = laneSegments(roleIds.flatMap((id) => spans.get(id) ?? []));
+        return [
+          skill.id,
+          {
+            segments,
+            earlier: claimsEarlier(segments, parseYears(skill.level), career.months),
+            projects: rolesForSkill(skillEvidence[skill.id] ?? [], tagged),
+            roles: roleIds.flatMap((id) => {
+              const experience = experiences.find((candidate) => candidate.id === id);
+              return experience
+                ? [
+                    {
+                      id,
+                      name: experience.company,
+                      mark: (
+                        <CompanyMark
+                          key={id}
+                          company={experience.company}
+                          className="size-6 text-[9px] ring-2 ring-background"
+                        />
+                      ),
+                    },
+                  ]
+                : [];
+            }),
+          },
+        ];
+      }),
+    );
+  }, [skills, projects, experiences, career, rolesBySkill]);
+
+  // The band through the lanes: the sidebar's chosen role, else the role
+  // pointed at on the timeline.
+  const bandSpan = career.spans.find((span) => span.id === (sidebarRole ?? previewRole));
+  const band = bandSpan
+    ? { id: bandSpan.id, startMonth: bandSpan.startMonth, endMonth: bandSpan.endMonth }
+    : null;
+
+  // The circles fly to the sidebar as the reader scrolls down; on a phone,
+  // or with reduced motion, both sets simply stay where they are.
+  const flight = !isMobile && !prefersReducedMotion && roles.length > 0;
+  const flightRoles = useMemo(
+    () =>
+      roles.map((role) => ({
+        id: role.entry.id,
+        mark: (
+          <CompanyMark company={role.experience.company} className="size-full text-sm ring-0" />
+        ),
+        className: circleState(
+          role.entry.id === sidebarRole,
+          highlighted?.has(role.entry.id) ?? false,
+        ),
+      })),
+    [roles, sidebarRole, highlighted],
   );
 
+  const entryLabels = {
+    keyAchievements: t.experience.keyAchievements,
+    technologies: t.experience.technologies,
+    askVex: t.experience.askVex,
+    askVexQuestion: t.experience.askVexQuestion,
+  };
+  const timelineLabels = {
+    figure: t.experience.timeline.figure,
+    now: t.experience.timeline.now,
+  };
+
   return (
-    <div
-      className="relative min-h-screen text-foreground transition-colors duration-300"
-      style={
-        theme === "dark"
-          ? { backgroundImage: `${gradients.darkBase}, ${gradients.darkOverlay}` }
-          : { backgroundImage: gradients.lightGradient }
-      }
-    >
-      {/* Header */}
-      <header className="fixed top-0 z-40 w-full border-b border-orange-200/50 bg-orange-100/80 backdrop-blur-md dark:border-white/10 dark:bg-black/20">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link
-            to="/#hero"
-            className="cursor-pointer bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-xl font-bold text-transparent transition-opacity hover:opacity-80 dark:from-purple-400 dark:to-blue-400"
-          >
-            Dawid Hanrahan
-          </Link>
-          <div className="flex items-center gap-4">
-            <nav className="hidden space-x-8 md:flex">
-              <Link
-                to="/"
-                className="py-2 transition-colors hover:text-orange-600 dark:hover:text-purple-400"
-              >
-                {t.nav.home}
-              </Link>
-              <span className="cursor-default py-2 text-orange-600 dark:text-purple-400">
-                {t.nav.experience}
-              </span>
-              <Link
-                to="/academic"
-                className="py-2 transition-colors hover:text-orange-600 dark:hover:text-purple-400"
-              >
-                {t.nav.academic}
-              </Link>
-            </nav>
-            {/* Mobile Nav */}
-            <div className="md:hidden">
-              <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
-                <SheetTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-full hover:bg-orange-100/50 dark:hover:bg-white/10"
-                    aria-label="Open navigation menu"
-                  >
-                    <Menu className="h-5 w-5" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent className="w-[85vw] max-w-sm">
-                  <div className="mt-6 flex flex-col gap-1">
-                    <div className="px-1 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      {t.nav.mainPage}
-                    </div>
-                    <div className="flex flex-col">
-                      <SheetClose asChild>
-                        <a href="/#about">
-                          <Button variant="ghost" className="justify-start pl-4 text-base">
-                            {t.nav.about}
-                          </Button>
-                        </a>
-                      </SheetClose>
-                      <SheetClose asChild>
-                        <a href="/#skills">
-                          <Button variant="ghost" className="justify-start pl-4 text-base">
-                            {t.nav.skills}
-                          </Button>
-                        </a>
-                      </SheetClose>
-                      <SheetClose asChild>
-                        <a href="/#projects">
-                          <Button variant="ghost" className="justify-start pl-4 text-base">
-                            {t.nav.projects}
-                          </Button>
-                        </a>
-                      </SheetClose>
-                      <SheetClose asChild>
-                        <a href="/#contact">
-                          <Button variant="ghost" className="justify-start pl-4 text-base">
-                            {t.nav.contact}
-                          </Button>
-                        </a>
-                      </SheetClose>
-                    </div>
-                    <Separator className="my-3" />
-                    <div className="px-1 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      {t.nav.pages}
-                    </div>
-                    <SheetClose asChild>
-                      <Link to="/experience">
-                        <Button variant="ghost" className="mt-2 w-full justify-start text-base">
-                          {t.nav.experience}
-                        </Button>
-                      </Link>
-                    </SheetClose>
-                    <SheetClose asChild>
-                      <Link to="/academic">
-                        <Button variant="ghost" className="w-full justify-start text-base">
-                          {t.nav.academic}
-                        </Button>
-                      </Link>
-                    </SheetClose>
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsSettingsOpen(true)}
-              className="rounded-full hover:bg-orange-100/50 dark:hover:bg-white/10"
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      </header>
+    <PageLayout>
+      {/* Every subpage opens the same way: the header alone on the page
+          background, then its first section on white, the sections after
+          it alternating, and the closing on the colour field. */}
+      <Section className="relative isolate overflow-hidden md:py-10">
+        <HeaderShapes variant="experience" />
+        <SectionHeading
+          level={1}
+          eyebrow={t.nav.experience}
+          title={t.experience.title}
+          leadLine={t.experience.subtitle}
+          // mb-0 at every width: the heading's own md:mb-12 would add a gap
+          // under the lead that the band's padding already gives.
+          className="mb-0 md:mb-0"
+        />
+      </Section>
 
-      {/* Main Content */}
-      <main className="px-6 pb-20 pt-32">
-        <div className="mx-auto max-w-4xl">
-          <div className="mb-16 text-center">
-            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-red-400 dark:from-purple-400 dark:to-blue-400">
-              <Briefcase className="h-12 w-12 text-white" />
-            </div>
-            <h1 className="mb-6 text-5xl font-bold">
-              <Reveal
-                as="span"
-                direction="right"
-                offset={48}
-                className="mr-2 inline-block bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400"
-              >
-                {t.experience.title
-                  .split(" ")
-                  .slice(0, Math.ceil(t.experience.title.split(" ").length / 2))
-                  .join(" ")}
-              </Reveal>
-              <Reveal
-                as="span"
-                direction="left"
-                delayMs={80}
-                offset={48}
-                className="inline-block bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400"
-              >
-                {t.experience.title
-                  .split(" ")
-                  .slice(Math.ceil(t.experience.title.split(" ").length / 2))
-                  .join(" ")}
-              </Reveal>
-            </h1>
-            <Reveal direction="up" delayMs={120}>
-              <p className="mx-auto max-w-3xl text-xl text-muted-foreground">
-                {t.experience.subtitle}
-              </p>
-            </Reveal>
-          </div>
-
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-orange-600 dark:border-purple-400"></div>
-            </div>
-          ) : error ? (
-            <div className="py-20 text-center">
-              <p className="text-lg text-red-500 dark:text-red-400">{t.experience.error}</p>
-              <Button
-                onClick={() => window.location.reload()}
-                className="mt-4 bg-orange-600 hover:bg-orange-700 dark:bg-purple-600 dark:hover:bg-purple-700"
-              >
-                {t.experience.tryAgain}
-              </Button>
-            </div>
+      <Section id="roles" tone="surface">
+        <SectionHeading eyebrow={eyebrow(1)} title={t.experience.rolesTitle} />
+        {queryStatus([experiencesQuery], {
+          loading: t.common.loading,
+          error: t.experience.error,
+          retry: t.experience.tryAgain,
+        }) ??
+          (experiences.length === 0 ? (
+            <StatusMessage variant="empty" message={t.experience.noData} />
           ) : (
-            <div className="space-y-8">
-              {experiences.length === 0 ? (
-                <div className="py-20 text-center">
-                  <p className="text-lg text-muted-foreground">{t.experience.noData}</p>
-                </div>
-              ) : (
-                experiences.map((exp, idx) => (
-                  <Reveal
-                    key={exp.id}
-                    direction={idx % 2 === 0 ? "right" : "left"}
-                    delayMs={idx * 60}
-                  >
-                    <Card className="border-orange-200/50 bg-orange-50/50 transition-all duration-300 hover:bg-orange-100/50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
-                      <CardHeader>
-                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                          <Reveal direction="right" delayMs={0}>
-                            <div>
-                              <CardTitle className="mb-2 text-2xl text-card-foreground">
-                                {exp.position}
-                              </CardTitle>
-                              <div className="mb-2 flex items-center gap-2 text-orange-600 dark:text-purple-400">
-                                <Building className="h-5 w-5" />
-                                <span className="text-lg font-semibold">{exp.company}</span>
-                              </div>
-                            </div>
-                          </Reveal>
-                          <Reveal direction="left" delayMs={60}>
-                            <div className="flex flex-col gap-2 md:text-right">
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                <Calendar className="h-4 w-4" />
-                                <span>{exp.period}</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                <MapPin className="h-4 w-4" />
-                                <span>{exp.location}</span>
-                              </div>
-                            </div>
-                          </Reveal>
-                        </div>
-                        <Reveal direction="up" delayMs={120}>
-                          <CardDescription className="text-base leading-relaxed text-muted-foreground md:text-justify">
-                            {exp.description}
-                          </CardDescription>
-                        </Reveal>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-6">
-                          <div>
-                            <h4 className="mb-3 font-semibold text-card-foreground">
-                              {t.experience.keyAchievements}
-                            </h4>
-                            <ul className="list-disc space-y-2 pl-6 text-muted-foreground marker:text-orange-600 dark:marker:text-purple-400">
-                              {exp.achievements.map((achievement, i) => (
-                                <li key={i}>{achievement}</li>
-                              ))}
-                            </ul>
-                          </div>
-                          <div>
-                            <h4 className="mb-3 font-semibold text-card-foreground">
-                              {t.experience.technologies}
-                            </h4>
-                            <div className="flex flex-wrap gap-2">
-                              {exp.technologies.map((tech, i) => (
-                                <Badge
-                                  key={i}
-                                  variant="secondary"
-                                  className="border-orange-400/30 bg-gradient-to-r from-orange-500/20 to-red-500/20 text-center text-orange-700 dark:border-purple-400/30 dark:from-purple-500/20 dark:to-blue-500/20 dark:text-purple-300"
-                                >
-                                  {tech}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Reveal>
-                ))
-              )}
-            </div>
-          )}
-        </div>
-      </main>
+            <>
+              <div ref={timelineArea}>
+                <Reveal>
+                  <CareerTimeline<number>
+                    entries={entries}
+                    timeline={career}
+                    labels={timelineLabels}
+                    selectedId={selectedId}
+                    onSelect={select}
+                    highlightedIds={highlighted}
+                    onPreview={setPreviewRole}
+                    circlesAway={flight && phase !== "timeline"}
+                    enterFromEdges
+                  />
+                </Reveal>
+              </div>
+              <TimelineDialog
+                items={items}
+                selectedId={selectedId}
+                open={open}
+                onSelect={select}
+                onClose={close}
+                labels={t.experience.dialog}
+              >
+                {(id, closeDialog, Heading) => {
+                  const role = roles.find((candidate) => candidate.entry.id === id);
+                  return (
+                    role && (
+                      <RoleEntry
+                        experience={role.experience}
+                        labels={entryLabels}
+                        Heading={Heading}
+                        // Shrink the entry away first, so the chat opens on the page.
+                        onAsk={(question) => closeDialog(() => askVex(question))}
+                      />
+                    )
+                  );
+                }}
+              </TimelineDialog>
+            </>
+          ))}
+      </Section>
 
-      {/* Settings Panel */}
-      <SettingsPanel isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-    </div>
+      {/* The skills on the timeline's axis, with the roles beside them as a
+          sidebar the timeline's circles fly into; choosing a skill lights up
+          its roles, choosing a role lights up its skills. */}
+      {skills.length > 0 && (
+        <Section id="skills" className="py-12 md:py-16">
+          <SectionHeading
+            eyebrow={eyebrow(2)}
+            title={t.skills.title}
+            leadLine={t.skills.subtitle}
+          />
+          {/* The roles as a sidebar, where the timeline's circles land, and
+              the skills beside them. From md the first circle starts on the
+              axis line, its name beside the years. Stuck, the circles sit
+              where they land at the end of the flight. */}
+          <div ref={skillList} className="md:grid md:grid-cols-[3rem_minmax(0,1fr)] md:gap-x-10">
+            <div
+              ref={sidebar}
+              className="sticky top-16 z-20 -mx-4 mb-6 bg-background/90 px-4 py-3 backdrop-blur-sm md:top-[5.25rem] md:mx-0 md:mb-0 md:self-start md:bg-transparent md:p-0 md:backdrop-blur-none"
+            >
+              <RoleSidebar
+                roles={roles.map((role) => ({
+                  id: role.entry.id,
+                  company: role.experience.company,
+                  period: role.experience.period,
+                }))}
+                selectedId={sidebarRole}
+                onToggle={chooseRole}
+                onOpen={select}
+                highlightedIds={highlighted}
+                circlesHidden={flight && phase !== "sidebar"}
+                labels={{
+                  list: t.skills.roles,
+                  show: (company) => fillTemplate(t.skills.showSkills, { company }),
+                  open: t.skills.openRole,
+                  openFull: (company) => fillTemplate(t.skills.openRoleFull, { company }),
+                }}
+              />
+            </div>
+            <SkillLanes
+              skills={skills}
+              axis={career}
+              lanes={lanes}
+              layers={skillLayers.map((layer) => ({
+                ...layer,
+                label: t.skills.layers[layer.key],
+              }))}
+              labels={{
+                years: (count) => formatYears(count, language),
+                level: (level) => t.skills.levels[level] ?? level,
+                show: (name) => fillTemplate(t.skills.show, { name }),
+                outsideRoles: t.skills.outsideRoles,
+                earlier: t.skills.earlier,
+                projects: t.skills.projects,
+                roles: t.skills.roles,
+                more: (count) => fillTemplate(t.skills.more, { count }),
+              }}
+              selectedId={chosenSkill}
+              onSelect={setChosenSkill}
+              band={band}
+            />
+          </div>
+          {flight && (
+            <CircleFlight
+              roles={flightRoles}
+              section={skillList}
+              from={timelineArea}
+              to={sidebar}
+              onPhase={setPhase}
+            />
+          )}
+        </Section>
+      )}
+
+      {/* How the page ends, as every subpage does: a question in its own
+          terms and two ways to answer it. */}
+      {/* Pushed to the foot of a short page, so it closes the page right
+          above the footer rather than leaving a gap under it. */}
+      <HeatField className="mt-auto">
+        <Section className="py-12 md:py-20">
+          <PageClosing
+            title={t.experience.closing.title}
+            body={t.experience.closing.body}
+            labels={{ email: t.experience.closing.email, askVex: t.hero.askAI }}
+            next={{ ...t.experience.closing.next, to: "/research" }}
+          />
+        </Section>
+      </HeatField>
+    </PageLayout>
   );
 };
 

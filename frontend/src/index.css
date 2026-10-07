@@ -2,6 +2,151 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Fonts ship with the Visual Identity Kit (../visual-kit/fonts) and are
+   self-hosted from public/fonts (licences alongside). Manrope is a single
+   variable file; Plex Mono is the 400 cut only, so mono text must stay at
+   font-weight 400. */
+@font-face {
+  font-family: "Manrope";
+  src: url("/fonts/Manrope.ttf") format("truetype");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/IBMPlexMono-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Design tokens — the "Soft Precision" palette from the Visual Identity Kit
+   ("Binary Axis", v5; see ../visual-kit/palette.json). Values are HSL triplets
+   so Tailwind can apply alpha modifiers.
+   The kit defines a light theme only; a dark theme would be declared here as a
+   second block when the kit gains one. */
+@layer base {
+  :root {
+    /* Kit palette */
+    --background: 225 40% 98%; /* #F8F9FC cloud */
+    --surface: 0 0% 100%; /* #FFFFFF */
+    --ink: 221 45% 16%; /* #17233D midnight */
+    --text-secondary: 222 17% 40%; /* #566078 */
+    --lavender: 257 71% 93%; /* #E8E1FA */
+    --blush: 333 53% 93%; /* #F6E2EB */
+    --iris: 257 32% 46%; /* #65509A */
+    --border: 224 22% 90%; /* #E0E3EB */
+    --control-border: 223 10% 56%; /* #848A9A */
+    /* Publication status on the paper cards. Not in the kit, which leaves
+       semantic colours open until a need appears; both keep 5:1 or more on
+       white, and the stamp always carries a word, so colour is never the only
+       signal. */
+    --published: 145 45% 34%; /* #2F7D4F */
+    --preprint: 216 56% 42%; /* #2F5FA8 */
+    --primary-hover: 220 38% 26%; /* #293A5C */
+    /* Illustration-only tints for the diffusion motif; never text or controls. */
+    --lavender-deep: 261 52% 81%; /* #C6B4E7 */
+    --blush-deep: 331 54% 85%; /* #EDC2D7 */
+    /* The teaching quotes' sticky notes. Not in the kit: the one surface on
+       the site meant to look like paper. Ink on it keeps well over 12:1. */
+    --note: 53 94% 82%; /* #FCF2A6 */
+    --note-rule: 45 70% 45%; /* #C39B22, the rules, drawn at low alpha */
+
+    /* Semantic roles consumed by the ui/ primitives */
+    --foreground: var(--ink);
+    --card: var(--surface);
+    --card-foreground: var(--ink);
+    --popover: var(--surface);
+    --popover-foreground: var(--ink);
+    --primary: var(--ink);
+    --primary-foreground: var(--surface);
+    --secondary: var(--lavender);
+    --secondary-foreground: var(--ink);
+    --accent: var(--lavender);
+    --accent-foreground: var(--ink);
+    --muted: var(--border);
+    --muted-foreground: var(--text-secondary);
+    /* The kit leaves state colours open; this red is only for error copy. */
+    --destructive: 355 55% 45%;
+    --destructive-foreground: var(--surface);
+    --input: var(--control-border);
+    --ring: var(--iris);
+
+    --radius: 12px;
+
+    --sidebar-background: var(--surface);
+    --sidebar-foreground: var(--ink);
+    --sidebar-primary: var(--ink);
+    --sidebar-primary-foreground: var(--surface);
+    --sidebar-accent: var(--lavender);
+    --sidebar-accent-foreground: var(--ink);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--iris);
+  }
+}
+
+@layer base {
+  html {
+    /* Prevent layout shift when scrollbars appear/disappear */
+    scrollbar-gutter: stable both-edges;
+    scroll-behavior: smooth;
+  }
+
+  html,
+  body {
+    /* Ensure the app fits the screen width and avoids accidental horizontal
+       scroll. Clip rather than hidden: hidden makes body a scroll container
+       of its own, and every position: sticky inside it then sticks to a box
+       that never scrolls, so nothing stays pinned. */
+    overflow-x: clip;
+  }
+
+  /* The same for a dialog's scroll lock, which sets hidden on body: the
+     sidebar beside the skills would drop out of place behind the dialog.
+     The html in front outranks the lock's own rule; the lock still stops
+     the page, since it also swallows wheel and touch. */
+  html body[data-scroll-locked] {
+    overflow: clip !important;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-semibold tracking-tight text-foreground;
+  }
+
+  /* Visible focus: iris outline, offset so it never sits on the control edge. */
+  :focus-visible {
+    outline: 2px solid hsl(var(--iris));
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+/* Formulas are MathML set inline by the Formula component. The browser's
+   math face is a serif by design — a formula reads as a formula — and it is
+   drawn a shade larger than the prose so its scripts stay legible. */
+math {
+  font-family: "STIX Two Math", "Latin Modern Math", "Cambria Math", "Noto Sans Math", math, serif;
+  font-size: 1.08em;
+}
+
 /* Markdown (prose) tweaks for chat */
 .prose {
   @apply max-w-none leading-7;
@@ -24,254 +169,9 @@
 .prose :where(hr) {
   @apply my-3;
 }
-.dark .prose code {
-  @apply text-slate-100;
+.prose :where(a) {
+  @apply text-iris underline decoration-1 underline-offset-2;
 }
-.dark .prose pre {
-  @apply bg-slate-900;
-}
-
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
-@layer base {
-  :root {
-    --background: 30 40% 98%;
-    --foreground: 20 14% 20%;
-
-    --card: 35 44% 96%;
-    --card-foreground: 20 14% 20%;
-
-    --popover: 35 44% 96%;
-    --popover-foreground: 20 14% 20%;
-
-    --primary: 15 85% 55%;
-    --primary-foreground: 35 44% 96%;
-
-    --secondary: 25 45% 88%;
-    --secondary-foreground: 15 85% 35%;
-
-    --muted: 30 35% 92%;
-    --muted-foreground: 20 14% 45%;
-
-    --accent: 20 65% 85%;
-    --accent-foreground: 15 85% 35%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 35 44% 96%;
-
-    --border: 25 35% 85%;
-    --input: 25 35% 85%;
-    --ring: 15 85% 55%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 35 50% 97%;
-
-    --sidebar-foreground: 20 14% 25%;
-
-    --sidebar-primary: 15 85% 55%;
-
-    --sidebar-primary-foreground: 35 44% 96%;
-
-    --sidebar-accent: 25 50% 90%;
-
-    --sidebar-accent-foreground: 15 85% 35%;
-
-    --sidebar-border: 25 35% 88%;
-
-    --sidebar-ring: 15 85% 55%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-}
-
-@layer base {
-  html {
-    /* Prevent layout shift when scrollbars appear/disappear */
-    scrollbar-gutter: stable both-edges;
-  }
-
-  html,
-  body {
-    /* Ensure the app fits the screen width and avoids accidental horizontal scroll */
-    overflow-x: hidden;
-  }
-
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
-/* Subtle shimmering effect for gradient-clipped text */
-@keyframes text-shine {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 100% 50%;
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .animate-shine {
-    background-size: 200% 100% !important;
-    animation: text-shine 6s ease-in-out infinite alternate;
-  }
-}
-
-/* Stronger sheen that passes over the text while preserving the base gradient */
-@keyframes shine-sweep {
-  0% {
-    background-position: -150% 0;
-  }
-  100% {
-    background-position: 150% 0;
-  }
-}
-
-/* Ambient background */
-.ambient-container {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.aurora {
-  position: absolute;
-  inset: -10% -30% -10% -30%;
-  filter: blur(48px);
-  opacity: 0.55;
-}
-
-.aurora-layer {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    hsla(15, 85%, 55%, 0.12) 0%,
-    hsla(260, 70%, 60%, 0.12) 40%,
-    hsla(200, 85%, 55%, 0.12) 80%
-  );
-  mix-blend-mode: screen;
-}
-
-@keyframes aurora-sweep {
-  0% {
-    transform: translate3d(-20%, 0, 0);
-  }
-  100% {
-    transform: translate3d(20%, 0, 0);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .aurora-1 {
-    animation: aurora-sweep 24s linear infinite alternate;
-  }
-  .aurora-2 {
-    animation: aurora-sweep 32s linear infinite alternate-reverse;
-  }
-  .aurora-3 {
-    animation: aurora-sweep 40s linear infinite alternate;
-  }
-}
-
-.ambient-grid {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(
-    circle at 1px 1px,
-    rgba(255, 255, 255, 0.06) 1px,
-    transparent 0
-  );
-  background-size: 28px 28px;
-  opacity: 0.25;
-  mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
-}
-
-.ambient-vignette {
-  position: absolute;
-  inset: -20%;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(0, 0, 0, 0) 40%,
-    rgba(0, 0, 0, 0.08) 75%,
-    rgba(0, 0, 0, 0.18) 100%
-  );
-  mix-blend-mode: multiply;
-}
-
-/* removed orb styles in favor of aurora */
-
-.shine-title {
-  position: relative;
-  display: inline-block;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .shine-title::after {
-    content: attr(data-text);
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0) 40%,
-      rgba(255, 255, 255, 0.9) 50%,
-      rgba(255, 255, 255, 0) 60%,
-      transparent 100%
-    );
-    background-size: 220% 100%;
-    background-position: -150% 0;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-    animation: shine-sweep 6s linear infinite;
-    pointer-events: none;
-  }
+.prose :where(code) {
+  @apply font-mono font-normal;
 }

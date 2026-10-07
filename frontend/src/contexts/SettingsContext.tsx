@@ -1,14 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-import { translations } from "@/utils/translations";
-
-type Theme = "light" | "dark";
 type Language = "en" | "pl";
 
 interface SettingsContextType {
-  theme: Theme;
   language: Language;
-  toggleTheme: () => void;
   setLanguage: (lang: Language) => void;
 }
 
@@ -22,13 +17,10 @@ export const useSettings = () => {
   return context;
 };
 
+// The Visual Identity Kit defines a light theme only, so the site has no theme
+// setting; language is the one preference that persists.
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem("theme") as Theme;
-    return saved || "dark";
-  });
-
-  const [language, setLanguageState] = useState<Language>(() => {
+  const [language, setLanguage] = useState<Language>(() => {
     try {
       const saved = localStorage.getItem("language") as Language | null;
       if (saved === "en" || saved === "pl") return saved;
@@ -53,56 +45,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
 
   useEffect(() => {
-    localStorage.setItem("theme", theme);
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [theme]);
-
-  useEffect(() => {
     localStorage.setItem("language", language);
   }, [language]);
 
-  // Update document language, title and meta when language changes
+  // Titles and descriptions are per page (usePageMeta); only the document
+  // language is global.
   useEffect(() => {
-    try {
-      // html lang
-      if (typeof document !== "undefined") {
-        document.documentElement.lang = language;
-      }
-      // localized title
-      const meta = translations[language]?.meta as
-        | { title?: string; description?: string }
-        | undefined;
-      if (meta?.title) {
-        document.title = meta.title;
-      }
-      // meta description
-      if (meta?.description) {
-        const metaDesc = document.querySelector('meta[name="description"]');
-        if (metaDesc) metaDesc.setAttribute("content", meta.description);
-        const ogTitle = document.querySelector('meta[property="og:title"]');
-        if (ogTitle && meta.title) ogTitle.setAttribute("content", meta.title);
-        const ogDesc = document.querySelector('meta[property="og:description"]');
-        if (ogDesc) ogDesc.setAttribute("content", meta.description);
-      }
-    } catch (_error) {
-      // no-op
-    }
+    document.documentElement.lang = language;
   }, [language]);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
-  };
-
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-  };
-
   return (
-    <SettingsContext.Provider value={{ theme, language, toggleTheme, setLanguage }}>
+    <SettingsContext.Provider value={{ language, setLanguage }}>
       {children}
     </SettingsContext.Provider>
   );

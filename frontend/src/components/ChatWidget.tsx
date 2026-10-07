@@ -1,30 +1,45 @@
-import React, { useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import { Bot, MessageSquare, Send, Trash2, User, X } from "lucide-react";
-import remarkGfm from "remark-gfm";
+import React, { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { AlertCircle, Bot, MessageSquare, Send, Trash2, User } from "lucide-react";
 
+import { BrandSymbol } from "@/components/brand/BrandLogo";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { toast as notify } from "@/components/ui/sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { buildUrl, endpoints } from "@/config/endpoints";
 import { env } from "@/config/env";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useLatest } from "@/hooks/use-latest";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { apiClient, apiFetch } from "@/lib/apiClient";
-import { decodeStreamData, finalizeMarkdown, normalizeMarkdown } from "@/lib/streamMarkdown";
+import { decodeStreamData, finalizeMarkdown } from "@/lib/streamMarkdown";
 import { translations } from "@/utils/translations";
+
+// react-markdown and its remark pipeline are the heaviest part of the widget;
+// they load on first use (and on hover of the launcher, see ChatLauncher).
+const MarkdownMessage = lazy(() => import("@/components/chat/MarkdownMessage"));
+
+// Silence for this long — waiting for the first token or between tokens — is
+// treated as a failure and shown as one.
+const STREAM_TIMEOUT_MS = 30_000;
 
 interface Message {
   id: string;
   text: string;
   isUser: boolean;
   timestamp: Date;
+  /** Set on the inline notice appended when a request fails or stalls. */
+  status?: "error";
 }
 
 interface ChatWidgetProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Sent as the visitor's first message as soon as the chat is open and hydrated. */
+  initialQuestion?: string | null;
+  /** Called once the initial question has been taken, so it is not sent twice. */
+  onInitialQuestionSent?: () => void;
 }
 
 class MarkdownBoundary extends React.Component<
@@ -58,9 +73,15 @@ class MarkdownBoundary extends React.Component<
 // Rendering errors are unlikely with react-markdown, and the fallback could mask formatting.
 // We render markdown directly to ensure live formatting.
 
-const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
+const ChatWidget = ({
+  isOpen,
+  onClose,
+  initialQuestion = null,
+  onInitialQuestionSent,
+}: ChatWidgetProps) => {
   const { language } = useSettings();
   const t = translations[language];
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -73,6 +94,10 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const initialScrollDoneRef = useRef(false);
+  const watchdogRef = useRef<number | null>(null);
+  // Starter questions must not flash for a returning visitor whose history is
+  // still being fetched.
+  const [hydrated, setHydrated] = useState(false);
 
   // Sample responses for demonstration - in production, this would connect to your RAG system
   const sampleResponses: { [key: string]: string } = {
@@ -107,7 +132,15 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
     }
   };
 
+  const clearWatchdog = () => {
+    if (watchdogRef.current !== null) {
+      window.clearTimeout(watchdogRef.current);
+      watchdogRef.current = null;
+    }
+  };
+
   const closeExistingStream = () => {
+    clearWatchdog();
     if (eventSourceRef.current) {
       try {
         eventSourceRef.current.close();
@@ -118,10 +151,17 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
     }
   };
 
+  // Each load is numbered, so a slow one from an earlier open never lands
+  // over the latest.
+  const hydration = useRef(0);
   const hydrateMessagesIfNeeded = async () => {
+    const run = ++hydration.current;
     const storedKey = localStorage.getItem("vex_chat_session_key");
     sessionKeyRef.current = storedKey;
-    if (!storedKey || env.mock) return;
+    if (!storedKey || env.mock) {
+      setHydrated(true);
+      return;
+    }
     try {
       const data = await apiClient.get<any>(endpoints.vex.messages.list, {
         session: storedKey,
@@ -144,29 +184,28 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
             timestamp: new Date(ts),
           };
         });
-        setMessages(mapped);
+        if (run === hydration.current) setMessages(mapped);
       }
     } catch (err) {
       console.error("Failed to hydrate chat history", err);
+    } finally {
+      if (run === hydration.current) setHydrated(true);
     }
   };
 
+  // Body scroll locking is handled by the Dialog while it is open.
   useEffect(() => {
     if (!isOpen) return;
-    const prevOverflow = document.body.style.overflow;
-    const prevPaddingRight = document.body.style.paddingRight;
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = "hidden";
-    if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
 
     // Ensure the first scroll after opening is instant (no animation)
     initialScrollDoneRef.current = false;
 
+    // Every open reloads the history (an answer cut off by closing comes back
+    // whole), and a question handed over waits for it: sent first, it would
+    // be overwritten by the history arriving after it.
+    setHydrated(false);
     hydrateMessagesIfNeeded();
     return () => {
-      // Restore body scroll
-      document.body.style.overflow = prevOverflow;
-      document.body.style.paddingRight = prevPaddingRight;
       // Close stream when widget closes
       closeExistingStream();
       setIsStreaming(false);
@@ -188,18 +227,48 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
     // Defer to let DOM render
     const id = requestAnimationFrame(() => {
       bottomRef.current?.scrollIntoView({
-        behavior: initialScrollDoneRef.current ? "smooth" : "auto",
+        // An inline behavior overrides the CSS reduced-motion rule, so the
+        // preference has to be checked here too.
+        behavior: initialScrollDoneRef.current && !prefersReducedMotion ? "smooth" : "auto",
         block: "end",
       });
       if (!initialScrollDoneRef.current) initialScrollDoneRef.current = true;
     });
     return () => cancelAnimationFrame(id);
-  }, [isOpen, messages, isLoading, isStreaming]);
+  }, [isOpen, messages, isLoading, isStreaming, prefersReducedMotion]);
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isStreaming) return;
+  // Every failure — request error, server error, or silence — ends in the same
+  // visible state: an inline notice with a way to reach me instead. The toast
+  // is only a secondary signal.
+  const failConversation = (reason: string) => {
+    closeExistingStream();
+    setIsLoading(false);
+    setIsStreaming(false);
+    hasReceivedFirstChunkRef.current = false;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `error-${Date.now()}`,
+        text: t.chat.errorFallback,
+        isUser: false,
+        timestamp: new Date(),
+        status: "error",
+      },
+    ]);
+    notify.error(reason);
+  };
 
-    const question = inputValue;
+  const armWatchdog = () => {
+    clearWatchdog();
+    watchdogRef.current = window.setTimeout(
+      () => failConversation("Vex did not respond in time"),
+      STREAM_TIMEOUT_MS,
+    );
+  };
+
+  const handleSendMessage = async (text?: string) => {
+    const question = (text ?? inputValue).trim();
+    if (!question || isStreaming) return;
     const locale = localStorage.getItem("language") || "en";
 
     const userMessage: Message = {
@@ -245,15 +314,23 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
       const existingKey = localStorage.getItem("vex_chat_session_key");
       if (existingKey) form.append("session_key", existingKey);
 
-      const postResp = await apiFetch<{ session_key: string; csrftoken: string }>(
-        endpoints.vex.chat.post,
-        {
-          method: "POST",
-          // Include CSRF token if we have one from previous round
-          headers: csrfTokenRef.current ? { "X-CSRFToken": csrfTokenRef.current } : undefined,
-          body: form as unknown as any,
-        },
-      );
+      const postController = new AbortController();
+      const postTimeout = window.setTimeout(() => postController.abort(), STREAM_TIMEOUT_MS);
+      let postResp: { session_key: string; csrftoken: string };
+      try {
+        postResp = await apiFetch<{ session_key: string; csrftoken: string }>(
+          endpoints.vex.chat.post,
+          {
+            method: "POST",
+            // Include CSRF token if we have one from previous round
+            headers: csrfTokenRef.current ? { "X-CSRFToken": csrfTokenRef.current } : undefined,
+            body: form as unknown as any,
+            signal: postController.signal,
+          },
+        );
+      } finally {
+        window.clearTimeout(postTimeout);
+      }
 
       const newSessionKey = postResp?.session_key;
       const newCsrf = postResp?.csrftoken;
@@ -279,12 +356,15 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
       });
       const es = new EventSource(streamUrl);
       eventSourceRef.current = es;
+      armWatchdog();
 
       es.addEventListener("received", () => {
         // Keep typing indicator until first data chunk arrives
+        armWatchdog();
       });
 
       es.addEventListener("finished", () => {
+        clearWatchdog();
         setIsStreaming(false);
         // Finalize the last assistant message markdown once stream completes
         setMessages((prev) => {
@@ -306,22 +386,17 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
       });
 
       es.addEventListener("error", (ev: any) => {
+        // The native error event carries no payload; only a named server event
+        // would, so the fallback string is the usual outcome.
         const dataMsg = typeof ev?.data === "string" ? ev.data : undefined;
-        if (!hasReceivedFirstChunkRef.current) setIsLoading(false);
-        setIsStreaming(false);
-        try {
-          es.close();
-        } catch {
-          /* noop */
-        }
-        if (eventSourceRef.current === es) eventSourceRef.current = null;
-        notify.error(dataMsg || "Streaming error");
+        failConversation(dataMsg || "Streaming error");
       });
 
       es.onmessage = (e: MessageEvent) => {
         // Streamed text chunks come as default messages without an event name
         const chunk = decodeStreamData(String(e.data ?? ""));
         if (!chunk) return;
+        armWatchdog();
         if (!hasReceivedFirstChunkRef.current) {
           hasReceivedFirstChunkRef.current = true;
           setIsLoading(false); // remove typing indicator once streaming starts
@@ -349,12 +424,20 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
       };
     } catch (err: any) {
       console.error("Chat send failed", err);
-      setIsLoading(false);
-      setIsStreaming(false);
-      closeExistingStream();
-      notify.error(err?.message || "Failed to send message");
+      failConversation(err?.message || "Failed to send message");
     }
   };
+
+  // A question handed over from the page (the hero's ask bar, a project's
+  // "ask Vex about this") goes out the moment history has loaded, so it lands
+  // after any earlier conversation rather than before it. The handler is read
+  // through a ref because it closes over state and is recreated every render.
+  const sendRef = useLatest(handleSendMessage);
+  useEffect(() => {
+    if (!isOpen || !hydrated || !initialQuestion) return;
+    onInitialQuestionSent?.();
+    void sendRef.current(initialQuestion);
+  }, [isOpen, hydrated, initialQuestion, onInitialQuestionSent, sendRef]);
 
   const handleClearChat = () => {
     try {
@@ -369,7 +452,7 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
     setIsLoading(false);
     setIsStreaming(false);
     hasReceivedFirstChunkRef.current = false;
-    notify.success("Chat cleared");
+    notify.success(t.chat.clear);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -379,50 +462,76 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
     }
   };
 
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] backdrop-blur-sm dark:bg-black/50">
-      <Card className="flex h-[80vh] w-full max-w-6xl flex-col border-orange-200 bg-orange-50 dark:border-slate-700 dark:bg-slate-900 md:h-[800px]">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-orange-200 pb-4 dark:border-slate-700">
-          <CardTitle className="flex items-center gap-2 text-card-foreground">
-            <MessageSquare className="h-5 w-5 text-orange-600 dark:text-blue-400" />
-            Vex
-          </CardTitle>
-          <div className="flex items-center gap-2">
+  const emptyState = hydrated ? (
+    <div className="flex h-full flex-col items-center justify-center py-16 text-center">
+      <span
+        aria-hidden="true"
+        className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-lavender text-iris"
+      >
+        <MessageSquare className="h-6 w-6" />
+      </span>
+      <h3 className="text-xl font-semibold md:text-card-title">{t.chat.prompt}</h3>
+      <ul className="mt-6 flex flex-col items-stretch gap-2">
+        {t.chat.starters.map((question) => (
+          <li key={question}>
             <Button
-              onClick={handleClearChat}
               variant="outline"
               size="sm"
-              className="border-orange-300 text-muted-foreground hover:border-orange-500 dark:border-slate-600 dark:hover:border-blue-400"
+              className="w-full justify-start whitespace-normal text-left"
+              onClick={() => handleSendMessage(question)}
+              disabled={isLoading || isStreaming}
             >
-              <Trash2 className="mr-1 h-4 w-4" />
-              Clear
+              {question}
             </Button>
-            <Button
-              onClick={onClose}
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-card-foreground"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-        </CardHeader>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ) : null;
 
-        <CardContent className="flex min-h-0 flex-1 flex-col p-0">
+  const sendButton = (
+    <Button
+      onClick={() => handleSendMessage()}
+      disabled={!inputValue.trim() || isLoading || isStreaming}
+      size="icon"
+      aria-label={t.chat.send}
+    >
+      <Send />
+    </Button>
+  );
+
+  return (
+    <Sheet
+      open={isOpen}
+      modal={false}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <SheetContent
+        side="right"
+        lockScroll={false}
+        aria-describedby={undefined}
+        // A side panel: the page behind stays readable and clickable, and a
+        // click outside must not dismiss a conversation in progress.
+        onInteractOutside={(event) => event.preventDefault()}
+        className="flex w-full flex-col gap-0 border-l border-border p-0 sm:w-[440px] sm:max-w-none lg:w-[520px]"
+      >
+        <header className="flex items-center justify-between border-b border-border py-3 pl-5 pr-14">
+          <SheetTitle className="flex items-center gap-3 text-lg font-semibold">
+            <BrandSymbol size={26} className="text-iris" />
+            Vex
+          </SheetTitle>
+          <Button onClick={handleClearChat} variant="ghost" size="sm" aria-label={t.chat.clear}>
+            <Trash2 />
+            {t.chat.clear}
+          </Button>
+        </header>
+
+        <div className="flex min-h-0 flex-1 flex-col">
           <ScrollArea className="flex-1 p-4">
             {messages.length === 0 && !isLoading && !isStreaming ? (
-              <div className="flex h-full items-center justify-center">
-                <div className="text-center">
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-red-400 shadow-sm dark:from-purple-400 dark:to-blue-400">
-                    <MessageSquare className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-2xl font-semibold text-transparent dark:from-purple-400 dark:to-blue-400 md:text-3xl">
-                    {t.chat?.prompt}
-                  </h3>
-                </div>
-              </div>
+              emptyState
             ) : (
               <div className="space-y-4">
                 {messages.map((message) => (
@@ -431,20 +540,36 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
                     className={`flex gap-3 ${message.isUser ? "justify-end" : "justify-start"}`}
                   >
                     {!message.isUser && (
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-orange-500 dark:bg-blue-500">
-                        <Bot className="h-4 w-4 text-white" />
+                      <div
+                        aria-hidden="true"
+                        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-iris text-primary-foreground"
+                      >
+                        <Bot className="h-4 w-4" />
                       </div>
                     )}
                     <div
-                      className={`prose prose-sm max-w-[80%] rounded-lg px-3 dark:prose-invert prose-headings:font-semibold prose-headings:leading-tight prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-p:my-2 prose-a:text-blue-600 prose-a:underline prose-a:decoration-1 prose-a:underline-offset-2 prose-code:before:content-[''] prose-code:after:content-[''] prose-pre:rounded-md prose-pre:bg-slate-900 prose-pre:p-3 prose-pre:text-slate-100 prose-ol:my-2 prose-ol:ml-5 prose-ol:list-decimal prose-ul:my-2 prose-ul:ml-5 prose-ul:list-disc prose-li:my-1 prose-hr:my-3 dark:prose-a:text-blue-400 ${
+                      className={`prose prose-sm max-w-[85%] rounded-xl px-4 prose-headings:font-semibold prose-headings:leading-tight prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-p:my-2 prose-a:text-iris prose-a:underline prose-a:decoration-1 prose-a:underline-offset-2 prose-code:before:content-[''] prose-code:after:content-[''] prose-pre:rounded-lg prose-pre:bg-primary prose-pre:p-3 prose-pre:text-primary-foreground prose-ol:my-2 prose-ol:ml-5 prose-ol:list-decimal prose-ul:my-2 prose-ul:ml-5 prose-ul:list-disc prose-li:my-1 prose-hr:my-3 ${
                         message.isUser
-                          ? "prose-invert bg-orange-600 py-1 text-white dark:bg-blue-600"
-                          : "border border-orange-200 bg-orange-100 py-2 text-foreground dark:border-slate-700 dark:bg-slate-800"
+                          ? "prose-invert bg-primary py-2 text-primary-foreground"
+                          : message.status === "error"
+                            ? "border border-destructive/40 bg-blush py-2 text-foreground"
+                            : "border border-border bg-lavender/40 py-2 text-foreground"
                       }`}
                     >
                       {message.isUser ? (
-                        <p className="not-prose m-0 whitespace-pre-wrap break-words text-sm leading-4">
+                        <p className="not-prose m-0 whitespace-pre-wrap break-words text-sm leading-6">
                           {message.text}
+                        </p>
+                      ) : message.status === "error" ? (
+                        <p
+                          role="alert"
+                          className="not-prose m-0 flex items-start gap-2 text-sm leading-relaxed"
+                        >
+                          <AlertCircle
+                            className="mt-0.5 h-4 w-4 shrink-0 text-destructive"
+                            aria-hidden="true"
+                          />
+                          <span>{message.text}</span>
                         </p>
                       ) : (
                         <MarkdownBoundary
@@ -455,38 +580,41 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
                           }
                           resetKey={`${message.id}:${message.text.length}`}
                         >
-                          <ReactMarkdown
-                            key={`md-${message.id}-${message.text.length}`}
-                            remarkPlugins={[remarkGfm]}
-                            className="text-sm leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
-                            components={{
-                              a: ({ node, ...props }) => (
-                                <a {...props} target="_blank" rel="noopener noreferrer" />
-                              ),
-                            }}
+                          <Suspense
+                            fallback={
+                              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                                {message.text}
+                              </p>
+                            }
                           >
-                            {normalizeMarkdown(message.text)}
-                          </ReactMarkdown>
+                            <MarkdownMessage text={message.text} />
+                          </Suspense>
                         </MarkdownBoundary>
                       )}
                     </div>
                     {message.isUser && (
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-red-500 dark:bg-teal-500">
-                        <User className="h-4 w-4 text-white" />
+                      <div
+                        aria-hidden="true"
+                        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                      >
+                        <User className="h-4 w-4" />
                       </div>
                     )}
                   </div>
                 ))}
                 {isLoading && (
-                  <div className="flex gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 dark:bg-blue-500">
-                      <Bot className="h-4 w-4 text-white" />
+                  <div className="flex gap-3" role="status" aria-label={t.chat.typing}>
+                    <div
+                      aria-hidden="true"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-iris text-primary-foreground"
+                    >
+                      <Bot className="h-4 w-4" />
                     </div>
-                    <div className="rounded-lg border border-orange-200 bg-orange-100 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
-                      <div className="flex gap-1">
-                        <div className="h-2 w-2 animate-pulse rounded-full bg-orange-400 dark:bg-gray-400"></div>
-                        <div className="h-2 w-2 animate-pulse rounded-full bg-orange-400 delay-100 dark:bg-gray-400"></div>
-                        <div className="h-2 w-2 animate-pulse rounded-full bg-orange-400 delay-200 dark:bg-gray-400"></div>
+                    <div className="rounded-xl border border-border bg-lavender/40 px-4 py-3">
+                      <div className="flex gap-1.5">
+                        <div className="h-2 w-2 animate-pulse rounded-full bg-iris motion-reduce:animate-none"></div>
+                        <div className="h-2 w-2 animate-pulse rounded-full bg-iris delay-100 motion-reduce:animate-none"></div>
+                        <div className="h-2 w-2 animate-pulse rounded-full bg-iris delay-200 motion-reduce:animate-none"></div>
                       </div>
                     </div>
                   </div>
@@ -496,16 +624,17 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
             <div ref={bottomRef} />
           </ScrollArea>
 
-          <div className="border-t border-orange-200 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] dark:border-slate-700">
+          <div className="border-t border-border p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
             <div
-              className={`relative min-h-[44px] overflow-hidden rounded-md border border-orange-300 bg-orange-50 px-3 py-2 dark:border-slate-600 dark:bg-slate-800 ${isMultilineInput ? "flex flex-col gap-2" : ""}`}
+              className={`relative min-h-[44px] overflow-hidden rounded-xl border border-control-border bg-card px-3 py-2 transition-colors duration-200 focus-within:border-foreground focus-within:outline focus-within:outline-2 focus-within:outline-offset-[3px] focus-within:outline-iris ${isMultilineInput ? "flex flex-col gap-2" : ""}`}
             >
               <Textarea
                 ref={textareaRef}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder={t.chat?.inputPlaceholder}
+                placeholder={t.chat.inputPlaceholder}
+                aria-label={t.chat.inputPlaceholder}
                 rows={1}
                 className={`max-h-40 w-full resize-none break-all border-0 bg-transparent p-0 leading-6 text-foreground shadow-none outline-none ring-0 ring-offset-0 placeholder:text-muted-foreground focus:shadow-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${!isMultilineInput ? "pr-12" : ""}`}
                 disabled={isLoading || isStreaming}
@@ -568,33 +697,16 @@ const ChatWidget = ({ isOpen, onClose }: ChatWidgetProps) => {
                   }
                 }}
               />
-              {!isMultilineInput && (
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={!inputValue.trim() || isLoading || isStreaming}
-                  className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-orange-600 p-0 text-white hover:bg-orange-700 dark:bg-blue-600 dark:hover:bg-blue-700"
-                  aria-label="Send"
-                >
-                  <Send className="h-4 w-4 text-white" />
-                </Button>
-              )}
-              {isMultilineInput && (
-                <div className="flex items-center justify-end">
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!inputValue.trim() || isLoading || isStreaming}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-600 p-0 text-white hover:bg-orange-700 dark:bg-blue-600 dark:hover:bg-blue-700"
-                    aria-label="Send"
-                  >
-                    <Send className="h-4 w-4 text-white" />
-                  </Button>
-                </div>
+              {isMultilineInput ? (
+                <div className="flex items-center justify-end">{sendButton}</div>
+              ) : (
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">{sendButton}</div>
               )}
             </div>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };
 
