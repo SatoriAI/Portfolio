@@ -35,32 +35,21 @@ export type UiSchool = {
   endDate: string;
 };
 
-// The degree is an untranslated field on the backend; these are the values it
-// holds today, named the way the site names them. Anything else passes
-// through unchanged. The doctorate is "Doktorat" / "PhD" everywhere, never
-// "Studia doktoranckie", so the page and the site's descriptions agree.
+// The degree is a choice on the backend, fetched in English (see
+// apiClient.getList); these are the values it holds today, named the way the
+// site names them. Anything else passes through unchanged. Whether a degree
+// is still under way is said once, by its period ("2022–obecnie").
 const DEGREE_NAMES: Record<string, Record<string, string>> = {
   pl: {
-    "Bachelor's": "Licencjat",
-    "Master's": "Magisterium",
-    "Doctoral Studies": "Doktorat",
-    PhD: "Doktorat",
-    MSc: "Magisterium",
+    "Bachelor's": "Studia licencjackie",
+    "Master's": "Studia magisterskie",
+    "Doctoral Studies": "Studia doktoranckie",
   },
   en: { "Doctoral Studies": "PhD" },
 };
 
-const IN_PROGRESS: Record<string, string> = { pl: "w toku", en: "in progress" };
-
-/**
- * A degree's name in the language, marked as in progress while it has no end
- * date, so a doctorate still under way never reads as one already awarded.
- */
-export const degreeLabel = (degree: string, lang: string, ongoing: boolean) => {
-  const name = DEGREE_NAMES[lang]?.[degree] ?? degree;
-  const note = IN_PROGRESS[lang] ?? IN_PROGRESS.en;
-  return ongoing && name ? `${name} (${note})` : name;
-};
+/** A degree's name in the language. */
+export const degreeLabel = (degree: string, lang: string) => DEGREE_NAMES[lang]?.[degree] ?? degree;
 
 export function mapApiSchoolToUi(school: ApiSchool, language: string): UiSchool {
   const lang = language.toLowerCase();
@@ -96,7 +85,7 @@ export function mapApiSchoolToUi(school: ApiSchool, language: string): UiSchool 
     id: school.id,
     study: localized.study || "",
     university: localized.university || "",
-    degree: degreeLabel(school.degree || "", lang, !school.end),
+    degree: degreeLabel(school.degree || "", lang),
     research: localized.research || "",
     advisor: localized.advisor || "",
     areas,
@@ -144,7 +133,7 @@ const mockSchools: ApiSchool[] = [
     updated_at: "2024-01-01T00:00:00Z",
     start: "2021-10-01",
     end: "",
-    degree: "PhD",
+    degree: "Doctoral Studies",
   },
   {
     id: 2,
@@ -175,7 +164,7 @@ const mockSchools: ApiSchool[] = [
     updated_at: "2021-06-30T00:00:00Z",
     start: "2016-10-01",
     end: "2021-06-30",
-    degree: "MSc",
+    degree: "Master's",
   },
 ];
 
@@ -183,4 +172,4 @@ const mockSchools: ApiSchool[] = [
 export const fetchSchools = (): Promise<ApiSchool[]> =>
   env.mock
     ? Promise.resolve(mockSchools)
-    : apiClient.get<ApiSchool[]>(endpoints.education.schools.list);
+    : apiClient.getList<ApiSchool[]>(endpoints.education.schools.list);

@@ -177,4 +177,4 @@ const mockExperiences: ApiExperience[] = [
 export const fetchExperiences = (): Promise<ApiExperience[]> =>
   env.mock
     ? Promise.resolve(mockExperiences)
-    : apiClient.get<ApiExperience[]>(endpoints.work.experiences.list);
+    : apiClient.getList<ApiExperience[]>(endpoints.work.experiences.list);

@@ -160,4 +160,4 @@ const mockTestimonials: ApiTestimonial[] = [
 export const fetchTestimonials = (): Promise<ApiTestimonial[]> =>
   env.mock
     ? Promise.resolve(mockTestimonials)
-    : apiClient.get<ApiTestimonial[]>(endpoints.education.testimonials.list);
+    : apiClient.getList<ApiTestimonial[]>(endpoints.education.testimonials.list);
