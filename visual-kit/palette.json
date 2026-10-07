@@ -1,0 +1,12 @@
+{
+  "background": "#F8F9FC",
+  "surface": "#FFFFFF",
+  "ink": "#17233D",
+  "text-secondary": "#566078",
+  "lavender": "#E8E1FA",
+  "blush": "#F6E2EB",
+  "iris": "#65509A",
+  "border": "#E0E3EB",
+  "control-border": "#848A9A",
+  "primary-hover": "#293A5C"
+}

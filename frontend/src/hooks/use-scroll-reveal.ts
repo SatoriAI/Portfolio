@@ -1,63 +1,33 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useState } from "react";
 
-export type ScrollRevealOptions = {
-  root?: Element | null;
-  rootMargin?: string;
-  threshold?: number | number[];
-  /**
-   * When true, the element will only reveal once and stop observing after first intersection
-   */
-  once?: boolean;
-};
+import { useOnceInView, useOnScreenAtMount } from "@/hooks/use-in-view";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 
-export function useScrollReveal<T extends HTMLElement = HTMLElement>(
-  options?: ScrollRevealOptions,
-) {
-  const {
-    root = null,
-    rootMargin = "0px 0px -10% 0px",
-    threshold = 0.1,
-    once = true,
-  } = options || {};
-
-  const elementRef = useRef<T | null>(null);
-  const [isRevealed, setIsRevealed] = useState(false);
-
-  const prefersReducedMotion = useMemo(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia === "undefined") return false;
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  }, []);
-
-  const setRef = useCallback((node: T | null) => {
-    elementRef.current = node;
-  }, []);
-
-  useEffect(() => {
-    const node = elementRef.current;
-    if (!node) return;
-
-    if (prefersReducedMotion) {
-      setIsRevealed(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsRevealed(true);
-            if (once) observer.unobserve(entry.target);
-          } else if (!once) {
-            setIsRevealed(false);
-          }
-        });
-      },
-      { root, rootMargin, threshold },
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [root, rootMargin, threshold, once, prefersReducedMotion]);
-
-  return { ref: setRef, isRevealed, prefersReducedMotion } as const;
+/**
+ * An entrance that plays once, the first time the element scrolls into view.
+ * `isRevealed` turns true then and stays; `isInitiallyVisible` is true for an
+ * element already on screen when it mounted, which should not animate at
+ * all, and under reduced motion everything is revealed from the start.
+ */
+export function useScrollReveal<T extends HTMLElement = HTMLElement>({
+  // A positive bottom margin reveals a section shortly before it scrolls into
+  // view, so text is never read mid-fade.
+  rootMargin = "0px 0px 15% 0px",
+  threshold = 0.1,
+}: { rootMargin?: string; threshold?: number } = {}) {
+  const [element, setElement] = useState<T | null>(null);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isInitiallyVisible = useOnScreenAtMount(element);
+  const [seen, setSeen] = useState(false);
+  useOnceInView(element, () => setSeen(true), {
+    rootMargin,
+    threshold,
+    enabled: !prefersReducedMotion && !isInitiallyVisible,
+  });
+  return {
+    ref: setElement,
+    isRevealed: seen || isInitiallyVisible || prefersReducedMotion,
+    isInitiallyVisible,
+    prefersReducedMotion,
+  } as const;
 }

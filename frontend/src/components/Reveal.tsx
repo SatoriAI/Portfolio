@@ -1,86 +1,51 @@
-import type { PropsWithChildren } from "react";
+import type { CSSProperties, ElementType, PropsWithChildren } from "react";
 
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { cn } from "@/lib/utils";
 
-type Direction = "up" | "down" | "left" | "right" | "fade";
-
 type RevealProps = PropsWithChildren<{
-  as?: keyof JSX.IntrinsicElements;
+  as?: ElementType;
   className?: string;
-  /**
-   * Where the content animates from
-   */
-  direction?: Direction;
-  /**
-   * Milliseconds to delay the reveal
-   */
+  /** Milliseconds to wait before revealing; use for a 50–70ms card stagger. */
   delayMs?: number;
-  /**
-   * Extra distance offset for translate animations
-   */
+  /** Distance travelled while fading in. The kit specifies 8px. */
   offset?: number;
-  /**
-   * If true, reveal only once
-   */
-  once?: boolean;
 }>;
 
+/**
+ * Section entrance from the kit: opacity 0 → 1 and translateY 8px → 0 over
+ * 400ms on cubic-bezier(.22,1,.36,1), once, and skipped entirely under
+ * prefers-reduced-motion. Content that is already on screen when it mounts
+ * renders visible straight away, so nothing above the fold ever fades in.
+ */
 export default function Reveal({
-  as = "div",
+  as: Tag = "div",
   className,
-  direction = "up",
   delayMs = 0,
-  offset = 24,
-  once = true,
+  offset = 8,
   children,
 }: RevealProps) {
-  const Tag = as as any;
-  const { ref, isRevealed, prefersReducedMotion } = useScrollReveal<HTMLDivElement>({
-    once,
-    root: null,
-    rootMargin: "0px 0px -10% 0px",
-    threshold: 0.1,
-  });
+  const { ref, isRevealed, isInitiallyVisible, prefersReducedMotion } =
+    useScrollReveal<HTMLElement>();
 
-  const baseHidden = "opacity-0 will-change-[transform,opacity]";
-  const baseVisible = "opacity-100";
+  const skipAnimation = prefersReducedMotion || isInitiallyVisible;
+  const visible = skipAnimation || isRevealed;
 
   // Inline transform ensures JIT doesn't purge required classes
-  const hiddenTransform: React.CSSProperties = (() => {
-    if (prefersReducedMotion) return {};
-    const distance = `${offset}px`;
-    switch (direction) {
-      case "up":
-        return { transform: `translate3d(0, ${distance}, 0)` };
-      case "down":
-        return { transform: `translate3d(0, -${distance}, 0)` };
-      case "left":
-        return { transform: `translate3d(${distance}, 0, 0)` };
-      case "right":
-        return { transform: `translate3d(-${distance}, 0, 0)` };
-      case "fade":
-      default:
-        return {};
-    }
-  })();
-
-  // Use inline style for delay and transform; duration via Tailwind
-  const style = prefersReducedMotion
+  const style: CSSProperties | undefined = skipAnimation
     ? undefined
-    : ({
-        transitionDelay: `${isNaN(delayMs) ? 0 : delayMs}ms`,
-        ...(isRevealed ? { transform: "translate3d(0,0,0)" } : hiddenTransform),
-      } as React.CSSProperties);
+    : {
+        transitionDelay: `${Number.isNaN(delayMs) ? 0 : delayMs}ms`,
+        transform: visible ? "translate3d(0,0,0)" : `translate3d(0, ${offset}px, 0)`,
+      };
 
   return (
     <Tag
       ref={ref}
       style={style}
       className={cn(
-        "transform-gpu transition-all duration-700 ease-out",
-        !prefersReducedMotion && !isRevealed && baseHidden,
-        (prefersReducedMotion || isRevealed) && baseVisible,
+        !skipAnimation && "transition-[opacity,transform] duration-400 ease-brand",
+        visible ? "opacity-100" : "opacity-0 will-change-[transform,opacity]",
         className,
       )}
     >

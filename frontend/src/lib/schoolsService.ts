@@ -1,8 +1,7 @@
 import { endpoints } from "../config/endpoints";
 import { env } from "../config/env";
-import { useSettings } from "../contexts/SettingsContext";
 
-import { apiFetch } from "./apiClient";
+import { apiClient } from "./apiClient";
 
 export type ApiSchool = {
   id: number;
@@ -36,6 +35,33 @@ export type UiSchool = {
   endDate: string;
 };
 
+// The degree is an untranslated field on the backend; these are the values it
+// holds today, named the way the site names them. Anything else passes
+// through unchanged. The doctorate is "Doktorat" / "PhD" everywhere, never
+// "Studia doktoranckie", so the page and the site's descriptions agree.
+const DEGREE_NAMES: Record<string, Record<string, string>> = {
+  pl: {
+    "Bachelor's": "Licencjat",
+    "Master's": "Magisterium",
+    "Doctoral Studies": "Doktorat",
+    PhD: "Doktorat",
+    MSc: "Magisterium",
+  },
+  en: { "Doctoral Studies": "PhD" },
+};
+
+const IN_PROGRESS: Record<string, string> = { pl: "w toku", en: "in progress" };
+
+/**
+ * A degree's name in the language, marked as in progress while it has no end
+ * date, so a doctorate still under way never reads as one already awarded.
+ */
+export const degreeLabel = (degree: string, lang: string, ongoing: boolean) => {
+  const name = DEGREE_NAMES[lang]?.[degree] ?? degree;
+  const note = IN_PROGRESS[lang] ?? IN_PROGRESS.en;
+  return ongoing && name ? `${name} (${note})` : name;
+};
+
 export function mapApiSchoolToUi(school: ApiSchool, language: string): UiSchool {
   const lang = language.toLowerCase();
   const localized = school.translations?.[lang] || school.translations?.["en"] || {};
@@ -48,9 +74,10 @@ export function mapApiSchoolToUi(school: ApiSchool, language: string): UiSchool 
   };
 
   const startYear = formatDate(school.start);
-  const presentLabel = lang === "pl" ? "Obecnie" : "Present";
+  const presentLabel = lang === "pl" ? "obecnie" : "present";
   const endYear = school.end ? formatDate(school.end) : presentLabel;
-  const period = `${startYear} - ${endYear}`;
+  // An en dash, closed up: the typographic range, not a hyphen with spaces.
+  const period = `${startYear}–${endYear}`;
 
   // Handle areas - can be string or array
   let areas: string[] = [];
@@ -69,7 +96,7 @@ export function mapApiSchoolToUi(school: ApiSchool, language: string): UiSchool 
     id: school.id,
     study: localized.study || "",
     university: localized.university || "",
-    degree: school.degree || "",
+    degree: degreeLabel(school.degree || "", lang, !school.end),
     research: localized.research || "",
     advisor: localized.advisor || "",
     areas,
@@ -152,20 +179,8 @@ const mockSchools: ApiSchool[] = [
   },
 ];
 
-export async function fetchSchools(language: string): Promise<UiSchool[]> {
-  if (env.mock) {
-    // Use mock data when VITE_MOCK=true
-    return mockSchools.map((s) => mapApiSchoolToUi(s, language));
-  }
-
-  const data = await apiFetch<ApiSchool[]>(endpoints.education.schools.list, {
-    method: "GET",
-    headers: { "Accept-Language": language },
-  });
-  return data.map((s) => mapApiSchoolToUi(s, language));
-}
-
-export function useSchools() {
-  const { language } = useSettings();
-  return { fetch: () => fetchSchools(language) };
-}
+/** Every translation at once: the page picks its language (see lib/queries.ts). */
+export const fetchSchools = (): Promise<ApiSchool[]> =>
+  env.mock
+    ? Promise.resolve(mockSchools)
+    : apiClient.get<ApiSchool[]>(endpoints.education.schools.list);

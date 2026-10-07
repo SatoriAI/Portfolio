@@ -1,8 +1,7 @@
 import { endpoints } from "../config/endpoints";
 import { env } from "../config/env";
-import { useSettings } from "../contexts/SettingsContext";
 
-import { apiFetch } from "./apiClient";
+import { apiClient } from "./apiClient";
 
 export type ApiExperience = {
   id: number;
@@ -28,6 +27,9 @@ export type UiExperience = {
   company: string;
   position: string;
   period: string;
+  /** ISO dates, kept so the timeline can be drawn to scale; `end` is empty while current. */
+  start: string;
+  end: string;
   location: string;
   description: string;
   achievements: string[];
@@ -46,15 +48,18 @@ export function mapApiExperienceToUi(experience: ApiExperience, language: string
   };
 
   const startYear = formatDate(experience.start);
-  const presentLabel = lang === "pl" ? "Obecnie" : "Present";
+  const presentLabel = lang === "pl" ? "obecnie" : "present";
   const endYear = experience.end ? formatDate(experience.end) : presentLabel;
-  const period = `${startYear} - ${endYear}`;
+  // An en dash, closed up: the typographic range, not a hyphen with spaces.
+  const period = `${startYear}–${endYear}`;
 
   return {
     id: experience.id,
     company: experience.company || "",
     position: experience.position || "",
     period,
+    start: experience.start || "",
+    end: experience.end || "",
     location: localized.location || "",
     description: localized.description || "",
     achievements: localized.achievements || [],
@@ -168,20 +173,8 @@ const mockExperiences: ApiExperience[] = [
   },
 ];
 
-export async function fetchExperiences(language: string): Promise<UiExperience[]> {
-  if (env.mock) {
-    // Use mock data when VITE_MOCK=true
-    return mockExperiences.map((e) => mapApiExperienceToUi(e, language));
-  }
-
-  const data = await apiFetch<ApiExperience[]>(endpoints.work.experiences.list, {
-    method: "GET",
-    headers: { "Accept-Language": language },
-  });
-  return data.map((e) => mapApiExperienceToUi(e, language));
-}
-
-export function useExperiences() {
-  const { language } = useSettings();
-  return { fetch: () => fetchExperiences(language) };
-}
+/** Every translation at once: the page picks its language (see lib/queries.ts). */
+export const fetchExperiences = (): Promise<ApiExperience[]> =>
+  env.mock
+    ? Promise.resolve(mockExperiences)
+    : apiClient.get<ApiExperience[]>(endpoints.work.experiences.list);

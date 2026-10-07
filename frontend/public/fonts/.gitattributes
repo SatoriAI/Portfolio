@@ -1,0 +1,5 @@
+# Manrope and IBM Plex Mono are served with the licence texts they ship with,
+# which the licences themselves require. They are upstream documents kept
+# byte-for-byte as published, so their trailing whitespace is not ours to
+# correct; exempt them from the whitespace check rather than editing a licence.
+*.txt -whitespace

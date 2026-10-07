@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1150" width="1000" height="1150" role="img">
+  <title>Dawid Hanrahan — Oś binarna mini brand sheet</title>
+  <defs>
+    <symbol id="binary-axis" viewBox="0 0 100 100">
+      <g fill="none" stroke="currentColor" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M49 18V77H31A17.5 17.5 0 0 1 31 42H49"/>
+        <path d="M49 57C55 43 75 42 82 55V77"/>
+      </g>
+    </symbol>
+    <symbol id="binary-axis-micro" viewBox="0 0 100 100">
+      <g fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M49 17V78H31A18 18 0 0 1 31 42H49"/>
+        <path d="M49 58C56 43 76 42 83 56V78"/>
+      </g>
+    </symbol>
+    <linearGradient id="diffusion" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#C6B4E7"/>
+      <stop offset=".48" stop-color="#F8F9FC"/>
+      <stop offset="1" stop-color="#EDC2D7"/>
+    </linearGradient>
+    <style>
+      .sans{font-family:Manrope,Arial,sans-serif;fill:#17233D}.mono{font-family:"IBM Plex Mono",monospace;fill:#17233D}.muted{fill:#566078}.rule{stroke:#D5D8E2;stroke-width:1}.label{font-size:12px;letter-spacing:.4px}.small{font-size:12px}.body{font-size:15px}.wordmark{font-size:42px;font-weight:600;letter-spacing:-1.2px}
+    </style>
+  </defs>
+  <rect width="1000" height="1150" fill="#F8F9FC"/>
+  <text x="48" y="48" class="mono label">DAWID HANRAHAN / VISUAL IDENTITY</text>
+  <text x="952" y="48" text-anchor="end" class="mono label">OŚ BINARNA / V5</text>
+  <line x1="48" y1="70" x2="952" y2="70" class="rule"/>
+
+  <g transform="translate(52 106)" color="#17233D">
+    <use href="#binary-axis" width="150" height="150"/>
+    <text x="165" y="64" class="sans wordmark"><tspan x="165">Dawid</tspan><tspan x="165" dy="48">Hanrahan</tspan></text>
+  </g>
+  <text x="650" y="152" class="sans body"><tspan x="650">Software &amp; AI engineering.</tspan><tspan x="650" dy="28">Badawcza ciekawość.</tspan><tspan x="650" dy="28">Precyzyjna, przyjazna forma.</tspan></text>
+
+  <text x="48" y="310" class="mono label">01 / OŚ BINARNA I WERSJE KOLORYSTYCZNE</text>
+  <rect x="48" y="334" width="290" height="124" rx="16" fill="#FFFFFF" stroke="#E0E3EB"/>
+  <use href="#binary-axis" x="151" y="354" width="84" height="84" color="#17233D"/>
+  <rect x="355" y="334" width="290" height="124" rx="16" fill="#17233D"/>
+  <use href="#binary-axis" x="458" y="354" width="84" height="84" color="#FFFFFF"/>
+  <rect x="662" y="334" width="290" height="124" rx="16" fill="#E8E1FA"/>
+  <use href="#binary-axis" x="765" y="354" width="84" height="84" color="#65509A"/>
+  <text x="48" y="486" class="sans small muted"><tspan font-weight="600" fill="#17233D">0 · 1 → dh.</tspan> Misa „d” przywołuje zero, wspólny pion działa jak jedynka, a jedna krzywa domyka „h”.</text>
+
+  <text x="48" y="536" class="mono label">02 / PALETA</text>
+  <g class="sans small">
+    <rect x="48" y="558" width="181" height="92" fill="#F8F9FC" stroke="#E0E3EB"/><text x="62" y="612">Cloud</text><text x="62" y="634" class="mono small">#F8F9FC</text>
+    <rect x="229" y="558" width="181" height="92" fill="#17233D"/><text x="243" y="612" fill="#FFFFFF">Midnight</text><text x="243" y="634" fill="#FFFFFF" class="mono small">#17233D</text>
+    <rect x="410" y="558" width="181" height="92" fill="#E8E1FA"/><text x="424" y="612">Lavender</text><text x="424" y="634" class="mono small">#E8E1FA</text>
+    <rect x="591" y="558" width="181" height="92" fill="#F6E2EB"/><text x="605" y="612">Blush</text><text x="605" y="634" class="mono small">#F6E2EB</text>
+    <rect x="772" y="558" width="180" height="92" fill="#65509A"/><text x="786" y="612" fill="#FFFFFF">Iris</text><text x="786" y="634" fill="#FFFFFF" class="mono small">#65509A</text>
+  </g>
+
+  <text x="48" y="706" class="mono label">03 / TYPOGRAFIA</text>
+  <text x="48" y="762" class="sans" font-size="34" font-weight="600">Manrope</text>
+  <text x="48" y="798" class="sans body">Precyzja myślenia. Użyteczne rozwiązania.</text>
+  <text x="570" y="760" class="mono" font-size="22">IBM Plex Mono</text>
+  <text x="570" y="798" class="sans small muted">Nagłówki 600 · treść 400 · etykiety 400</text>
+
+  <text x="48" y="854" class="mono label">04 / GEOMETRIA + MIĘKKIE POLA KOLORU</text>
+  <rect x="48" y="878" width="440" height="126" rx="16" fill="#FFFFFF"/>
+  <g stroke="#65509A" stroke-width="2">
+    <line x1="157" y1="912" x2="157" y2="970"/><line x1="177" y1="912" x2="177" y2="970"/><line x1="197" y1="912" x2="197" y2="970"/><line x1="217" y1="912" x2="217" y2="970"/><line x1="237" y1="912" x2="237" y2="970"/><line x1="257" y1="912" x2="257" y2="970"/><line x1="277" y1="912" x2="277" y2="970"/><line x1="297" y1="912" x2="297" y2="970"/>
+  </g>
+  <circle cx="340" cy="941" r="7" fill="#17233D"/>
+  <rect x="512" y="878" width="440" height="126" rx="16" fill="url(#diffusion)"/>
+
+  <line x1="48" y1="1032" x2="952" y2="1032" class="rule"/>
+  <text x="48" y="1063" class="sans small muted"><tspan x="48">Pole ochronne: minimum 20% wysokości symbolu.</tspan><tspan x="48" dy="23">Logo od 180 px · symbol od 32 px · wersja micro poniżej 32 px.</tspan></text>
+  <text x="626" y="1063" class="mono label">FAVICON / MICRO</text>
+  <rect x="626" y="1078" width="20" height="20" rx="4" fill="#17233D"/><use href="#binary-axis-micro" x="628" y="1080" width="16" height="16" color="#FFFFFF"/>
+  <rect x="667" y="1072" width="32" height="32" rx="7" fill="#17233D"/><use href="#binary-axis-micro" x="671" y="1076" width="24" height="24" color="#FFFFFF"/>
+  <rect x="720" y="1062" width="52" height="52" rx="11" fill="#17233D"/><use href="#binary-axis-micro" x="727" y="1069" width="38" height="38" color="#FFFFFF"/>
+  <text x="48" y="1130" class="mono" font-size="10">SOFT PRECISION / OŚ BINARNA</text>
+  <text x="952" y="1130" text-anchor="end" class="mono" font-size="10">MINI BRAND SHEET</text>
+</svg>

@@ -51,7 +51,7 @@ describe("mapApiSkillToUi", () => {
   // The backend's Icons choices and this map can drift apart; a new choice must
   // not render nothing.
   it("falls back to the Code icon for an unrecognised name", () => {
-    const unknown = { ...bilingual, icon: "Sparkles" } as unknown as ApiSkill;
+    const unknown = { ...bilingual, icon: "Rocket" } as unknown as ApiSkill;
     expect(mapApiSkillToUi(unknown, "en").icon).toBe(Code);
   });
 });
