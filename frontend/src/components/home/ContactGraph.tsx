@@ -17,10 +17,13 @@ import { cn } from "@/lib/utils";
  * opens the mail app and its "copy" copies it; the Vex node opens the chat;
  * the GitHub node opens the profile. Pointing at or focusing a node lights
  * its edge in iris and sends a pulse along it from the hub to the node. The
- * first time the graph is in view the hub appears; then, once, each edge is
- * drawn out in turn and its node appears as the edge lands. Where the page's
- * circuit runs (from xl up), that waits for the current to reach the hub
- * and close the circuit; elsewhere it follows the hub straight away. After that the
+ * first time the graph is in view the hub appears; then each edge is drawn
+ * out in turn and its node appears as the edge lands. Where the page's
+ * circuit runs (from xl up), the graph runs on it: it lights up each time the
+ * current reaches the hub and closes the circuit, and switches off again,
+ * nodes first and then the edges drawn back into the hub, when the reader
+ * scrolls up and the current draws back. Keyboard focus on a node keeps it
+ * lit. Elsewhere it follows the hub straight away, once. While lit the
  * edges wave gently, each on its own rhythm, and each carries its own current,
  * a spark running out along it on an irregular beat, the edge shivering as it
  * passes, for as long as the graph is on screen and the page is visible: a
@@ -84,6 +87,11 @@ const SPARK_PX = 28;
 /** When an edge starts drawing, and when its node appears. */
 const edgeAt = (index: number) => HUB_MS / 2 + index * STAGGER_MS;
 const nodeAt = (index: number) => edgeAt(index) + EDGE_MS * 0.65;
+/** Switching off: the nodes go, the last first, then each edge draws back into the hub. */
+const OFF_STAGGER_MS = 60;
+const EDGE_OFF_MS = 400;
+const nodeOffAt = (index: number) => (STAR.length - 1 - index) * OFF_STAGGER_MS;
+const edgeOffAt = (index: number) => nodeOffAt(0) + 200 + nodeOffAt(index);
 
 /** The waving: how far an edge's middle swings, and each edge's period. */
 const WAVE_PX = 7;
@@ -137,13 +145,13 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
   useOnceInView(box, () => setSeen(true), { threshold: 0.4 });
 
   // Where the page's circuit is drawn (from xl up, in motion; see Circuit),
-  // the edges and nodes wait for it: they arrive the first time the current
-  // reaches the hub and closes the circuit, and stay. Elsewhere they arrive
-  // with the hub.
+  // the edges and nodes run on it: lit while the circuit is closed, off when
+  // it opens, so the contact switches on and off with the current. A node
+  // with keyboard focus keeps the graph lit, so focus never lands on a card
+  // that cannot be seen. Elsewhere they arrive with the hub, and stay.
   const circuit = useCircuit();
-  const [everClosed, setEverClosed] = useState(false);
-  if (circuit.closed && !everClosed) setEverClosed(true);
-  const drawn = circuit.wired ? everClosed : seen;
+  const [focusWithin, setFocusWithin] = useState(false);
+  const drawn = circuit.wired ? circuit.closed || focusWithin : seen;
   const hubShown = seen || prefersReducedMotion;
   const shown = drawn || prefersReducedMotion;
 
@@ -343,17 +351,28 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
   ];
 
   const edge = (index: number) => (hot === index ? "stroke-iris" : "stroke-control-border");
-  // Before the arrival, and as it plays: each node fades and rises in.
+  // Before the arrival, and as it plays: each node fades and rises in. When
+  // the power goes, the reverse, and quicker: the nodes go first, the last
+  // one first, then the edges draw back into the hub (see edgeDelay).
   const arrive = (index: number) => ({
     className: cn(
-      "transition-[opacity,translate] duration-500 ease-brand",
-      shown ? "opacity-100 [translate:0_0]" : "opacity-0 [translate:0_8px]",
+      "transition-[opacity,translate] ease-brand",
+      shown
+        ? "opacity-100 duration-500 [translate:0_0]"
+        : "pointer-events-none opacity-0 duration-200 [translate:0_8px]",
     ),
-    style: { transitionDelay: `${nodeAt(index)}ms` },
+    style: { transitionDelay: `${shown ? nodeAt(index) : nodeOffAt(index)}ms` },
   });
+  const edgeDelay = (index: number) => (shown ? edgeAt(index) : edgeOffAt(index));
 
   return (
-    <div ref={box}>
+    <div
+      ref={box}
+      onFocus={() => setFocusWithin(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setFocusWithin(false);
+      }}
+    >
       {/* The star, from lg up. */}
       <div ref={star} className="relative hidden h-[25rem] lg:block">
         <svg aria-hidden="true" className="absolute inset-0 h-full w-full overflow-visible">
@@ -371,7 +390,7 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
                 strokeWidth={hot === index ? 2 : 1.5}
                 className={edge(index)}
                 style={{
-                  transition: `stroke-dashoffset ${EDGE_MS}ms ${EASE_BRAND} ${edgeAt(index)}ms, stroke 200ms, stroke-width 200ms`,
+                  transition: `stroke-dashoffset ${shown ? EDGE_MS : EDGE_OFF_MS}ms ${EASE_BRAND} ${edgeDelay(index)}ms, stroke 200ms, stroke-width 200ms`,
                 }}
               />
             ))}

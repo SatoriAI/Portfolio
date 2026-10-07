@@ -64,6 +64,12 @@ const LINGER_MS = 500;
 const FADE_MS = 220;
 /** How near the bottom of the page counts as the bottom. */
 const CLOSE_WITHIN = 12;
+/**
+ * Once closed, the circuit stays closed until the reader has scrolled this
+ * far back up from the foot of the page: the contact graph runs on it (see
+ * ContactGraph), so a small scroll there must not switch it off and on.
+ */
+const STAY_CLOSED_PX = 160;
 
 type Layout = {
   d: string;
@@ -200,15 +206,19 @@ const Circuit = ({ children }: PropsWithChildren) => {
       nodeLengths.forEach((at, index) => {
         dots.current[index]?.setAttribute("data-lit", String(filled >= at - 0.5));
       });
-      const closed = filled >= total - 0.5;
+      const atHub = filled >= total - 0.5;
       if (head.current) {
         const point = pointAt(filled);
         head.current.setAttribute("transform", `translate(${point.x} ${point.y})`);
-        head.current.style.opacity = closed || filled <= 0 ? "0" : "1";
+        head.current.style.opacity = atHub || filled <= 0 ? "0" : "1";
       }
       halo.current?.setAttribute("r", String(6 + live * (2 + 3 * breath)));
       if (sheen.current) sheen.current.style.opacity = String(live);
       if (aura.current) aura.current.style.opacity = String(live * (0.4 + 0.6 * breath));
+      // Closed when the current reaches the hub; open again only once the
+      // reader has scrolled clearly back up (see STAY_CLOSED_PX).
+      const foot = document.documentElement.scrollHeight - window.innerHeight;
+      const closed = atHub || (wasClosed && window.scrollY >= foot - STAY_CLOSED_PX);
       if (closed !== wasClosed) {
         wasClosed = closed;
         setClosed(closed);
