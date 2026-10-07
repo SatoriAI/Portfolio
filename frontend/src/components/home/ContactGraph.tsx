@@ -18,14 +18,13 @@ import { cn } from "@/lib/utils";
  * the GitHub node opens the profile. Pointing at or focusing a node lights
  * its edge in iris and sends a pulse along it from the hub to the node. The
  * first time the graph is in view the hub appears; then each edge is drawn
- * out in turn and its node lights as the edge lands. Where the page's circuit
- * runs (from xl up), the graph runs on its power: the nodes are there from
- * the first sight, dimmed and grey but readable and pressable, and light up
- * each time the current reaches the hub and closes the circuit; when the
- * reader scrolls back up and it opens, the power goes again, the nodes
- * dimming (the last first) and then the edges drawing back into the hub.
- * Keyboard focus on a node powers the graph at once. Elsewhere it lights
- * with the hub, once. While powered the edges wave gently, each on its own
+ * out in turn and its node appears as the edge lands. Where the page's
+ * circuit runs (from xl up), the graph runs on its power: it lights up each
+ * time the current reaches the hub and closes the circuit, and switches off
+ * again, the nodes first (the last first) and then the edges drawn back into
+ * the hub, when the reader scrolls back up and it opens. Keyboard focus on a
+ * node powers the graph at once. Elsewhere it appears with the hub, once.
+ * While powered the edges wave gently, each on its own
  * rhythm, and each carries its own current, a spark running out along it on
  * an irregular beat, the edge shivering as it passes, for as long as the
  * graph is on screen and the page is visible: a
@@ -87,17 +86,17 @@ const JOLT_PX = 3;
 /** A spark's length, in pixels. */
 const SPARK_PX = 28;
 /**
- * When an edge starts drawing, and when its node lights. On the first
+ * When an edge starts drawing, and when its node appears. On the first
  * arrival the edges wait half the hub's own entrance; powered again later,
  * the hub is long there, so they start at once.
  */
 const edgeAt = (index: number, afterHub: boolean) =>
   (afterHub ? HUB_MS / 2 : 0) + index * STAGGER_MS;
 const nodeAt = (index: number, afterHub: boolean) => edgeAt(index, afterHub) + EDGE_MS * 0.65;
-/** How long a node takes to light. */
+/** How long a node takes to appear. */
 const NODE_ON_MS = 500;
 /**
- * Losing power: the nodes dim, the last first, each over NODE_OFF_MS, and
+ * Losing power: the nodes go, the last first, each over NODE_OFF_MS, and
  * once they all have, each edge draws back into the hub over EDGE_OFF_MS.
  */
 const NODE_OFF_MS = 200;
@@ -159,17 +158,14 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
   useOnceInView(box, () => setSeen(true), { threshold: 0.4 });
 
   // Where the page's circuit is drawn (from xl up, in motion; see Circuit),
-  // the graph runs on its power: powered while the circuit is closed, and
-  // otherwise its nodes are dimmed but there, never hidden from a reader
-  // looking for them. Keyboard focus on a node powers it at once, without
-  // the arrival, so focus never lands on a dimmed card. Elsewhere the graph
-  // is powered with the hub, and stays.
+  // the graph runs on its power: shown while the circuit is closed, off when
+  // it opens. Keyboard focus on a node powers it at once, without the
+  // arrival, so focus never lands on a card that cannot be seen. Elsewhere
+  // the graph appears with the hub, and stays.
   const circuit = useCircuit();
   const [keyboardFocus, setKeyboardFocus] = useState(false);
   const powered = circuit.wired ? circuit.closed || keyboardFocus : seen;
   const hubShown = seen || prefersReducedMotion;
-  /** The nodes are there from the first sight, lit or dimmed. */
-  const present = hubShown;
   const lit = powered || prefersReducedMotion;
   /** Powered by focus alone: at once, no arrival. */
   const instant = circuit.wired && keyboardFocus && !circuit.closed;
@@ -381,21 +377,16 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
   ];
 
   const edge = (index: number) => (hot === index ? "stroke-iris" : "stroke-control-border");
-  // Each node in one of three states. Before the first sight it is not yet
-  // there; powered, it is lit, lighting as its edge lands (at once when
-  // focus powered it); unpowered, it is dimmed and grey but readable and
-  // pressable, dimming the last first and before the edges draw back.
+  // Powered, each node fades and rises in as its edge lands (at once when
+  // focus powered it). When the power goes, the reverse and quicker: the
+  // nodes go first, the last first, then the edges draw back (see edgeDelay).
   const arrive = (index: number) => ({
     className: cn(
-      "transition-[opacity,translate,filter] ease-brand",
-      !present
-        ? "pointer-events-none opacity-0 [translate:0_8px]"
-        : lit
-          ? "opacity-100 [translate:0_0]"
-          : "opacity-[0.72] grayscale [translate:0_0]",
+      "transition-[opacity,translate] ease-brand",
+      lit ? "opacity-100 [translate:0_0]" : "pointer-events-none opacity-0 [translate:0_8px]",
     ),
     style: {
-      transitionDuration: `${lit || !present ? NODE_ON_MS : NODE_OFF_MS}ms`,
+      transitionDuration: `${lit ? NODE_ON_MS : NODE_OFF_MS}ms`,
       transitionDelay: `${lit ? (instant ? 0 : nodeAt(index, afterHub)) : nodeOffAt(index)}ms`,
     },
   });
