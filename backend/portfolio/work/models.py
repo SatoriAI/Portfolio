@@ -1,3 +1,5 @@
+from typing import cast
+
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.translation import get_language
@@ -66,6 +68,14 @@ class ExperienceQuerySet(TranslatableQuerySet):
         return self.filter(visible=True)
 
 
+class ExperienceManager(TranslatableManager):
+    # Where parler's manager (built with Manager.from_queryset) takes its queryset.
+    _queryset_class = ExperienceQuerySet
+
+    def visible(self) -> ExperienceQuerySet:
+        return cast(ExperienceQuerySet, self.get_queryset()).visible()
+
+
 class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
     # `position` is the shared, untranslated title the current site reads; `role`
     # (translated) replaces it, and `position` goes once the site reads `role`.
@@ -109,7 +119,7 @@ class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
     )
 
     # Managers
-    objects = TranslatableManager.from_queryset(ExperienceQuerySet)()
+    objects: ExperienceManager = ExperienceManager()
 
     @property
     def period(self) -> str:
