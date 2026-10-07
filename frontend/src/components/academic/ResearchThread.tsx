@@ -10,13 +10,11 @@ import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { ArrowUpRight, Award } from "lucide-react";
 
 import DomainGlyph, { type DomainKind } from "@/components/academic/DomainGlyph";
-import { Button } from "@/components/ui/button";
 import { useOnceInView, useOnScreenAtMount } from "@/hooks/use-in-view";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { linkedSlug, replaceHash } from "@/lib/hash";
 import { matchesMedia, MEDIA } from "@/lib/media";
 import type { UiSchool } from "@/lib/schoolsService";
-import { splitSentences } from "@/lib/sentences";
 import { cn } from "@/lib/utils";
 
 /**
@@ -54,8 +52,6 @@ import { cn } from "@/lib/utils";
 export type ResearchThreadLabels = {
   advisor: string;
   researchAreas: string;
-  more: string;
-  less: string;
   /** Names the row of steps that choose a degree. */
   steps: string;
   /** Says the drawing can be pressed to set heat on it. */
@@ -79,12 +75,6 @@ type ResearchThreadProps = {
   className?: string;
 };
 
-/**
- * A degree's text longer than this opens on its first two sentences behind
- * "More"; a shorter one is read at a glance and shown whole.
- */
-const COLLAPSE_FROM = 400;
-
 export type DegreeHighlight = {
   /** Small capitals over the award, e.g. who gave it. */
   label: string;
@@ -101,12 +91,6 @@ type DegreeTextProps = {
 };
 
 const DegreeText = ({ school, labels, highlight, headline }: DegreeTextProps) => {
-  const [open, setOpen] = useState(false);
-  const [summary, rest] =
-    school.research.length > COLLAPSE_FROM
-      ? splitSentences(school.research, 2)
-      : [school.research.trim(), ""];
-
   return (
     // The degree as one card: its award as a ribbon across the top, the
     // story in the middle, who and what it was about in a footer.
@@ -148,21 +132,12 @@ const DegreeText = ({ school, labels, highlight, headline }: DegreeTextProps) =>
         <p className="mt-1 text-base text-muted-foreground">
           {school.study} · {school.university}
         </p>
-        {summary && (
+        {/* The whole story, never cut short: the cards share one cell, so
+            the tallest sets the height, and there is room beside the road. */}
+        {school.research.trim() && (
           <p className="mt-5 text-pretty text-base text-foreground/90 md:text-body-lg">
-            {summary}
-            {open && rest && ` ${rest}`}
+            {school.research.trim()}
           </p>
-        )}
-        {rest && (
-          <Button
-            variant="link"
-            className="mt-1 h-auto px-0 text-sm font-medium"
-            aria-expanded={open}
-            onClick={() => setOpen((value) => !value)}
-          >
-            {open ? labels.less : labels.more}
-          </Button>
         )}
       </div>
       {(school.advisor || school.areas.length > 0) && (
@@ -194,14 +169,16 @@ const slugOf = (school: UiSchool) => school.startDate.slice(0, 4);
 
 /**
  * Where each stop's dot sits in the road's column from lg: across as a share
- * of the column (closer together until xl, so the last name clears the card),
- * down in pixels. Three degrees, three places; a fourth would
- * need one more.
+ * of the column (closer together until xl), down in pixels. The steps are
+ * gentle enough that the last name keeps to the road's column beside the
+ * card; a stop is also never wider than the room left to the column's right
+ * edge, so a longer name wraps there rather than run under the card. Three
+ * degrees, three places; a fourth would need one more.
  */
 const STOPS = [
   { x: "12%", xl: "14%", y: 136 },
-  { x: "29%", xl: "36%", y: 340 },
-  { x: "46%", xl: "58%", y: 544 },
+  { x: "27%", xl: "32%", y: 340 },
+  { x: "42%", xl: "50%", y: 544 },
 ] as const;
 /** The road's column: tall enough for the last stop's name under its dot. */
 const ROAD_HEIGHT = 620;
@@ -450,7 +427,7 @@ const ResearchThread = ({
                   arrive.className,
                   // From lg a stop is its drawing over its dot, the name beside
                   // the dot, all one box, so the focus ring takes in all three.
-                  "lg:absolute lg:left-[calc(var(--x)-60px)] lg:top-[calc(var(--y)-124px)] lg:mb-0 lg:grid lg:w-max lg:grid-cols-[120px_auto] lg:items-start lg:p-0 xl:left-[calc(var(--x-xl)-60px)]",
+                  "lg:absolute lg:left-[calc(var(--x)-60px)] lg:top-[calc(var(--y)-124px)] lg:mb-0 lg:grid lg:w-max lg:max-w-[calc(100%-var(--x)+60px)] lg:grid-cols-[120px_auto] lg:items-start lg:p-0 xl:left-[calc(var(--x-xl)-60px)] xl:max-w-[calc(100%-var(--x-xl)+60px)]",
                   STOP_ORDER[index],
                   "lg:order-none",
                 )}

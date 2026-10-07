@@ -117,4 +117,4 @@ const mockPublications: ApiPublication[] = [
 export const fetchPublications = (): Promise<ApiPublication[]> =>
   env.mock
     ? Promise.resolve(mockPublications)
-    : apiClient.get<ApiPublication[]>(endpoints.education.publications.list);
+    : apiClient.getList<ApiPublication[]>(endpoints.education.publications.list);
