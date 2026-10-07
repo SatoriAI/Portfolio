@@ -1,16 +1,13 @@
-import {
-  type FocusEvent,
-  type KeyboardEvent,
-  type PointerEvent,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 import { RotateCcw } from "lucide-react";
 
 import FigureFrame from "@/components/academic/FigureFrame";
+import { MARGIN } from "@/components/academic/grokking/geometry";
+import GrokkingDataTable from "@/components/academic/grokking/GrokkingDataTable";
+import GrokkingKey from "@/components/academic/grokking/GrokkingKey";
+import GrokkingPlot from "@/components/academic/grokking/GrokkingPlot";
+import { MarkSwatch } from "@/components/academic/grokking/marks";
+import { useGuessAndRead } from "@/components/academic/grokking/useGuessAndRead";
 import { Button } from "@/components/ui/button";
 import { useElementSize } from "@/hooks/use-element-size";
 import { useOnceInView } from "@/hooks/use-in-view";
@@ -23,9 +20,7 @@ import {
   type GuessVerdict,
   guessVerdict,
   linearScale,
-  measuredPath,
   type Metric,
-  nearestStep,
   percentFormat,
   placeBeside,
   readoutAt,
@@ -72,35 +67,9 @@ import { cn } from "@/lib/utils";
  * across the card, where a reader looks for it after the result.
  */
 
-/** The top margin holds the guess's name, above the 100% line, clear of every line. */
-const MARGIN = { left: 44, right: 24, top: 46, bottom: 30 };
-/**
- * The chart asks before it answers. At first it shows only the examples seen
- * in training, already at 100% by step 1000, and asks the reader from which
- * step the model will handle new ones: the reader sets a marker, on the plot
- * or with the slider in the chart's first row, and presses Check; there is
- * no marker, and nothing to check, until the reader has chosen. Then the
- * new examples are drawn in, left to right at an even pace over the steps,
- * so the delay, which is the finding, passes as time. The chart answers on
- * itself, not in a sentence: a pale band marks the steps between which every
- * run passed 50% on new examples, and the marker, which stays, is graded
- * beside its name (spot on inside the band, almost within a thousand steps
- * of it, off otherwise); a screen reader hears the same in a sentence, and
- * while guessing the plot is a slider that says each step itself. The
- * crosshair then stands
- * at the guess, focus stays in the chart, and the reader can guess again.
- * From then on the first row reads out any step, as before. That row keeps one
- * height throughout, the tallest of everything it will hold, so nothing
- * under it moves. With reduced motion the new examples appear at once. The
- * page asks the question over the chart and gives the finding under it.
- */
-const DRAW_MS = 2800;
-/** The guess moves in half-thousands: finer than the measurements, no finer. */
-const GUESS_STEP = 500;
 /** The marker's one lean to the right and back, to show it can be moved. */
 const NUDGE_PX = 28;
 const NUDGE_MS = 900;
-const OPENING_STEP = 1000;
 /**
  * The key keeps right of this step, where every run is at 80% or more
  * (grokking.test.ts holds the data to that), so the corner under the lines
@@ -161,47 +130,10 @@ type GrokkingChartProps = {
   className?: string;
 };
 
-type MarkProps = {
-  x: number;
-  y: number;
-  /** A mark at the selected step, grown a little so the step reads in the plot. */
-  active?: boolean;
-};
-
-// Grown about its own centre, within the kit's 160–200 ms for hover feedback.
-const markMotion = (active: boolean) =>
-  cn(
-    "origin-center transition-transform duration-200 ease-brand [transform-box:fill-box] motion-reduce:transition-none",
-    active && "scale-[1.35]",
-  );
-
-const SeenMark = ({ x, y, active = false }: MarkProps) => (
-  <rect
-    x={x - 5}
-    y={y - 5}
-    width={10}
-    height={10}
-    strokeWidth={1.5}
-    className={cn("fill-none stroke-control-border", markMotion(active))}
-  />
-);
-
-const UnseenMark = ({ x, y, active = false }: MarkProps) => (
-  <circle
-    cx={x}
-    cy={y}
-    r={4}
-    strokeWidth={2}
-    className={cn("fill-iris stroke-card", markMotion(active))}
-  />
-);
-
 const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
   // The plot's width in CSS pixels, so text in the SVG stays at its set size.
   const ref = useRef<HTMLDivElement>(null);
   const { width } = useElementSize(ref, { width: 560, height: 0 });
-  const [step, setStep] = useState(OPENING_STEP);
-  const [showTip, setShowTip] = useState(false);
   const keyRef = useRef<HTMLUListElement>(null);
   const tipRef = useRef<HTMLDivElement>(null);
   const [keyBox, setKeyBox] = useState<Box | null>(null);
@@ -209,34 +141,23 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const drawId = `${useId().replace(/:/g, "")}-draw`;
   const drawRef = useRef<SVGRectElement>(null);
-  // The reader's guess, then the new examples drawing in, then all drawn.
-  const [phase, setPhase] = useState<"guess" | "drawing" | "drawn">("guess");
-  // The guess starts at step 0, where the marker waits to be moved; nothing
-  // can be checked until the reader has moved it.
-  const [guess, setGuess] = useState(0);
-  const [picked, setPicked] = useState(false);
   const markerLine = useRef<SVGLineElement>(null);
   const markerTag = useRef<HTMLSpanElement>(null);
-  // Whether the reader has moved the read-out since the answer: until then it
-  // stays quiet, so the grade is heard first.
-  const [moved, setMoved] = useState(false);
 
-  useEffect(() => {
-    if (phase !== "drawing") return;
-    const sweep = prefersReducedMotion
-      ? null
-      : drawRef.current?.animate([{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], {
-          duration: DRAW_MS,
-          easing: "linear",
-          fill: "forwards",
-        });
-    if (!sweep) {
-      setPhase("drawn");
-      return;
-    }
-    sweep.onfinish = () => setPhase("drawn");
-    return () => sweep.cancel();
-  }, [phase, prefersReducedMotion]);
+  const stepMax = GROKKING_STEPS[GROKKING_STEPS.length - 1];
+  const x = linearScale(0, stepMax, MARGIN.left, width - MARGIN.right);
+  // Wide and low across the section; a little taller on a phone, where the
+  // plot is narrow and a flat one would bury the rise.
+  const plotHeight = width < 640 ? 272 : 252;
+  const y = linearScale(0, 1, plotHeight - MARGIN.bottom, MARGIN.top);
+  const stepAt = linearScale(MARGIN.left, width - MARGIN.right, 0, stepMax);
+  // Every other step when a phone leaves too little room between labels.
+  const tickEvery = x(GROKKING_STEPS[1]) - x(GROKKING_STEPS[0]) < 48 ? 2 : 1;
+
+  const { phase, step, guess, picked, moved, showTip, check, retry, plotHandlers } =
+    useGuessAndRead({ plotRef: ref, drawRef, stepMax, stepAt, prefersReducedMotion });
+  const guessing = phase === "guess";
+  const answered = phase === "drawn";
 
   // The key and the tooltip are measured whenever what sizes them changes, so
   // the tooltip can be set clear of both the lines and the key. State changes
@@ -262,106 +183,22 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
       );
     }
     // The width places and wraps the key; the step, the labels and the locale
-    // set what the key and the tooltip say; showing mounts the tooltip.
-  }, [showTip, step, width, labels, locale]);
-
-  const stepMax = GROKKING_STEPS[GROKKING_STEPS.length - 1];
-  const x = linearScale(0, stepMax, MARGIN.left, width - MARGIN.right);
-  // Wide and low across the section; a little taller on a phone, where the
-  // plot is narrow and a flat one would bury the rise.
-  const plotHeight = width < 640 ? 272 : 252;
-  const y = linearScale(0, 1, plotHeight - MARGIN.bottom, MARGIN.top);
-  const stepAt = linearScale(MARGIN.left, width - MARGIN.right, 0, stepMax);
-  // Every other step when a phone leaves too little room between labels.
-  const tickEvery = x(GROKKING_STEPS[1]) - x(GROKKING_STEPS[0]) < 48 ? 2 : 1;
+    // set what the key and the tooltip say; showing mounts the tooltip;
+    // the answer adds the new examples to the key.
+  }, [showTip, step, width, labels, locale, answered]);
 
   const formatStep = new Intl.NumberFormat(locale).format;
   const formatPercent = percentFormat(locale).format;
 
-  const guessing = phase === "guess";
-  const toGuess = (value: number) =>
-    Math.min(stepMax, Math.max(0, Math.round(value / GUESS_STEP) * GUESS_STEP));
-  const pointAt = (event: PointerEvent<HTMLDivElement>) => {
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const at = stepAt(event.clientX - bounds.left);
-    if (guessing) {
-      // A press or a drag moves the marker; a mouse only hovering leaves it.
-      // The press captures the pointer, so the drag goes on off the plot.
-      if (event.type === "pointerdown") event.currentTarget.setPointerCapture(event.pointerId);
-      if (event.type === "pointerdown" || event.buttons === 1) {
-        setGuess(toGuess(at));
-        setPicked(true);
-      }
-      return;
-    }
-    setMoved(true);
-    setStep(nearestStep(GROKKING_STEPS, at));
-    setShowTip(true);
-  };
-  // A mouse that leaves takes the tooltip with it. A lifted finger leaves the
-  // plot too, but a tap's tooltip should stay to be read, until focus moves on.
-  const onPointerLeave = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType !== "touch") setShowTip(false);
-  };
-  // Focus from the keyboard shows the tooltip; focus from a click does not,
-  // or it would outstay the pointer.
-  const onFocus = (event: FocusEvent<HTMLDivElement>) => {
-    if (!guessing && event.currentTarget.matches(":focus-visible")) setShowTip(true);
-  };
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "Escape") {
-      setShowTip(false);
-      return;
-    }
-    if (guessing) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        check();
-        return;
-      }
-      const notch =
-        event.key === "ArrowRight" ? GUESS_STEP : event.key === "ArrowLeft" ? -GUESS_STEP : 0;
-      if (event.key !== "Home" && event.key !== "End" && notch === 0) return;
-      event.preventDefault();
-      // From the latest guess, however fast the keys come.
-      setGuess((now) =>
-        event.key === "Home" ? 0 : event.key === "End" ? stepMax : toGuess(now + notch),
-      );
-      setPicked(true);
-      return;
-    }
-    setMoved(true);
-    const index = GROKKING_STEPS.indexOf(step);
-    const last = GROKKING_STEPS.length - 1;
-    const next =
-      event.key === "ArrowRight"
-        ? Math.min(last, index + 1)
-        : event.key === "ArrowLeft"
-          ? Math.max(0, index - 1)
-          : event.key === "Home"
-            ? 0
-            : event.key === "End"
-              ? last
-              : null;
-    if (next === null) return;
-    event.preventDefault();
-    setStep(GROKKING_STEPS[next]);
-    setShowTip(true);
-  };
-
   // The selected step, and only it, in words; rounded as the tooltip rounds.
   const note = stepSentence(labels.stepNote, GROKKING_RUNS, step, locale);
-  const answered = phase === "drawn";
 
   // The first time the chart is mostly in view, the marker and its name
   // lean right and come back, once, so the reader sees they can be moved.
   // Not after a move, and not under reduced motion.
-  const nudged = useRef(false);
   useOnceInView(
     ref,
     () => {
-      if (nudged.current) return;
-      nudged.current = true;
       const lean = { duration: NUDGE_MS, delay: 300, easing: EASE_TRAVEL };
       markerLine.current?.animate(
         [
@@ -390,23 +227,6 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
   const heard = answered
     ? `${labels.predict.verdict[grade]}. ${fillTemplate(labels.predict.result, { from: formatStep(crossing.min), to: formatStep(crossing.max) })}`
     : "";
-  // Check keeps focus in the chart, which it is about to answer, and stands
-  // the crosshair at the guess.
-  const check = () => {
-    if (!picked) return;
-    ref.current?.focus();
-    setStep(nearestStep(GROKKING_STEPS, guess));
-    setPhase("drawing");
-  };
-  const retry = () => {
-    ref.current?.focus();
-    setGuess(0);
-    setPicked(false);
-    setMoved(false);
-    setShowTip(false);
-    setStep(OPENING_STEP);
-    setPhase("guess");
-  };
   const howId = `${drawId}-how`;
   // Every read-out the row can show, laid under it unseen, so the row is as
   // tall as the longest of them at this width and never grows.
@@ -414,9 +234,9 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
     stepSentence(labels.stepNote, GROKKING_RUNS, tick, locale),
   );
 
-  const series: { metric: Metric; name: string; Mark: typeof UnseenMark }[] = [
-    { metric: "test", name: labels.unseen, Mark: UnseenMark },
-    { metric: "train", name: labels.seen, Mark: SeenMark },
+  const series: { metric: Metric; name: string }[] = [
+    { metric: "test", name: labels.unseen },
+    { metric: "train", name: labels.seen },
   ];
 
   // Until the tooltip has been measured once it is drawn unseen, so it never
@@ -528,12 +348,7 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
           // While guessing, a sideways drag moves the guess and an upward
           // one still scrolls the page.
           style={guessing ? { touchAction: "pan-y" } : undefined}
-          onPointerMove={pointAt}
-          onPointerDown={pointAt}
-          onPointerLeave={onPointerLeave}
-          onFocus={onFocus}
-          onBlur={() => setShowTip(false)}
-          onKeyDown={onKeyDown}
+          {...plotHandlers}
           // The chart convention for pointing at data. The reading itself
           // snaps to the nearest of the seven measured steps, which the
           // crosshair line, the grown marks and the inked step label show.
@@ -543,168 +358,22 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
             guessing ? "cursor-ew-resize select-none" : "cursor-crosshair",
           )}
         >
-          <svg
+          <GrokkingPlot
             width={width}
             height={plotHeight}
-            viewBox={`0 0 ${width} ${plotHeight}`}
-            className="block h-auto w-full"
-            aria-hidden="true"
-          >
-            {[0, 0.5, 1].map((value) => (
-              <g key={value}>
-                <line
-                  x1={MARGIN.left}
-                  x2={width - MARGIN.right}
-                  y1={y(value)}
-                  y2={y(value)}
-                  strokeWidth={1}
-                  className={value === 0 ? "stroke-control-border" : "stroke-border"}
-                />
-                <text
-                  x={MARGIN.left - 8}
-                  y={y(value)}
-                  textAnchor="end"
-                  dominantBaseline="central"
-                  fontSize={11}
-                  className="fill-muted-foreground font-mono"
-                >
-                  {formatPercent(value)}
-                </text>
-              </g>
-            ))}
-            {/* The selected step's label is always drawn, in ink, even where a
-                phone thins the axis to every other step: its neighbours are
-                then two steps away and there is room for it. */}
-            {GROKKING_STEPS.filter(
-              (tick, index) =>
-                index % tickEvery === 0 ||
-                tick === step ||
-                (answered && (tick === crossing.min || tick === crossing.max)),
-            ).map((tick) => (
-              <text
-                key={tick}
-                x={x(tick)}
-                y={plotHeight - MARGIN.bottom + 18}
-                textAnchor="middle"
-                fontSize={11}
-                className={
-                  !guessing && tick === step
-                    ? "fill-foreground font-mono font-medium"
-                    : "fill-muted-foreground font-mono"
-                }
-              >
-                {formatStep(tick)}
-              </text>
-            ))}
-
-            {/* Where every run passed 50% on new examples: the answer the guess
-                is graded against, drawn once the lines are. */}
-            {answered && (
-              <rect
-                x={x(crossing.min)}
-                y={MARGIN.top}
-                width={x(crossing.max) - x(crossing.min)}
-                height={plotHeight - MARGIN.bottom - MARGIN.top}
-                className="fill-iris/10 duration-400 animate-in fade-in-0 motion-reduce:animate-none"
-              />
-            )}
-            {!guessing && (
-              <line
-                x1={x(step)}
-                x2={x(step)}
-                y1={MARGIN.top - 6}
-                y2={plotHeight - MARGIN.bottom}
-                strokeWidth={1}
-                className="stroke-foreground/40"
-              />
-            )}
-            {/* The reader's guess: dashed, from its name down to the axis. It
-                waits at step 0 to be moved, and is kept after the answer. */}
-            <line
-              ref={markerLine}
-              x1={x(guess)}
-              x2={x(guess)}
-              y1={MARGIN.top - 10}
-              y2={plotHeight - MARGIN.bottom}
-              strokeWidth={1.5}
-              strokeDasharray="4 3"
-              className="stroke-iris"
-            />
-
-            {phase !== "drawn" && (
-              <defs>
-                <clipPath id={drawId}>
-                  {/* From just left of the first step, so its marks show whole. */}
-                  <rect
-                    ref={drawRef}
-                    x={MARGIN.left - 8}
-                    y={0}
-                    width={Math.max(0, width - MARGIN.left - MARGIN.right + 16)}
-                    height={plotHeight}
-                    style={{
-                      transformBox: "fill-box",
-                      transformOrigin: "left",
-                      transform: "scaleX(0)",
-                    }}
-                  />
-                </clipPath>
-              </defs>
-            )}
-            {GROKKING_RUNS.map((run) => (
-              <path
-                key={`train-${run.seed}`}
-                d={measuredPath(run.points, "train", x, y)}
-                fill="none"
-                strokeWidth={2}
-                strokeLinejoin="round"
-                className="stroke-control-border"
-              />
-            ))}
-            {/* The new examples, hidden until the reader has guessed. */}
-            <g clipPath={phase !== "drawn" ? `url(#${drawId})` : undefined}>
-              {GROKKING_RUNS.map((run) => (
-                <path
-                  key={`test-${run.seed}`}
-                  d={measuredPath(run.points, "test", x, y)}
-                  fill="none"
-                  strokeWidth={2}
-                  strokeLinejoin="round"
-                  className="stroke-iris"
-                />
-              ))}
-              {/* Circles first, squares over them: at 100% both series meet and
-                the hollow square frames the circle instead of hiding it. */}
-              {GROKKING_RUNS.flatMap((run) =>
-                run.points.map((p) => (
-                  <UnseenMark
-                    key={`t${run.seed}-${p.step}`}
-                    x={x(p.step)}
-                    y={y(p.test)}
-                    active={!guessing && p.step === step}
-                  />
-                )),
-              )}
-            </g>
-            {GROKKING_RUNS.flatMap((run) =>
-              run.points.map((p) => (
-                <SeenMark
-                  key={`s${run.seed}-${p.step}`}
-                  x={x(p.step)}
-                  y={y(p.train)}
-                  active={!guessing && p.step === step}
-                />
-              )),
-            )}
-
-            {/* The whole plot answers the pointer, not only the thin marks. */}
-            <rect
-              x={MARGIN.left}
-              y={0}
-              width={Math.max(0, width - MARGIN.left - MARGIN.right)}
-              height={plotHeight}
-              fill="transparent"
-            />
-          </svg>
+            x={x}
+            y={y}
+            step={step}
+            guess={guess}
+            phase={phase}
+            crossing={crossing}
+            tickEvery={tickEvery}
+            formatStep={formatStep}
+            formatPercent={formatPercent}
+            drawId={drawId}
+            drawRef={drawRef}
+            markerRef={markerLine}
+          />
 
           {/* The guess's name, above the 100% line where no line goes, always
               on its line: an outline while guessing (grab it, or drag
@@ -737,28 +406,15 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
             {markerName}
           </span>
 
-          {/* The key, in the corner the lines have left empty. Its surface
-              hides the crosshair as it passes, so the names stay whole. */}
-          <ul
+          <GrokkingKey
             ref={keyRef}
-            className="pointer-events-none absolute space-y-1 bg-card text-sm text-foreground"
+            series={series.filter(({ metric }) => answered || metric !== "test")}
             style={{
               right: MARGIN.right,
               bottom: MARGIN.bottom + KEY_INSET,
               maxWidth: width - MARGIN.right - x(KEY_FROM_STEP) - KEY_INSET,
             }}
-          >
-            {series
-              .filter(({ metric }) => answered || metric !== "test")
-              .map(({ metric, name, Mark }) => (
-                <li key={metric} className="flex items-start gap-2">
-                  <svg viewBox="0 0 12 12" className="mt-1 size-3 shrink-0" aria-hidden="true">
-                    <Mark x={6} y={6} />
-                  </svg>
-                  <span>{name}</span>
-                </li>
-              ))}
-          </ul>
+          />
 
           {/* The values at the marked step, one per run, marked as the key
               marks them. The step itself is on the axis under the crosshair
@@ -779,14 +435,12 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
                   : { left: 0, top: 0, visibility: "hidden" }
               }
             >
-              {series.map(({ metric, Mark }) => (
+              {series.map(({ metric }) => (
                 <p
                   key={metric}
                   className="flex items-center gap-2 whitespace-nowrap font-mono text-[11px] tabular-nums leading-4 text-foreground"
                 >
-                  <svg viewBox="0 0 12 12" className="size-3 shrink-0" aria-hidden="true">
-                    <Mark x={6} y={6} />
-                  </svg>
+                  <MarkSwatch metric={metric} />
                   {readoutAt(GROKKING_RUNS, step, metric, formatPercent).join(" · ")}
                 </p>
               ))}
@@ -798,32 +452,11 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
         </p>
 
         {!guessing && (
-          <table className="sr-only">
-            <caption>{labels.title}</caption>
-            <thead>
-              <tr>
-                <th scope="col">{labels.step}</th>
-                <th scope="col">{labels.run}</th>
-                <th scope="col">{labels.seen}</th>
-                <th scope="col">{labels.unseen}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {GROKKING_STEPS.flatMap((tick) =>
-                GROKKING_RUNS.map((run, index) => {
-                  const point = run.points.find((p) => p.step === tick);
-                  return (
-                    <tr key={`${tick}-${run.seed}`}>
-                      <td>{formatStep(tick)}</td>
-                      <td>{index + 1}</td>
-                      <td>{point ? formatPercent(point.train) : ""}</td>
-                      <td>{point ? formatPercent(point.test) : ""}</td>
-                    </tr>
-                  );
-                }),
-              )}
-            </tbody>
-          </table>
+          <GrokkingDataTable
+            labels={labels}
+            formatStep={formatStep}
+            formatPercent={formatPercent}
+          />
         )}
 
         {/* Last in the figure, as a caption must be first or last; the table
