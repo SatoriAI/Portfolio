@@ -12,7 +12,6 @@ import TimelineDialog from "@/components/experience/TimelineDialog";
 import { queryStatus } from "@/components/feedback/queryStatus";
 import StatusMessage from "@/components/feedback/StatusMessage";
 import PageClosing from "@/components/layout/PageClosing";
-import PageLayout from "@/components/layout/PageLayout";
 import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
 import Reveal from "@/components/Reveal";
@@ -220,7 +219,7 @@ const Experience = () => {
   };
 
   return (
-    <PageLayout>
+    <>
       {/* Every subpage opens the same way: the header alone on the page
           background, then its first section on white, the sections after
           it alternating, and the closing on the colour field. */}
@@ -369,7 +368,7 @@ const Experience = () => {
         copy={t.experience.closing}
         next={{ ...t.experience.closing.next, to: "/research" }}
       />
-    </PageLayout>
+    </>
   );
 };
 

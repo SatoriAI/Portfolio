@@ -5,7 +5,6 @@ import HeaderShapes from "@/components/brand/HeaderShapes";
 import { queryStatus } from "@/components/feedback/queryStatus";
 import StatusMessage from "@/components/feedback/StatusMessage";
 import PageClosing from "@/components/layout/PageClosing";
-import PageLayout from "@/components/layout/PageLayout";
 import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -62,7 +61,7 @@ const Education = () => {
   };
 
   return (
-    <PageLayout>
+    <>
       <Section className="relative isolate overflow-hidden md:py-10">
         <HeaderShapes variant="education" />
         <SectionHeading
@@ -131,7 +130,7 @@ const Education = () => {
 
       {/* How the page ends, as every subpage does, on the colour field. */}
       <PageClosing copy={story.closing} next={{ ...story.closing.next, to: "/workshop" }} />
-    </PageLayout>
+    </>
   );
 };
 

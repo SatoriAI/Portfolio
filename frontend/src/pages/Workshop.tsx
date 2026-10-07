@@ -1,7 +1,6 @@
 import HeaderShapes from "@/components/brand/HeaderShapes";
 import StatusMessage from "@/components/feedback/StatusMessage";
 import PageClosing from "@/components/layout/PageClosing";
-import PageLayout from "@/components/layout/PageLayout";
 import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
 import WorkshopIndex from "@/components/workshop/WorkshopIndex";
@@ -31,7 +30,7 @@ const Workshop = () => {
   };
 
   return (
-    <PageLayout>
+    <>
       {/* The header as every subpage opens: alone on the page background,
           over its own drawing, here a sheet from the bench. */}
       <Section className="relative isolate overflow-hidden md:py-10">
@@ -54,7 +53,7 @@ const Workshop = () => {
       </Section>
 
       <PageClosing copy={w.closing} />
-    </PageLayout>
+    </>
   );
 };
 

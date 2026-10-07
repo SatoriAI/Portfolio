@@ -1,7 +1,8 @@
-import { lazy, Suspense } from "react";
+import { lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 
+import PageLayout from "@/components/layout/PageLayout";
 import ScrollToTop from "@/components/ScrollToTop";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -30,20 +31,20 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ScrollToTop />
-            <Suspense fallback={<div className="min-h-screen bg-background" />}>
-              <Routes>
+            <Routes>
+              {/* Every page inside one layout, which stays mounted between them. */}
+              <Route element={<PageLayout />}>
                 <Route path="/" element={<Index />} />
                 <Route path="/experience" element={<Experience />} />
                 <Route path="/research" element={<Academic />} />
                 {/* The page's old address, kept so shared links still land. */}
                 <Route path="/academic" element={<Navigate to="/research" replace />} />
                 <Route path="/education" element={<Education />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="/workshop" element={<Workshop />} />
                 <Route path="/workshop/:slug" element={<WorkshopArticle />} />
                 <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
+              </Route>
+            </Routes>
           </BrowserRouter>
         </TooltipProvider>
       </VexProvider>

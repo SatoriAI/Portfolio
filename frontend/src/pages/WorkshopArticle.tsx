@@ -4,8 +4,8 @@ import { ArrowLeft } from "lucide-react";
 
 import { queryStatus } from "@/components/feedback/queryStatus";
 import { Col, Grid } from "@/components/layout/Grid";
+import { useLauncherAside } from "@/components/layout/launcherAside";
 import PageClosing from "@/components/layout/PageClosing";
-import PageLayout from "@/components/layout/PageLayout";
 import Section from "@/components/layout/Section";
 import ArticleBody from "@/components/workshop/ArticleBody";
 import { EXHIBITS } from "@/components/workshop/exhibitRegistry";
@@ -40,6 +40,8 @@ const WorkshopArticle = () => {
   const t = translations[language];
   const w = t.workshop;
   const articleRef = useRef<HTMLDivElement>(null);
+  // The chat button stands aside over the text (see PageLayout).
+  useLauncherAside(articleRef);
   const article = articlesFor(workshopArticles, language, { drafts: showDrafts }).find(
     (piece) => piece.slug === slug,
   );
@@ -82,7 +84,7 @@ const WorkshopArticle = () => {
   let numbered = 0;
 
   return (
-    <PageLayout launcherClearOf={articleRef}>
+    <>
       <Section className="md:py-10">
         {/* The chat button stands aside over all of this, the evidence card included. */}
         <div ref={articleRef}>
@@ -203,7 +205,7 @@ const WorkshopArticle = () => {
             : { lead: w.related, label: w.all, to: "/workshop" }
         }
       />
-    </PageLayout>
+    </>
   );
 };
 
