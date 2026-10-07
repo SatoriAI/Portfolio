@@ -573,8 +573,6 @@ const copy = {
       author: "Author",
       authors: "Authors",
       status: { published: "Published", preprint: "Preprint" },
-      more: "More",
-      less: "Less",
       /** Two or three sentences per paper, keyed by its link; the abstract sits behind a toggle. */
       publicationSummaries: {
         "https://doi.org/10.1016/j.jat.2023.105921":
@@ -1179,8 +1177,6 @@ const copy = {
       author: "Autor",
       authors: "Autorzy",
       status: { published: "Opublikowano", preprint: "Preprint" },
-      more: "Więcej",
-      less: "Mniej",
       publicationSummaries: {
         "https://doi.org/10.1016/j.jat.2023.105921":
           "Na stożku brzeg i wierzchołek zmieniają sposób, w jaki rozchodzi się ciepło. Jak oszacować, na ile ogrzanie jednego punktu wpływa na temperaturę w innym? W tej pracy wyznaczamy oszacowania z dołu i z góry, osobno dla stożka i dla jego powierzchni.",

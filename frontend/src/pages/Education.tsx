@@ -46,8 +46,6 @@ const Education = () => {
   const threadLabels = {
     advisor: t.academic.advisor,
     researchAreas: t.academic.researchAreas,
-    more: t.academic.more,
-    less: t.academic.less,
     steps: t.academic.degreeSteps,
     heatHint: t.academic.heatHint,
     newTab: t.academic.newTab,
