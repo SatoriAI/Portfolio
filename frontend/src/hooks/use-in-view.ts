@@ -3,8 +3,10 @@ import { type RefObject, useEffect, useLayoutEffect, useRef, useState } from "re
 import { useLatest } from "@/hooks/use-latest";
 
 /**
- * What to watch: a ref, or the element itself, held in state through a
- * callback ref, for an element that may mount after the hook first runs.
+ * What to watch: a ref, for an element mounted with the component, or the
+ * element itself, held in state through a callback ref. A ref is read when
+ * the hook first runs and never again, so an element that can mount later
+ * (after an early return, inside a fold) must be passed as state.
  */
 export type InViewTarget = RefObject<Element | null> | Element | null | undefined;
 

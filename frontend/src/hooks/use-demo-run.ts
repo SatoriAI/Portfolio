@@ -76,8 +76,13 @@ export function useDemoRun<T extends Element>(
 
   const stop = useCallback(() => {
     stopped.current = true;
+    window.clearTimeout(timer.current);
     cancelAnimationFrame(frame.current);
   }, []);
+  // Asking for reduced motion mid-run stops the run where it is.
+  useEffect(() => {
+    if (prefersReducedMotion) stop();
+  }, [prefersReducedMotion, stop]);
 
   return { ref: setElement, stop };
 }

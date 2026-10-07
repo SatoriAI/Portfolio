@@ -102,7 +102,7 @@ const CircleFlight = ({ roles, section, from, to, onPhase }: CircleFlightProps) 
         }px)`;
       });
     },
-    { watch: [roles.length] },
+    { watch: roles.length },
   );
 
   return createPortal(

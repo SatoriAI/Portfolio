@@ -66,7 +66,7 @@ const WorkshopArticle = () => {
       });
       setCurrent(at);
     },
-    { watch: [sections] },
+    { watch: sections },
   );
 
   if (!article) return <NotFound />;

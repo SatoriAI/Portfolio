@@ -5,13 +5,13 @@ import { useLatest } from "@/hooks/use-latest";
 /**
  * Runs `onFrame` before the first paint, then at most once a frame after any
  * scroll or resize, for drawings that follow the scroll. The latest
- * `onFrame` is the one run, so the listeners are added once; `watch` lists
+ * `onFrame` is the one run, so the listeners are added once; `watch` is
  * what, when it changes, calls for an immediate run (e.g. the elements it
  * measures). Idle while `enabled` is false.
  */
 export function useScrollFrame(
   onFrame: () => void,
-  { watch = [], enabled = true }: { watch?: readonly unknown[]; enabled?: boolean } = {},
+  { watch, enabled = true }: { watch?: unknown; enabled?: boolean } = {},
 ) {
   const latest = useLatest(onFrame);
   useLayoutEffect(() => {
@@ -32,7 +32,5 @@ export function useScrollFrame(
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
     };
-    // `watch` is the caller's list of what calls for a fresh run.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, latest, ...watch]);
+  }, [enabled, latest, watch]);
 }

@@ -271,13 +271,14 @@ const Experience = () => {
                 onClose={close}
                 labels={t.experience.dialog}
               >
-                {(id, closeDialog) => {
+                {(id, closeDialog, Heading) => {
                   const role = roles.find((candidate) => candidate.entry.id === id);
                   return (
                     role && (
                       <RoleEntry
                         experience={role.experience}
                         labels={entryLabels}
+                        Heading={Heading}
                         // Shrink the entry away first, so the chat opens on the page.
                         onAsk={(question) => closeDialog(() => askVex(question))}
                       />

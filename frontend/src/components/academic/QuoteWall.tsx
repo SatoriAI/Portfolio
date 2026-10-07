@@ -130,7 +130,7 @@ const QuoteWall = ({ testimonials, themes, evidence, labels, className }: QuoteW
         note.style.rotate = `${(-tilt * (1 - pinned)).toFixed(3)}deg`;
       });
     },
-    { watch: [testimonials], enabled: !prefersReducedMotion },
+    { watch: testimonials, enabled: !prefersReducedMotion },
   );
   // Turned off mid-visit, reduced motion leaves every note where it belongs.
   useLayoutEffect(() => {

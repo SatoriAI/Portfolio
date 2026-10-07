@@ -302,7 +302,9 @@ const ResearchThread = ({
   // Nothing waits under reduced motion: the road is simply there.
   const prefersReducedMotion = usePrefersReducedMotion();
   const [arrival, setArrival] = useState<Arrival>(prefersReducedMotion ? "done" : "waiting");
-  const root = useRef<HTMLDivElement>(null);
+  // In state, not a ref: the thread can render nothing at first (see below)
+  // and mount its road later, and the hooks must see it when it does.
+  const [root, setRoot] = useState<HTMLDivElement | null>(null);
   const last = schools.length - 1;
   useOnceInView(root, () => setArrival("walking"), {
     threshold: 0.3,
@@ -351,7 +353,7 @@ const ResearchThread = ({
 
   return (
     <TabsPrimitive.Root
-      ref={root}
+      ref={setRoot}
       orientation="vertical"
       value={String(current.id)}
       onValueChange={choose}

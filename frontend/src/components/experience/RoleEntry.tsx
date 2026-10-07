@@ -1,3 +1,4 @@
+import type { ElementType, ReactNode } from "react";
 import { MessageSquare } from "lucide-react";
 
 import CompanyMark from "@/components/experience/CompanyMark";
@@ -26,9 +27,11 @@ type RoleEntryProps = {
   experience: UiExperience;
   labels: RoleEntryLabels;
   onAsk: (question: string) => void;
+  /** The company's heading; a dialog passes its own, which names it. */
+  Heading?: ElementType<{ className?: string; children: ReactNode }>;
 };
 
-const RoleEntry = ({ experience, labels, onAsk }: RoleEntryProps) => (
+const RoleEntry = ({ experience, labels, onAsk, Heading = "h2" }: RoleEntryProps) => (
   <article className="grid grid-cols-4 gap-x-6 gap-y-6 md:grid-cols-12">
     <header className="col-span-4 md:col-span-5">
       <CompanyMark company={experience.company} className="size-14 text-sm" />
@@ -36,9 +39,9 @@ const RoleEntry = ({ experience, labels, onAsk }: RoleEntryProps) => (
         {experience.period}
         {experience.location && ` · ${experience.location}`}
       </p>
-      <h3 className="mt-2 text-card-title-sm font-semibold md:text-card-title">
+      <Heading className="mt-2 text-card-title-sm font-semibold md:text-card-title">
         {experience.company}
-      </h3>
+      </Heading>
       <p className="mt-1 text-base text-muted-foreground">{experience.position}</p>
       {experience.technologies.length > 0 && (
         <div className="mt-6">

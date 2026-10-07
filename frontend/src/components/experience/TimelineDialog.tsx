@@ -50,9 +50,25 @@ type TimelineDialogProps<Id extends TimelineId> = {
   /** Called once the panel has shrunk away. */
   onClose: () => void;
   labels: TimelineDialogLabels;
-  /** The entry's content; `close` shrinks the panel away, then runs `after`. */
-  children: (id: Id, close: (after?: () => void) => void) => ReactNode;
+  /**
+   * The entry's content; `close` shrinks the panel away, then runs `after`.
+   * `Heading` is the entry's visible heading, which also names the dialog.
+   */
+  children: (
+    id: Id,
+    close: (after?: () => void) => void,
+    Heading: typeof DialogHeading,
+  ) => ReactNode;
 };
+
+/** The entry's heading (an h2), and the dialog's accessible name with it. */
+export const DialogHeading = ({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) => <DialogPrimitive.Title className={className}>{children}</DialogPrimitive.Title>;
 
 /**
  * Longer than the kit's 400 ms section entrance: the panel travels further
@@ -195,15 +211,13 @@ const TimelineDialog = <Id extends TimelineId>({
 
           {item && (
             <>
-              {/* The dialog names itself, whatever its content sets as a heading. */}
-              <DialogPrimitive.Title className="sr-only">{item.name}</DialogPrimitive.Title>
               <div ref={body} className="overflow-y-auto px-6 pb-8 pt-6 sm:px-8 sm:pt-8">
                 {/* Keyed, so a step to another entry fades the new one in. */}
                 <div
                   key={item.id}
                   className="duration-300 animate-in fade-in-0 motion-reduce:animate-none"
                 >
-                  {children(item.id, close)}
+                  {children(item.id, close, DialogHeading)}
                 </div>
               </div>
 
