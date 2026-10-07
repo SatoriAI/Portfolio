@@ -85,6 +85,15 @@ export async function apiFetch<TResponse extends JsonValue, TBody extends JsonVa
 export const apiClient = {
   get: <T>(path: string, query?: FetchOptions<never>["query"]) =>
     apiFetch<T>(path, { method: "GET", query }),
+  /**
+   * A list as the backend stores it, the same whatever the site's language:
+   * every translation included, and the few labels the backend would
+   * translate itself (a degree, a season, a skill's level) left in English
+   * for the site to translate. Fetched once, it serves both languages
+   * (see lib/queries.ts).
+   */
+  getList: <T>(path: string) =>
+    apiFetch<T>(path, { method: "GET", headers: { "Accept-Language": "en" } }),
   post: <T, B = unknown>(path: string, body?: B) => apiFetch<T, B>(path, { method: "POST", body }),
   put: <T, B = unknown>(path: string, body?: B) => apiFetch<T, B>(path, { method: "PUT", body }),
   patch: <T, B = unknown>(path: string, body?: B) =>

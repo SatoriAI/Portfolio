@@ -98,4 +98,6 @@ const mockSkills: ApiSkill[] = [
 
 /** Every translation at once: the page picks its language (see lib/queries.ts). */
 export const fetchSkills = (): Promise<ApiSkill[]> =>
-  env.mock ? Promise.resolve(mockSkills) : apiClient.get<ApiSkill[]>(endpoints.work.skills.list);
+  env.mock
+    ? Promise.resolve(mockSkills)
+    : apiClient.getList<ApiSkill[]>(endpoints.work.skills.list);

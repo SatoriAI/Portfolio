@@ -39,4 +39,4 @@ export function mapApiProjectToUi(project: ApiProject, language: string): UiProj
 
 /** Every translation at once: the page picks its language (see lib/queries.ts). */
 export const fetchProjects = (): Promise<ApiProject[]> =>
-  apiClient.get<ApiProject[]>(endpoints.work.projects.list);
+  apiClient.getList<ApiProject[]>(endpoints.work.projects.list);
