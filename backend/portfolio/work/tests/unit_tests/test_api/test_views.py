@@ -190,7 +190,8 @@ class ExperienceListViewTestCase(TestCase):
         item = response.json()[0]
 
         self.assertEqual(item["id"], obj.id)
-        self.assertTrue(item["visible"])
+        # Only visible roles are listed, so the flag stays internal.
+        self.assertNotIn("visible", item)
         self.assertListEqual(item["tools"], ["Claude Code"])
         self.assertListEqual(item["topics"], ["Databases", "Testing"])
         en, pl = item["translations"]["en"], item["translations"]["pl"]

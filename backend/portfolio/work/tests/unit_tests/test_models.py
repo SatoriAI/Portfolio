@@ -183,6 +183,35 @@ class WorkModelsTestCase(TestCase):
         self.assertNotIn("Topics:", text)
         self.assertNotIn("Responsibilities:", text)
 
+    def test_experience_representation_gives_the_old_write_up_only_where_the_new_is_empty(self) -> None:
+        old_only = Experience.objects.create(
+            position="Engineer",
+            start=fake.date_object(),
+            company="Acme",
+            location="Online",
+            description="Old paragraph",
+            achievements=["Old bullet"],
+        )
+        text = old_only.representation_for("en")
+        self.assertIn("Description: Old paragraph", text)
+        self.assertIn("Achievements: Old bullet", text)
+
+        rewritten = Experience.objects.create(
+            position="Engineer",
+            start=fake.date_object(),
+            company="Globex",
+            location="Online",
+            responsibilities="New paragraph",
+            results=["New result"],
+            description="Old paragraph",
+            achievements=["Old bullet"],
+        )
+        text = rewritten.representation_for("en")
+        self.assertIn("Responsibilities: New paragraph", text)
+        self.assertIn("Results: New result", text)
+        self.assertNotIn("Old paragraph", text)
+        self.assertNotIn("Old bullet", text)
+
     def test_experience_representation_falls_back_to_position(self) -> None:
         obj = Experience.objects.create(
             position="Engineer", start=fake.date_object(), company="Acme", location="Online"

@@ -2,7 +2,7 @@ from typing import cast
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.utils.translation import get_language
+from django.utils.translation import get_language, pgettext_lazy
 from django.utils.translation import gettext_lazy as _
 from parler.managers import TranslatableManager, TranslatableQuerySet
 from parler.models import TranslatableModel, TranslatedFields
@@ -86,14 +86,14 @@ class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
     technologies = ArrayField(models.CharField(_("Technologies"), max_length=128), null=True, blank=True)
     tools = ArrayField(
         models.CharField(max_length=128),
-        verbose_name=_("Tools"),
+        verbose_name=pgettext_lazy("experience", "Tools"),
         null=True,
         blank=True,
         help_text=_("Programming tools used in the role, e.g. Copilot, Claude Code."),
     )
     topics = ArrayField(
         models.CharField(max_length=128),
-        verbose_name=_("Topics"),
+        verbose_name=pgettext_lazy("experience", "Topics"),
         null=True,
         blank=True,
         help_text=_("Subjects taught, for a teaching or training role."),
@@ -105,14 +105,29 @@ class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
     )
 
     translations = TranslatedFields(
-        role=models.CharField(_("Role"), max_length=128, blank=True),
-        location=models.CharField(_("Location"), max_length=128),
-        product=models.TextField(_("Product"), null=True, blank=True),
-        responsibilities=models.TextField(_("Responsibilities"), null=True, blank=True),
-        contributions=ArrayField(
-            models.CharField(max_length=512), verbose_name=_("Contributions"), null=True, blank=True
+        role=models.CharField(
+            _("Role"),
+            max_length=128,
+            blank=True,
+            # Kept in the database too, so the release before this one can still add a translation.
+            db_default="",
+            help_text=_("The role's title in this language; it replaces Position, still shown by the current site."),
         ),
-        results=ArrayField(models.CharField(max_length=512), verbose_name=_("Results"), null=True, blank=True),
+        location=models.CharField(_("Location"), max_length=128),
+        product=models.TextField(pgettext_lazy("experience", "Product"), null=True, blank=True),
+        responsibilities=models.TextField(pgettext_lazy("experience", "Responsibilities"), null=True, blank=True),
+        contributions=ArrayField(
+            models.CharField(max_length=512),
+            verbose_name=pgettext_lazy("experience", "Contributions"),
+            null=True,
+            blank=True,
+        ),
+        results=ArrayField(
+            models.CharField(max_length=512),
+            verbose_name=pgettext_lazy("experience", "Results"),
+            null=True,
+            blank=True,
+        ),
         # Read by the current site; replaced by the four fields above.
         description=models.TextField(_("Description"), null=True, blank=True),
         achievements=ArrayField(models.CharField(_("Achievements"), max_length=512), null=True, blank=True),
@@ -134,6 +149,10 @@ class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
         def items(field: str) -> str:
             return "; ".join(self.safe_translation_getter(field, language_code=lang, any_language=True) or [])
 
+        # The old write-up only where the new one has nothing in its place, so
+        # Vex never reads two accounts of the same role.
+        rewritten = bool(text("responsibilities") or text("product"))
+        listed = bool(items("contributions") or items("results"))
         lines = [
             f"Experience: {text('role') or self.position} at {self.company}",
             f"Period: {self.period}",
@@ -145,8 +164,8 @@ class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
             f"Responsibilities: {text('responsibilities')}",
             f"Contributions: {items('contributions')}",
             f"Results: {items('results')}",
-            f"Description: {text('description')}",
-            f"Achievements: {items('achievements')}",
+            f"Description: {'' if rewritten else text('description')}",
+            f"Achievements: {'' if listed else items('achievements')}",
         ]
         # Only what the role has: an empty line tells Vex nothing.
         return "\n".join(line for line in lines if not line.endswith(": "))
