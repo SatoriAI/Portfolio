@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Box, ChevronRight, Sparkles } from "lucide-react";
 
+import BrandMark from "@/components/brand/BrandMark";
 import { groupTechnologies, techGroupOf } from "@/config/techGroups";
 import { techIcon } from "@/config/techIcons";
 import { useInView } from "@/hooks/use-in-view";
@@ -46,11 +47,7 @@ const TechMark = ({
       <Box ref={markRef} aria-hidden="true" className={cn("text-muted-foreground", className)} />
     );
   }
-  return (
-    <svg ref={markRef} aria-hidden="true" viewBox="0 0 24 24" fill={icon.hex} className={className}>
-      <path d={icon.path} />
-    </svg>
-  );
+  return <BrandMark icon={icon} className={className} markRef={markRef} />;
 };
 
 /** The next control: a 44px target, quiet until pointed at. */
