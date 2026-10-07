@@ -3,14 +3,14 @@ import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { ArrowUp, ChevronLeft, ChevronRight, CodeXml, ExternalLink, Lock } from "lucide-react";
 
 import BuildLine from "@/components/home/BuildLine";
-import LiveCheck, { type CheckState, type LiveCheckLabels } from "@/components/home/LiveCheck";
+import LiveCheck, { type LiveCheckLabels } from "@/components/home/LiveCheck";
 import ProjectWindow from "@/components/home/ProjectWindow";
 import { Button } from "@/components/ui/button";
 import { projectIcons } from "@/config/projectIcons";
 import { useOnceInView } from "@/hooks/use-in-view";
 import type { LiveChecks } from "@/hooks/use-live-checks";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
-import { hostOf } from "@/lib/liveCheck";
+import { type CheckState, hostOf } from "@/lib/liveCheck";
 import { isThisSite } from "@/lib/projectLinks";
 import type { UiProject } from "@/lib/projectsService";
 import { fillTemplate } from "@/lib/text";
