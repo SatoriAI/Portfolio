@@ -150,6 +150,45 @@ class WorkModelsTestCase(TestCase):
         # trailing space after hyphen is expected by current implementation
         self.assertEqual(obj.period, f"{start.year} - ")
 
+    def test_experience_is_visible_by_default_and_can_be_hidden(self) -> None:
+        shown = Experience.objects.create(
+            position="Engineer", start=fake.date_object(), company="Acme", location="Online"
+        )
+        hidden = Experience.objects.create(
+            position="Engineer", start=fake.date_object(), company="Globex", location="Online", visible=False
+        )
+        self.assertTrue(shown.visible)
+        self.assertListEqual(list(Experience.objects.visible()), [shown])
+        self.assertIn(hidden, Experience.objects.all())
+
+    def test_experience_representation_uses_the_structured_fields(self) -> None:
+        obj = Experience.objects.create(
+            position="Engineer",
+            start=fake.date_object(),
+            company="Acme",
+            location="Online",
+            role="Python Backend Engineer",
+            tools=["Claude Code"],
+            product="A grant platform",
+            contributions=["Designed the API"],
+            results=["Half the filing time"],
+        )
+        text = obj.representation_for("en")
+        self.assertIn("Experience: Python Backend Engineer at Acme", text)
+        self.assertIn("Tools: Claude Code", text)
+        self.assertIn("Product: A grant platform", text)
+        self.assertIn("Contributions: Designed the API", text)
+        self.assertIn("Results: Half the filing time", text)
+        # Fields the role does not have are left out rather than given empty.
+        self.assertNotIn("Topics:", text)
+        self.assertNotIn("Responsibilities:", text)
+
+    def test_experience_representation_falls_back_to_position(self) -> None:
+        obj = Experience.objects.create(
+            position="Engineer", start=fake.date_object(), company="Acme", location="Online"
+        )
+        self.assertIn("Experience: Engineer at Acme", obj.representation_for("en"))
+
     def test_experience_translations(self) -> None:
         obj = Experience.objects.create(
             position="Engineer",

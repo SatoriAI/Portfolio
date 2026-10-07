@@ -67,6 +67,9 @@ class ExperienceFactory(DjangoModelFactory, i18nMixin):
     start = factory.Faker("date_between", start_date="-10y", end_date="-2y")
     company = factory.Faker("company")
     technologies = factory.LazyFunction(lambda: random.sample(TECH_STACK, k=random.randint(2, 5)))
+    tools = factory.LazyFunction(lambda: random.sample(["Copilot", "Claude Code", "Cursor"], k=1))
+    topics = None
+    visible = True
 
     @factory.lazy_attribute
     def end(self):
@@ -75,7 +78,12 @@ class ExperienceFactory(DjangoModelFactory, i18nMixin):
         return fake.date_between(start_date=self.start, end_date="today")
 
     # Translated fields (current language)
+    role = factory.SelfAttribute("position")
     location = factory.Faker("city")
+    product = factory.Faker("paragraph")
+    responsibilities = factory.Faker("paragraph")
+    contributions = factory.LazyFunction(lambda: [fake.sentence(nb_words=10) for _ in range(random.randint(1, 3))])
+    results = factory.LazyFunction(lambda: [fake.sentence(nb_words=8) for _ in range(random.randint(1, 2))])
     description = factory.Faker("paragraph")
     achievements = factory.LazyFunction(lambda: [fake.sentence(nb_words=10) for _ in range(random.randint(1, 3))])
 

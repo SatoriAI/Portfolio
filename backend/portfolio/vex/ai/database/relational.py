@@ -145,6 +145,9 @@ class RelationalContextGetter:
 
         for model in self._get_requirements():
             qs = model.objects.all()  # type: ignore[attr-defined]
+            # A model that can hide rows (a hidden role) gives Vex only what the site shows.
+            if hasattr(qs, "visible"):
+                qs = qs.visible()
             if hasattr(model, "translations"):
                 qs = qs.prefetch_related("translations")
 

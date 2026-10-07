@@ -52,6 +52,14 @@ class RelationalContextGetterTestCase(TestCase):
         self.assertIn("Engineer", body)
         self.assertIn("Acme", body)
 
+    def test_hidden_experience_is_not_given_to_vex(self) -> None:
+        ExperienceFactory(position="Engineer", company="Acme")
+        ExperienceFactory(position="Engineer", company="Hidden Corp", visible=False)
+        getter = RelationalContextGetter(question="Tell me about his work experience")
+        body = "\n\n".join(d.page_content for d in getter.get_context())
+        self.assertIn("Acme", body)
+        self.assertNotIn("Hidden Corp", body)
+
     def test_limit_per_model_respected(self) -> None:
         # Create more items than the limit and assert truncation
         for _ in range(15):

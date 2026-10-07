@@ -21,7 +21,7 @@ class ProjectViewSet(generics.ListAPIView):
 @extend_schema(summary="List Experiences", tags=["Work"])
 class ExperienceViewSet(generics.ListAPIView):
     queryset = (
-        Experience.objects.all()
+        Experience.objects.visible()
         .annotate(
             is_current=Case(
                 When(end__isnull=True, then=Value(1)),
