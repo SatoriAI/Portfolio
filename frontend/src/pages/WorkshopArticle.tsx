@@ -2,7 +2,6 @@ import { useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
-import HeatField from "@/components/brand/HeatField";
 import { queryStatus } from "@/components/feedback/queryStatus";
 import { Col, Grid } from "@/components/layout/Grid";
 import PageClosing from "@/components/layout/PageClosing";
@@ -194,24 +193,16 @@ const WorkshopArticle = () => {
         </div>
       </Section>
 
-      {/* Pushed to the foot of a short page, so it closes the page right
-          above the footer rather than leaving a gap under it. */}
-      <HeatField className="mt-auto">
-        <Section className="py-12 md:py-20">
-          <PageClosing
-            split={4}
-            subject={article.title}
-            title={w.articleClosing.title}
-            body={w.articleClosing.body}
-            labels={{ email: w.articleClosing.email, askVex: t.hero.askAI }}
-            next={
-              article.related && relatedName
-                ? { lead: w.related, label: relatedName, to: article.related }
-                : { lead: w.related, label: w.all, to: "/workshop" }
-            }
-          />
-        </Section>
-      </HeatField>
+      <PageClosing
+        split={4}
+        subject={article.title}
+        copy={w.articleClosing}
+        next={
+          article.related && relatedName
+            ? { lead: w.related, label: relatedName, to: article.related }
+            : { lead: w.related, label: w.all, to: "/workshop" }
+        }
+      />
     </PageLayout>
   );
 };

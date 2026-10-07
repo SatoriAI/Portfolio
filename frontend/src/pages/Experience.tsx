@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 
 import HeaderShapes from "@/components/brand/HeaderShapes";
-import HeatField from "@/components/brand/HeatField";
 import CareerTimeline, { type TimelineEntry } from "@/components/experience/CareerTimeline";
 import CircleFlight, { type FlightPhase } from "@/components/experience/CircleFlight";
 import { circleState } from "@/components/experience/circleStyles";
@@ -366,18 +365,10 @@ const Experience = () => {
 
       {/* How the page ends, as every subpage does: a question in its own
           terms and two ways to answer it. */}
-      {/* Pushed to the foot of a short page, so it closes the page right
-          above the footer rather than leaving a gap under it. */}
-      <HeatField className="mt-auto">
-        <Section className="py-12 md:py-20">
-          <PageClosing
-            title={t.experience.closing.title}
-            body={t.experience.closing.body}
-            labels={{ email: t.experience.closing.email, askVex: t.hero.askAI }}
-            next={{ ...t.experience.closing.next, to: "/research" }}
-          />
-        </Section>
-      </HeatField>
+      <PageClosing
+        copy={t.experience.closing}
+        next={{ ...t.experience.closing.next, to: "/research" }}
+      />
     </PageLayout>
   );
 };

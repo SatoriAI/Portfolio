@@ -1,5 +1,4 @@
 import HeaderShapes from "@/components/brand/HeaderShapes";
-import HeatField from "@/components/brand/HeatField";
 import StatusMessage from "@/components/feedback/StatusMessage";
 import PageClosing from "@/components/layout/PageClosing";
 import PageLayout from "@/components/layout/PageLayout";
@@ -54,17 +53,7 @@ const Workshop = () => {
         )}
       </Section>
 
-      {/* Pushed to the foot of a short page, so it closes the page right
-          above the footer rather than leaving a gap under it. */}
-      <HeatField className="mt-auto">
-        <Section className="py-12 md:py-20">
-          <PageClosing
-            title={w.closing.title}
-            body={w.closing.body}
-            labels={{ email: w.closing.email, askVex: t.hero.askAI }}
-          />
-        </Section>
-      </HeatField>
+      <PageClosing copy={w.closing} />
     </PageLayout>
   );
 };

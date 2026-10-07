@@ -13,7 +13,6 @@ import PublicationStack from "@/components/academic/PublicationStack";
 import SharpBoundsFigure, { SharpBoundsControls } from "@/components/academic/SharpBoundsFigure";
 import StageHeading from "@/components/academic/StageHeading";
 import HeaderShapes from "@/components/brand/HeaderShapes";
-import HeatField from "@/components/brand/HeatField";
 import { queryStatus } from "@/components/feedback/queryStatus";
 import StatusMessage from "@/components/feedback/StatusMessage";
 import { MathText } from "@/components/Formula";
@@ -403,18 +402,10 @@ const Academic = () => {
 
       {/* How the page ends, as every subpage does: a question in its own
           terms and two ways to answer it. */}
-      {/* Pushed to the foot of a short page, so it closes the page right
-          above the footer rather than leaving a gap under it. */}
-      <HeatField className="mt-auto">
-        <Section className="py-12 md:py-20">
-          <PageClosing
-            title={story.researchClosing.title}
-            body={story.researchClosing.body}
-            labels={{ email: story.researchClosing.email, askVex: t.hero.askAI }}
-            next={{ ...story.researchClosing.next, to: "/education" }}
-          />
-        </Section>
-      </HeatField>
+      <PageClosing
+        copy={story.researchClosing}
+        next={{ ...story.researchClosing.next, to: "/education" }}
+      />
     </PageLayout>
   );
 };
