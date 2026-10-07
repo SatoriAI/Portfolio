@@ -1,10 +1,7 @@
-import { GROKKING_STEPS, linearScale } from "@/lib/grokking";
+import { GROKKING_STEPS, linearScale, STEP_MAX } from "@/lib/grokking";
 
 /** The top margin holds the guess's name, above the 100% line, clear of every line. */
 export const MARGIN = { left: 44, right: 24, top: 46, bottom: 30 };
-
-/** The last measured step, where the step axis ends. */
-export const STEP_MAX = GROKKING_STEPS[GROKKING_STEPS.length - 1];
 
 /**
  * The plot laid out at a width in CSS pixels, so text in it stays at its set

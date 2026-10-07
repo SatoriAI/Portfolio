@@ -2,11 +2,12 @@ import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { RotateCcw } from "lucide-react";
 
 import FigureFrame from "@/components/academic/FigureFrame";
-import { MARGIN, plotGeometry, STEP_MAX } from "@/components/academic/grokking/geometry";
+import { MARGIN, plotGeometry } from "@/components/academic/grokking/geometry";
 import GrokkingDataTable from "@/components/academic/grokking/GrokkingDataTable";
 import GrokkingKey from "@/components/academic/grokking/GrokkingKey";
 import GrokkingPlot from "@/components/academic/grokking/GrokkingPlot";
 import GrokkingTooltip from "@/components/academic/grokking/GrokkingTooltip";
+import { MARK_REACH } from "@/components/academic/grokking/marks";
 import { useGuessAndRead } from "@/components/academic/grokking/use-guess-and-read";
 import { Button } from "@/components/ui/button";
 import { useElementSize } from "@/hooks/use-element-size";
@@ -23,6 +24,7 @@ import {
   percentFormat,
   placeBeside,
   runSegments,
+  STEP_MAX,
   type StepDescription,
   stepSentence,
   valuesAt,
@@ -233,10 +235,10 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
   // tooltip must never hide the very points it reads out.
   const marksAtStep = (["train", "test"] as const).flatMap((metric) =>
     valuesAt(GROKKING_RUNS, step, metric).map((value) => ({
-      left: x(step) - 6,
-      top: y(value) - 6,
-      right: x(step) + 6,
-      bottom: y(value) + 6,
+      left: x(step) - MARK_REACH,
+      top: y(value) - MARK_REACH,
+      right: x(step) + MARK_REACH,
+      bottom: y(value) + MARK_REACH,
     })),
   );
   const tipAt =

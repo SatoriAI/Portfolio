@@ -1,4 +1,4 @@
-import { type MouseEvent, useState } from "react";
+import { type MouseEvent, useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { Menu } from "lucide-react";
 
@@ -28,6 +28,9 @@ const SiteHeader = () => {
   const t = translations[language];
   const { pathname, hash } = useLocation();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  // The header outlives its pages, so the menu closes on any change of page,
+  // the browser's back and forward included, not only on its own links.
+  useEffect(() => setIsMobileNavOpen(false), [pathname]);
   // Sections only exist on the home page; elsewhere the spy simply finds none.
   // The header stays mounted across pages, so the spy looks again on each.
   const activeSection = useActiveSection(sectionIds, pathname);

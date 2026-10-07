@@ -2,10 +2,15 @@ import { type Ref, useEffect, useId, useRef } from "react";
 
 import { MARGIN, type PlotGeometry } from "@/components/academic/grokking/geometry";
 import { SeenMark, UnseenMark } from "@/components/academic/grokking/marks";
-import type { GuessPhase } from "@/components/academic/grokking/use-guess-and-read";
 import { useLatest } from "@/hooks/use-latest";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
-import { GROKKING_CROSSING, GROKKING_RUNS, GROKKING_STEPS, measuredPath } from "@/lib/grokking";
+import {
+  GROKKING_CROSSING,
+  GROKKING_RUNS,
+  GROKKING_STEPS,
+  type GuessPhase,
+  measuredPath,
+} from "@/lib/grokking";
 
 /**
  * The plot itself, drawn in CSS pixels at the measured width: the accuracy

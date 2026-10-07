@@ -4,7 +4,6 @@ import { ArrowLeft } from "lucide-react";
 
 import { queryStatus } from "@/components/feedback/queryStatus";
 import { Col, Grid } from "@/components/layout/Grid";
-import { useLauncherAside } from "@/components/layout/launcherAside";
 import PageClosing from "@/components/layout/PageClosing";
 import Section from "@/components/layout/Section";
 import ArticleBody from "@/components/workshop/ArticleBody";
@@ -12,6 +11,7 @@ import { EXHIBITS } from "@/components/workshop/exhibitRegistry";
 import MetaLine from "@/components/workshop/MetaLine";
 import { showDrafts, workshopArticles } from "@/content/workshop";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useLauncherAside } from "@/hooks/use-launcher-aside";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { useScrollFrame } from "@/hooks/use-scroll-frame";
 import { useArticleText } from "@/lib/queries";

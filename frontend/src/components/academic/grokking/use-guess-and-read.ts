@@ -6,8 +6,7 @@ import {
   useState,
 } from "react";
 
-import { STEP_MAX } from "@/components/academic/grokking/geometry";
-import { GROKKING_STEPS, nearestStep } from "@/lib/grokking";
+import { GROKKING_STEPS, type GuessPhase, nearestStep, STEP_MAX } from "@/lib/grokking";
 
 /**
  * The chart asks before it answers. At first it shows only the examples seen
@@ -31,8 +30,6 @@ import { GROKKING_STEPS, nearestStep } from "@/lib/grokking";
 const GUESS_STEP = 500;
 /** The step read out first, the gap the section is about. */
 const OPENING_STEP = 1000;
-
-export type GuessPhase = "guess" | "drawing" | "drawn";
 
 export function useGuessAndRead({
   plotRef,

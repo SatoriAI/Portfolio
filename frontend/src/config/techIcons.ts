@@ -133,7 +133,7 @@ export type TechName = keyof typeof TECH_ICONS;
  * Names whose product has no mark of its own and uses its parent's: SvelteKit
  * is drawn with the Svelte mark, Google Maps Platform with Google Maps'.
  */
-const ALIASES: Readonly<Record<string, string>> = {
+const ALIASES: Readonly<Record<string, TechName>> = {
   SvelteKit: "Svelte",
   "Google Maps Platform": "Google Maps",
   Vue: "Vue.js",

@@ -1,14 +1,14 @@
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { Outlet } from "react-router-dom";
 
 import ChatLauncher from "@/components/ChatLauncher";
 import ChatWidget from "@/components/ChatWidget";
-import { LauncherAsideContext } from "@/components/layout/launcherAside";
 import SiteFooter from "@/components/layout/SiteFooter";
 import SiteHeader from "@/components/layout/SiteHeader";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useVex } from "@/contexts/VexContext";
 import { useInView } from "@/hooks/use-in-view";
+import { LauncherAsideProvider, useLauncherAsideTarget } from "@/hooks/use-launcher-aside";
 import { translations } from "@/utils/translations";
 
 /**
@@ -39,8 +39,8 @@ const PageLayout = () => {
   // Only the strip at the foot of the screen, where the launcher sits:
   // once the text's last line has risen above it, the launcher is back.
   // A page names that text through useLauncherAside.
-  const [launcherClearOf, setLauncherClearOf] = useState<HTMLElement | null>(null);
-  const launcherAside = useInView(launcherClearOf, { rootMargin: "-88% 0px 0px 0px" });
+  const launcherClearOf = useLauncherAsideTarget();
+  const launcherAside = useInView(launcherClearOf.target, { rootMargin: "-88% 0px 0px 0px" });
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -53,11 +53,11 @@ const PageLayout = () => {
       </a>
       <SiteHeader />
       <main id="content" tabIndex={-1} className="flex flex-1 flex-col pt-16 outline-none md:pt-20">
-        <LauncherAsideContext.Provider value={setLauncherClearOf}>
+        <LauncherAsideProvider value={launcherClearOf.register}>
           <Suspense fallback={<div className="flex-1" />}>
             <Outlet />
           </Suspense>
-        </LauncherAsideContext.Provider>
+        </LauncherAsideProvider>
       </main>
       {/* The footer keeps clear of the floating launcher. */}
       <SiteFooter className="pb-24 sm:pb-8" />
