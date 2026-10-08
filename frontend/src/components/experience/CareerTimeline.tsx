@@ -51,12 +51,6 @@ type CareerTimelineProps<Id extends TimelineId> = {
   labels: CareerTimelineLabels;
   /** The entry whose line is drawn in full, or null for none. */
   selectedId: Id | null;
-  /**
-   * Entries to light up while something elsewhere on the page points at them
-   * (a skill used in these roles): their circles are ringed and the rest
-   * recede. Null when nothing is pointed at.
-   */
-  highlightedIds?: ReadonlySet<Id> | null;
   /** Told which entry is pointed at or focused, and null when none is. */
   onPreview?: (id: Id | null) => void;
   /**
@@ -96,7 +90,6 @@ const CareerTimeline = <Id extends TimelineId>({
   entries,
   labels,
   selectedId,
-  highlightedIds = null,
   onPreview,
   circlesAway = false,
   enterFromEdges = false,
@@ -165,8 +158,6 @@ const CareerTimeline = <Id extends TimelineId>({
             const entry = byId.get(span.id);
             if (!entry) return null;
             const selected = span.id === selectedId;
-            const highlighted = highlightedIds?.has(span.id) ?? false;
-            const receded = highlightedIds !== null && !highlighted;
             return (
               <li
                 key={span.id}
@@ -213,7 +204,7 @@ const CareerTimeline = <Id extends TimelineId>({
                   className={cn(
                     "absolute left-5 top-0 -translate-x-1/2 whitespace-nowrap text-sm font-medium transition-colors duration-200 md:left-7",
                     // A role a chosen skill passed over greys, but stays legible.
-                    selected ? "text-iris" : receded ? "text-muted-foreground" : "text-foreground",
+                    selected ? "text-iris" : "text-foreground",
                   )}
                 >
                   {entry.label}
@@ -241,8 +232,8 @@ const CareerTimeline = <Id extends TimelineId>({
                     circleControl,
                     // No halo here: the name sits just above the circle, and
                     // the role's dialog opens over it.
-                    circleState(selected, highlighted, false),
-                    circlesAway ? "opacity-30" : receded ? "opacity-40" : "opacity-100",
+                    circleState(selected, false, false),
+                    circlesAway ? "opacity-30" : "opacity-100",
                   )}
                 >
                   {entry.mark}

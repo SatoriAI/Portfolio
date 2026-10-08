@@ -27,10 +27,10 @@ import { cn } from "@/lib/utils";
  * opens in place, under the chosen row, as a lavender band: the skill's
  * line of proof, the roles as logos and the projects whose tags name it,
  * without repeating the name the row already gives. Nothing else on the
- * page moves to show it. Choosing a skill also lights its roles
- * up on the timeline (the page draws that); pointing at a role on the
- * timeline draws a band through the rows over its months, growing from its
- * start, and the skills it did not use recede.
+ * page moves to show it. Choosing a skill also lights its roles up in the
+ * role sidebar beside it, and only there (the page draws that); pointing at a
+ * role on the timeline draws a band through the rows over its months,
+ * growing from its start, and the skills it did not use recede.
  *
  * When the section comes into view the chart draws once, group by group:
  * each name lights up and its bars draw from their first month to their last.

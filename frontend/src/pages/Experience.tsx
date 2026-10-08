@@ -3,7 +3,6 @@ import { useMemo, useRef, useState } from "react";
 import HeaderShapes from "@/components/brand/HeaderShapes";
 import CareerTimeline, { type TimelineEntry } from "@/components/experience/CareerTimeline";
 import CircleFlight, { type FlightPhase } from "@/components/experience/CircleFlight";
-import { circleState } from "@/components/experience/circleStyles";
 import CompanyMark from "@/components/experience/CompanyMark";
 import RoleEntry from "@/components/experience/RoleEntry";
 import RoleSidebar from "@/components/experience/RoleSidebar";
@@ -243,14 +242,11 @@ const Experience = () => {
         mark: (
           <CompanyMark company={role.experience.company} className="size-full text-sm ring-0" />
         ),
-        // The copies wear the sidebar's look, halo included, since that is
-        // where they land.
-        className: circleState(
-          role.entry.id === sidebarRole,
-          highlighted?.has(role.entry.id) ?? false,
-        ),
+        // The copies fly plain: a choice made beside the skills (a role, or a
+        // skill's roles) belongs to that section, so it leaves the circles as
+        // they lift off for the timeline and returns as they land again.
       })),
-    [roles, sidebarRole, highlighted],
+    [roles],
   );
 
   const entryLabels = {
@@ -308,7 +304,8 @@ const Experience = () => {
                     labels={timelineLabels}
                     selectedId={selectedId}
                     onSelect={select}
-                    highlightedIds={highlighted}
+                    // Only its own state: a skill chosen below lights its
+                    // roles in the sidebar there, not here.
                     onPreview={setPreviewRole}
                     circlesAway={flight && phase !== "timeline"}
                     enterFromEdges

@@ -4,7 +4,6 @@ import { createPortal } from "react-dom";
 import { useLatest } from "@/hooks/use-latest";
 import { useScrollFrame } from "@/hooks/use-scroll-frame";
 import { clamp01, easeInOutCubic } from "@/lib/motion";
-import { cn } from "@/lib/utils";
 
 /**
  * The roles' circles flying from the career timeline to the sidebar beside
@@ -30,10 +29,10 @@ export type FlightPhase = "timeline" | "flying" | "sidebar";
 
 type CircleFlightProps = {
   /**
-   * The roles, in the order they sit in the sidebar, each with its mark and
-   * the ring it wears there (chosen, lit), so it keeps it in flight.
+   * The roles, in the order they sit in the sidebar, each with its mark. The
+   * copies fly plain: what is chosen beside the skills stays there.
    */
-  roles: readonly { id: number; mark: ReactNode; className?: string }[];
+  roles: readonly { id: number; mark: ReactNode }[];
   /** The skills section: its top's travel sets the flight's progress. */
   section: RefObject<HTMLElement>;
   /** Where the circles start: the timeline. */
@@ -113,10 +112,7 @@ const CircleFlight = ({ roles, section, from, to, onPhase }: CircleFlightProps) 
           ref={(element) => {
             copies.current[index] = element;
           }}
-          className={cn(
-            "invisible absolute left-0 top-0 rounded-full shadow-rim will-change-transform",
-            role.className,
-          )}
+          className="invisible absolute left-0 top-0 rounded-full shadow-rim will-change-transform"
         >
           {role.mark}
         </div>
