@@ -3,6 +3,7 @@ import { ChevronRight } from "lucide-react";
 
 import {
   circleControl,
+  SIDEBAR_TRANSITION,
   sidebarCircleState,
   sidebarMarks,
 } from "@/components/experience/circleStyles";
@@ -87,9 +88,9 @@ const RoleSidebar = ({
       >
         {labels.list}
       </p>
-      {/* 24px apart, so the chosen circle's halo clears its neighbours. On a
+      {/* 24px apart, so the lavender rings clear their neighbours. On a
           phone the strip is wider than the screen, so it scrolls sideways,
-          with room round it for the halo. It fades at its end, and at its
+          with room round it for the rings. It fades at its end, and at its
           start once scrolled; the last circle, and any circle focused from
           the keyboard, stops clear of the fade. */}
       <ol
@@ -121,7 +122,7 @@ const RoleSidebar = ({
                   // Faded rather than hidden while the circles are in flight,
                   // so the keyboard can still reach them; focus brings them back.
                   // At once, not faded in, so a landing copy hands over cleanly.
-                  "motion-safe:transition-transform",
+                  SIDEBAR_TRANSITION,
                   circlesHidden &&
                     "pointer-events-none opacity-0 group-focus-within/circles:pointer-events-auto group-focus-within/circles:opacity-100",
                 )}

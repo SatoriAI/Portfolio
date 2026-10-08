@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils";
  * Beside the skills, every choice answers the same way: a role chosen, or a
  * role a chosen skill used, gains a soft lavender ring outside the rim, and
  * the others recede, grey and faint, as the chart fades the skills a chosen
- * role did not use. On the timeline, where a name sits just above and the
+ * role did not use; a receded circle comes back in full under keyboard focus,
+ * so its focus ring keeps its contrast. On the timeline, where a name sits just above and the
  * role's dialog opens over it at once, a chosen circle's rim turns iris.
  * Keyboard focus sits outside the rim (shadow-rim-focus), outside the ring
  * too. The hover lift and ring wait for a real pointer: on touch a tap would
@@ -17,7 +18,7 @@ import { cn } from "@/lib/utils";
 
 export const circleControl = [
   "rounded-full shadow-rim",
-  "motion-safe:transition-[transform,opacity,filter] motion-safe:duration-200 motion-safe:ease-brand",
+  "motion-safe:transition-[transform,opacity] motion-safe:duration-200 motion-safe:ease-brand",
   "[@media(hover:hover)]:motion-safe:hover:-translate-y-1",
   "focus-visible:shadow-rim-focus",
 ].join(" ");
@@ -28,8 +29,20 @@ const PLAIN =
   "focus-visible:outline-none [@media(hover:hover)]:hover:outline [@media(hover:hover)]:hover:outline-2 [@media(hover:hover)]:hover:outline-offset-[3px] [@media(hover:hover)]:hover:outline-iris/40";
 /** Chosen, or used by the chosen skill: a soft lavender ring outside the rim. */
 const MARKED = "outline outline-[3px] outline-offset-[5px] outline-lavender-deep";
-/** Neither, while something is chosen: grey and faint, still legible and pressable. */
-const RECEDED = "opacity-45 grayscale";
+/**
+ * Neither, while something is chosen: grey and faint, still legible and
+ * pressable. A filter rather than opacity, so it can fade on its own while the
+ * sidebar keeps opacity for hiding its circles in flight, which must be
+ * instant (SIDEBAR_TRANSITION). Back in full under keyboard focus.
+ */
+const RECEDED = "[filter:grayscale(1)_opacity(0.45)] focus-visible:[filter:none]";
+
+/**
+ * The sidebar's own transition: the lift and the receding fade over 200 ms;
+ * opacity, which hides a circle while its copy flies, changes at once, so the
+ * copy hands over cleanly.
+ */
+export const SIDEBAR_TRANSITION = "motion-safe:transition-[transform,filter]";
 
 /** A circle on the timeline: its rim turns iris while its role is open. */
 export const circleState = (selected: boolean) =>
@@ -57,11 +70,13 @@ export const sidebarMarks = (
 export const sidebarCircleState = ({ marked, receded }: SidebarMarks) =>
   cn(marked ? MARKED : PLAIN, receded && RECEDED);
 
+/** The lavender ring of a marked role, for its copy in flight. */
+export const circleRing = ({ marked }: SidebarMarks) => (marked ? MARKED : "");
+
 /**
- * The sidebar's state for a copy in flight, laid over the plain copy: the
- * lavender ring of a marked role, and for a receded one a wash of the page's
- * own background that greys and fades the mark beneath, as RECEDED does to
- * the circle itself.
+ * A receded role's look on its copy in flight, `k` of the way there (0 plain,
+ * 1 as in the sidebar): the same filter as RECEDED, so the two match exactly
+ * at the hand-over.
  */
-export const circleRing = ({ marked, receded }: SidebarMarks) =>
-  cn(marked && MARKED, receded && "bg-background/55 backdrop-grayscale");
+export const recededFilter = (k: number) =>
+  k > 0 ? `grayscale(${k}) opacity(${1 - 0.55 * k})` : "";

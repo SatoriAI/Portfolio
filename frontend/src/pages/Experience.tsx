@@ -240,13 +240,17 @@ const Experience = () => {
   const flight = !isMobile && !prefersReducedMotion && roles.length > 0;
   const flightRoles = useMemo(
     () =>
-      roles.map((role) => ({
-        id: role.entry.id,
-        mark: (
-          <CompanyMark company={role.experience.company} className="size-full text-sm ring-0" />
-        ),
-        ring: circleRing(sidebarMarks(role.entry.id, sidebarRole, highlighted)),
-      })),
+      roles.map((role) => {
+        const marks = sidebarMarks(role.entry.id, sidebarRole, highlighted);
+        return {
+          id: role.entry.id,
+          mark: (
+            <CompanyMark company={role.experience.company} className="size-full text-sm ring-0" />
+          ),
+          ring: circleRing(marks),
+          receded: marks.receded,
+        };
+      }),
     [roles, sidebarRole, highlighted],
   );
 
