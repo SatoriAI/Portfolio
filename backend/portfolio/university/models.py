@@ -6,10 +6,10 @@ from parler.managers import TranslatableManager
 from parler.models import TranslatableModel, TranslatedFields
 
 from university.choices import Degrees, Seasons
-from utils.models import TimestampedModel
+from utils.models import DescriptiveModel, TimestampedModel
 
 
-class School(TranslatableModel, TimestampedModel):
+class School(TranslatableModel, TimestampedModel, DescriptiveModel):
     start = models.DateField(_("Start"))
     end = models.DateField(_("End"), null=True, blank=True)
     degree = models.CharField(_("Degree"), choices=Degrees, default=Degrees.BACHELOR, max_length=64)
@@ -43,7 +43,7 @@ class School(TranslatableModel, TimestampedModel):
         )
 
 
-class Publication(TranslatableModel, TimestampedModel):
+class Publication(TranslatableModel, TimestampedModel, DescriptiveModel):
     journal = models.CharField(_("Journal"), max_length=256)
     link = models.URLField(_("Link"), null=True, blank=True)
     year = models.PositiveSmallIntegerField(_("Year"))
@@ -70,7 +70,7 @@ class Publication(TranslatableModel, TimestampedModel):
         )
 
 
-class Testimonial(TranslatableModel, TimestampedModel):
+class Testimonial(TranslatableModel, TimestampedModel, DescriptiveModel):
     semester = models.CharField(_("Semester"), max_length=128)
     season = models.CharField(_("Season"), choices=Seasons, max_length=8)
 

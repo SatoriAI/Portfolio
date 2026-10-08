@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from parler.managers import TranslatableManager, TranslatableQuerySet
 from parler.models import TranslatableModel, TranslatedFields
 
+from utils.fields import LinesArrayField
 from utils.models import DescriptiveModel, TimestampedModel
 from work.choices import Icons, Levels
 
@@ -101,6 +102,8 @@ class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
     visible = models.BooleanField(
         _("Visible"),
         default=True,
+        # In the database too, so the release before this one can still add a role.
+        db_default=True,
         help_text=_("Shown on the site and to Vex. Uncheck to keep the role without showing it."),
     )
 
@@ -116,13 +119,13 @@ class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
         location=models.CharField(_("Location"), max_length=128),
         product=models.TextField(pgettext_lazy("experience", "Product"), null=True, blank=True),
         responsibilities=models.TextField(pgettext_lazy("experience", "Responsibilities"), null=True, blank=True),
-        contributions=ArrayField(
+        contributions=LinesArrayField(
             models.CharField(max_length=512),
             verbose_name=pgettext_lazy("experience", "Contributions"),
             null=True,
             blank=True,
         ),
-        results=ArrayField(
+        results=LinesArrayField(
             models.CharField(max_length=512),
             verbose_name=pgettext_lazy("experience", "Results"),
             null=True,
@@ -130,7 +133,7 @@ class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
         ),
         # Read by the current site; replaced by the four fields above.
         description=models.TextField(_("Description"), null=True, blank=True),
-        achievements=ArrayField(models.CharField(_("Achievements"), max_length=512), null=True, blank=True),
+        achievements=LinesArrayField(models.CharField(_("Achievements"), max_length=512), null=True, blank=True),
     )
 
     # Managers
@@ -140,7 +143,20 @@ class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
     def period(self) -> str:
         return f"{self.start.year} - {self.end.year if self.end is not None else ''}"
 
+    @classmethod
+    def vex_queryset(cls) -> ExperienceQuerySet:
+        """Hidden roles stay out of Vex's context, as they do off the site."""
+        return cls.objects.visible()
+
     def representation_for(self, locale: str | None) -> str:
+        """
+        The role as Vex reads it, in the reader's language, with only the parts
+        it has. The old write-up comes in only where the new one leaves a gap:
+        the old description when neither product nor responsibilities is
+        written, the old achievements when neither contributions nor results
+        is. Each pair covers the same ground, so Vex never reads two accounts
+        of one role.
+        """
         lang = (locale or get_language() or "").split("-")[0][:2]
 
         def text(field: str) -> str:
@@ -149,26 +165,24 @@ class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
         def items(field: str) -> str:
             return "; ".join(self.safe_translation_getter(field, language_code=lang, any_language=True) or [])
 
-        # The old write-up only where the new one has nothing in its place, so
-        # Vex never reads two accounts of the same role.
         rewritten = bool(text("responsibilities") or text("product"))
         listed = bool(items("contributions") or items("results"))
-        lines = [
-            f"Experience: {text('role') or self.position} at {self.company}",
-            f"Period: {self.period}",
-            f"Location: {text('location')}",
-            f"Technologies: {', '.join(self.technologies or [])}",
-            f"Tools: {', '.join(self.tools or [])}",
-            f"Topics: {', '.join(self.topics or [])}",
-            f"Product: {text('product')}",
-            f"Responsibilities: {text('responsibilities')}",
-            f"Contributions: {items('contributions')}",
-            f"Results: {items('results')}",
-            f"Description: {'' if rewritten else text('description')}",
-            f"Achievements: {'' if listed else items('achievements')}",
+        parts = [
+            ("Period", self.period),
+            ("Location", text("location")),
+            ("Technologies", ", ".join(self.technologies or [])),
+            ("Tools", ", ".join(self.tools or [])),
+            ("Topics", ", ".join(self.topics or [])),
+            ("Product", text("product")),
+            ("Responsibilities", text("responsibilities")),
+            ("Contributions", items("contributions")),
+            ("Results", items("results")),
+            ("Description", "" if rewritten else text("description")),
+            ("Achievements", "" if listed else items("achievements")),
         ]
-        # Only what the role has: an empty line tells Vex nothing.
-        return "\n".join(line for line in lines if not line.endswith(": "))
+        heading = f"Experience: {text('role') or self.position} at {self.company}"
+        # Only what the role has: an empty part tells Vex nothing.
+        return "\n".join([heading, *(f"{label}: {value}" for label, value in parts if value)])
 
     class Meta:
         verbose_name = _("Experience")

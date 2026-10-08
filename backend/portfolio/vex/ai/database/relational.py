@@ -5,7 +5,7 @@ from django.db import models
 from langchain_core.documents import Document
 
 from university.models import Publication, School, Testimonial
-from work.models import Experience, ExperienceQuerySet, Project, Skill
+from work.models import Experience, Project, Skill
 
 
 def tokenize(question: str, locale: str) -> set[str]:  # pylint: disable=unused-argument
@@ -144,10 +144,8 @@ class RelationalContextGetter:
         documents: list[Document] = []
 
         for model in self._get_requirements():
-            qs = model.objects.all()  # type: ignore[attr-defined]
-            # Hidden roles stay out of Vex's context, as they do off the site.
-            if isinstance(qs, ExperienceQuerySet):
-                qs = qs.visible()
+            # Each model says which of its rows Vex may read (a hidden role is not one).
+            qs = model.vex_queryset()  # type: ignore[attr-defined]
             if hasattr(model, "translations"):
                 qs = qs.prefetch_related("translations")
 

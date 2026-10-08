@@ -12,6 +12,10 @@ class CopyPositionToRoleTestCase(TransactionTestCase):
     def setUp(self) -> None:
         executor = MigrationExecutor(connection)
         executor.migrate(BEFORE)
+        # Back to the latest schema whatever happens next, so later tests never see 0007.
+        self.addCleanup(
+            lambda: MigrationExecutor(connection).migrate(MigrationExecutor(connection).loader.graph.leaf_nodes())
+        )
         apps = executor.loader.project_state(BEFORE).apps
         Experience = apps.get_model("work", "Experience")
         ExperienceTranslation = apps.get_model("work", "ExperienceTranslation")
@@ -21,9 +25,6 @@ class CopyPositionToRoleTestCase(TransactionTestCase):
         for language, location in (("en", "Wroclaw"), ("pl", "Wrocław")):
             ExperienceTranslation.objects.create(master=experience, language_code=language, location=location)
         self.pk = experience.pk
-
-    def tearDown(self) -> None:
-        MigrationExecutor(connection).migrate(MigrationExecutor(connection).loader.graph.leaf_nodes())
 
     def test_role_is_copied_from_position_in_every_language(self) -> None:
         executor = MigrationExecutor(connection)
