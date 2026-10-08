@@ -31,7 +31,7 @@ export type FlightPhase = "timeline" | "flying" | "sidebar";
 type CircleFlightProps = {
   /**
    * The roles, in the order they sit in the sidebar, each with its mark and
-   * the ring it wears there (chosen, lit). The ring is the sidebar's, not the
+   * the ring it wears there (chosen, receded). The ring is the sidebar's, not the
    * timeline's: it fades in over the last stretch of the way down and out over
    * the first stretch of the way up, with the scroll, so a choice made beside
    * the skills never reaches the timeline and never blinks at the hand-over.

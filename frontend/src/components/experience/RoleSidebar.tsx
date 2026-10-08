@@ -113,7 +113,9 @@ const RoleSidebar = ({
                   // 44px on a phone: the smallest comfortable touch target.
                   "block size-11 md:size-12",
                   circleControl,
-                  circleState(selected, highlighted),
+                  circleState(selected, {
+                    receded: highlightedIds !== null && !highlighted,
+                  }),
                   // Faded rather than hidden while the circles are in flight,
                   // so the keyboard can still reach them; focus brings them back.
                   // At once, not faded in, so a landing copy hands over cleanly.

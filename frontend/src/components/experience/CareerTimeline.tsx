@@ -231,7 +231,7 @@ const CareerTimeline = <Id extends TimelineId>({
                     circleControl,
                     // No halo here: the name sits just above the circle, and
                     // the role's dialog opens over it.
-                    circleState(selected, false, false),
+                    circleState(selected, { halo: false }),
                     circlesAway ? "opacity-30" : "opacity-100",
                   )}
                 >
