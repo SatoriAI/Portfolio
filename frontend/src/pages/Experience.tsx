@@ -25,11 +25,11 @@ import { useIsMobile, usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { useTimelineSelection } from "@/hooks/use-timeline-selection";
 import { useExperiences, useProjects, useSkills } from "@/lib/queries";
-import { claimsEarlier, laneSegments } from "@/lib/skillLanes";
+import { laneSegments, skillReach } from "@/lib/skillLanes";
 import { rolesForSkill } from "@/lib/skillRoles";
-import { formatYears, parseYears } from "@/lib/skillYears";
+import { formatYears } from "@/lib/skillYears";
 import { fillTemplate, formatCounter } from "@/lib/text";
-import { buildTimeline, companyShortName } from "@/lib/timeline";
+import { buildTimeline, companyShortName, extendBack } from "@/lib/timeline";
 import { translations } from "@/utils/translations";
 
 /**
@@ -42,6 +42,13 @@ import { translations } from "@/utils/translations";
 
 const SECTION_COUNT = 2;
 const eyebrow = (index: number) => formatCounter(index, SECTION_COUNT);
+
+/**
+ * How far back the skills' axis may reach: ten years, the longest stretch a
+ * skill claims. A skill used even earlier is cut at the edge and says from
+ * when.
+ */
+const SKILLS_FROM_YEAR = 2016;
 
 const Experience = () => {
   const [chosenSkill, setChosenSkill] = useState<number | null>(null);
@@ -150,10 +157,32 @@ const Experience = () => {
     setSidebarRole(null);
   });
 
-  // Each skill's lane: the months of the roles that prove it, the roles
-  // themselves as small marks, and the projects whose tags name it.
+  // The skills' axis reaches back to the earliest year a skill was used
+  // before its roles, so those years can be drawn; it ends with the
+  // timeline's.
+  const skillAxis = useMemo(
+    () =>
+      extendBack(
+        career,
+        Math.max(Math.min(...skills.flatMap((skill) => skill.since ?? [])), SKILLS_FROM_YEAR) * 12,
+      ),
+    [career, skills],
+  );
+
+  // Each skill's lane: the months of the roles that prove it, the years
+  // before them it was used anyway, the roles themselves as small marks, and
+  // the projects whose tags name it.
   const lanes = useMemo(() => {
-    const spans = new Map(career.spans.map((span) => [span.id, span]));
+    const spans = new Map(
+      career.spans.map((span) => [
+        span.id,
+        {
+          ...span,
+          startMonth: span.startMonth + skillAxis.shift,
+          endMonth: span.endMonth + skillAxis.shift,
+        },
+      ]),
+    );
     const tagged = projects.map((project) => ({
       id: project.title,
       technologies: project.technologies,
@@ -162,11 +191,12 @@ const Experience = () => {
       skills.map((skill) => {
         const roleIds = rolesBySkill.get(skill.id) ?? [];
         const segments = laneSegments(roleIds.flatMap((id) => spans.get(id) ?? []));
+        const sinceMonth = skill.since === null ? null : skill.since * 12 - skillAxis.origin;
         return [
           skill.id,
           {
             segments,
-            earlier: claimsEarlier(segments, parseYears(skill.level), career.months),
+            ...skillReach(segments, sinceMonth, skillAxis.months),
             projects: rolesForSkill(skillEvidence[skill.id] ?? [], tagged),
             roles: roleIds.flatMap((id) => {
               const experience = experiences.find((candidate) => candidate.id === id);
@@ -190,13 +220,17 @@ const Experience = () => {
         ];
       }),
     );
-  }, [skills, projects, experiences, career, rolesBySkill]);
+  }, [skills, projects, experiences, career, skillAxis, rolesBySkill]);
 
   // The band through the lanes: the sidebar's chosen role, else the role
   // pointed at on the timeline.
   const bandSpan = career.spans.find((span) => span.id === (sidebarRole ?? previewRole));
   const band = bandSpan
-    ? { id: bandSpan.id, startMonth: bandSpan.startMonth, endMonth: bandSpan.endMonth }
+    ? {
+        id: bandSpan.id,
+        startMonth: bandSpan.startMonth + skillAxis.shift,
+        endMonth: bandSpan.endMonth + skillAxis.shift,
+      }
     : null;
 
   // The circles fly to the sidebar as the reader scrolls down; on a phone,
@@ -346,7 +380,7 @@ const Experience = () => {
             </div>
             <SkillLanes
               skills={skills}
-              axis={career}
+              axis={skillAxis}
               lanes={lanes}
               layers={skillLayers.map((layer) => ({
                 ...layer,
@@ -354,10 +388,11 @@ const Experience = () => {
               }))}
               labels={{
                 years: (count) => formatYears(count, language),
-                level: (level) => t.skills.levels[level] ?? level,
+                since: (year) => fillTemplate(t.skills.since, { year }),
+                sinceLaunch: t.skills.sinceLaunch,
                 show: (name) => fillTemplate(t.skills.show, { name }),
                 outsideRoles: t.skills.outsideRoles,
-                earlier: t.skills.earlier,
+                legend: t.skills.legend,
                 projects: t.skills.projects,
                 roles: t.skills.roles,
                 more: (count) => fillTemplate(t.skills.more, { count }),

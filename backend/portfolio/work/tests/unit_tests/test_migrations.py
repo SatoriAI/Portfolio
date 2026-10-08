@@ -34,3 +34,41 @@ class CopyPositionToRoleTestCase(TransactionTestCase):
         ExperienceTranslation = apps.get_model("work", "ExperienceTranslation")
         roles = dict(ExperienceTranslation.objects.filter(master_id=self.pk).values_list("language_code", "role"))
         self.assertDictEqual(roles, {"en": "Python Developer", "pl": "Python Developer"})
+
+
+class CarryLevelsOverTestCase(TransactionTestCase):
+    """0009 keeps what the old levels said that the roles cannot show."""
+
+    BEFORE = [("work", "0008_experience_structured_fields")]
+    AFTER = [("work", "0009_skill_since")]
+
+    def setUp(self) -> None:
+        executor = MigrationExecutor(connection)
+        executor.migrate(self.BEFORE)
+        self.addCleanup(
+            lambda: MigrationExecutor(connection).migrate(MigrationExecutor(connection).loader.graph.leaf_nodes())
+        )
+        Skill = executor.loader.project_state(self.BEFORE).apps.get_model("work", "Skill")
+        self.pks = {
+            level: Skill.objects.create(level=level).pk
+            for level in ("3+ years of experience", "5+ years of experience", "10+ years of experience", "Since launch")
+        }
+
+    def test_ten_years_becomes_2016_and_since_launch_its_flag_and_year(self) -> None:
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()
+        executor.migrate(self.AFTER)
+        Skill = executor.loader.project_state(self.AFTER).apps.get_model("work", "Skill")
+        found = {
+            level: tuple(Skill.objects.filter(pk=pk).values_list("since", "since_launch").get())
+            for level, pk in self.pks.items()
+        }
+        self.assertDictEqual(
+            found,
+            {
+                "3+ years of experience": (None, False),
+                "5+ years of experience": (None, False),
+                "10+ years of experience": (2016, False),
+                "Since launch": (2025, True),
+            },
+        )

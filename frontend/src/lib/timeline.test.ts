@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildTimeline, companyInitials, companyShortName } from "./timeline";
+import { buildTimeline, companyInitials, companyShortName, extendBack } from "./timeline";
 
 const NOW = new Date("2026-09-15T00:00:00Z");
 
@@ -67,6 +67,7 @@ describe("buildTimeline", () => {
   it("ignores entries without a start and copes with none", () => {
     expect(buildTimeline([{ id: 1, start: "", end: "" }], NOW)).toEqual({
       spans: [],
+      origin: 0,
       months: 0,
       lanes: 0,
       ticks: [],
@@ -91,5 +92,31 @@ describe("companyShortName", () => {
   it("keeps the first word, and a one-word name whole", () => {
     expect(companyShortName("Nokia Solutions and Networks")).toBe("Nokia");
     expect(companyShortName("CloudFerro")).toBe("CloudFerro");
+  });
+});
+
+describe("extendBack", () => {
+  const career = buildTimeline([{ id: 1, start: "2020-11-01", end: "" }], NOW);
+
+  it("reaches back to an earlier month, ticking each January it adds", () => {
+    const axis = extendBack(career, 2016 * 12);
+    expect(axis.origin).toBe(2016 * 12);
+    expect(axis.shift).toBe(58);
+    expect(axis.months).toBe(career.months + 58);
+    expect(axis.ticks.slice(0, 2)).toEqual([
+      { year: 2016, month: 0 },
+      { year: 2017, month: 12 },
+    ]);
+    expect(axis.ticks.map((tick) => tick.year)).toContain(2021);
+  });
+
+  it("keeps the timeline's own axis for a later month", () => {
+    const axis = extendBack(career, 2023 * 12);
+    expect(axis).toEqual({
+      origin: career.origin,
+      months: career.months,
+      ticks: career.ticks,
+      shift: 0,
+    });
   });
 });

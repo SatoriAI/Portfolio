@@ -32,6 +32,8 @@ export type TimelineTick = {
 
 export type Timeline<Id extends TimelineId = number> = {
   spans: TimelineSpan<Id>[];
+  /** The domain's first month, as a count of months since year 0, for placing other dates on it. */
+  origin: number;
   /** Total months in the domain. */
   months: number;
   lanes: number;
@@ -67,7 +69,7 @@ export function buildTimeline<Id extends TimelineId = number>(
     // teaching that began with it.
     .sort((a, b) => a.start - b.start || b.end - a.end);
 
-  if (dated.length === 0) return { spans: [], months: 0, lanes: 0, ticks: [] };
+  if (dated.length === 0) return { spans: [], origin: 0, months: 0, lanes: 0, ticks: [] };
 
   const origin = Math.min(...dated.map((item) => item.start));
   const last = Math.max(...dated.map((item) => item.end));
@@ -91,7 +93,32 @@ export function buildTimeline<Id extends TimelineId = number>(
     if (month % 12 === 0) ticks.push({ year: month / 12, month: month - origin });
   }
 
-  return { spans, months: last - origin, lanes: laneEnds.length, ticks };
+  return { spans, origin, months: last - origin, lanes: laneEnds.length, ticks };
+}
+
+/** An axis like the timeline's, but starting at `origin` (months since year 0). */
+export type Axis = {
+  origin: number;
+  months: number;
+  ticks: TimelineTick[];
+  /** How far everything placed on the timeline moves along this axis. */
+  shift: number;
+};
+
+/**
+ * The timeline's axis reaching back to `month` (months since year 0) where
+ * that is earlier, with a January tick for each year it adds; otherwise the
+ * timeline's own axis.
+ */
+export function extendBack(timeline: Timeline<TimelineId>, month: number): Axis {
+  const origin = Math.min(timeline.origin, month);
+  const shift = timeline.origin - origin;
+  const months = timeline.months + shift;
+  const ticks: TimelineTick[] = [];
+  for (let at = origin; at < origin + months; at++) {
+    if (at % 12 === 0) ticks.push({ year: at / 12, month: at - origin });
+  }
+  return { origin, months, ticks, shift };
 }
 
 /**
