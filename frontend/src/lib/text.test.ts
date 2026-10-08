@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { fillTemplate, formatCounter, pad2, splitLastWord } from "./text";
+import { fillTemplate, formatCounter, pad2, paragraphsOf, splitLastWord } from "./text";
 
 describe("text", () => {
   it("pads to two digits", () => {
@@ -21,5 +21,13 @@ describe("text", () => {
   it("cuts a line before its last word", () => {
     expect(splitLastWord("Kiedy sieć odkrywa zegar")).toEqual(["Kiedy sieć odkrywa ", "zegar"]);
     expect(splitLastWord("Słowo")).toEqual(["", "Słowo"]);
+  });
+
+  it("splits text into paragraphs at blank lines, keeping single line breaks", () => {
+    expect(paragraphsOf("First\nstill first\n\n  \nSecond  \n\n")).toEqual([
+      "First\nstill first",
+      "Second",
+    ]);
+    expect(paragraphsOf("")).toEqual([]);
   });
 });
