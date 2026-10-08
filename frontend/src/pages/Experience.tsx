@@ -208,8 +208,14 @@ const Experience = () => {
   );
 
   const entryLabels = {
-    keyAchievements: t.experience.keyAchievements,
     technologies: t.experience.technologies,
+    tools: t.experience.tools,
+    topics: t.experience.topics,
+    product: t.experience.product,
+    responsibilities: t.experience.responsibilities,
+    contributions: t.experience.contributions,
+    results: t.experience.results,
+    keyAchievements: t.experience.keyAchievements,
     askVex: t.experience.askVex,
     askVexQuestion: t.experience.askVexQuestion,
   };
