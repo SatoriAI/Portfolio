@@ -10,9 +10,9 @@ import type { TimelineTick } from "@/lib/timeline";
 import { cn } from "@/lib/utils";
 
 /**
- * The skills told as the path of one request, layer by layer, as a chart to
- * scan: one thin row per skill, its bar on the career timeline's time axis,
- * reaching further back where a skill was used before its roles.
+ * The skills, group by group (config/skillLayers), as a chart to scan: one
+ * thin row per skill, its bar on the career timeline's time axis, reaching
+ * further back where a skill was used before its roles.
  *
  * The bar is solid where a role proves the skill: the months of every role
  * whose technologies name it, merged where roles overlap, gaps kept, and a
