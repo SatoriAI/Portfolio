@@ -31,4 +31,6 @@ export const companyLogos: Record<string, CompanyLogo> = {
   PeakData: { src: "/logos/peakdata.png", background: "#2C2646", scale: 0.86 },
   Xperi: { src: "/logos/xperi.jpg", background: "#ffffff", scale: 0.82 },
   CloudFerro: { src: "/logos/cloudferro.jpg", background: "#ffffff", scale: 0.74 },
+  PwC: { src: "/logos/pwc.png", background: "#ffffff", scale: 0.76 },
+  Addepto: { src: "/logos/addepto.png", background: "#ffffff", scale: 0.6 },
 };
