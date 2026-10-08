@@ -19,8 +19,9 @@ class Skill(TranslatableModel, TimestampedModel, DescriptiveModel):
     """
     A skill's years are not typed in: the site counts them from the roles that
     used it. Only what no role shows is stored: the year it was first used,
-    where that came before its first role (university, own projects), or that
-    it has been used since it came out.
+    where that came before its first role (university, own projects), and,
+    for a tool taken up the year it came out, that it has been used since its
+    launch, which then words the count.
     """
 
     since = models.PositiveSmallIntegerField(
@@ -28,13 +29,16 @@ class Skill(TranslatableModel, TimestampedModel, DescriptiveModel):
         null=True,
         blank=True,
         validators=[MinValueValidator(1990)],
-        help_text=_("The year it was first used, if before its first role. Leave empty to count from the roles."),
+        help_text=_(
+            "The year it was first used, if before its first role, or its launch year. "
+            "Leave empty to count from the roles."
+        ),
     )
     since_launch = models.BooleanField(
         _("Since launch"),
         default=False,
         db_default=False,
-        help_text=_("Used since it came out; shown instead of a count of years."),
+        help_text=_("Used since it came out, in the year above; said instead of a count of years."),
     )
     icon = models.CharField(choices=Icons, default=Icons.CODE, max_length=16)
 
@@ -51,10 +55,10 @@ class Skill(TranslatableModel, TimestampedModel, DescriptiveModel):
         name = self.safe_translation_getter("name", language_code=lang, any_language=True) or ""
         description = self.safe_translation_getter("description", language_code=lang, any_language=True) or ""
         lines = [f"Skill: {name}"]
-        if self.since:
+        if self.since_launch:
+            lines.append(f"Used since: its launch in {self.since}")
+        elif self.since:
             lines.append(f"Used since: {self.since}, before the roles that show it")
-        elif self.since_launch:
-            lines.append("Used since: its launch")
         lines.append(f"Description: {description}")
         return "\n".join(lines)
 
@@ -68,9 +72,9 @@ class Skill(TranslatableModel, TimestampedModel, DescriptiveModel):
         verbose_name_plural = _("Skills")
         constraints = [
             models.CheckConstraint(
-                condition=~(models.Q(since_launch=True) & models.Q(since__isnull=False)),
-                name="skill_since_or_since_launch",
-                violation_error_message=_("Give a year or mark it as used since launch, not both."),
+                condition=~(models.Q(since_launch=True) & models.Q(since__isnull=True)),
+                name="skill_since_launch_has_year",
+                violation_error_message=_("Give the launch year for a skill used since launch."),
             )
         ]
 

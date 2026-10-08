@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-08 11:10+0000\n"
+"POT-Creation-Date: 2026-10-08 11:34+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -44,11 +44,11 @@ msgstr "Studia magisterskie"
 msgid "Doctoral Studies"
 msgstr "Studia doktoranckie"
 
-#: university/models.py:13 work/models.py:124
+#: university/models.py:13 work/models.py:128
 msgid "Start"
 msgstr "Rozpoczęcie"
 
-#: university/models.py:14 work/models.py:125
+#: university/models.py:14 work/models.py:129
 msgid "End"
 msgstr "Koniec"
 
@@ -92,7 +92,7 @@ msgstr "Link"
 msgid "Year"
 msgstr "Rok"
 
-#: university/models.py:52 vex/models.py:33 vex/models.py:56 work/models.py:79
+#: university/models.py:52 vex/models.py:33 vex/models.py:56 work/models.py:83
 msgid "Title"
 msgstr "Tytuł"
 
@@ -168,7 +168,7 @@ msgstr "Rozmowa"
 msgid "Conversations"
 msgstr "Rozmowy"
 
-#: vex/models.py:24 work/models.py:152
+#: vex/models.py:24 work/models.py:156
 msgid "Role"
 msgstr "Rola"
 
@@ -180,7 +180,7 @@ msgstr "Wiadomość"
 msgid "Messages"
 msgstr "Wiadomomści"
 
-#: vex/models.py:34 work/models.py:43 work/models.py:86 work/models.py:175
+#: vex/models.py:34 work/models.py:47 work/models.py:90 work/models.py:179
 msgid "Description"
 msgstr "Opis"
 
@@ -236,113 +236,114 @@ msgstr "Konfiguracje"
 msgid "Work"
 msgstr "Praca"
 
-#: work/models.py:27
+#: work/models.py:28
 msgid "Used since"
 msgstr "Używany od"
 
-#: work/models.py:31
+#: work/models.py:33
 msgid ""
-"The year it was first used, if before its first role. Leave empty to count "
-"from the roles."
+"The year it was first used, if before its first role, or its launch year. "
+"Leave empty to count from the roles."
 msgstr ""
-"Rok, w którym zaczął być używany, jeśli przed pierwszą rolą. Zostaw puste, "
-"by liczyć od ról."
+"Rok, w którym zaczął być używany, jeśli przed pierwszą rolą, albo rok "
+"premiery. Zostaw puste, by liczyć od ról."
 
-#: work/models.py:34
+#: work/models.py:38
 msgid "Since launch"
 msgstr "Od premiery"
 
-#: work/models.py:37
-msgid "Used since it came out; shown instead of a count of years."
-msgstr "Używany od premiery; pokazywane zamiast liczby lat."
+#: work/models.py:41
+msgid ""
+"Used since it came out, in the year above; said instead of a count of years."
+msgstr "Używany od premiery, w roku podanym wyżej; zamiast liczby lat."
 
-#: work/models.py:42
+#: work/models.py:46
 msgid "Name"
 msgstr "Nazwa"
 
-#: work/models.py:64
+#: work/models.py:68
 msgid "The year cannot be in the future."
 msgstr "Rok nie może być z przyszłości."
 
-#: work/models.py:67
+#: work/models.py:71
 msgid "Skill"
 msgstr "Umiejętność"
 
-#: work/models.py:68
+#: work/models.py:72
 msgid "Skills"
 msgstr "Umiejętności"
 
-#: work/models.py:73
-msgid "Give a year or mark it as used since launch, not both."
-msgstr "Podaj rok albo zaznacz „Od premiery”, nie oba naraz."
+#: work/models.py:77
+msgid "Give the launch year for a skill used since launch."
+msgstr "Podaj rok premiery dla umiejętności używanej od premiery."
 
-#: work/models.py:80
+#: work/models.py:84
 msgid "Image URL"
 msgstr "Adres URL obrazu"
 
-#: work/models.py:81
+#: work/models.py:85
 msgid "Tags"
 msgstr "Tagi"
 
-#: work/models.py:82
+#: work/models.py:86
 msgid "Demo"
 msgstr "Demo"
 
-#: work/models.py:83
+#: work/models.py:87
 msgid "Repository"
 msgstr "Repozytorium"
 
-#: work/models.py:102
+#: work/models.py:106
 msgid "Project"
 msgstr "Projekt"
 
-#: work/models.py:103
+#: work/models.py:107
 msgid "Projects"
 msgstr "Projekty"
 
-#: work/models.py:123
+#: work/models.py:127
 msgid "Position"
 msgstr "Stanowisko"
 
-#: work/models.py:126
+#: work/models.py:130
 msgid "Company"
 msgstr "Firma"
 
-#: work/models.py:127
+#: work/models.py:131
 msgid "Technologies"
 msgstr "Technologie"
 
-#: work/models.py:130
+#: work/models.py:134
 msgctxt "experience"
 msgid "Tools"
 msgstr "Narzędzia programistyczne"
 
-#: work/models.py:133
+#: work/models.py:137
 msgid "Programming tools used in the role, e.g. Copilot, Claude Code."
 msgstr ""
 "Narzędzia programistyczne używane w tej roli, np. Copilot, Claude Code."
 
-#: work/models.py:137
+#: work/models.py:141
 msgctxt "experience"
 msgid "Topics"
 msgstr "Tematyka zajęć"
 
-#: work/models.py:140
+#: work/models.py:144
 msgid "Subjects taught, for a teaching or training role."
 msgstr "Tematy zajęć, dla roli trenerskiej lub dydaktycznej."
 
-#: work/models.py:143
+#: work/models.py:147
 msgid "Visible"
 msgstr "Widoczne"
 
-#: work/models.py:147
+#: work/models.py:151
 msgid ""
 "Shown on the site and to Vex. Uncheck to keep the role without showing it."
 msgstr ""
 "Pokazywane na stronie i Vexowi. Odznacz, by zachować rolę bez pokazywania "
 "jej."
 
-#: work/models.py:157
+#: work/models.py:161
 msgid ""
 "The role's title in this language; it replaces Position, still shown by the "
 "current site."
@@ -350,38 +351,38 @@ msgstr ""
 "Nazwa roli w tym języku; zastępuje Stanowisko, które obecna strona wciąż "
 "pokazuje."
 
-#: work/models.py:159
+#: work/models.py:163
 msgid "Location"
 msgstr "Lokalizacja"
 
-#: work/models.py:160
+#: work/models.py:164
 msgctxt "experience"
 msgid "Product"
 msgstr "Produkt"
 
-#: work/models.py:161
+#: work/models.py:165
 msgctxt "experience"
 msgid "Responsibilities"
 msgstr "Moja odpowiedzialność"
 
-#: work/models.py:164
+#: work/models.py:168
 msgctxt "experience"
 msgid "Contributions"
 msgstr "Wybrane elementy mojego wkładu"
 
-#: work/models.py:170
+#: work/models.py:174
 msgctxt "experience"
 msgid "Results"
 msgstr "Efekty"
 
-#: work/models.py:176
+#: work/models.py:180
 msgid "Achievements"
 msgstr "Osiągnięcia"
 
-#: work/models.py:228
+#: work/models.py:232
 msgid "Experience"
 msgstr "Doświadczenie"
 
-#: work/models.py:229
+#: work/models.py:233
 msgid "Experiences"
 msgstr "Doświadczenia"

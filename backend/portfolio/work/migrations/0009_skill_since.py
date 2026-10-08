@@ -4,24 +4,25 @@ import django.core.validators
 from django.db import migrations, models
 
 # The levels that said more than the roles can: "10+ years" is Python, used
-# since 2016, and "Since launch" is Claude Code. "3+" and "5+" are left to
-# be counted from the roles, which show at least as much.
+# since 2016, and "Since launch" is Claude Code, which came out in 2025. "3+"
+# and "5+" are left to be counted from the roles, which show at least as much.
 EXPERT = "10+ years of experience"
 EXPERT_SINCE = 2016
 SINCE_LAUNCH = "Since launch"
+LAUNCHED = 2025
 
 
 def carry_levels_over(apps, schema_editor):  # pylint: disable=unused-argument
     """Each level that the roles cannot show, as the year or the flag that replaces it."""
     Skill = apps.get_model("work", "Skill")
     Skill.objects.filter(level=EXPERT).update(since=EXPERT_SINCE)
-    Skill.objects.filter(level=SINCE_LAUNCH).update(since_launch=True)
+    Skill.objects.filter(level=SINCE_LAUNCH).update(since=LAUNCHED, since_launch=True)
 
 
 def restore_levels(apps, schema_editor):  # pylint: disable=unused-argument
     """The way back: the year and the flag as the levels they came from, the rest as the least."""
     Skill = apps.get_model("work", "Skill")
-    Skill.objects.filter(since__isnull=False).update(level=EXPERT)
+    Skill.objects.filter(since__isnull=False, since_launch=False).update(level=EXPERT)
     Skill.objects.filter(since_launch=True).update(level=SINCE_LAUNCH)
 
 
@@ -36,7 +37,10 @@ class Migration(migrations.Migration):
             name="since",
             field=models.PositiveSmallIntegerField(
                 blank=True,
-                help_text="The year it was first used, if before its first role. Leave empty to count from the roles.",
+                help_text=(
+                    "The year it was first used, if before its first role, or its launch year. "
+                    "Leave empty to count from the roles."
+                ),
                 null=True,
                 validators=[django.core.validators.MinValueValidator(1990)],
                 verbose_name="Used since",
@@ -48,7 +52,7 @@ class Migration(migrations.Migration):
             field=models.BooleanField(
                 db_default=False,
                 default=False,
-                help_text="Used since it came out; shown instead of a count of years.",
+                help_text="Used since it came out, in the year above; said instead of a count of years.",
                 verbose_name="Since launch",
             ),
         ),
@@ -60,9 +64,9 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="skill",
             constraint=models.CheckConstraint(
-                condition=models.Q(("since_launch", True), ("since__isnull", False), _negated=True),
-                name="skill_since_or_since_launch",
-                violation_error_message="Give a year or mark it as used since launch, not both.",
+                condition=models.Q(("since_launch", True), ("since__isnull", True), _negated=True),
+                name="skill_since_launch_has_year",
+                violation_error_message="Give the launch year for a skill used since launch.",
             ),
         ),
     ]

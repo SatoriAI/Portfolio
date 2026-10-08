@@ -29,13 +29,17 @@ class WorkModelsTestCase(TestCase):
         self.assertEqual(obj.description, "General-purpose programming language.")
         self.assertIsNotNone(obj.representation_for("en"))
 
-    def test_skill_cannot_have_a_year_and_be_since_launch(self) -> None:
-        with self.assertRaises(IntegrityError):
-            Skill.objects.create(since=2016, since_launch=True, name="Python")
+    @data({}, {"since": 2016}, {"since": 2025, "since_launch": True})
+    def test_skill_takes_a_year_with_or_without_since_launch(self, fields: dict) -> None:
+        Skill(name="Claude Code", **fields).full_clean()
 
-    def test_skill_form_says_a_year_and_since_launch_clash(self) -> None:
-        skill = Skill(since=2016, since_launch=True, name="Python")
-        with self.assertRaisesMessage(ValidationError, "not both"):
+    def test_skill_since_launch_needs_its_year(self) -> None:
+        with self.assertRaises(IntegrityError):
+            Skill.objects.create(since_launch=True, name="Claude Code")
+
+    def test_skill_form_asks_for_the_launch_year(self) -> None:
+        skill = Skill(since_launch=True, name="Claude Code")
+        with self.assertRaisesMessage(ValidationError, "launch year"):
             skill.full_clean()
 
     @data(1989, timezone.now().year + 1)
@@ -46,7 +50,7 @@ class WorkModelsTestCase(TestCase):
 
     @data(
         ({"since": 2016}, "Used since: 2016, before the roles that show it"),
-        ({"since_launch": True}, "Used since: its launch"),
+        ({"since": 2025, "since_launch": True}, "Used since: its launch in 2025"),
         ({}, None),
     )
     def test_skill_representation_tells_vex_what_the_roles_cannot(self, case: tuple[dict, str | None]) -> None:

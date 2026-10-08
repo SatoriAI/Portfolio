@@ -54,7 +54,7 @@ class CarryLevelsOverTestCase(TransactionTestCase):
             for level in ("3+ years of experience", "5+ years of experience", "10+ years of experience", "Since launch")
         }
 
-    def test_ten_years_becomes_2016_and_since_launch_its_flag(self) -> None:
+    def test_ten_years_becomes_2016_and_since_launch_its_flag_and_year(self) -> None:
         executor = MigrationExecutor(connection)
         executor.loader.build_graph()
         executor.migrate(self.AFTER)
@@ -69,6 +69,6 @@ class CarryLevelsOverTestCase(TransactionTestCase):
                 "3+ years of experience": (None, False),
                 "5+ years of experience": (None, False),
                 "10+ years of experience": (2016, False),
-                "Since launch": (None, True),
+                "Since launch": (2025, True),
             },
         )
