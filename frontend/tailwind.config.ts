@@ -137,7 +137,7 @@ export default {
         // The chosen circle: the rim itself turns iris, with a soft iris halo
         // round it, so the choice reads at a glance among six logos.
         "rim-chosen":
-          "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 10px hsl(var(--iris) / 0.15), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
+          "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 12px hsl(var(--iris) / 0.3), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
         // Chosen and focused from the keyboard: the iris rim, and the focus
         // ring outside it where the halo would be.
         "rim-chosen-focus":
@@ -163,11 +163,11 @@ export default {
         "chosen-pulse": {
           "0%, 100%": {
             boxShadow:
-              "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 10px hsl(var(--iris) / 0.15), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
+              "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 12px hsl(var(--iris) / 0.3), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
           },
           "50%": {
             boxShadow:
-              "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 15px hsl(var(--iris) / 0.28), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
+              "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 17px hsl(var(--iris) / 0.38), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
           },
         },
         // A clock numeral counted as the hand passes it: iris, fading back.
