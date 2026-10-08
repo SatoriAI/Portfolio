@@ -11,8 +11,10 @@ export const skillEvidence: Readonly<Record<number, readonly string[]>> = {
   1: ["Python", "FastAPI", "Django"],
   2: ["PostgreSQL"],
   3: ["Docker"],
-  // System engineering: services that talk over gRPC or a message queue.
-  4: ["gRPC", "RabbitMQ", "Celery", "Golang"],
+  // Microservices: an architecture, not a technology, so no library or
+  // language proves it (a queue or Go comes with a monolith as readily).
+  // The roles built that way say so with an explicit tag, as GenAI does.
+  4: ["Microservices"],
   // Generative AI: the roles and projects that name GenAI.
   5: ["GenAI"],
   6: ["Kubernetes"],
