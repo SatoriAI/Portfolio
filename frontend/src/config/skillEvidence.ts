@@ -24,4 +24,5 @@ export const skillEvidence: Readonly<Record<number, readonly string[]>> = {
   10: ["Claude Code"],
   // Likewise an editor, listed under a role's programming tools.
   11: ["Cursor"],
+  12: ["Redis"],
 };

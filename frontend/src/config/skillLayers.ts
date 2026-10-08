@@ -9,7 +9,7 @@ export type SkillLayerKey = "interfaceApi" | "dataServices" | "platformDelivery"
 
 export const skillLayers: readonly { key: SkillLayerKey; skills: readonly number[] }[] = [
   { key: "interfaceApi", skills: [9, 1] },
-  { key: "dataServices", skills: [2, 4] },
+  { key: "dataServices", skills: [2, 12, 4] },
   { key: "platformDelivery", skills: [3, 6, 8, 7] },
   { key: "ai", skills: [5, 10, 11] },
 ];
