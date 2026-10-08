@@ -1,7 +1,12 @@
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 
-import { circleControl, circleState } from "@/components/experience/circleStyles";
+import {
+  circleControl,
+  SIDEBAR_TRANSITION,
+  sidebarCircleState,
+  sidebarMarks,
+} from "@/components/experience/circleStyles";
 import CompanyMark from "@/components/experience/CompanyMark";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +30,8 @@ type RoleSidebarProps = {
   onOpen: (id: number) => void;
   /** Roles lit up from elsewhere on the page (a chosen skill's). */
   highlightedIds: ReadonlySet<number> | null;
+  /** Read with each lit role, as its ring is only seen ("Docker used here"). */
+  litNote?: string;
   /** Hidden while the circles fly in or back; they land here. */
   circlesHidden?: boolean;
   labels: {
@@ -45,21 +52,25 @@ const RoleSidebar = ({
   onToggle,
   onOpen,
   highlightedIds,
+  litNote,
   circlesHidden = false,
   labels,
   className,
 }: RoleSidebarProps) => {
   const chosen = roles.find((role) => role.id === selectedId);
 
-  // On a phone the strip scrolls sideways: bring a chosen circle into it,
-  // moving the strip alone, never the page.
+  // On a phone the strip scrolls sideways: bring a chosen circle into it, or,
+  // with none chosen, the first role a chosen skill lights, moving the strip
+  // alone, never the page.
   // The strip is the circles' offset parent, so offsetLeft is measured in it.
   const strip = useRef<HTMLOListElement>(null);
   // Faded at its start too, once scrolled, so circles never end on a hard cut.
   const [scrolled, setScrolled] = useState(false);
+  const firstLit = roles.find((role) => highlightedIds?.has(role.id))?.id ?? null;
+  const shown = selectedId ?? firstLit;
   useEffect(() => {
     const list = strip.current;
-    const circle = list?.querySelector<HTMLElement>(`[data-sidebar-circle="${selectedId}"]`);
+    const circle = list?.querySelector<HTMLElement>(`[data-sidebar-circle="${shown}"]`);
     if (!list || !circle || list.scrollWidth <= list.clientWidth) return;
     const left = circle.offsetLeft;
     if (left < list.scrollLeft || left + circle.offsetWidth > list.scrollLeft + list.clientWidth)
@@ -67,7 +78,7 @@ const RoleSidebar = ({
         left: left - (list.clientWidth - circle.offsetWidth) / 2,
         behavior: "instant",
       });
-  }, [selectedId]);
+  }, [shown]);
   return (
     <nav aria-label={labels.list} className={cn("flex items-center gap-4 md:block", className)}>
       {/* In the axis's row, so the first circle starts on the axis line. */}
@@ -77,9 +88,9 @@ const RoleSidebar = ({
       >
         {labels.list}
       </p>
-      {/* 24px apart, so the chosen circle's halo clears its neighbours. On a
+      {/* 24px apart, so the lavender rings clear their neighbours. On a
           phone the strip is wider than the screen, so it scrolls sideways,
-          with room round it for the halo. It fades at its end, and at its
+          with room round it for the rings. It fades at its end, and at its
           start once scrolled; the last circle, and any circle focused from
           the keyboard, stops clear of the fade. */}
       <ol
@@ -96,7 +107,9 @@ const RoleSidebar = ({
               <button
                 type="button"
                 aria-pressed={selected}
-                aria-label={`${labels.show(role.company)}, ${role.period}`}
+                aria-label={[`${labels.show(role.company)}, ${role.period}`, highlighted && litNote]
+                  .filter(Boolean)
+                  .join(", ")}
                 title={role.company}
                 data-sidebar-circle={role.id}
                 data-timeline-circle={role.id}
@@ -105,11 +118,11 @@ const RoleSidebar = ({
                   // 44px on a phone: the smallest comfortable touch target.
                   "block size-11 md:size-12",
                   circleControl,
-                  circleState(selected, highlighted),
+                  sidebarCircleState(sidebarMarks(role.id, selectedId, highlightedIds)),
                   // Faded rather than hidden while the circles are in flight,
                   // so the keyboard can still reach them; focus brings them back.
                   // At once, not faded in, so a landing copy hands over cleanly.
-                  "motion-safe:transition-transform",
+                  SIDEBAR_TRANSITION,
                   circlesHidden &&
                     "pointer-events-none opacity-0 group-focus-within/circles:pointer-events-auto group-focus-within/circles:opacity-100",
                 )}

@@ -3,7 +3,7 @@ import { useMemo, useRef, useState } from "react";
 import HeaderShapes from "@/components/brand/HeaderShapes";
 import CareerTimeline, { type TimelineEntry } from "@/components/experience/CareerTimeline";
 import CircleFlight, { type FlightPhase } from "@/components/experience/CircleFlight";
-import { circleState } from "@/components/experience/circleStyles";
+import { circleRing, sidebarMarks } from "@/components/experience/circleStyles";
 import CompanyMark from "@/components/experience/CompanyMark";
 import RoleEntry from "@/components/experience/RoleEntry";
 import RoleSidebar from "@/components/experience/RoleSidebar";
@@ -148,6 +148,8 @@ const Experience = () => {
     () => (chosenSkill === null ? null : new Set(rolesBySkill.get(chosenSkill) ?? [])),
     [chosenSkill, rolesBySkill],
   );
+  // Said with each role the chosen skill lights, since the ring is only seen.
+  const chosenSkillName = skills.find((skill) => skill.id === chosenSkill)?.name;
   // A skill and a sidebar role are chosen independently, so a role's band
   // stays while its skills are looked at one by one; a press anywhere else
   // lets go of both.
@@ -238,18 +240,17 @@ const Experience = () => {
   const flight = !isMobile && !prefersReducedMotion && roles.length > 0;
   const flightRoles = useMemo(
     () =>
-      roles.map((role) => ({
-        id: role.entry.id,
-        mark: (
-          <CompanyMark company={role.experience.company} className="size-full text-sm ring-0" />
-        ),
-        // The copies wear the sidebar's look, halo included, since that is
-        // where they land.
-        className: circleState(
-          role.entry.id === sidebarRole,
-          highlighted?.has(role.entry.id) ?? false,
-        ),
-      })),
+      roles.map((role) => {
+        const marks = sidebarMarks(role.entry.id, sidebarRole, highlighted);
+        return {
+          id: role.entry.id,
+          mark: (
+            <CompanyMark company={role.experience.company} className="size-full text-sm ring-0" />
+          ),
+          ring: circleRing(marks),
+          receded: marks.receded,
+        };
+      }),
     [roles, sidebarRole, highlighted],
   );
 
@@ -308,7 +309,8 @@ const Experience = () => {
                     labels={timelineLabels}
                     selectedId={selectedId}
                     onSelect={select}
-                    highlightedIds={highlighted}
+                    // Only its own state: a skill chosen below lights its
+                    // roles in the sidebar there, not here.
                     onPreview={setPreviewRole}
                     circlesAway={flight && phase !== "timeline"}
                     enterFromEdges
@@ -371,6 +373,9 @@ const Experience = () => {
                 onToggle={chooseRole}
                 onOpen={select}
                 highlightedIds={highlighted}
+                litNote={
+                  chosenSkillName && fillTemplate(t.skills.usedHere, { name: chosenSkillName })
+                }
                 circlesHidden={flight && phase !== "sidebar"}
                 labels={{
                   list: t.skills.roles,

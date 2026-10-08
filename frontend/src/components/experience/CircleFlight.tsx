@@ -1,6 +1,7 @@
 import { type ReactNode, type RefObject, useRef } from "react";
 import { createPortal } from "react-dom";
 
+import { recededFilter } from "@/components/experience/circleStyles";
 import { useLatest } from "@/hooks/use-latest";
 import { useScrollFrame } from "@/hooks/use-scroll-frame";
 import { clamp01, easeInOutCubic } from "@/lib/motion";
@@ -31,9 +32,13 @@ export type FlightPhase = "timeline" | "flying" | "sidebar";
 type CircleFlightProps = {
   /**
    * The roles, in the order they sit in the sidebar, each with its mark and
-   * the ring it wears there (chosen, lit), so it keeps it in flight.
+   * the look it wears there: its lavender ring, or receded. The look is the
+   * sidebar's, not the timeline's: it fades in over the last stretch of the
+   * way down and out over the first stretch of the way up, with the scroll,
+   * so a choice made beside the skills never reaches the timeline and never
+   * blinks at the hand-over.
    */
-  roles: readonly { id: number; mark: ReactNode; className?: string }[];
+  roles: readonly { id: number; mark: ReactNode; ring?: string; receded?: boolean }[];
   /** The skills section: its top's travel sets the flight's progress. */
   section: RefObject<HTMLElement>;
   /** Where the circles start: the timeline. */
@@ -49,15 +54,18 @@ const START_AT = 1.05;
 const END_AT = 0.65;
 /** How much later each circle leaves than the one before, as progress. */
 const STAGGER = 0.08;
+/** The share of a circle's own way, at the sidebar's end, over which its look fades. */
+const RING_FADE = 0.5;
 
 const CircleFlight = ({ roles, section, from, to, onPhase }: CircleFlightProps) => {
   const copies = useRef<(HTMLDivElement | null)[]>([]);
+  const rings = useRef<(HTMLSpanElement | null)[]>([]);
   const phase = useRef<FlightPhase | null>(null);
   // Read through a ref, so a new callback each render does not restart the loop.
   const tell = useLatest(onPhase);
 
-  // The class of each circle changes as roles are chosen; only how many
-  // there are moves anything.
+  // A ring's look changes as roles are chosen, through React; only how many
+  // circles there are restarts the loop.
   useScrollFrame(
     () => {
       const sectionTop = section.current?.getBoundingClientRect().top;
@@ -81,7 +89,7 @@ const CircleFlight = ({ roles, section, from, to, onPhase }: CircleFlightProps) 
           ? { a: origin.getBoundingClientRect(), b: target.getBoundingClientRect() }
           : null;
       });
-      roles.forEach((_role, index) => {
+      roles.forEach((role, index) => {
         const copy = copies.current[index];
         if (!copy) return;
         if (next !== "flying") {
@@ -100,6 +108,10 @@ const CircleFlight = ({ roles, section, from, to, onPhase }: CircleFlightProps) 
         copy.style.transform = `translate(${a.left + (b.left - a.left) * t}px, ${
           a.top + (b.top - a.top) * t
         }px)`;
+        const shown = clamp01((t - (1 - RING_FADE)) / RING_FADE);
+        const ring = rings.current[index];
+        if (ring) ring.style.opacity = String(shown);
+        copy.style.filter = role.receded ? recededFilter(shown) : "";
       });
     },
     { watch: roles.length },
@@ -113,12 +125,16 @@ const CircleFlight = ({ roles, section, from, to, onPhase }: CircleFlightProps) 
           ref={(element) => {
             copies.current[index] = element;
           }}
-          className={cn(
-            "invisible absolute left-0 top-0 rounded-full shadow-rim will-change-transform",
-            role.className,
-          )}
+          className="invisible absolute left-0 top-0 rounded-full shadow-rim will-change-transform"
         >
           {role.mark}
+          {/* The sidebar's lavender ring, laid over the plain copy. */}
+          <span
+            ref={(element) => {
+              rings.current[index] = element;
+            }}
+            className={cn("absolute inset-0 rounded-full opacity-0", role.ring)}
+          />
         </div>
       ))}
     </div>,
