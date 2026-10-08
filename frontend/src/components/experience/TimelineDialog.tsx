@@ -201,7 +201,7 @@ const TimelineDialog = <Id extends TimelineId>({
           onKeyDown={onKeyDown}
           className={
             "fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] flex-col rounded-t-card bg-card shadow-xl focus:outline-none " +
-            "sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[calc(100%-3rem)] sm:max-w-4xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-card sm:border sm:border-border"
+            "sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[calc(100%-3rem)] sm:max-w-5xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-card sm:border sm:border-border"
           }
         >
           <DialogPrimitive.Close className="absolute right-4 top-4 z-10 rounded-lg p-2 text-muted-foreground transition-colors duration-200 hover:bg-lavender hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
