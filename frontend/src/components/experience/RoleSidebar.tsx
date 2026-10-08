@@ -1,7 +1,11 @@
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 
-import { circleControl, circleState } from "@/components/experience/circleStyles";
+import {
+  circleControl,
+  sidebarCircleState,
+  sidebarMarks,
+} from "@/components/experience/circleStyles";
 import CompanyMark from "@/components/experience/CompanyMark";
 import { cn } from "@/lib/utils";
 
@@ -113,10 +117,7 @@ const RoleSidebar = ({
                   // 44px on a phone: the smallest comfortable touch target.
                   "block size-11 md:size-12",
                   circleControl,
-                  circleState(selected, {
-                    matched: highlighted,
-                    receded: highlightedIds !== null && !highlighted,
-                  }),
+                  sidebarCircleState(sidebarMarks(role.id, selectedId, highlightedIds)),
                   // Faded rather than hidden while the circles are in flight,
                   // so the keyboard can still reach them; focus brings them back.
                   // At once, not faded in, so a landing copy hands over cleanly.

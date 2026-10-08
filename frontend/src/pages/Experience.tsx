@@ -3,7 +3,7 @@ import { useMemo, useRef, useState } from "react";
 import HeaderShapes from "@/components/brand/HeaderShapes";
 import CareerTimeline, { type TimelineEntry } from "@/components/experience/CareerTimeline";
 import CircleFlight, { type FlightPhase } from "@/components/experience/CircleFlight";
-import { circleRing } from "@/components/experience/circleStyles";
+import { circleRing, sidebarMarks } from "@/components/experience/circleStyles";
 import CompanyMark from "@/components/experience/CompanyMark";
 import RoleEntry from "@/components/experience/RoleEntry";
 import RoleSidebar from "@/components/experience/RoleSidebar";
@@ -245,11 +245,7 @@ const Experience = () => {
         mark: (
           <CompanyMark company={role.experience.company} className="size-full text-sm ring-0" />
         ),
-        ring: circleRing(
-          role.entry.id === sidebarRole,
-          highlighted?.has(role.entry.id) ?? false,
-          highlighted !== null && !highlighted.has(role.entry.id),
-        ),
+        ring: circleRing(sidebarMarks(role.entry.id, sidebarRole, highlighted)),
       })),
     [roles, sidebarRole, highlighted],
   );
