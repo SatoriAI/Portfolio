@@ -1,8 +1,9 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The company circle as a control, shared by the timeline, the sidebar beside
- * the skills and the copies that fly between them, so the three never drift.
+ * The company circle as a control, shared by the timeline and the sidebar
+ * beside the skills, so the two never drift; the copies that fly between them
+ * wear the sidebar's state on a ring of their own (CircleFlight).
  *
  * Chosen turns the rim itself iris. In the sidebar beside the skills it also
  * wears an iris halo (shadow-rim-chosen-halo) that swells three times as it
@@ -35,13 +36,18 @@ export const circleState = (selected: boolean, lit: boolean, halo = true) =>
         cn(
           "shadow-rim-chosen-halo focus-visible:shadow-rim-chosen-halo",
           "motion-safe:animate-chosen-pulse motion-safe:[animation-duration:500ms]",
+          // Chosen and used by the chosen skill too: the dashed ring as well,
+          // outside the resting halo, so neither signal hides the other.
+          lit && "outline-dashed outline-2 outline-offset-[13px] outline-iris",
           "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[6px] focus-visible:outline-iris",
         )
       : "shadow-rim-chosen focus-visible:shadow-rim-chosen-focus focus-visible:outline-none"
     : lit
       ? // Outside the rim, with a gap, not over it, where it only tinted the
         // grey and was easily missed.
-        "outline-dashed outline-2 outline-offset-[7px] outline-iris"
+        // Solid under keyboard focus, where the focus ring would lie beneath
+        // the dashes and barely show.
+        "outline-dashed outline-2 outline-offset-[7px] outline-iris focus-visible:outline"
       : // Without a ring of its own, the page's focus outline would land on
         // the rim and read as chosen.
         "focus-visible:outline-none [@media(hover:hover)]:hover:outline [@media(hover:hover)]:hover:outline-2 [@media(hover:hover)]:hover:outline-offset-[3px] [@media(hover:hover)]:hover:outline-iris/40";

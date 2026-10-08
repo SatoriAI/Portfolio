@@ -3,6 +3,7 @@ import { useMemo, useRef, useState } from "react";
 import HeaderShapes from "@/components/brand/HeaderShapes";
 import CareerTimeline, { type TimelineEntry } from "@/components/experience/CareerTimeline";
 import CircleFlight, { type FlightPhase } from "@/components/experience/CircleFlight";
+import { circleState } from "@/components/experience/circleStyles";
 import CompanyMark from "@/components/experience/CompanyMark";
 import RoleEntry from "@/components/experience/RoleEntry";
 import RoleSidebar from "@/components/experience/RoleSidebar";
@@ -147,6 +148,8 @@ const Experience = () => {
     () => (chosenSkill === null ? null : new Set(rolesBySkill.get(chosenSkill) ?? [])),
     [chosenSkill, rolesBySkill],
   );
+  // Said with each role the chosen skill lights, since the ring is only seen.
+  const chosenSkillName = skills.find((skill) => skill.id === chosenSkill)?.name;
   // A skill and a sidebar role are chosen independently, so a role's band
   // stays while its skills are looked at one by one; a press anywhere else
   // lets go of both.
@@ -242,11 +245,9 @@ const Experience = () => {
         mark: (
           <CompanyMark company={role.experience.company} className="size-full text-sm ring-0" />
         ),
-        // The copies fly plain: a choice made beside the skills (a role, or a
-        // skill's roles) belongs to that section, so it leaves the circles as
-        // they lift off for the timeline and returns as they land again.
+        ring: circleState(role.entry.id === sidebarRole, highlighted?.has(role.entry.id) ?? false),
       })),
-    [roles],
+    [roles, sidebarRole, highlighted],
   );
 
   const entryLabels = {
@@ -368,6 +369,9 @@ const Experience = () => {
                 onToggle={chooseRole}
                 onOpen={select}
                 highlightedIds={highlighted}
+                litNote={
+                  chosenSkillName && fillTemplate(t.skills.usedHere, { name: chosenSkillName })
+                }
                 circlesHidden={flight && phase !== "sidebar"}
                 labels={{
                   list: t.skills.roles,

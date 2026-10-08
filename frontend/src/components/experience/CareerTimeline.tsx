@@ -203,7 +203,6 @@ const CareerTimeline = <Id extends TimelineId>({
                   aria-hidden="true"
                   className={cn(
                     "absolute left-5 top-0 -translate-x-1/2 whitespace-nowrap text-sm font-medium transition-colors duration-200 md:left-7",
-                    // A role a chosen skill passed over greys, but stays legible.
                     selected ? "text-iris" : "text-foreground",
                   )}
                 >

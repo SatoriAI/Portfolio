@@ -135,6 +135,8 @@ const copy = {
       roles: "Roles",
       /** A sidebar circle's name; `{company}` is replaced. */
       showSkills: "{company}: show the skills",
+      /** Read with a role the chosen skill lights; `{name}` is the skill. */
+      usedHere: "{name} used here",
       openRole: "More",
       /** The link's full name; `{company}` is replaced. */
       openRoleFull: "More about {company}",
@@ -772,6 +774,7 @@ const copy = {
       },
       roles: "Role",
       showSkills: "{company}: pokaż umiejętności",
+      usedHere: "{name} w tej roli",
       openRole: "Więcej",
       openRoleFull: "Więcej o {company}",
       more: "+{count} więcej",
