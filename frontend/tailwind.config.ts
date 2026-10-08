@@ -166,11 +166,12 @@ export default {
         // The chosen circle's halo swelling and settling: played three times
         // as a circle is chosen, then it rests (the kit allows no loop here).
         // Only the swell is given; it starts and ends on the circle's own
-        // shadow (rim-chosen-halo), so the two cannot drift apart.
+        // shadow (rim-chosen-halo), so the two cannot drift apart. At 16 px
+        // it stays inside the 16 px of room the phone strip leaves round it.
         "chosen-pulse": {
           "50%": {
             boxShadow:
-              "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 17px hsl(var(--iris) / 0.38), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
+              "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 16px hsl(var(--iris) / 0.38), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
           },
         },
         // A clock numeral counted as the hand passes it: iris, fading back.

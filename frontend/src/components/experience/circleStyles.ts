@@ -26,16 +26,18 @@ export const circleControl = [
 
 export const circleState = (selected: boolean, lit: boolean, halo = true) =>
   selected
-    ? cn(
-        "focus-visible:shadow-rim-chosen-focus focus-visible:outline-none",
-        halo
-          ? // Three swells as it is chosen, each 500 ms (set here: the
-            // control's duration-200 sets animations too), then the halo
-            // rests. Not under keyboard focus, whose ring the swell would
-            // cover.
-            "shadow-rim-chosen-halo focus-visible:animate-none motion-safe:animate-chosen-pulse motion-safe:[animation-duration:500ms]"
-          : "shadow-rim-chosen",
-      )
+    ? halo
+      ? // Three swells as it is chosen, each 500 ms (set here: the control's
+        // duration-200 sets animations too), then the halo rests. Nothing
+        // ever switches the swell off, so nothing restarts it: keyboard focus
+        // is an outline over the halo, which paints above any box-shadow,
+        // and the halo stays under focus.
+        cn(
+          "shadow-rim-chosen-halo focus-visible:shadow-rim-chosen-halo",
+          "motion-safe:animate-chosen-pulse motion-safe:[animation-duration:500ms]",
+          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[6px] focus-visible:outline-iris",
+        )
+      : "shadow-rim-chosen focus-visible:shadow-rim-chosen-focus focus-visible:outline-none"
     : lit
       ? "outline-dashed outline-2 outline-offset-[3px] outline-iris"
       : // Without a ring of its own, the page's focus outline would land on
