@@ -1,4 +1,4 @@
-import { type ReactNode, useLayoutEffect, useRef } from "react";
+import { type ReactNode, useId, useLayoutEffect, useRef } from "react";
 
 import { TimelineAxis, TimelineGridlines } from "@/components/experience/TimelineAxis";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
@@ -119,49 +119,58 @@ const Band = ({ left, width }: { left: string; width: string }) => {
 };
 
 type DetailProps = {
+  id: string;
   skill: UiSkill;
   lane: SkillLane | undefined;
   labels: SkillLanesLabels;
 };
 
+/** Whether choosing the skill has anything to open under its row. */
+const hasProof = (skill: UiSkill, lane: SkillLane | undefined) =>
+  Boolean(skill.description) || (lane?.roles.length ?? 0) > 0 || (lane?.projects.length ?? 0) > 0;
+
 /**
  * One skill's proof, under its row: the line on the left, the roles and the
- * projects on the right, wrapping under it where the row is narrow. Above the
- * button laid over the row, so reading it does not close it; opaque, so the
- * gridlines stop at it.
+ * projects on the right, wrapping under it where the row is narrow. Outside
+ * the row's button, so reading it neither closes it nor lights the row up;
+ * on the page's own background, so the gridlines stop at it.
  */
-const Detail = ({ skill, lane, labels }: DetailProps) => {
+const Detail = ({ id, skill, lane, labels }: DetailProps) => {
   const projects = lane?.projects ?? [];
   const roles = lane?.roles ?? [];
-  if (!skill.description && roles.length === 0 && projects.length === 0) return null;
   return (
-    <div className="relative z-20 mt-2 flex flex-wrap items-center justify-between gap-x-8 gap-y-2 rounded-lg bg-background px-4 py-3 shadow-[inset_0_0_0_999px_hsl(var(--lavender)/0.45)] duration-400 ease-brand animate-in fade-in-0 slide-in-from-top-1 motion-reduce:animate-none">
-      {skill.description && <p className="text-base text-foreground">{skill.description}</p>}
-      {(roles.length > 0 || projects.length > 0) && (
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-2 font-mono text-meta">
-          {roles.length > 0 && (
-            <span className="flex items-center gap-3">
-              <span className="uppercase tracking-widest text-muted-foreground">
-                {labels.roles}
+    <div
+      id={id}
+      className="relative mb-2 rounded-lg bg-background duration-400 ease-brand animate-in fade-in-0 slide-in-from-top-1 motion-reduce:animate-none"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-2 rounded-lg bg-lavender/45 px-4 py-3">
+        {skill.description && <p className="text-base text-foreground">{skill.description}</p>}
+        {(roles.length > 0 || projects.length > 0) && (
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-2 font-mono text-meta">
+            {roles.length > 0 && (
+              <span className="flex items-center gap-3">
+                <span className="uppercase tracking-widest text-muted-foreground">
+                  {labels.roles}
+                </span>
+                <span className="flex -space-x-1.5">{roles.map((role) => role.mark)}</span>
+                <span className="sr-only">{roles.map((role) => role.name).join(", ")}</span>
               </span>
-              <span className="flex -space-x-1.5">{roles.map((role) => role.mark)}</span>
-              <span className="sr-only">{roles.map((role) => role.name).join(", ")}</span>
-            </span>
-          )}
-          {projects.length > 0 && (
-            <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span className="uppercase tracking-widest text-muted-foreground">
-                {labels.projects}
+            )}
+            {projects.length > 0 && (
+              <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="uppercase tracking-widest text-muted-foreground">
+                  {labels.projects}
+                </span>
+                <span className="text-foreground">
+                  {projects.slice(0, PROJECTS_SHOWN).join(", ")}
+                  {projects.length > PROJECTS_SHOWN &&
+                    ` ${labels.more(projects.length - PROJECTS_SHOWN)}`}
+                </span>
               </span>
-              <span className="text-foreground">
-                {projects.slice(0, PROJECTS_SHOWN).join(", ")}
-                {projects.length > PROJECTS_SHOWN &&
-                  ` ${labels.more(projects.length - PROJECTS_SHOWN)}`}
-              </span>
-            </span>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -179,6 +188,27 @@ const SkillLanes = ({
 }: SkillLanesProps) => {
   const percent = (month: number) => `${(month / axis.months) * 100}%`;
   const { ref: revealRef, isRevealed, prefersReducedMotion } = useScrollReveal<HTMLDivElement>();
+  const proofId = useId();
+  const root = useRef<HTMLDivElement | null>(null);
+
+  // Choosing a skill below an open one closes that one above it, which would
+  // pull the chosen row up under the pointer. Where the row was is noted on
+  // the press and the page is put back by the difference, before the paint.
+  const pressed = useRef<{ id: number; top: number } | null>(null);
+  const rowTop = (id: number) =>
+    root.current?.querySelector(`[data-skill="${id}"]`)?.getBoundingClientRect().top;
+  const choose = (id: number, next: number | null) => {
+    const top = rowTop(id);
+    pressed.current = top === undefined ? null : { id, top };
+    onSelect(next);
+  };
+  useLayoutEffect(() => {
+    const was = pressed.current;
+    pressed.current = null;
+    if (!was) return;
+    const top = rowTop(was.id);
+    if (top !== undefined) window.scrollBy({ top: top - was.top, behavior: "instant" });
+  }, [selectedId]);
 
   const byId = new Map(skills.map((skill) => [skill.id, skill]));
   const placed = new Set(layers.flatMap((layer) => layer.skills));
@@ -201,7 +231,13 @@ const SkillLanes = ({
       : `${property} ${duration}ms ${EASE_BRAND} ${layer * LAYER_STEP_MS + after}ms`;
 
   return (
-    <div ref={revealRef} className={cn("relative", className)}>
+    <div
+      ref={(element) => {
+        root.current = element;
+        revealRef(element);
+      }}
+      className={cn("relative", className)}
+    >
       {/* What the two kinds of bar mean, read before the bars. */}
       <Legend labels={labels.legend} />
       {/* The axis, as on the timeline above. */}
@@ -240,6 +276,8 @@ const SkillLanes = ({
                 const receded = band !== null && !lane?.roles.some((role) => role.id === band.id);
                 const years = lane?.years ?? null;
                 const Icon = skill.icon;
+                const proof = hasProof(skill, lane);
+                const proofOf = `${proofId}-${skill.id}`;
                 // A skill the chosen role did not use greys its words, which
                 // stay legible, and fades only its bar.
                 const tone = selected
@@ -248,132 +286,141 @@ const SkillLanes = ({
                     ? "text-muted-foreground group-hover:text-iris"
                     : "text-foreground group-hover:text-iris";
                 return (
-                  <li key={skill.id} className="group relative border-b border-border/60 py-1.5">
-                    {/* The whole row presses, through a button laid over it. */}
-                    <button
-                      type="button"
-                      aria-pressed={selected}
-                      aria-label={labels.show(skill.name)}
-                      onClick={() => onSelect(selected ? null : skill.id)}
-                      className="absolute inset-0 z-10 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    />
+                  <li key={skill.id} data-skill={skill.id} className="border-b border-border/60">
+                    {/* The row: its hover and its button stop at it, so the
+                        proof opened under it is read, not pressed. */}
+                    <div className="group relative py-1.5">
+                      {/* The whole row presses, through a button laid over it.
+                        It opens the proof where there is one, and says so. */}
+                      <button
+                        type="button"
+                        aria-expanded={proof ? selected : undefined}
+                        aria-controls={proof && selected ? proofOf : undefined}
+                        aria-pressed={proof ? undefined : selected}
+                        aria-label={labels.show(skill.name)}
+                        onClick={() => choose(skill.id, selected ? null : skill.id)}
+                        className="absolute inset-0 z-10 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      />
 
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="flex min-w-0 items-center gap-2">
-                        {/* A brand mark keeps its colour; beside a greyed
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="flex min-w-0 items-center gap-2">
+                          {/* A brand mark keeps its colour; beside a greyed
                             name it fades with the bar instead. */}
-                        <span
-                          aria-hidden="true"
-                          className={`transition-[color,opacity] duration-200 ${tone} ${receded ? "opacity-50" : ""}`}
-                        >
-                          <Icon className="size-4" />
-                        </span>
-                        <h4
-                          className={cn(
-                            "truncate text-sm font-medium transition-colors duration-200",
-                            tone,
-                          )}
-                        >
-                          {skill.name}
-                        </h4>
-                        {lane?.beforeAxis && skill.since !== null && (
                           <span
-                            className="whitespace-nowrap font-mono text-meta text-muted-foreground"
+                            aria-hidden="true"
+                            className={`transition-[color,opacity] duration-200 ${tone} ${receded ? "opacity-50" : ""}`}
+                          >
+                            <Icon className="size-4" />
+                          </span>
+                          <h4
+                            className={cn(
+                              "truncate text-sm font-medium transition-colors duration-200",
+                              tone,
+                            )}
+                          >
+                            {skill.name}
+                          </h4>
+                          {lane?.beforeAxis && skill.since !== null && (
+                            <span
+                              className="whitespace-nowrap font-mono text-meta text-muted-foreground"
+                              style={{
+                                opacity: shown ? 1 : 0,
+                                transition: transition("opacity", 200, layer, DRAW_MS),
+                              }}
+                            >
+                              ← {labels.since(skill.since)}
+                            </span>
+                          )}
+                        </span>
+                        <span
+                          className={`shrink-0 font-mono text-meta transition-colors duration-200 ${
+                            receded ? "text-muted-foreground" : "text-foreground"
+                          }`}
+                        >
+                          {skill.sinceLaunch
+                            ? labels.sinceLaunch
+                            : years !== null && labels.years(years)}
+                        </span>
+                      </div>
+
+                      {/* The bar: the months a role proves, on the timeline's axis. */}
+                      <div
+                        className={cn(
+                          "relative mt-1.5 h-1.5 transition-opacity duration-200",
+                          // The words "outside the roles" stay, like the name.
+                          receded && (segments.length > 0 || lane?.leadIn) && "opacity-40",
+                        )}
+                      >
+                        {/* The years used before the roles: the bar's own
+                          colour, dashed, drawn with the rest. */}
+                        {lane?.leadIn && (
+                          <span
+                            aria-hidden="true"
+                            className="absolute inset-y-0 origin-left"
                             style={{
-                              opacity: shown ? 1 : 0,
-                              transition: transition("opacity", 200, layer, DRAW_MS),
+                              left: percent(lane.leadIn.startMonth),
+                              width: percent(lane.leadIn.endMonth - lane.leadIn.startMonth),
+                              transform: `scaleX(${shown ? 1 : 0})`,
+                              transition: transition("transform", DRAW_MS, layer),
                             }}
                           >
-                            ← {labels.since(skill.since)}
+                            <span
+                              className={cn(
+                                "block h-full transition-[color,transform] duration-200 group-hover:scale-y-150",
+                                DASHED,
+                                selected ? "text-iris" : "text-iris/50",
+                              )}
+                            />
                           </span>
                         )}
-                      </span>
-                      <span
-                        className={`shrink-0 font-mono text-meta transition-colors duration-200 ${
-                          receded ? "text-muted-foreground" : "text-foreground"
-                        }`}
-                      >
-                        {skill.sinceLaunch
-                          ? labels.sinceLaunch
-                          : years !== null && labels.years(years)}
-                      </span>
-                    </div>
-
-                    {/* The bar: the months a role proves, on the timeline's axis. */}
-                    <div
-                      className={cn(
-                        "relative mt-1.5 h-1.5 transition-opacity duration-200",
-                        // The words "outside the roles" stay, like the name.
-                        receded && (segments.length > 0 || lane?.leadIn) && "opacity-40",
-                      )}
-                    >
-                      {/* The years used before the roles: the bar's own
-                          colour, dashed, drawn with the rest. */}
-                      {lane?.leadIn && (
-                        <span
-                          aria-hidden="true"
-                          className="absolute inset-y-0 origin-left"
-                          style={{
-                            left: percent(lane.leadIn.startMonth),
-                            width: percent(lane.leadIn.endMonth - lane.leadIn.startMonth),
-                            transform: `scaleX(${shown ? 1 : 0})`,
-                            transition: transition("transform", DRAW_MS, layer),
-                          }}
-                        >
-                          <span
-                            className={cn(
-                              "block h-full transition-[color,transform] duration-200 group-hover:scale-y-150",
-                              DASHED,
-                              selected ? "text-iris" : "text-iris/50",
-                            )}
-                          />
-                        </span>
-                      )}
-                      {segments.length > 0 || lane?.leadIn ? (
-                        segments.map((segment) => (
-                          <span key={segment.startMonth} aria-hidden="true">
-                            {/* Drawn from its first month as its layer is
+                        {segments.length > 0 || lane?.leadIn ? (
+                          segments.map((segment) => (
+                            <span key={segment.startMonth} aria-hidden="true">
+                              {/* Drawn from its first month as its layer is
                                 reached; the bar inside thickens under the
                                 pointer, so the two motions never share one
                                 transform. */}
-                            <span
-                              className="absolute inset-y-0 origin-left"
-                              style={{
-                                left: percent(segment.startMonth),
-                                width: percent(segment.endMonth - segment.startMonth),
-                                transform: `scaleX(${shown ? 1 : 0})`,
-                                transition: transition("transform", DRAW_MS, layer),
-                              }}
-                            >
                               <span
-                                className={cn(
-                                  "block h-full rounded-motif transition-[background-color,transform] duration-200 group-hover:scale-y-150",
-                                  selected ? "bg-iris" : "bg-iris/50",
-                                )}
-                              />
-                            </span>
-                            {/* Outside the bar, so the draw does not squash it. */}
-                            {segment.current && (
-                              <span
-                                className="absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary"
+                                className="absolute inset-y-0 origin-left"
                                 style={{
-                                  left: percent(segment.endMonth),
-                                  opacity: shown ? 1 : 0,
-                                  transition: transition("opacity", 200, layer, DRAW_MS),
+                                  left: percent(segment.startMonth),
+                                  width: percent(segment.endMonth - segment.startMonth),
+                                  transform: `scaleX(${shown ? 1 : 0})`,
+                                  transition: transition("transform", DRAW_MS, layer),
                                 }}
-                              />
-                            )}
+                              >
+                                <span
+                                  className={cn(
+                                    "block h-full rounded-motif transition-[background-color,transform] duration-200 group-hover:scale-y-150",
+                                    selected ? "bg-iris" : "bg-iris/50",
+                                  )}
+                                />
+                              </span>
+                              {/* Outside the bar, so the draw does not squash it. */}
+                              {segment.current && (
+                                <span
+                                  className="absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary"
+                                  style={{
+                                    left: percent(segment.endMonth),
+                                    opacity: shown ? 1 : 0,
+                                    transition: transition("opacity", 200, layer, DRAW_MS),
+                                  }}
+                                />
+                              )}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="absolute -top-1 font-mono text-meta leading-none text-muted-foreground">
+                            {labels.outsideRoles}
                           </span>
-                        ))
-                      ) : (
-                        <span className="absolute -top-1 font-mono text-meta leading-none text-muted-foreground">
-                          {labels.outsideRoles}
-                        </span>
-                      )}
+                        )}
+                      </div>
                     </div>
 
                     {/* The proof opens here, under the row that asked for it. */}
-                    {selected && <Detail skill={skill} lane={lane} labels={labels} />}
+                    {selected && proof && (
+                      <Detail id={proofOf} skill={skill} lane={lane} labels={labels} />
+                    )}
                   </li>
                 );
               })}
