@@ -33,4 +33,5 @@ export const companyLogos: Record<string, CompanyLogo> = {
   CloudFerro: { src: "/logos/cloudferro.jpg", background: "#ffffff", scale: 0.74 },
   PwC: { src: "/logos/pwc.png", background: "#ffffff", scale: 0.76 },
   Addepto: { src: "/logos/addepto.png", background: "#ffffff", scale: 0.6 },
+  "SDA / PFiG": { src: "/logos/sda.png", background: "#ffffff", scale: 0.74 },
 };
