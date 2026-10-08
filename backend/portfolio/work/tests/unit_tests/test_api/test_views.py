@@ -4,7 +4,6 @@ import faker
 from django.test import TestCase
 from django.urls import reverse
 
-from work.choices import Levels
 from work.tests.factories import ExperienceFactory, ProjectFactory, SkillFactory
 
 fake = faker.Faker()
@@ -19,7 +18,7 @@ class SkillListViewTestCase(TestCase):
 
     def test_list_skills_with_translations(self) -> None:
         obj = SkillFactory(
-            level=Levels.EXPERT,
+            since=2016,
             name="Python",
             description="Expert-level Python programming",
             i18n={
@@ -40,7 +39,9 @@ class SkillListViewTestCase(TestCase):
 
         # Basic fields present
         self.assertEqual(item["id"], obj.id)
-        self.assertEqual(item["level"], Levels.EXPERT)
+        self.assertEqual(item["since"], 2016)
+        self.assertFalse(item["since_launch"])
+        self.assertNotIn("level", item)
         self.assertIn("created_at", item)
         self.assertIn("updated_at", item)
 

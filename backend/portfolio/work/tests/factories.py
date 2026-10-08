@@ -5,7 +5,6 @@ import faker
 from factory.django import DjangoModelFactory
 
 from utils.factories import i18nMixin
-from work.choices import Levels
 from work.models import Experience, Project, Skill
 
 fake = faker.Faker()
@@ -33,9 +32,6 @@ class SkillFactory(DjangoModelFactory, i18nMixin):
     class Meta:
         model = Skill
         skip_postgeneration_save = True
-
-    # Shared fields
-    level = factory.Faker("random_element", elements=[lvl.value for lvl in Levels])
 
     # Translated fields (current language)
     name = factory.Faker("word")

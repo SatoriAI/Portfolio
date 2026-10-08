@@ -124,12 +124,12 @@ const copy = {
       },
     },
     skills: {
-      title: "How a request travels",
+      title: "Skills",
       subtitle: "Pick a technology to see where I used it. Or the other way round.",
       layers: {
-        interfaceApi: "Interface and API",
-        dataServices: "Data and services",
-        platformDelivery: "Platform and delivery",
+        languages: "Languages and frameworks",
+        dataArchitecture: "Databases and architecture",
+        infrastructure: "Infrastructure and deployment",
         ai: "AI and tools",
       },
       roles: "Roles",
@@ -140,13 +140,15 @@ const copy = {
       openRoleFull: "More about {company}",
       /** After the first projects, how many more there are. */
       more: "+{count} more",
-      /** Where a claimed level reaches back before the roles on the axis. */
-      earlier: "earlier",
       projects: "Projects",
       /** Beside a skill no role above lists. */
       outsideRoles: "Outside the roles above",
-      /** A level that is not a count of years, as the backend stores it, said here. */
-      levels: { "Since launch": "Since launch" } as Record<string, string>,
+      /** Above the chart: what the solid and the dashed bar stand for. */
+      legend: { roles: "In the roles above", own: "Learning and own projects" },
+      /** Beside a skill used from before the axis begins; `{year}` is replaced. */
+      since: "since {year}",
+      /** In place of a count of years, for a tool used since it came out. */
+      sinceLaunch: "Since launch",
       /** The row's accessible name when it can be pressed. */
       show: "{name}: show the roles",
     },
@@ -760,12 +762,12 @@ const copy = {
       },
     },
     skills: {
-      title: "Jak przechodzi żądanie",
-      subtitle: "Wybierz technologię, a zobaczysz, gdzie jej używałem. Albo odwrotnie.",
+      title: "Umiejętności",
+      subtitle: "Wybierz technologię, a zobaczysz, gdzie jej używałem. Lub odwrotnie.",
       layers: {
-        interfaceApi: "Interfejs i API",
-        dataServices: "Dane i usługi",
-        platformDelivery: "Platforma i dostarczanie",
+        languages: "Języki i frameworki",
+        dataArchitecture: "Bazy danych i architektura",
+        infrastructure: "Infrastruktura i wdrażanie",
         ai: "AI i narzędzia",
       },
       roles: "Role",
@@ -773,10 +775,11 @@ const copy = {
       openRole: "Więcej",
       openRoleFull: "Więcej o {company}",
       more: "+{count} więcej",
-      earlier: "wcześniej",
       projects: "Projekty",
       outsideRoles: "Poza rolami powyżej",
-      levels: { "Since launch": "Od premiery" } as Record<string, string>,
+      legend: { roles: "W rolach powyżej", own: "Nauka i projekty własne" },
+      since: "od {year}",
+      sinceLaunch: "Od premiery",
       show: "{name}: pokaż role",
     },
     workshop: {

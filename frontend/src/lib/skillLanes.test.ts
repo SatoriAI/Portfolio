@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { claimsEarlier, laneSegments } from "./skillLanes";
+import { laneSegments, skillReach } from "./skillLanes";
 
 describe("laneSegments", () => {
   it("merges roles that overlap and keeps a gap between roles that do not", () => {
@@ -35,19 +35,56 @@ describe("laneSegments", () => {
   });
 });
 
-describe("claimsEarlier", () => {
-  const segments = [{ startMonth: 0, endMonth: 84, current: true }];
+describe("skillReach", () => {
+  // An axis from November 2020 to October 2026: the month after now is 72.
+  const months = 72;
+  const fromNokia = [{ startMonth: 0, endMonth: 72, current: true }];
 
-  it("says so when the claimed years reach back past the first drawn month", () => {
-    expect(claimsEarlier(segments, 10, 84)).toBe(true);
+  it("counts from the first role when there is no start year", () => {
+    expect(skillReach(fromNokia, null, months)).toEqual({
+      leadIn: null,
+      beforeAxis: false,
+      years: 5,
+    });
   });
 
-  it("does not when the roles already cover the claim", () => {
-    expect(claimsEarlier(segments, 5, 84)).toBe(false);
+  it("leads in dashed from a start year before the axis, cut at its edge", () => {
+    // January 2016 is 58 months before November 2020.
+    expect(skillReach(fromNokia, -58, months)).toEqual({
+      leadIn: { startMonth: 0, endMonth: 0 },
+      beforeAxis: true,
+      years: 10,
+    });
   });
 
-  it("does not for a level that is not a count, or a skill without a lane", () => {
-    expect(claimsEarlier(segments, null, 84)).toBe(false);
-    expect(claimsEarlier([], 10, 84)).toBe(false);
+  it("leads in from a start year on the axis up to the first role", () => {
+    const fromPwc = [{ startMonth: 61, endMonth: 72, current: true }];
+    expect(skillReach(fromPwc, 26, months)).toEqual({
+      leadIn: { startMonth: 26, endMonth: 61 },
+      beforeAxis: false,
+      years: 3,
+    });
+  });
+
+  it("ignores a start year after the first role", () => {
+    expect(skillReach(fromNokia, 10, months).leadIn).toBeNull();
+  });
+
+  it("runs a start year with no role behind it on to now", () => {
+    expect(skillReach([], 26, months)).toEqual({
+      leadIn: { startMonth: 26, endMonth: 72 },
+      beforeAxis: false,
+      years: 3,
+    });
+  });
+
+  it("places nothing without a role or a start year", () => {
+    expect(skillReach([], null, months).years).toBeNull();
+  });
+
+  it("says under a year as zero", () => {
+    expect(skillReach([{ startMonth: 61, endMonth: 72, current: true }], null, months).years).toBe(
+      0,
+    );
   });
 });

@@ -8,7 +8,8 @@ from work.models import Experience, Project, Skill
 class SkillAdmin(TranslatableAdmin):
     list_display = (
         "name",
-        "level",
+        "since",
+        "since_launch",
         "created_at",
     )
     search_fields = ("name",)

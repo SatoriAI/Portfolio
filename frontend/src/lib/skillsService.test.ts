@@ -11,7 +11,8 @@ const skill = (translations: ApiSkill["translations"]): ApiSkill => ({
   translations,
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
-  level: "Advanced",
+  since: 2016,
+  since_launch: false,
   icon: "Brain",
 });
 
@@ -40,8 +41,10 @@ describe("mapApiSkillToUi", () => {
     expect(untranslated.description).toBe("");
   });
 
-  it("carries the level through untouched", () => {
-    expect(mapApiSkillToUi(bilingual, "en").level).toBe("Advanced");
+  it("carries the start year and the launch flag through", () => {
+    expect(mapApiSkillToUi(bilingual, "en")).toMatchObject({ since: 2016, sinceLaunch: false });
+    const launched = { ...bilingual, since: null, since_launch: true };
+    expect(mapApiSkillToUi(launched, "en")).toMatchObject({ since: null, sinceLaunch: true });
   });
 
   it("maps the icon name to its component", () => {
