@@ -10,10 +10,11 @@ import { cn } from "@/lib/utils";
  * (shadow-rim-chosen-halo) that swells three times as it is chosen and then
  * rests, the one loud mark in the column; on the timeline, where a name sits
  * just above and the role's dialog opens over it at once, the rim alone. A
- * chosen skill answers instead of marking: the roles that used it stay as
- * they are and the rest recede, grey and faint, as the chart beside it fades
- * the skills a chosen role did not use. A chosen role the skill passed over
- * keeps its halo and greys with the rest. Keyboard focus sits outside the rim
+ * chosen skill answers: the roles that used it gain a soft lavender ring
+ * outside the rim, related rather than chosen, and the rest recede, grey and
+ * faint, as the chart beside it fades the skills a chosen role did not use.
+ * A chosen role keeps its halo either way, the one loud mark, and greys with
+ * the rest if the skill passed it over. Keyboard focus sits outside the rim
  * (shadow-rim-focus, or an outline over the halo on the chosen one), so it
  * shows on any of them. The hover lift and ring wait for a real pointer: on
  * touch a tap would leave them stuck.
@@ -28,10 +29,16 @@ export const circleControl = [
 
 /** A role a chosen skill did not use: grey and faint, still legible and pressable. */
 const RECEDED = "opacity-45 grayscale";
+/** A role a chosen skill used: a soft lavender ring outside the rim. */
+const MATCHED = "outline outline-[3px] outline-offset-[5px] outline-lavender-deep";
 
 export const circleState = (
   selected: boolean,
-  { receded = false, halo = true }: { receded?: boolean; halo?: boolean } = {},
+  {
+    matched = false,
+    receded = false,
+    halo = true,
+  }: { matched?: boolean; receded?: boolean; halo?: boolean } = {},
 ) =>
   cn(
     selected
@@ -47,17 +54,24 @@ export const circleState = (
             "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[6px] focus-visible:outline-iris",
           ]
         : "shadow-rim-chosen focus-visible:shadow-rim-chosen-focus focus-visible:outline-none"
-      : // Without a ring of its own, the page's focus outline would land on
-        // the rim and read as chosen.
-        "focus-visible:outline-none [@media(hover:hover)]:hover:outline [@media(hover:hover)]:hover:outline-2 [@media(hover:hover)]:hover:outline-offset-[3px] [@media(hover:hover)]:hover:outline-iris/40",
+      : matched
+        ? // Its ring stays under the pointer; focus shows outside it (shadow-rim-focus).
+          MATCHED
+        : // Without a ring of its own, the page's focus outline would land on
+          // the rim and read as chosen.
+          "focus-visible:outline-none [@media(hover:hover)]:hover:outline [@media(hover:hover)]:hover:outline-2 [@media(hover:hover)]:hover:outline-offset-[3px] [@media(hover:hover)]:hover:outline-iris/40",
     receded && RECEDED,
   );
 
 /**
  * The sidebar's state for a copy in flight, laid over the plain copy: the
- * halo of a chosen role, and for a receded one a wash of the page's own
- * background that greys and fades the mark beneath, as RECEDED does to the
- * circle itself. Never pulsing: the choosing has already played.
+ * halo of a chosen role, the lavender ring of a matched one, and for a
+ * receded one a wash of the page's own background that greys and fades the
+ * mark beneath, as RECEDED does to the circle itself. Never pulsing: the
+ * choosing has already played.
  */
-export const circleRing = (selected: boolean, receded: boolean) =>
-  cn(selected && "shadow-rim-chosen-halo", receded && "bg-background/55 backdrop-grayscale");
+export const circleRing = (selected: boolean, matched: boolean, receded: boolean) =>
+  cn(
+    selected ? "shadow-rim-chosen-halo" : matched && MATCHED,
+    receded && "bg-background/55 backdrop-grayscale",
+  );

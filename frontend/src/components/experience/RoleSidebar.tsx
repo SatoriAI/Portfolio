@@ -114,6 +114,7 @@ const RoleSidebar = ({
                   "block size-11 md:size-12",
                   circleControl,
                   circleState(selected, {
+                    matched: highlighted,
                     receded: highlightedIds !== null && !highlighted,
                   }),
                   // Faded rather than hidden while the circles are in flight,

@@ -247,6 +247,7 @@ const Experience = () => {
         ),
         ring: circleRing(
           role.entry.id === sidebarRole,
+          highlighted?.has(role.entry.id) ?? false,
           highlighted !== null && !highlighted.has(role.entry.id),
         ),
       })),
