@@ -243,6 +243,8 @@ const Experience = () => {
         mark: (
           <CompanyMark company={role.experience.company} className="size-full text-sm ring-0" />
         ),
+        // The copies wear the sidebar's look, halo included, since that is
+        // where they land.
         className: circleState(
           role.entry.id === sidebarRole,
           highlighted?.has(role.entry.id) ?? false,
