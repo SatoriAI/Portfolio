@@ -117,15 +117,25 @@ const Experience = () => {
   const projectsQuery = useProjects();
   const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data]);
 
+  // A role proves a skill through what it used: its technologies and its
+  // programming tools (Claude Code is evidence for the Claude Code skill).
+  const roleEvidence = useMemo(
+    () =>
+      experiences.map((experience) => ({
+        id: experience.id,
+        technologies: [...experience.technologies, ...experience.tools],
+      })),
+    [experiences],
+  );
   const rolesBySkill = useMemo(
     () =>
       new Map(
         skills.map((skill) => [
           skill.id,
-          rolesForSkill(skillEvidence[skill.id] ?? [], experiences),
+          rolesForSkill(skillEvidence[skill.id] ?? [], roleEvidence),
         ]),
       ),
-    [skills, experiences],
+    [skills, roleEvidence],
   );
   const highlighted = useMemo(
     () => (chosenSkill === null ? null : new Set(rolesBySkill.get(chosenSkill) ?? [])),
