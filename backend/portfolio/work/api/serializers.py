@@ -32,4 +32,5 @@ class ExperienceSerializer(TranslatableModelSerializer):
 
     class Meta:
         model = Experience
-        fields = "__all__"
+        # Only visible roles are listed, so the flag would always read true.
+        exclude = ("visible",)

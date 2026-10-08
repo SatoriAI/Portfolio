@@ -162,6 +162,57 @@ class ExperienceListViewTestCase(TestCase):
             ["Wdrożenie CI/CD", "Optymalizacja zapytań SQL"],
         )
 
+    def test_list_experiences_with_structured_fields(self) -> None:
+        obj = ExperienceFactory(
+            position="Python Backend Engineer",
+            company="Acme Corp",
+            tools=["Claude Code"],
+            topics=["Databases", "Testing"],
+            role="Python Backend Engineer",
+            product="A platform for grant applications",
+            responsibilities="Backend and data model",
+            contributions=["Designed the API", "Wrote the importer"],
+            results=["Applications filed in half the time"],
+            i18n={
+                "pl": {
+                    "role": "Inżynier backendu Python",
+                    "location": "Online",
+                    "product": "Serwis do wniosków grantowych",
+                    "responsibilities": "Backend i model danych",
+                    "contributions": ["Projekt API", "Importer danych"],
+                    "results": ["Wnioski składane w połowę czasu"],
+                }
+            },
+        )
+
+        response = self.client.get(reverse("work:experiences"))
+        self.assertEqual(response.status_code, 200)
+        item = response.json()[0]
+
+        self.assertEqual(item["id"], obj.id)
+        # Only visible roles are listed, so the flag stays internal.
+        self.assertNotIn("visible", item)
+        self.assertListEqual(item["tools"], ["Claude Code"])
+        self.assertListEqual(item["topics"], ["Databases", "Testing"])
+        en, pl = item["translations"]["en"], item["translations"]["pl"]
+        self.assertEqual(en["role"], "Python Backend Engineer")
+        self.assertEqual(en["product"], "A platform for grant applications")
+        self.assertEqual(en["responsibilities"], "Backend and data model")
+        self.assertListEqual(en["contributions"], ["Designed the API", "Wrote the importer"])
+        self.assertListEqual(en["results"], ["Applications filed in half the time"])
+        self.assertEqual(pl["role"], "Inżynier backendu Python")
+        self.assertEqual(pl["product"], "Serwis do wniosków grantowych")
+        self.assertListEqual(pl["contributions"], ["Projekt API", "Importer danych"])
+        self.assertListEqual(pl["results"], ["Wnioski składane w połowę czasu"])
+
+    def test_list_experiences_leaves_out_hidden_roles(self) -> None:
+        shown = ExperienceFactory(company="Shown Corp")
+        ExperienceFactory(company="Hidden Corp", visible=False)
+
+        response = self.client.get(reverse("work:experiences"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([item["id"] for item in response.json()], [shown.id])
+
     def test_list_experiences_ordering_current_first_then_start_desc(self) -> None:
         # Current roles (end=None)
         current_newer = ExperienceFactory(position="Current Newer", start=date(2024, 6, 1), end=None)
