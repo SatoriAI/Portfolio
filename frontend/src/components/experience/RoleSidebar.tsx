@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { ChevronRight } from "lucide-react";
 
 import { circleControl, circleState } from "@/components/experience/circleStyles";
@@ -49,6 +50,21 @@ const RoleSidebar = ({
   className,
 }: RoleSidebarProps) => {
   const chosen = roles.find((role) => role.id === selectedId);
+
+  // On a phone the strip scrolls sideways: bring a chosen circle into it,
+  // moving the strip alone, never the page.
+  const strip = useRef<HTMLOListElement>(null);
+  useEffect(() => {
+    const list = strip.current;
+    const circle = list?.querySelector<HTMLElement>(`[data-sidebar-circle="${selectedId}"]`);
+    if (!list || !circle || list.scrollWidth <= list.clientWidth) return;
+    const left = circle.offsetLeft - list.offsetLeft;
+    if (left < list.scrollLeft || left + circle.offsetWidth > list.scrollLeft + list.clientWidth)
+      list.scrollTo({
+        left: left - (list.clientWidth - circle.offsetWidth) / 2,
+        behavior: "instant",
+      });
+  }, [selectedId]);
   return (
     <nav aria-label={labels.list} className={cn("flex items-center gap-4 md:block", className)}>
       {/* In the axis's row, so the first circle starts on the axis line. */}
@@ -58,7 +74,13 @@ const RoleSidebar = ({
       >
         {labels.list}
       </p>
-      <ol className="group/circles flex gap-4 md:flex-col md:items-center md:gap-5">
+      {/* 24px apart, so the chosen circle's halo clears its neighbours. On a
+          phone the strip is wider than the screen, so it scrolls sideways,
+          with room round it for the halo, and fades at its end. */}
+      <ol
+        ref={strip}
+        className="group/circles relative -my-4 -ml-4 flex min-w-0 gap-6 overflow-x-auto py-4 pl-4 [mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)] [scrollbar-width:none] md:m-0 md:flex-col md:items-center md:overflow-visible md:p-0 md:[mask-image:none]"
+      >
         {roles.map((role) => {
           const selected = role.id === selectedId;
           const highlighted = highlightedIds?.has(role.id) ?? false;

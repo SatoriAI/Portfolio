@@ -134,9 +134,14 @@ export default {
         // being chosen, which is drawn there.
         "rim-focus":
           "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--control-border)), 0 0 0 8px hsl(var(--surface)), 0 0 0 10px hsl(var(--iris)), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
-        // The chosen circle: the rim itself turns iris, with a soft iris halo
-        // round it, so the choice reads at a glance among six logos.
+        // The chosen circle: the rim itself turns iris. On the timeline, where
+        // a name sits just above it and its dialog opens over it at once.
         "rim-chosen":
+          "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
+        // The same with an iris halo round it, in the sidebar beside the
+        // skills, so the choice reads at a glance among the logos while the
+        // reader looks at what that role used.
+        "rim-chosen-halo":
           "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 12px hsl(var(--iris) / 0.3), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
         // Chosen and focused from the keyboard: the iris rim, and the focus
         // ring outside it where the halo would be.
@@ -160,11 +165,9 @@ export default {
         },
         // The chosen circle's halo swelling and settling: played three times
         // as a circle is chosen, then it rests (the kit allows no loop here).
+        // Only the swell is given; it starts and ends on the circle's own
+        // shadow (rim-chosen-halo), so the two cannot drift apart.
         "chosen-pulse": {
-          "0%, 100%": {
-            boxShadow:
-              "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 12px hsl(var(--iris) / 0.3), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
-          },
           "50%": {
             boxShadow:
               "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 17px hsl(var(--iris) / 0.38), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
@@ -192,7 +195,9 @@ export default {
         // At a hand's pace: easing in and out, not the brand's quick start.
         marker: "marker 600ms cubic-bezier(0.45, 0, 0.55, 1) both",
         tick: "tick 700ms ease-out",
-        "chosen-pulse": "chosen-pulse 500ms ease-in-out 3",
+        // Its length is set where it is used (components/experience/
+        // circleStyles), since the circle's duration-* sets animations too.
+        "chosen-pulse": "chosen-pulse ease-in-out 3",
       },
     },
   },

@@ -1,10 +1,14 @@
+import { cn } from "@/lib/utils";
+
 /**
  * The company circle as a control, shared by the timeline, the sidebar beside
  * the skills and the copies that fly between them, so the three never drift.
  *
- * Chosen turns the rim itself iris, with a soft iris halo round it
- * (shadow-rim-chosen), pulsing three times as it is chosen and then resting,
- * so the choice reads at a glance among the logos; lit
+ * Chosen turns the rim itself iris. In the sidebar beside the skills it also
+ * wears an iris halo (shadow-rim-chosen-halo) that swells three times as it
+ * is chosen and then rests, so the choice reads at a glance among the logos;
+ * on the timeline, where a name sits just above and the role's dialog opens
+ * over it at once, the rim alone. Lit
  * up from elsewhere (a chosen skill's roles) is a dashed iris ring over the
  * grey rim, so the two read apart when both show at once. Keyboard focus sits
  * outside the rim (shadow-rim-focus, or shadow-rim-chosen-focus on the chosen
@@ -20,11 +24,18 @@ export const circleControl = [
   "focus-visible:shadow-rim-focus",
 ].join(" ");
 
-export const circleState = (selected: boolean, lit: boolean) =>
+export const circleState = (selected: boolean, lit: boolean, halo = true) =>
   selected
-    ? // The halo pulses three times as the circle is chosen, then rests. Its
-      // length is pinned: the control's duration-200 sets animations too.
-      "shadow-rim-chosen motion-safe:animate-chosen-pulse motion-safe:[animation-duration:500ms] focus-visible:shadow-rim-chosen-focus focus-visible:outline-none"
+    ? cn(
+        "focus-visible:shadow-rim-chosen-focus focus-visible:outline-none",
+        halo
+          ? // Three swells as it is chosen, each 500 ms (set here: the
+            // control's duration-200 sets animations too), then the halo
+            // rests. Not under keyboard focus, whose ring the swell would
+            // cover.
+            "shadow-rim-chosen-halo focus-visible:animate-none motion-safe:animate-chosen-pulse motion-safe:[animation-duration:500ms]"
+          : "shadow-rim-chosen",
+      )
     : lit
       ? "outline-dashed outline-2 outline-offset-[3px] outline-iris"
       : // Without a ring of its own, the page's focus outline would land on

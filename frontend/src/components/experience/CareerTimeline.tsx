@@ -239,7 +239,9 @@ const CareerTimeline = <Id extends TimelineId>({
                   className={cn(
                     "group absolute left-0 top-7 size-10 md:size-14",
                     circleControl,
-                    circleState(selected, highlighted),
+                    // No halo here: the name sits just above the circle, and
+                    // the role's dialog opens over it.
+                    circleState(selected, highlighted, false),
                     circlesAway ? "opacity-30" : receded ? "opacity-40" : "opacity-100",
                   )}
                 >
