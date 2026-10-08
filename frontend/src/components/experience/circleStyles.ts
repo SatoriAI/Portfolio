@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils";
  * is chosen and then rests, so the choice reads at a glance among the logos;
  * on the timeline, where a name sits just above and the role's dialog opens
  * over it at once, the rim alone. Lit
- * up from elsewhere (a chosen skill's roles) is a dashed iris ring over the
- * grey rim, so the two read apart when both show at once. Keyboard focus sits
+ * up from elsewhere (a chosen skill's roles) is a dashed iris ring outside the
+ * grey rim, with a gap, so the two read apart when both show at once. Keyboard focus sits
  * outside the rim (shadow-rim-focus, or shadow-rim-chosen-focus on the chosen
  * one), so it shows beside either.
  * The hover lift and ring wait for a real pointer: on touch a tap would
@@ -39,7 +39,9 @@ export const circleState = (selected: boolean, lit: boolean, halo = true) =>
         )
       : "shadow-rim-chosen focus-visible:shadow-rim-chosen-focus focus-visible:outline-none"
     : lit
-      ? "outline-dashed outline-2 outline-offset-[3px] outline-iris"
+      ? // Outside the rim, with a gap, not over it, where it only tinted the
+        // grey and was easily missed.
+        "outline-dashed outline-2 outline-offset-[7px] outline-iris"
       : // Without a ring of its own, the page's focus outline would land on
         // the rim and read as chosen.
         "focus-visible:outline-none [@media(hover:hover)]:hover:outline [@media(hover:hover)]:hover:outline-2 [@media(hover:hover)]:hover:outline-offset-[3px] [@media(hover:hover)]:hover:outline-iris/40";
