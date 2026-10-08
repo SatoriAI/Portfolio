@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useLayoutEffect, useRef } from "react";
+import { type ReactNode, useLayoutEffect, useRef } from "react";
 
 import { TimelineAxis, TimelineGridlines } from "@/components/experience/TimelineAxis";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
@@ -23,10 +23,11 @@ import { cn } from "@/lib/utils";
  * disagree; a tool used since it came out says so instead. A skill nothing
  * places in time says so in place of a bar.
  *
- * The detail is the answer to a choice, so nothing is chosen at first. Under
- * the chart, one panel shows the chosen skill: one line of proof, the roles
- * as logos, and the projects whose tags name it. On a phone it
- * opens under the chosen row instead. Choosing a skill also lights its roles
+ * The detail is the answer to a choice, so nothing is chosen at first. It
+ * opens in place, under the chosen row, as a lavender band: the skill's
+ * line of proof, the roles as logos and the projects whose tags name it,
+ * without repeating the name the row already gives. Nothing else on the
+ * page moves to show it. Choosing a skill also lights its roles
  * up on the timeline (the page draws that); pointing at a role on the
  * timeline draws a band through the rows over its months, growing from its
  * start, and the skills it did not use recede.
@@ -123,24 +124,21 @@ type DetailProps = {
   labels: SkillLanesLabels;
 };
 
-/** One skill's proof: the line, the roles, the projects. */
+/**
+ * One skill's proof, under its row: the line on the left, the roles and the
+ * projects on the right, wrapping under it where the row is narrow. Above the
+ * button laid over the row, so reading it does not close it; opaque, so the
+ * gridlines stop at it.
+ */
 const Detail = ({ skill, lane, labels }: DetailProps) => {
-  const Icon = skill.icon;
   const projects = lane?.projects ?? [];
   const roles = lane?.roles ?? [];
+  if (!skill.description && roles.length === 0 && projects.length === 0) return null;
   return (
-    <div className="duration-400 ease-brand animate-in fade-in-0 slide-in-from-bottom-2 motion-reduce:animate-none">
-      <h3 className="flex items-center gap-2 text-card-title-sm font-semibold">
-        <span aria-hidden="true" className="text-iris">
-          <Icon className="size-5" />
-        </span>
-        {skill.name}
-      </h3>
-      {skill.description && (
-        <p className="mt-2 max-w-[60ch] text-base text-muted-foreground">{skill.description}</p>
-      )}
+    <div className="relative z-20 mt-2 flex flex-wrap items-center justify-between gap-x-8 gap-y-2 rounded-lg bg-background px-4 py-3 shadow-[inset_0_0_0_999px_hsl(var(--lavender)/0.45)] duration-400 ease-brand animate-in fade-in-0 slide-in-from-top-1 motion-reduce:animate-none">
+      {skill.description && <p className="text-base text-foreground">{skill.description}</p>}
       {(roles.length > 0 || projects.length > 0) && (
-        <div className="mt-4 flex flex-wrap items-center gap-x-8 gap-y-3 font-mono text-meta">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-2 font-mono text-meta">
           {roles.length > 0 && (
             <span className="flex items-center gap-3">
               <span className="uppercase tracking-widest text-muted-foreground">
@@ -201,18 +199,6 @@ const SkillLanes = ({
     prefersReducedMotion
       ? "none"
       : `${property} ${duration}ms ${EASE_BRAND} ${layer * LAYER_STEP_MS + after}ms`;
-
-  const detailed = selectedId === null ? undefined : byId.get(selectedId);
-
-  // A skill chosen high in the chart opens its detail a screen below: bring
-  // the panel into view, at once rather than gliding, since only the scroll
-  // itself may move the page. Not on a phone, where the panel is hidden and
-  // the detail opens under the row.
-  const panel = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (selectedId === null || !panel.current?.offsetParent) return;
-    panel.current.scrollIntoView({ block: "nearest", behavior: "instant" });
-  }, [selectedId]);
 
   return (
     <div ref={revealRef} className={cn("relative", className)}>
@@ -386,12 +372,8 @@ const SkillLanes = ({
                       )}
                     </div>
 
-                    {/* On a phone the proof opens here, not a screen away. */}
-                    {selected && (
-                      <div className="mt-4 pb-2 md:hidden">
-                        <Detail skill={skill} lane={lane} labels={labels} />
-                      </div>
-                    )}
+                    {/* The proof opens here, under the row that asked for it. */}
+                    {selected && <Detail skill={skill} lane={lane} labels={labels} />}
                   </li>
                 );
               })}
@@ -399,22 +381,6 @@ const SkillLanes = ({
           </section>
         ))}
       </div>
-
-      {/* From md, the chosen skill's proof, in one panel under the chart. */}
-      {detailed && (
-        <div
-          ref={panel}
-          aria-live="polite"
-          className="mt-6 hidden min-h-[8rem] rounded-card border border-border bg-card p-5 md:block"
-        >
-          <Detail
-            key={detailed.id}
-            skill={detailed}
-            lane={lanes.get(detailed.id)}
-            labels={labels}
-          />
-        </div>
-      )}
     </div>
   );
 };
