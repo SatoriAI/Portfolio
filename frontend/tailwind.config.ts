@@ -134,6 +134,14 @@ export default {
         // being chosen, which is drawn there.
         "rim-focus":
           "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--control-border)), 0 0 0 8px hsl(var(--surface)), 0 0 0 10px hsl(var(--iris)), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
+        // The chosen circle: the rim itself turns iris, with a soft iris halo
+        // round it, so the choice reads at a glance among six logos.
+        "rim-chosen":
+          "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 10px hsl(var(--iris) / 0.15), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
+        // Chosen and focused from the keyboard: the iris rim, and the focus
+        // ring outside it where the halo would be.
+        "rim-chosen-focus":
+          "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 8px hsl(var(--surface)), 0 0 0 10px hsl(var(--iris)), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
       },
       transitionTimingFunction: {
         brand: "cubic-bezier(0.22, 1, 0.36, 1)",
