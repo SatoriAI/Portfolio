@@ -38,10 +38,8 @@ type CareerTimelineLabels = {
 };
 
 export type TimelineEntry<Id extends TimelineId> = TimelineInput<Id> & {
-  /** Set above the circle. */
+  /** Set above the circle, centred on it: short, so it never reaches the next entry. */
   label: string;
-  /** Set instead on a phone, where a long label would reach the next entry. */
-  shortLabel?: string;
   /** The circle's accessible name. */
   ariaLabel: string;
   /** What fills the circle; it should fill its box (size-full). */
@@ -209,18 +207,16 @@ const CareerTimeline = <Id extends TimelineId>({
                   )}
                 </span>
 
+                {/* Centred on the circle below it, as its caption. */}
                 <span
                   aria-hidden="true"
                   className={cn(
-                    "absolute left-0 top-0 whitespace-nowrap text-sm font-medium transition-colors duration-200",
+                    "absolute left-5 top-0 -translate-x-1/2 whitespace-nowrap text-sm font-medium transition-colors duration-200 md:left-7",
                     // A role a chosen skill passed over greys, but stays legible.
                     selected ? "text-iris" : receded ? "text-muted-foreground" : "text-foreground",
                   )}
                 >
-                  {/* Short on a phone, where a long name would reach the next
-                      entry on its lane; whole from sm. */}
-                  <span className="sm:hidden">{entry.shortLabel ?? entry.label}</span>
-                  <span className="hidden sm:inline">{entry.label}</span>
+                  {entry.label}
                 </span>
 
                 <button

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import { ArrowUp, ChevronLeft, ChevronRight, CodeXml, ExternalLink, Lock } from "lucide-react";
+import { ChevronLeft, ChevronRight, CodeXml, ExternalLink, Lock } from "lucide-react";
 
+import AskVexPrompt from "@/components/AskVexPrompt";
 import BuildLine from "@/components/home/BuildLine";
 import LiveCheck, { type LiveCheckLabels } from "@/components/home/LiveCheck";
 import ProjectWindow from "@/components/home/ProjectWindow";
@@ -54,7 +55,7 @@ export type ProjectIndexLabels = {
   youAreHere: string;
   /** In the address bar of a project with no public address yet. */
   notPublic: string;
-  /** Text of the ask-Vex control; `{title}` is replaced. */
+  /** What the ask-Vex control does, read after its name; `{title}` is replaced. */
   askVex: string;
   /** The question sent when it is pressed; `{title}` is replaced. */
   askVexQuestion: string;
@@ -227,30 +228,17 @@ const ProjectFrame = ({
           nextLabel={labels.stackNext}
         />
 
-        {/* Asking Vex looks like what it is: the chat's own input, already
-            holding the question it will send. Pinned to the column's foot, so
-            it ends level with the frame beside it when the text is shorter. */}
-        <button
-          type="button"
-          aria-label={fillTemplate(labels.askVex, { title: project.title })}
-          onClick={() => onAsk(fillTemplate(labels.askVexQuestion, { title: project.title }))}
-          className="group flex min-h-11 w-full items-center gap-3 rounded-lg border border-control-border bg-background py-1.5 pl-4 pr-1.5 text-left outline-none transition-colors duration-200 hover:border-iris focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background max-sm:w-[calc(100%-4rem)] sm:w-fit sm:self-center lg:mt-auto"
-        >
-          <span className="shrink-0 font-mono text-meta text-iris">Vex</span>
-          {/* On a phone the pill makes room for the chat button, so the
-              question wraps rather than losing the project's name. */}
-          <span className="min-w-0 flex-1 text-sm text-muted-foreground transition-colors duration-200 group-hover:text-foreground sm:truncate">
-            {fillTemplate(labels.quoted, {
-              text: fillTemplate(labels.askVexQuestion, { title: project.title }),
-            })}
-          </span>
-          <span
-            aria-hidden="true"
-            className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground"
-          >
-            <ArrowUp className="size-4" />
-          </span>
-        </button>
+        {/* Pinned to the column's foot, so it ends level with the frame
+            beside it when the text is shorter. On a phone it makes room for
+            the chat button, so the question wraps rather than losing the
+            project's name. */}
+        <AskVexPrompt
+          question={fillTemplate(labels.askVexQuestion, { title: project.title })}
+          quoted={labels.quoted}
+          hint={fillTemplate(labels.askVex, { title: project.title })}
+          onAsk={onAsk}
+          className="max-sm:w-[calc(100%-4rem)] sm:w-fit sm:self-center lg:mt-auto"
+        />
       </div>
     </article>
   );
