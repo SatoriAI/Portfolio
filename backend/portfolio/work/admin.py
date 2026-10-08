@@ -30,6 +30,8 @@ class ExperienceAdmin(TranslatableAdmin):
         "position",
         "company",
         "period",
+        "visible",
         "created_at",
     )
-    search_fields = ("position",)
+    list_filter = ("visible",)
+    search_fields = ("position", "translations__role", "company")

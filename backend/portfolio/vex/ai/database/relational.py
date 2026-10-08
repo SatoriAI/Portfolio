@@ -144,7 +144,8 @@ class RelationalContextGetter:
         documents: list[Document] = []
 
         for model in self._get_requirements():
-            qs = model.objects.all()  # type: ignore[attr-defined]
+            # Each model says which of its rows Vex may read (a hidden role is not one).
+            qs = model.vex_queryset()  # type: ignore[attr-defined]
             if hasattr(model, "translations"):
                 qs = qs.prefetch_related("translations")
 
