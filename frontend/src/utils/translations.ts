@@ -140,13 +140,13 @@ const copy = {
       openRoleFull: "More about {company}",
       /** After the first projects, how many more there are. */
       more: "+{count} more",
-      /** Where a claimed level reaches back before the roles on the axis. */
-      earlier: "earlier",
       projects: "Projects",
       /** Beside a skill no role above lists. */
       outsideRoles: "Outside the roles above",
-      /** A level that is not a count of years, as the backend stores it, said here. */
-      levels: { "Since launch": "Since launch" } as Record<string, string>,
+      /** Beside a skill used from before the axis begins; `{year}` is replaced. */
+      since: "since {year}",
+      /** In place of a count of years, for a tool used since it came out. */
+      sinceLaunch: "Since launch",
       /** The row's accessible name when it can be pressed. */
       show: "{name}: show the roles",
     },
@@ -773,10 +773,10 @@ const copy = {
       openRole: "Więcej",
       openRoleFull: "Więcej o {company}",
       more: "+{count} więcej",
-      earlier: "wcześniej",
       projects: "Projekty",
       outsideRoles: "Poza rolami powyżej",
-      levels: { "Since launch": "Od premiery" } as Record<string, string>,
+      since: "od {year}",
+      sinceLaunch: "Od premiery",
       show: "{name}: pokaż role",
     },
     workshop: {

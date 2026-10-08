@@ -1,8 +1,10 @@
 import faker
 from ddt import data, ddt
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.test import TestCase
+from django.utils import timezone
 
-from work.choices import Levels
 from work.models import Experience, Project, Skill
 
 fake = faker.Faker()
@@ -15,27 +17,50 @@ class WorkModelsTestCase(TestCase):
     # -------------------------
     def test_create_skill_success(self) -> None:
         obj = Skill.objects.create(
-            level=Levels.INTERMEDIATE,
             name="Python",
             description="General-purpose programming language.",
         )
         self.assertEqual(Skill.objects.count(), 1)
-        self.assertEqual(obj.level, Levels.INTERMEDIATE)
-        # choice label (UI, relies on gettext; default 'en')
-        self.assertEqual(obj.get_level_display(), "3+ years of experience")
+        # Counted from the roles unless told otherwise.
+        self.assertIsNone(obj.since)
+        self.assertFalse(obj.since_launch)
         # translated fields (current language)
         self.assertEqual(obj.name, "Python")
         self.assertEqual(obj.description, "General-purpose programming language.")
         self.assertIsNotNone(obj.representation_for("en"))
 
-    @data(Levels.INTERMEDIATE, Levels.ADVANCED, Levels.EXPERT)
-    def test_create_skill_with_various_levels(self, level: Levels) -> None:
-        Skill.objects.create(level=level, name=fake.word(), description=fake.sentence())
-        self.assertEqual(Skill.objects.count(), 1)
-        self.assertEqual(Skill.objects.first().level, level)
+    def test_skill_cannot_have_a_year_and_be_since_launch(self) -> None:
+        with self.assertRaises(IntegrityError):
+            Skill.objects.create(since=2016, since_launch=True, name="Python")
+
+    def test_skill_form_says_a_year_and_since_launch_clash(self) -> None:
+        skill = Skill(since=2016, since_launch=True, name="Python")
+        with self.assertRaisesMessage(ValidationError, "not both"):
+            skill.full_clean()
+
+    @data(1989, timezone.now().year + 1)
+    def test_skill_year_is_neither_ancient_nor_future(self, year: int) -> None:
+        with self.assertRaises(ValidationError) as caught:
+            Skill(since=year, name="Python").full_clean()
+        self.assertIn("since", caught.exception.message_dict)
+
+    @data(
+        ({"since": 2016}, "Used since: 2016, before the roles that show it"),
+        ({"since_launch": True}, "Used since: its launch"),
+        ({}, None),
+    )
+    def test_skill_representation_tells_vex_what_the_roles_cannot(self, case: tuple[dict, str | None]) -> None:
+        fields, line = case
+        text = Skill.objects.create(name="Python", description="Backends", **fields).representation_for("en")
+        if line is None:
+            self.assertNotIn("Used since", text)
+        else:
+            self.assertIn(line, text)
+        self.assertIn("Skill: Python", text)
+        self.assertIn("Description: Backends", text)
 
     def test_skill_translations_roundtrip(self) -> None:
-        obj = Skill.objects.create(level=Levels.EXPERT, name="Python", description="Expert level")
+        obj = Skill.objects.create(since=2016, name="Python", description="Expert level")
         # add Polish translation
         obj.set_current_language("pl")
         obj.name = "Python"

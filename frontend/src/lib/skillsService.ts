@@ -21,7 +21,10 @@ export type ApiSkill = {
   translations: Record<string, { name?: string; description?: string }>;
   created_at: string;
   updated_at: string;
-  level: string;
+  /** The year it was first used, where that came before its first role. */
+  since: number | null;
+  /** Used since it came out: said instead of a count of years. */
+  since_launch: boolean;
   icon: "Code" | "Brain" | "Server" | "Database" | "Cloud" | "Container" | "Sparkles" | "Boxes";
 };
 
@@ -33,7 +36,8 @@ export type UiSkill = {
   id: number;
   icon: SkillIcon;
   name: string;
-  level: string;
+  since: number | null;
+  sinceLaunch: boolean;
   description: string;
 };
 
@@ -57,7 +61,8 @@ export function mapApiSkillToUi(skill: ApiSkill, language: string): UiSkill {
     id: skill.id,
     icon: Icon,
     name: localized.name || "",
-    level: skill.level || "",
+    since: skill.since ?? null,
+    sinceLaunch: skill.since_launch ?? false,
     description: localized.description || "",
   };
 }
@@ -67,33 +72,22 @@ const mockSkill = (
   id: number,
   icon: ApiSkill["icon"],
   name: string,
-  level: string,
+  since: number | null,
   description: string,
 ): ApiSkill => ({
   id,
   icon,
-  level,
+  since,
+  since_launch: false,
   translations: { en: { name, description } },
   created_at: "",
   updated_at: "",
 });
 const mockSkills: ApiSkill[] = [
-  mockSkill(
-    1,
-    "Code",
-    "Python",
-    "10+ years of experience",
-    "Backend development, APIs, automation",
-  ),
-  mockSkill(2, "Database", "PostgreSQL", "5+ years of experience", "Schemas, queries, migrations"),
-  mockSkill(
-    5,
-    "Brain",
-    "LLMs & RAG",
-    "3+ years of experience",
-    "Pipeline development, vector databases",
-  ),
-  mockSkill(6, "Server", "Kubernetes", "3+ years of experience", "Helm, deployments, services"),
+  mockSkill(1, "Code", "Python", 2016, "Backend development, APIs, automation"),
+  mockSkill(2, "Database", "PostgreSQL", null, "Schemas, queries, migrations"),
+  mockSkill(5, "Brain", "LLMs & RAG", null, "Pipeline development, vector databases"),
+  mockSkill(6, "Server", "Kubernetes", null, "Helm, deployments, services"),
 ];
 
 /** Every translation at once: the page picks its language (see lib/queries.ts). */

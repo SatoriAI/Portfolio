@@ -4,23 +4,24 @@ import { TimelineAxis, TimelineGridlines } from "@/components/experience/Timelin
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { prefersReducedMotion } from "@/lib/media";
 import { EASE_BRAND } from "@/lib/motion";
-import type { LaneSegment } from "@/lib/skillLanes";
+import type { LaneSegment, SkillReach } from "@/lib/skillLanes";
 import type { UiSkill } from "@/lib/skillsService";
-import { parseYears } from "@/lib/skillYears";
 import type { TimelineTick } from "@/lib/timeline";
 import { cn } from "@/lib/utils";
 
 /**
  * The skills told as the path of one request, layer by layer, as a chart to
- * scan: one thin row per skill, its bar on the same time axis as the career
- * timeline above, month for month.
+ * scan: one thin row per skill, its bar on the career timeline's time axis,
+ * reaching further back where a skill was used before its roles.
  *
- * A bar is drawn only where a role proves the skill: the months of every role
+ * The bar is solid where a role proves the skill: the months of every role
  * whose technologies name it, merged where roles overlap, gaps kept, and a
- * navy dot where it is still running. Where the claimed level reaches back
- * further than the roles show, the row says "earlier" instead of drawing
- * years no role backs. A skill no role places in time says so in place of a
- * bar.
+ * navy dot where it is still running. Before the first role, the years it
+ * was used anyway (university, own projects) are dashed, from its start
+ * year; one used from before the axis begins says from when. The count at
+ * the row's end is the whole bar, dashed and solid, so the two never
+ * disagree; a tool used since it came out says so instead. A skill nothing
+ * places in time says so in place of a bar.
  *
  * The detail is the answer to a choice, so nothing is chosen at first. Under
  * the chart, one panel shows the chosen skill: one line of proof, the roles
@@ -41,15 +42,15 @@ export type SkillLane = {
   roles: readonly { id: number; name: string; mark: ReactNode }[];
   /** Projects whose tags name the skill. */
   projects: readonly string[];
-  earlier: boolean;
-};
+} & SkillReach;
 
 type SkillLanesLabels = {
   years: (count: number) => string;
-  level: (level: string) => string;
+  /** Beside a skill used from before the axis, given the year. */
+  since: (year: number) => string;
+  sinceLaunch: string;
   show: (name: string) => string;
   outsideRoles: string;
-  earlier: string;
   roles: string;
   projects: string;
   /** "+2 more", given how many. */
@@ -58,7 +59,7 @@ type SkillLanesLabels = {
 
 type SkillLanesProps = {
   skills: readonly UiSkill[];
-  /** The axis of the career timeline, so both line up month for month. */
+  /** The career timeline's axis, reaching back as far as the skills do. */
   axis: { months: number; ticks: readonly TimelineTick[] };
   lanes: ReadonlyMap<number, SkillLane>;
   /** The layers, in order, each with its name and its skills' ids. */
@@ -230,7 +231,7 @@ const SkillLanes = ({
                 const segments = lane?.segments ?? [];
                 const selected = skill.id === selectedId;
                 const receded = band !== null && !lane?.roles.some((role) => role.id === band.id);
-                const years = parseYears(skill.level);
+                const years = lane?.years ?? null;
                 const Icon = skill.icon;
                 // A skill the chosen role did not use greys its words, which
                 // stay legible, and fades only its bar.
@@ -268,7 +269,7 @@ const SkillLanes = ({
                         >
                           {skill.name}
                         </h4>
-                        {lane?.earlier && (
+                        {lane?.beforeAxis && skill.since !== null && (
                           <span
                             className="whitespace-nowrap font-mono text-meta text-muted-foreground"
                             style={{
@@ -276,7 +277,7 @@ const SkillLanes = ({
                               transition: transition("opacity", 200, layer, DRAW_MS),
                             }}
                           >
-                            ← {labels.earlier}
+                            ← {labels.since(skill.since)}
                           </span>
                         )}
                       </span>
@@ -285,7 +286,9 @@ const SkillLanes = ({
                           receded ? "text-muted-foreground" : "text-foreground"
                         }`}
                       >
-                        {years !== null ? labels.years(years) : labels.level(skill.level)}
+                        {skill.sinceLaunch
+                          ? labels.sinceLaunch
+                          : years !== null && labels.years(years)}
                       </span>
                     </div>
 
@@ -294,10 +297,32 @@ const SkillLanes = ({
                       className={cn(
                         "relative mt-1.5 h-1.5 transition-opacity duration-200",
                         // The words "outside the roles" stay, like the name.
-                        receded && segments.length > 0 && "opacity-40",
+                        receded && (segments.length > 0 || lane?.leadIn) && "opacity-40",
                       )}
                     >
-                      {segments.length > 0 ? (
+                      {/* The years used before the roles: the bar's own
+                          colour, dashed, drawn with the rest. */}
+                      {lane?.leadIn && (
+                        <span
+                          aria-hidden="true"
+                          className="absolute inset-y-0 origin-left"
+                          style={{
+                            left: percent(lane.leadIn.startMonth),
+                            width: percent(lane.leadIn.endMonth - lane.leadIn.startMonth),
+                            transform: `scaleX(${shown ? 1 : 0})`,
+                            transition: transition("transform", DRAW_MS, layer),
+                          }}
+                        >
+                          <span
+                            className={cn(
+                              "block h-full transition-[color,transform] duration-200 group-hover:scale-y-150",
+                              "bg-[repeating-linear-gradient(90deg,currentColor_0_6px,transparent_6px_10px)]",
+                              selected ? "text-iris" : "text-iris/50",
+                            )}
+                          />
+                        </span>
+                      )}
+                      {segments.length > 0 || lane?.leadIn ? (
                         segments.map((segment) => (
                           <span key={segment.startMonth} aria-hidden="true">
                             {/* Drawn from its first month as its layer is

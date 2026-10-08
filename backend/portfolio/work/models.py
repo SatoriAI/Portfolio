@@ -1,7 +1,10 @@
 from typing import cast
 
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import get_language, pgettext_lazy
 from django.utils.translation import gettext_lazy as _
 from parler.managers import TranslatableManager, TranslatableQuerySet
@@ -9,11 +12,30 @@ from parler.models import TranslatableModel, TranslatedFields
 
 from utils.fields import LinesArrayField
 from utils.models import DescriptiveModel, TimestampedModel
-from work.choices import Icons, Levels
+from work.choices import Icons
 
 
 class Skill(TranslatableModel, TimestampedModel, DescriptiveModel):
-    level = models.CharField(choices=Levels, default=Levels.INTERMEDIATE)
+    """
+    A skill's years are not typed in: the site counts them from the roles that
+    used it. Only what no role shows is stored: the year it was first used,
+    where that came before its first role (university, own projects), or that
+    it has been used since it came out.
+    """
+
+    since = models.PositiveSmallIntegerField(
+        _("Used since"),
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1990)],
+        help_text=_("The year it was first used, if before its first role. Leave empty to count from the roles."),
+    )
+    since_launch = models.BooleanField(
+        _("Since launch"),
+        default=False,
+        db_default=False,
+        help_text=_("Used since it came out; shown instead of a count of years."),
+    )
     icon = models.CharField(choices=Icons, default=Icons.CODE, max_length=16)
 
     translations = TranslatedFields(
@@ -28,11 +50,29 @@ class Skill(TranslatableModel, TimestampedModel, DescriptiveModel):
         lang = (locale or get_language() or "").split("-")[0][:2]
         name = self.safe_translation_getter("name", language_code=lang, any_language=True) or ""
         description = self.safe_translation_getter("description", language_code=lang, any_language=True) or ""
-        return f"Skill: {name}\nLevel: {self.level}\nDescription: {description}"
+        lines = [f"Skill: {name}"]
+        if self.since:
+            lines.append(f"Used since: {self.since}, before the roles that show it")
+        elif self.since_launch:
+            lines.append("Used since: its launch")
+        lines.append(f"Description: {description}")
+        return "\n".join(lines)
+
+    def clean(self) -> None:
+        super().clean()
+        if self.since and self.since > timezone.now().year:
+            raise ValidationError({"since": _("The year cannot be in the future.")})
 
     class Meta:
         verbose_name = _("Skill")
         verbose_name_plural = _("Skills")
+        constraints = [
+            models.CheckConstraint(
+                condition=~(models.Q(since_launch=True) & models.Q(since__isnull=False)),
+                name="skill_since_or_since_launch",
+                violation_error_message=_("Give a year or mark it as used since launch, not both."),
+            )
+        ]
 
 
 class Project(TranslatableModel, TimestampedModel, DescriptiveModel):
