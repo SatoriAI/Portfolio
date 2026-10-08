@@ -31,8 +31,8 @@ import { cn } from "@/lib/utils";
  * timeline draws a band through the rows over its months, growing from its
  * start, and the skills it did not use recede.
  *
- * When the section comes into view the request travels once: layer by layer,
- * the name lights up and its bars draw from their first month to their last.
+ * When the section comes into view the chart draws once, group by group:
+ * each name lights up and its bars draw from their first month to their last.
  * It never plays again, and with reduced motion everything is simply shown.
  */
 

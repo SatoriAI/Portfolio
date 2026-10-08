@@ -124,7 +124,7 @@ const copy = {
       },
     },
     skills: {
-      title: "How a request travels",
+      title: "Skills",
       subtitle: "Pick a technology to see where I used it. Or the other way round.",
       layers: {
         languages: "Languages and frameworks",
@@ -762,7 +762,7 @@ const copy = {
       },
     },
     skills: {
-      title: "Jak przechodzi żądanie",
+      title: "Umiejętności",
       subtitle: "Wybierz technologię, a zobaczysz, gdzie jej używałem. Albo odwrotnie.",
       layers: {
         languages: "Języki i frameworki",
