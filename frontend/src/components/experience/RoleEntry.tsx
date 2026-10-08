@@ -137,7 +137,11 @@ const Results = ({ title, points }: { title: string; points: readonly string[] }
 
 const RoleEntry = ({ experience, labels, onAsk, Heading = "h2" }: RoleEntryProps) => (
   <article className="grid grid-cols-4 gap-x-6 gap-y-8 md:grid-cols-12">
-    <header className="col-span-4 space-y-6 md:col-span-5">
+    {/* The gist stays in view beside a long story, Vex with it, where the
+        screen is tall enough to hold the whole column (from 800px high;
+        below that the column scrolls with the story, as on a phone). Its top
+        matches the dialog body's own top padding. */}
+    <header className="col-span-4 space-y-6 md:col-span-5 md:self-start md:[@media(min-height:800px)]:sticky md:[@media(min-height:800px)]:top-8">
       <div>
         {/* On a phone the logo stands beside the name, sparing the first screen. */}
         <div className="flex items-center gap-4 md:block">
