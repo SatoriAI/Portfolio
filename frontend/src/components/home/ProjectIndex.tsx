@@ -55,7 +55,7 @@ export type ProjectIndexLabels = {
   youAreHere: string;
   /** In the address bar of a project with no public address yet. */
   notPublic: string;
-  /** Text of the ask-Vex control; `{title}` is replaced. */
+  /** What the ask-Vex control does, read after its name; `{title}` is replaced. */
   askVex: string;
   /** The question sent when it is pressed; `{title}` is replaced. */
   askVexQuestion: string;
@@ -234,10 +234,8 @@ const ProjectFrame = ({
             project's name. */}
         <AskVexPrompt
           question={fillTemplate(labels.askVexQuestion, { title: project.title })}
-          shown={fillTemplate(labels.quoted, {
-            text: fillTemplate(labels.askVexQuestion, { title: project.title }),
-          })}
-          label={fillTemplate(labels.askVex, { title: project.title })}
+          quoted={labels.quoted}
+          hint={fillTemplate(labels.askVex, { title: project.title })}
           onAsk={onAsk}
           className="max-sm:w-[calc(100%-4rem)] sm:w-fit sm:self-center lg:mt-auto"
         />

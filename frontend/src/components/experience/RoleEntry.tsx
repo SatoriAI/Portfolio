@@ -1,9 +1,10 @@
-import type { ElementType, ReactNode } from "react";
+import { type ElementType, type ReactNode, useRef } from "react";
 
 import AskVexPrompt from "@/components/AskVexPrompt";
 import CompanyMark from "@/components/experience/CompanyMark";
+import { useFitsScrollport } from "@/hooks/use-fits-scrollport";
 import type { UiExperience } from "@/lib/experiencesService";
-import { fillTemplate } from "@/lib/text";
+import { fillTemplate, paragraphsOf } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
 /**
@@ -30,11 +31,11 @@ export type RoleEntryLabels = {
   contributions: string;
   results: string;
   keyAchievements: string;
-  /** The ask-Vex control's accessible name; `{company}` is replaced. */
+  /** What the ask-Vex control does, read after its name; `{company}` is replaced. */
   askVex: string;
   /** The question sent when it is pressed; `{company}` is replaced. */
   askVexQuestion: string;
-  /** How the question is shown in the control; `{text}` is replaced. */
+  /** The language's quotation marks around `{text}`, for the question shown. */
   quoted: string;
 };
 
@@ -73,27 +74,20 @@ const Names = ({ title, names }: { title: string; names: readonly string[] }) =>
   names.length > 0 ? (
     <Part title={title}>
       <ul className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-sm text-foreground">
-        {names.map((name) => (
-          <li key={name}>{name}</li>
+        {names.map((name, index) => (
+          <li key={index}>{name}</li>
         ))}
       </ul>
     </Part>
   ) : null;
-
-/** Text split into its paragraphs at blank lines, as it was written. */
-const paragraphsOf = (text: string) =>
-  text
-    .split(/\n\s*\n/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
 
 /** Paragraphs under their title. */
 const Prose = ({ title, text }: { title: string; text: string }) =>
   text ? (
     <Part title={title}>
       <div className="space-y-4">
-        {paragraphsOf(text).map((paragraph) => (
-          <p key={paragraph} className={PROSE}>
+        {paragraphsOf(text).map((paragraph, index) => (
+          <p key={index} className={PROSE}>
             {paragraph}
           </p>
         ))}
@@ -107,8 +101,8 @@ const Marked = ({ points, className }: { points: readonly string[]; className?: 
     <p className={className}>{points[0]}</p>
   ) : (
     <ul className="space-y-3">
-      {points.map((point) => (
-        <li key={point} className={cn("flex gap-4", className)}>
+      {points.map((point, index) => (
+        <li key={index} className={cn("flex gap-4", className)}>
           <span aria-hidden="true" className="mt-2.5 h-2 w-2 shrink-0 rounded-motif bg-primary" />
           <span>{point}</span>
         </li>
@@ -135,54 +129,64 @@ const Results = ({ title, points }: { title: string; points: readonly string[] }
     </Part>
   ) : null;
 
-const RoleEntry = ({ experience, labels, onAsk, Heading = "h2" }: RoleEntryProps) => (
-  <article className="grid grid-cols-4 gap-x-6 gap-y-8 md:grid-cols-12">
-    {/* The gist stays in view beside a long story, Vex with it, where the
-        screen is tall enough to hold the whole column (from 800px high;
-        below that the column scrolls with the story, as on a phone). Its top
-        matches the dialog body's own top padding. */}
-    <header className="col-span-4 space-y-6 md:col-span-5 md:self-start md:[@media(min-height:800px)]:sticky md:[@media(min-height:800px)]:top-8">
-      <div>
-        {/* On a phone the logo stands beside the name, sparing the first screen. */}
-        <div className="flex items-center gap-4 md:block">
-          <CompanyMark
-            company={experience.company}
-            className="size-12 shrink-0 text-sm md:size-14"
-          />
-          <div className="min-w-0 md:mt-4">
-            <p className="font-mono text-meta text-iris">
-              {experience.period}
-              {experience.location && ` · ${experience.location}`}
-            </p>
-            <Heading className="mt-1 text-card-title-sm font-semibold md:mt-2 md:text-card-title">
-              {experience.company}
-            </Heading>
+const RoleEntry = ({ experience, labels, onAsk, Heading = "h2" }: RoleEntryProps) => {
+  const gist = useRef<HTMLElement>(null);
+  const fits = useFitsScrollport(gist);
+  const question = fillTemplate(labels.askVexQuestion, { company: experience.company });
+  return (
+    <article className="grid grid-cols-4 gap-x-6 gap-y-8 md:grid-cols-12">
+      {/* The gist stays in view beside a long story, Vex with it, but only
+        where the dialog's body can hold the whole column: a taller one would
+        keep the Vex pill out of sight until the story's end, so it scrolls
+        with the story instead, as on a phone. Its top matches the body's own
+        top padding. */}
+      <header
+        ref={gist}
+        className={cn(
+          "col-span-4 space-y-6 md:col-span-5 md:self-start",
+          fits && "md:sticky md:top-8",
+        )}
+      >
+        <div>
+          {/* On a phone the logo stands beside the name, sparing the first screen. */}
+          <div className="flex items-center gap-4 md:block">
+            <CompanyMark
+              company={experience.company}
+              className="size-12 shrink-0 text-sm md:size-14"
+            />
+            <div className="min-w-0 md:mt-4">
+              <p className="font-mono text-meta text-iris">
+                {experience.period}
+                {experience.location && ` · ${experience.location}`}
+              </p>
+              <Heading className="mt-1 text-card-title-sm font-semibold md:mt-2 md:text-card-title">
+                {experience.company}
+              </Heading>
+            </div>
           </div>
+          <p className="mt-1 text-base text-muted-foreground">{experience.role}</p>
         </div>
-        <p className="mt-1 text-base text-muted-foreground">{experience.role}</p>
-      </div>
-      <Results title={labels.results} points={experience.results} />
-      <Names title={labels.technologies} names={experience.technologies} />
-      <Names title={labels.tools} names={experience.tools} />
-      <Names title={labels.topics} names={experience.topics} />
-      <AskVexPrompt
-        question={fillTemplate(labels.askVexQuestion, { company: experience.company })}
-        shown={fillTemplate(labels.quoted, {
-          text: fillTemplate(labels.askVexQuestion, { company: experience.company }),
-        })}
-        label={fillTemplate(labels.askVex, { company: experience.company })}
-        onAsk={onAsk}
-      />
-    </header>
+        <Results title={labels.results} points={experience.results} />
+        <Names title={labels.technologies} names={experience.technologies} />
+        <Names title={labels.tools} names={experience.tools} />
+        <Names title={labels.topics} names={experience.topics} />
+        <AskVexPrompt
+          question={question}
+          quoted={labels.quoted}
+          hint={fillTemplate(labels.askVex, { company: experience.company })}
+          onAsk={onAsk}
+        />
+      </header>
 
-    <div className="col-span-4 space-y-8 md:col-span-7">
-      <Prose title={labels.product} text={experience.product} />
-      <Prose title={labels.responsibilities} text={experience.responsibilities} />
-      {experience.description && <p className={PROSE}>{experience.description}</p>}
-      <Points title={labels.contributions} points={experience.contributions} />
-      <Points title={labels.keyAchievements} points={experience.achievements} />
-    </div>
-  </article>
-);
+      <div className="col-span-4 space-y-8 md:col-span-7">
+        <Prose title={labels.product} text={experience.product} />
+        <Prose title={labels.responsibilities} text={experience.responsibilities} />
+        {experience.description && <p className={PROSE}>{experience.description}</p>}
+        <Points title={labels.contributions} points={experience.contributions} />
+        <Points title={labels.keyAchievements} points={experience.achievements} />
+      </div>
+    </article>
+  );
+};
 
 export default RoleEntry;

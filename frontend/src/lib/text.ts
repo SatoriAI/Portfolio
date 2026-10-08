@@ -22,3 +22,10 @@ export const splitLastWord = (text: string): [head: string, last: string] => {
   const at = text.lastIndexOf(" ") + 1;
   return [text.slice(0, at), text.slice(at)];
 };
+
+/** Text split into its paragraphs at blank lines, as it was written. */
+export const paragraphsOf = (text: string) =>
+  text
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);

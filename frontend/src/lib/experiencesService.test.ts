@@ -83,4 +83,36 @@ describe("mapApiExperienceToUi", () => {
     expect(rewritten.description).toBe("");
     expect(rewritten.achievements).toEqual([]);
   });
+
+  it("judges the old paragraph and the old points apart", () => {
+    const old = { description: "Old paragraph", achievements: ["Old point"] };
+    const resultsOnly = mapApiExperienceToUi(
+      role({ en: { location: "Warsaw", results: ["New result"], ...old } }),
+      "en",
+    );
+    expect(resultsOnly.description).toBe("Old paragraph");
+    expect(resultsOnly.achievements).toEqual([]);
+
+    const productOnly = mapApiExperienceToUi(
+      role({ en: { location: "Warsaw", product: "New product", ...old } }),
+      "en",
+    );
+    expect(productOnly.description).toBe("");
+    expect(productOnly.achievements).toEqual(["Old point"]);
+  });
+
+  it("reads English where the reader's language has no translation", () => {
+    const ui = mapApiExperienceToUi(
+      role({ en: { role: "Backend engineer", location: "Warsaw", results: ["Faster deploys"] } }),
+      "pl",
+    );
+    expect(ui.role).toBe("Backend engineer");
+    expect(ui.results).toEqual(["Faster deploys"]);
+  });
+
+  it("reads a role from the API before tools and topics existed", () => {
+    const ui = mapApiExperienceToUi(role({ en: { location: "Warsaw" } }), "en");
+    expect(ui.tools).toEqual([]);
+    expect(ui.topics).toEqual([]);
+  });
 });

@@ -88,7 +88,7 @@ const Index = () => {
     notPublic: t.projects.notPublic,
     askVex: t.projects.askVex,
     askVexQuestion: t.projects.askVexQuestion,
-    quoted: t.projects.quoted,
+    quoted: t.common.quoted,
     screenshotAlt: t.projects.screenshotAlt,
     previous: t.projects.previous,
     next: t.projects.next,

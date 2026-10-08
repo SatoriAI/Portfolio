@@ -41,6 +41,8 @@ const copy = {
       openMenu: "Open navigation menu",
       chatWithVex: "Chat with Vex",
       loading: "Loading…",
+      /** The language's quotation marks around `{text}`. */
+      quoted: "“{text}”",
     },
     chat: {
       prompt: "Ask Vex anything about Dawid.",
@@ -229,7 +231,6 @@ const copy = {
       notPublic: "not public yet",
       askVex: "Ask Vex about {title}",
       askVexQuestion: "Tell me about {title}.",
-      quoted: "“{text}”",
       screenshotAlt: "{title}: screenshot",
       previous: "Show previous projects",
       next: "Show more projects",
@@ -301,7 +302,7 @@ const copy = {
       },
       keyAchievements: "Key achievements",
       technologies: "Technologies",
-      /** A role's parts, in the order it is written. */
+      /** A role's parts: its stack, then its story, then what came of it. */
       tools: "Programming tools",
       topics: "Topics taught",
       product: "Product",
@@ -677,6 +678,7 @@ const copy = {
       openMenu: "Otwórz menu nawigacji",
       chatWithVex: "Porozmawiaj z Vexem",
       loading: "Wczytywanie…",
+      quoted: "„{text}”",
     },
     chat: {
       prompt: "Zapytaj Vexa o Dawida.",
@@ -858,7 +860,6 @@ const copy = {
       notPublic: "jeszcze niepubliczne",
       askVex: "Zapytaj Vexa o projekt {title}",
       askVexQuestion: "Opowiedz o projekcie {title}.",
-      quoted: "„{text}”",
       screenshotAlt: "{title}: zrzut ekranu",
       previous: "Pokaż poprzednie projekty",
       next: "Pokaż kolejne projekty",
@@ -934,7 +935,7 @@ const copy = {
       topics: "Tematyka zajęć",
       product: "Produkt",
       responsibilities: "Moja odpowiedzialność",
-      contributions: "Wybrane elementy mojego wkładu",
+      contributions: "Wybrany wkład",
       results: "Efekty",
       askVex: "Zapytaj Vexa o firmę {company}",
       askVexQuestion: "Co robił w firmie {company}?",
