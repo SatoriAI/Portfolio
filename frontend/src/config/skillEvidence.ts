@@ -22,4 +22,6 @@ export const skillEvidence: Readonly<Record<number, readonly string[]>> = {
   9: ["React"],
   // A tool rather than a technology: roles list it under programming tools.
   10: ["Claude Code"],
+  // Likewise an editor, listed under a role's programming tools.
+  11: ["Cursor"],
 };
