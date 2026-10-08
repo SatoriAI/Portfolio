@@ -392,6 +392,7 @@ const Experience = () => {
                 sinceLaunch: t.skills.sinceLaunch,
                 show: (name) => fillTemplate(t.skills.show, { name }),
                 outsideRoles: t.skills.outsideRoles,
+                legend: t.skills.legend,
                 projects: t.skills.projects,
                 roles: t.skills.roles,
                 more: (count) => fillTemplate(t.skills.more, { count }),

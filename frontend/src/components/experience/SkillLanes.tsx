@@ -51,6 +51,8 @@ type SkillLanesLabels = {
   sinceLaunch: string;
   show: (name: string) => string;
   outsideRoles: string;
+  /** The legend: what the solid and the dashed bar stand for. */
+  legend: { roles: string; own: string };
   roles: string;
   projects: string;
   /** "+2 more", given how many. */
@@ -71,6 +73,23 @@ type SkillLanesProps = {
   band: { id: number; startMonth: number; endMonth: number } | null;
   className?: string;
 };
+
+/** The years used outside any role, dashed in the bar's own colour. */
+const DASHED = "bg-[repeating-linear-gradient(90deg,currentColor_0_6px,transparent_6px_10px)]";
+
+/** The two kinds of bar, each with a short piece of itself, so a reader knows the dashes at once. */
+const Legend = ({ labels }: { labels: SkillLanesLabels["legend"] }) => (
+  <ul className="mb-4 flex flex-wrap gap-x-6 gap-y-1 font-mono text-meta text-muted-foreground">
+    <li className="flex items-center gap-2">
+      <span aria-hidden="true" className="h-1.5 w-6 rounded-motif bg-iris/50" />
+      {labels.roles}
+    </li>
+    <li className="flex items-center gap-2">
+      <span aria-hidden="true" className={cn("h-1.5 w-6 text-iris/50", DASHED)} />
+      {labels.own}
+    </li>
+  </ul>
+);
 
 /** How long the request takes from one layer to the next. */
 const LAYER_STEP_MS = 220;
@@ -197,6 +216,8 @@ const SkillLanes = ({
 
   return (
     <div ref={revealRef} className={cn("relative", className)}>
+      {/* What the two kinds of bar mean, read before the bars. */}
+      <Legend labels={labels.legend} />
       {/* The axis, as on the timeline above. */}
       <TimelineAxis ticks={axis.ticks} months={axis.months} />
 
@@ -316,7 +337,7 @@ const SkillLanes = ({
                           <span
                             className={cn(
                               "block h-full transition-[color,transform] duration-200 group-hover:scale-y-150",
-                              "bg-[repeating-linear-gradient(90deg,currentColor_0_6px,transparent_6px_10px)]",
+                              DASHED,
                               selected ? "text-iris" : "text-iris/50",
                             )}
                           />

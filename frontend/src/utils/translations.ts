@@ -143,6 +143,8 @@ const copy = {
       projects: "Projects",
       /** Beside a skill no role above lists. */
       outsideRoles: "Outside the roles above",
+      /** Above the chart: what the solid and the dashed bar stand for. */
+      legend: { roles: "In the roles above", own: "Learning and own projects" },
       /** Beside a skill used from before the axis begins; `{year}` is replaced. */
       since: "since {year}",
       /** In place of a count of years, for a tool used since it came out. */
@@ -775,6 +777,7 @@ const copy = {
       more: "+{count} więcej",
       projects: "Projekty",
       outsideRoles: "Poza rolami powyżej",
+      legend: { roles: "W rolach powyżej", own: "Nauka i projekty własne" },
       since: "od {year}",
       sinceLaunch: "Od premiery",
       show: "{name}: pokaż role",
