@@ -1,3 +1,4 @@
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 
 import { circleControl, circleState } from "@/components/experience/circleStyles";
@@ -49,6 +50,24 @@ const RoleSidebar = ({
   className,
 }: RoleSidebarProps) => {
   const chosen = roles.find((role) => role.id === selectedId);
+
+  // On a phone the strip scrolls sideways: bring a chosen circle into it,
+  // moving the strip alone, never the page.
+  // The strip is the circles' offset parent, so offsetLeft is measured in it.
+  const strip = useRef<HTMLOListElement>(null);
+  // Faded at its start too, once scrolled, so circles never end on a hard cut.
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const list = strip.current;
+    const circle = list?.querySelector<HTMLElement>(`[data-sidebar-circle="${selectedId}"]`);
+    if (!list || !circle || list.scrollWidth <= list.clientWidth) return;
+    const left = circle.offsetLeft;
+    if (left < list.scrollLeft || left + circle.offsetWidth > list.scrollLeft + list.clientWidth)
+      list.scrollTo({
+        left: left - (list.clientWidth - circle.offsetWidth) / 2,
+        behavior: "instant",
+      });
+  }, [selectedId]);
   return (
     <nav aria-label={labels.list} className={cn("flex items-center gap-4 md:block", className)}>
       {/* In the axis's row, so the first circle starts on the axis line. */}
@@ -58,7 +77,17 @@ const RoleSidebar = ({
       >
         {labels.list}
       </p>
-      <ol className="group/circles flex gap-4 md:flex-col md:items-center md:gap-5">
+      {/* 24px apart, so the chosen circle's halo clears its neighbours. On a
+          phone the strip is wider than the screen, so it scrolls sideways,
+          with room round it for the halo. It fades at its end, and at its
+          start once scrolled; the last circle, and any circle focused from
+          the keyboard, stops clear of the fade. */}
+      <ol
+        ref={strip}
+        onScroll={(event) => setScrolled(event.currentTarget.scrollLeft > 0)}
+        style={{ "--strip-start": scrolled ? "transparent" : "black" } as CSSProperties}
+        className="group/circles relative -my-4 -ml-4 flex min-w-0 scroll-px-6 gap-6 overflow-x-auto py-4 pl-4 pr-6 [mask-image:linear-gradient(to_right,var(--strip-start),black_24px,black_calc(100%-24px),transparent)] [scrollbar-width:none] md:m-0 md:flex-col md:items-center md:overflow-visible md:p-0 md:[mask-image:none]"
+      >
         {roles.map((role) => {
           const selected = role.id === selectedId;
           const highlighted = highlightedIds?.has(role.id) ?? false;
