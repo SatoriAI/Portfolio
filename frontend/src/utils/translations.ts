@@ -763,7 +763,7 @@ const copy = {
     },
     skills: {
       title: "Umiejętności",
-      subtitle: "Wybierz technologię, a zobaczysz, gdzie jej używałem. Albo odwrotnie.",
+      subtitle: "Wybierz technologię, a zobaczysz, gdzie jej używałem. Lub odwrotnie.",
       layers: {
         languages: "Języki i frameworki",
         dataArchitecture: "Bazy danych i architektura",
