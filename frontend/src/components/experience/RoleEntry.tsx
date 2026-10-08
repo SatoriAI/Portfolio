@@ -1,8 +1,7 @@
 import type { ElementType, ReactNode } from "react";
-import { MessageSquare } from "lucide-react";
 
+import AskVexPrompt from "@/components/AskVexPrompt";
 import CompanyMark from "@/components/experience/CompanyMark";
-import { Button } from "@/components/ui/button";
 import type { UiExperience } from "@/lib/experiencesService";
 import { fillTemplate } from "@/lib/text";
 import { cn } from "@/lib/utils";
@@ -31,10 +30,12 @@ export type RoleEntryLabels = {
   contributions: string;
   results: string;
   keyAchievements: string;
-  /** Text of the ask-Vex control; `{company}` is replaced. */
+  /** The ask-Vex control's accessible name; `{company}` is replaced. */
   askVex: string;
   /** The question sent when it is pressed; `{company}` is replaced. */
   askVexQuestion: string;
+  /** How the question is shown in the control; `{text}` is replaced. */
+  quoted: string;
 };
 
 type RoleEntryProps = {
@@ -160,14 +161,14 @@ const RoleEntry = ({ experience, labels, onAsk, Heading = "h2" }: RoleEntryProps
       <Names title={labels.technologies} names={experience.technologies} />
       <Names title={labels.tools} names={experience.tools} />
       <Names title={labels.topics} names={experience.topics} />
-      <Button
-        variant="link"
-        className="h-auto whitespace-normal px-0 text-left text-sm font-medium"
-        onClick={() => onAsk(fillTemplate(labels.askVexQuestion, { company: experience.company }))}
-      >
-        <MessageSquare />
-        {fillTemplate(labels.askVex, { company: experience.company })}
-      </Button>
+      <AskVexPrompt
+        question={fillTemplate(labels.askVexQuestion, { company: experience.company })}
+        shown={fillTemplate(labels.quoted, {
+          text: fillTemplate(labels.askVexQuestion, { company: experience.company }),
+        })}
+        label={fillTemplate(labels.askVex, { company: experience.company })}
+        onAsk={onAsk}
+      />
     </header>
 
     <div className="col-span-4 space-y-8 md:col-span-7">
