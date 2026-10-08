@@ -76,8 +76,8 @@ const Experience = () => {
         id: experience.id,
         start: experience.start,
         end: experience.end,
-        label: experience.company,
-        shortLabel: shortName,
+        // "Nokia", not "Nokia Solutions and Networks": the dialog has the whole name.
+        label: shortName,
         ariaLabel: `${experience.company}, ${experience.period}`,
         // The button's rim edges the circle, so the mark needs no hairline.
         mark: (

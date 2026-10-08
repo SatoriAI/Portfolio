@@ -109,8 +109,8 @@ export function companyInitials(company: string): string {
 
 /**
  * A company's name as short as it can be and still be recognised: its first
- * word, for the timeline on a narrow phone, where "Nokia Solutions and
- * Networks" would run into the next company on its lane.
+ * word, for the timeline, where "Nokia Solutions and Networks" would run
+ * into the next company on its lane.
  */
 export function companyShortName(company: string): string {
   return company.trim().split(/\s+/)[0] ?? company;
