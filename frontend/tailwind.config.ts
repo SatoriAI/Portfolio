@@ -158,6 +158,18 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        // The chosen circle's halo swelling and settling: played three times
+        // as a circle is chosen, then it rests (the kit allows no loop here).
+        "chosen-pulse": {
+          "0%, 100%": {
+            boxShadow:
+              "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 10px hsl(var(--iris) / 0.15), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
+          },
+          "50%": {
+            boxShadow:
+              "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 15px hsl(var(--iris) / 0.28), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
+          },
+        },
         // A clock numeral counted as the hand passes it: iris, fading back.
         tick: {
           from: { fill: "hsl(var(--iris))" },
@@ -180,6 +192,7 @@ export default {
         // At a hand's pace: easing in and out, not the brand's quick start.
         marker: "marker 600ms cubic-bezier(0.45, 0, 0.55, 1) both",
         tick: "tick 700ms ease-out",
+        "chosen-pulse": "chosen-pulse 500ms ease-in-out 3",
       },
     },
   },
