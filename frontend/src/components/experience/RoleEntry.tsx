@@ -34,16 +34,16 @@ export type RoleEntryLabels = {
   /** What the ask-Vex control does, read after its name; `{company}` is replaced. */
   askVex: string;
   /**
-   * The questions it may send, `{company}` replaced; each role asks one,
-   * picked by its place among the roles, so neighbours ask differently and
-   * the same role always asks the same.
+   * The general questions, `{company}` replaced, for a role without one of
+   * its own: each such role asks one, picked by its place among the roles,
+   * so neighbours ask differently and the same role always asks the same.
    */
   askVexQuestions: readonly string[];
 };
 
 type RoleEntryProps = {
   experience: UiExperience;
-  /** The role's place among the roles, from the earliest; picks its question. */
+  /** The role's place among the roles, from the earliest; picks its general question. */
   order: number;
   labels: RoleEntryLabels;
   onAsk: (question: string) => void;

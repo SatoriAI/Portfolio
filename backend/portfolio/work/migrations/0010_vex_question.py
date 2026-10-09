@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 blank=True,
                 db_default="",
-                help_text="What the Ask Vex prompt offers to ask about it. Leave empty for a general question.",
+                help_text="What the Ask Vex button offers to ask about this item. Leave empty for a general question.",
                 max_length=255,
                 verbose_name="Vex question",
             ),
@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 blank=True,
                 db_default="",
-                help_text="What the Ask Vex prompt offers to ask about it. Leave empty for a general question.",
+                help_text="What the Ask Vex button offers to ask about this item. Leave empty for a general question.",
                 max_length=255,
                 verbose_name="Vex question",
             ),

@@ -109,6 +109,11 @@ class ProjectListViewTestCase(TestCase):
         self.assertEqual(item["translations"]["en"]["vex_question"], "How does the API handle auth?")
         self.assertEqual(item["translations"]["pl"]["vex_question"], "Jak API obsługuje logowanie?")
 
+    def test_vex_question_is_empty_until_written(self) -> None:
+        ProjectFactory()
+        item = self.client.get(reverse("work:projects")).json()[0]
+        self.assertEqual(item["translations"]["en"]["vex_question"], "")
+
 
 class ExperienceListViewTestCase(TestCase):
     def test_list_experiences_empty(self) -> None:
@@ -215,10 +220,8 @@ class ExperienceListViewTestCase(TestCase):
 
     def test_vex_question_is_empty_until_written(self) -> None:
         ExperienceFactory()
-        ProjectFactory()
-        for name in ("work:experiences", "work:projects"):
-            item = self.client.get(reverse(name)).json()[0]
-            self.assertEqual(item["translations"]["en"]["vex_question"], "")
+        item = self.client.get(reverse("work:experiences")).json()[0]
+        self.assertEqual(item["translations"]["en"]["vex_question"], "")
 
     def test_list_experiences_leaves_out_hidden_roles(self) -> None:
         shown = ExperienceFactory(company="Shown Corp")

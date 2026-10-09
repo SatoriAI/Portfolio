@@ -93,7 +93,7 @@ class Project(TranslatableModel, TimestampedModel, DescriptiveModel):
             max_length=255,
             blank=True,
             db_default="",
-            help_text=_("What the Ask Vex prompt offers to ask about it. Leave empty for a general question."),
+            help_text=_("What the Ask Vex button offers to ask about this item. Leave empty for a general question."),
         ),
     )
 
@@ -190,7 +190,7 @@ class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
             max_length=255,
             blank=True,
             db_default="",
-            help_text=_("What the Ask Vex prompt offers to ask about it. Leave empty for a general question."),
+            help_text=_("What the Ask Vex button offers to ask about this item. Leave empty for a general question."),
         ),
     )
 
