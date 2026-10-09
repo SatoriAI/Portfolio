@@ -313,9 +313,10 @@ const copy = {
       results: "Results",
       askVex: "Ask Vex about {company}",
       /**
-       * The questions the Vex prompt offers about a role, one per role (picked
-       * by its place on the timeline), so the cards do not all ask the same; `{company}` is
-       * replaced. Kept in step with the Polish list, question for question.
+       * The questions the Vex prompt offers about a role, one per role
+       * (picked by its place on the timeline), so the cards do not all ask
+       * the same; `{company}` is replaced. Kept in step with the Polish list,
+       * question for question.
        */
       askVexQuestions: [
         "What did he do at {company}?",
