@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-08 11:34+0000\n"
+"POT-Creation-Date: 2026-10-09 05:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -44,11 +44,11 @@ msgstr "Studia magisterskie"
 msgid "Doctoral Studies"
 msgstr "Studia doktoranckie"
 
-#: university/models.py:13 work/models.py:128
+#: university/models.py:13 work/models.py:135
 msgid "Start"
 msgstr "Rozpoczęcie"
 
-#: university/models.py:14 work/models.py:129
+#: university/models.py:14 work/models.py:136
 msgid "End"
 msgstr "Koniec"
 
@@ -168,7 +168,7 @@ msgstr "Rozmowa"
 msgid "Conversations"
 msgstr "Rozmowy"
 
-#: vex/models.py:24 work/models.py:156
+#: vex/models.py:24 work/models.py:163
 msgid "Role"
 msgstr "Rola"
 
@@ -180,7 +180,7 @@ msgstr "Wiadomość"
 msgid "Messages"
 msgstr "Wiadomomści"
 
-#: vex/models.py:34 work/models.py:47 work/models.py:90 work/models.py:179
+#: vex/models.py:34 work/models.py:47 work/models.py:90 work/models.py:186
 msgid "Description"
 msgstr "Opis"
 
@@ -293,57 +293,69 @@ msgstr "Demo"
 msgid "Repository"
 msgstr "Repozytorium"
 
-#: work/models.py:106
+#: work/models.py:92 work/models.py:189
+msgid "Vex question"
+msgstr "Pytanie do Vexa"
+
+#: work/models.py:96 work/models.py:193
+msgid ""
+"What the Ask Vex prompt offers to ask about it. Leave empty for a general "
+"question."
+msgstr ""
+"Pytanie, które przycisk Zapytaj Vexa podsuwa w tej sprawie. Zostaw puste, "
+"by użyć ogólnego pytania."
+
+#: work/models.py:113
 msgid "Project"
 msgstr "Projekt"
 
-#: work/models.py:107
+#: work/models.py:114
 msgid "Projects"
 msgstr "Projekty"
 
-#: work/models.py:127
+#: work/models.py:134
 msgid "Position"
 msgstr "Stanowisko"
 
-#: work/models.py:130
+#: work/models.py:137
 msgid "Company"
 msgstr "Firma"
 
-#: work/models.py:131
+#: work/models.py:138
 msgid "Technologies"
 msgstr "Technologie"
 
-#: work/models.py:134
+#: work/models.py:141
 msgctxt "experience"
 msgid "Tools"
 msgstr "Narzędzia programistyczne"
 
-#: work/models.py:137
+#: work/models.py:144
 msgid "Programming tools used in the role, e.g. Copilot, Claude Code."
 msgstr ""
 "Narzędzia programistyczne używane w tej roli, np. Copilot, Claude Code."
 
-#: work/models.py:141
+#: work/models.py:148
 msgctxt "experience"
 msgid "Topics"
 msgstr "Tematyka zajęć"
 
-#: work/models.py:144
+#: work/models.py:151
 msgid "Subjects taught, for a teaching or training role."
 msgstr "Tematy zajęć, dla roli trenerskiej lub dydaktycznej."
 
-#: work/models.py:147
+#: work/models.py:154
 msgid "Visible"
 msgstr "Widoczne"
 
-#: work/models.py:151
+#: work/models.py:158
 msgid ""
 "Shown on the site and to Vex. Uncheck to keep the role without showing it."
 msgstr ""
 "Pokazywane na stronie i Vexowi. Odznacz, by zachować rolę bez pokazywania "
 "jej."
 
-#: work/models.py:161
+#: work/models.py:168
 msgid ""
 "The role's title in this language; it replaces Position, still shown by the "
 "current site."
@@ -351,38 +363,38 @@ msgstr ""
 "Nazwa roli w tym języku; zastępuje Stanowisko, które obecna strona wciąż "
 "pokazuje."
 
-#: work/models.py:163
+#: work/models.py:170
 msgid "Location"
 msgstr "Lokalizacja"
 
-#: work/models.py:164
+#: work/models.py:171
 msgctxt "experience"
 msgid "Product"
 msgstr "Produkt"
 
-#: work/models.py:165
+#: work/models.py:172
 msgctxt "experience"
 msgid "Responsibilities"
 msgstr "Moja odpowiedzialność"
 
-#: work/models.py:168
+#: work/models.py:175
 msgctxt "experience"
 msgid "Contributions"
 msgstr "Wybrane elementy mojego wkładu"
 
-#: work/models.py:174
+#: work/models.py:181
 msgctxt "experience"
 msgid "Results"
 msgstr "Efekty"
 
-#: work/models.py:180
+#: work/models.py:187
 msgid "Achievements"
 msgstr "Osiągnięcia"
 
-#: work/models.py:232
+#: work/models.py:246
 msgid "Experience"
 msgstr "Doświadczenie"
 
-#: work/models.py:233
+#: work/models.py:247
 msgid "Experiences"
 msgstr "Doświadczenia"

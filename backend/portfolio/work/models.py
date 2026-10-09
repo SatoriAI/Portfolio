@@ -88,6 +88,13 @@ class Project(TranslatableModel, TimestampedModel, DescriptiveModel):
 
     translations = TranslatedFields(
         description=models.TextField(_("Description"), null=True, blank=True),
+        vex_question=models.CharField(
+            _("Vex question"),
+            max_length=255,
+            blank=True,
+            db_default="",
+            help_text=_("What the Ask Vex prompt offers to ask about it. Leave empty for a general question."),
+        ),
     )
 
     # Managers
@@ -178,6 +185,13 @@ class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
         # Read by the current site; replaced by the four fields above.
         description=models.TextField(_("Description"), null=True, blank=True),
         achievements=LinesArrayField(models.CharField(_("Achievements"), max_length=512), null=True, blank=True),
+        vex_question=models.CharField(
+            _("Vex question"),
+            max_length=255,
+            blank=True,
+            db_default="",
+            help_text=_("What the Ask Vex prompt offers to ask about it. Leave empty for a general question."),
+        ),
     )
 
     # Managers

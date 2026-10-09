@@ -146,8 +146,12 @@ const Results = ({ title, points }: { title: string; points: readonly string[] }
 const RoleEntry = ({ experience, order, labels, onAsk, Heading = "h2" }: RoleEntryProps) => {
   const gist = useRef<HTMLElement>(null);
   const fits = useFitsScrollport(gist);
-  const asked = labels.askVexQuestions[order % labels.askVexQuestions.length];
-  const question = fillTemplate(asked, { company: experience.company });
+  // Its own question where one is written, else one of the general ones.
+  const question =
+    experience.vexQuestion ||
+    fillTemplate(labels.askVexQuestions[order % labels.askVexQuestions.length], {
+      company: experience.company,
+    });
   return (
     <article className="grid grid-cols-4 gap-x-6 gap-y-8 md:grid-cols-12">
       {/* The gist stays in view beside a long story, Vex with it, but only
