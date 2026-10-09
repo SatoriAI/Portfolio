@@ -41,8 +41,6 @@ const copy = {
       openMenu: "Open navigation menu",
       chatWithVex: "Chat with Vex",
       loading: "Loading…",
-      /** The language's quotation marks around `{text}`. */
-      quoted: "“{text}”",
     },
     chat: {
       prompt: "Ask Vex anything about Dawid.",
@@ -146,7 +144,7 @@ const copy = {
       /** Beside a skill no role above lists. */
       outsideRoles: "Outside the roles above",
       /** Above the chart: what the solid and the dashed bar stand for. */
-      legend: { roles: "In the roles above", own: "Learning and own projects" },
+      legend: { roles: "Commercial experience", own: "Studies and projects" },
       /** Beside a skill used from before the axis begins; `{year}` is replaced. */
       since: "since {year}",
       /** In place of a count of years, for a tool used since it came out. */
@@ -314,7 +312,19 @@ const copy = {
       contributions: "Selected contributions",
       results: "Results",
       askVex: "Ask Vex about {company}",
-      askVexQuestion: "What did he do at {company}?",
+      /**
+       * The questions the Vex prompt offers about a role, one per role
+       * (picked by its place on the timeline), so the cards do not all ask
+       * the same; `{company}` is replaced. Kept in step with the Polish list,
+       * question for question.
+       */
+      askVexQuestions: [
+        "What did he do at {company}?",
+        "What was he responsible for at {company}?",
+        "What came of his work at {company}?",
+        "Which technologies did he use at {company}?",
+        "What did he learn at {company}?",
+      ],
       error: "Failed to load work experience data",
       tryAgain: "Try again",
       noData: "No work experience data available.",
@@ -682,7 +692,6 @@ const copy = {
       openMenu: "Otwórz menu nawigacji",
       chatWithVex: "Porozmawiaj z Vexem",
       loading: "Wczytywanie…",
-      quoted: "„{text}”",
     },
     chat: {
       prompt: "Zapytaj Vexa o Dawida.",
@@ -780,7 +789,7 @@ const copy = {
       more: "+{count} więcej",
       projects: "Projekty",
       outsideRoles: "Poza rolami powyżej",
-      legend: { roles: "W rolach powyżej", own: "Nauka i projekty własne" },
+      legend: { roles: "Doświadczenie komercyjne", own: "Studia i projekty" },
       since: "od {year}",
       sinceLaunch: "Od premiery",
       show: "{name}: pokaż role",
@@ -944,7 +953,13 @@ const copy = {
       contributions: "Wybrany wkład",
       results: "Efekty",
       askVex: "Zapytaj Vexa o firmę {company}",
-      askVexQuestion: "Co robił w firmie {company}?",
+      askVexQuestions: [
+        "Co robił w firmie {company}?",
+        "Za co odpowiadał w firmie {company}?",
+        "Jakie efekty przyniosła jego praca w firmie {company}?",
+        "Z jakich technologii korzystał w firmie {company}?",
+        "Czego się nauczył w firmie {company}?",
+      ],
       error: "Nie udało się załadować danych o doświadczeniu zawodowym",
       tryAgain: "Spróbuj ponownie",
       noData: "Brak dostępnych danych o doświadczeniu zawodowym.",

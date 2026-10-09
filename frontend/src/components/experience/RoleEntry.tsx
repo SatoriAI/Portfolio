@@ -33,14 +33,18 @@ export type RoleEntryLabels = {
   keyAchievements: string;
   /** What the ask-Vex control does, read after its name; `{company}` is replaced. */
   askVex: string;
-  /** The question sent when it is pressed; `{company}` is replaced. */
-  askVexQuestion: string;
-  /** The language's quotation marks around `{text}`, for the question shown. */
-  quoted: string;
+  /**
+   * The questions it may send, `{company}` replaced; each role asks one,
+   * picked by its place among the roles, so neighbours ask differently and
+   * the same role always asks the same.
+   */
+  askVexQuestions: readonly string[];
 };
 
 type RoleEntryProps = {
   experience: UiExperience;
+  /** The role's place among the roles, from the earliest; picks its question. */
+  order: number;
   labels: RoleEntryLabels;
   onAsk: (question: string) => void;
   /** The company's heading; a dialog passes its own, which names it. */
@@ -69,13 +73,26 @@ const Part = ({
   </section>
 );
 
-/** Names set as a quiet run of mono words: technologies, tools, topics. */
+/**
+ * Names set as a quiet run of mono words: technologies, tools, topics. A
+ * muted dot between them, as between a role's period and place, so a name of
+ * two words ("REST API") reads as one; it ends the name before it, so a
+ * wrapped line never starts with a dot. Only seen: the list already parts
+ * the names for a screen reader, which would otherwise read "middle dot".
+ */
 const Names = ({ title, names }: { title: string; names: readonly string[] }) =>
   names.length > 0 ? (
     <Part title={title}>
-      <ul className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-sm text-foreground">
+      <ul className="flex flex-wrap gap-x-2 gap-y-1 font-mono text-sm text-foreground">
         {names.map((name, index) => (
-          <li key={index}>{name}</li>
+          <li key={index}>
+            {name}
+            {index < names.length - 1 && (
+              <span aria-hidden="true" className="ml-2 text-muted-foreground">
+                ·
+              </span>
+            )}
+          </li>
         ))}
       </ul>
     </Part>
@@ -129,10 +146,11 @@ const Results = ({ title, points }: { title: string; points: readonly string[] }
     </Part>
   ) : null;
 
-const RoleEntry = ({ experience, labels, onAsk, Heading = "h2" }: RoleEntryProps) => {
+const RoleEntry = ({ experience, order, labels, onAsk, Heading = "h2" }: RoleEntryProps) => {
   const gist = useRef<HTMLElement>(null);
   const fits = useFitsScrollport(gist);
-  const question = fillTemplate(labels.askVexQuestion, { company: experience.company });
+  const asked = labels.askVexQuestions[order % labels.askVexQuestions.length];
+  const question = fillTemplate(asked, { company: experience.company });
   return (
     <article className="grid grid-cols-4 gap-x-6 gap-y-8 md:grid-cols-12">
       {/* The gist stays in view beside a long story, Vex with it, but only
@@ -172,7 +190,6 @@ const RoleEntry = ({ experience, labels, onAsk, Heading = "h2" }: RoleEntryProps
         <Names title={labels.topics} names={experience.topics} />
         <AskVexPrompt
           question={question}
-          quoted={labels.quoted}
           hint={fillTemplate(labels.askVex, { company: experience.company })}
           onAsk={onAsk}
         />

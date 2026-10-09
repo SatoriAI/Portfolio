@@ -59,8 +59,6 @@ export type ProjectIndexLabels = {
   askVex: string;
   /** The question sent when it is pressed; `{title}` is replaced. */
   askVexQuestion: string;
-  /** The language's quotation marks around `{text}`, for the question shown. */
-  quoted: string;
   /** Alt text of a screenshot; `{title}` is replaced. */
   screenshotAlt: string;
   /** Accessible names of the arrows beside the strip. */
@@ -234,7 +232,6 @@ const ProjectFrame = ({
             project's name. */}
         <AskVexPrompt
           question={fillTemplate(labels.askVexQuestion, { title: project.title })}
-          quoted={labels.quoted}
           hint={fillTemplate(labels.askVex, { title: project.title })}
           onAsk={onAsk}
           className="max-sm:w-[calc(100%-4rem)] sm:w-fit sm:self-center lg:mt-auto"

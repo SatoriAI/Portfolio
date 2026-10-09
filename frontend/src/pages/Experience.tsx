@@ -264,8 +264,7 @@ const Experience = () => {
     results: t.experience.results,
     keyAchievements: t.experience.keyAchievements,
     askVex: t.experience.askVex,
-    askVexQuestion: t.experience.askVexQuestion,
-    quoted: t.common.quoted,
+    askVexQuestions: t.experience.askVexQuestions,
   };
   const timelineLabels = {
     figure: t.experience.timeline.figure,
@@ -326,11 +325,14 @@ const Experience = () => {
                 labels={t.experience.dialog}
               >
                 {(id, closeDialog, Heading) => {
-                  const role = roles.find((candidate) => candidate.entry.id === id);
+                  // Its place on the timeline: neighbours ask Vex differently.
+                  const order = roles.findIndex((candidate) => candidate.entry.id === id);
+                  const role = roles[order];
                   return (
                     role && (
                       <RoleEntry
                         experience={role.experience}
+                        order={order}
                         labels={entryLabels}
                         Heading={Heading}
                         // Shrink the entry away first, so the chat opens on the page.
