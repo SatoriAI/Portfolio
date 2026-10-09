@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import { ChevronLeft, ChevronRight, CodeXml, ExternalLink, Lock } from "lucide-react";
+import { CodeXml, ExternalLink, Lock } from "lucide-react";
 
 import AskVexPrompt from "@/components/AskVexPrompt";
 import BuildLine from "@/components/home/BuildLine";
 import LiveCheck, { type LiveCheckLabels } from "@/components/home/LiveCheck";
 import ProjectWindow from "@/components/home/ProjectWindow";
-import { Button } from "@/components/ui/button";
 import { projectIcons } from "@/config/projectIcons";
 import { useOnceInView } from "@/hooks/use-in-view";
 import type { LiveChecks } from "@/hooks/use-live-checks";
@@ -18,11 +17,13 @@ import { fillTemplate } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
 /**
- * The projects as a strip of tabs over one panel per project.
+ * The projects as a row of cards over one panel per project.
  *
- * The strip runs the full width: each tab its icon and its name. The chosen
- * one sits in a pressed well that slides along the strip to the next one
- * chosen. Tabs choose on press or keyboard focus, never on hover. The first
+ * Each card is a tab: its icon, its name and the line that says what it is,
+ * so a reader knows every project before choosing one. From xl the row holds
+ * them all, side by side and equal; narrower, it scrolls sideways and brings
+ * a chosen card into view. The chosen card is filled lavender and edged in
+ * iris. Cards choose on press or keyboard focus, never on hover. The first
  * time the section is mostly in view every address is checked once, in turn;
  * the sentence under the heading (see CheckProof) and each frame's address
  * bar show the answers.
@@ -36,8 +37,7 @@ import { cn } from "@/lib/utils";
  * never moves the page. The panel enters with the kit's 8px rise.
  *
  * One of the projects is this site: its bar says so instead of checking it.
- * On a phone the strip scrolls sideways and the description follows the
- * frame.
+ * On a phone the description follows the frame.
  */
 
 export type ProjectIndexLabels = {
@@ -61,9 +61,6 @@ export type ProjectIndexLabels = {
   askVexQuestion: string;
   /** Alt text of a screenshot; `{title}` is replaced. */
   screenshotAlt: string;
-  /** Accessible names of the arrows beside the strip. */
-  previous: string;
-  next: string;
   live: LiveCheckLabels;
 };
 
@@ -285,42 +282,17 @@ const ProjectIndex = ({
   const root = useRef<HTMLDivElement>(null);
   useOnceInView(root, onSeen, { threshold: 0.3 });
 
-  // The pressed well: one shape laid under the strip that slides to the
-  // chosen tab. It lives inside the strip, so when the strip scrolls on a
-  // narrow screen the well scrolls with it. Placed before paint, and again
-  // when the tabs reflow.
+  // On a narrow screen the row scrolls sideways: a chosen card is scrolled
+  // just enough to be in full view, and again when the row is resized.
   const list = useRef<HTMLDivElement>(null);
-  const [well, setWell] = useState<{ left: number; width: number; moved: boolean } | null>(null);
-  useLayoutEffect(() => {
-    const element = list.current;
-    if (!element) return;
-    const place = () => {
-      const tab = element.querySelector<HTMLElement>('[role="tab"][data-state="active"]');
-      if (!tab) return;
-      setWell((last) => ({ left: tab.offsetLeft, width: tab.offsetWidth, moved: last !== null }));
-    };
-    place();
-    // The tabs, not only the strip: a time arriving widens its tab while the
-    // strip keeps its size.
-    const observer = new ResizeObserver(place);
-    observer.observe(element);
-    element.querySelectorAll('[role="tab"]').forEach((tab) => observer.observe(tab));
-    return () => observer.disconnect();
-  }, [selected]);
-
-  // The arrows page the strip like a carousel, about one view at a time,
-  // and the reader chooses a project by pressing its tab. Each arrow is live
-  // only while there are more tabs on its side, and a soft fade marks that
-  // side. A chosen tab is scrolled just enough to be in full view.
   const prefersReducedMotion = usePrefersReducedMotion();
-  const [edges, setEdges] = useState({ before: false, after: false });
   const reveal = useCallback((smooth: boolean) => {
     const element = list.current;
-    const tab = element?.querySelector<HTMLElement>('[role="tab"][data-state="active"]');
-    if (!element || !tab) return;
+    const card = element?.querySelector<HTMLElement>('[role="tab"][data-state="active"]');
+    if (!element || !card || element.scrollWidth <= element.clientWidth) return;
     const margin = 24;
-    const left = Math.max(0, tab.offsetLeft - margin);
-    const right = tab.offsetLeft + tab.offsetWidth + margin - element.clientWidth;
+    const left = Math.max(0, card.offsetLeft - margin);
+    const right = card.offsetLeft + card.offsetWidth + margin - element.clientWidth;
     const target =
       element.scrollLeft > left ? left : element.scrollLeft < right ? right : element.scrollLeft;
     if (target !== element.scrollLeft) {
@@ -330,50 +302,11 @@ const ProjectIndex = ({
   useEffect(() => {
     const element = list.current;
     if (!element) return;
-    const measure = () =>
-      setEdges({
-        before: element.scrollLeft > 1,
-        after: element.scrollLeft + element.clientWidth < element.scrollWidth - 1,
-      });
-    // A resize can push the chosen tab out of view; bring it back at once.
-    const resized = () => {
-      reveal(false);
-      measure();
-    };
-    resized();
-    element.addEventListener("scroll", measure, { passive: true });
-    // The tabs too: a time arriving widens its tab, and with it the row,
-    // while the strip keeps its size.
-    const observer = new ResizeObserver(resized);
+    const observer = new ResizeObserver(() => reveal(false));
     observer.observe(element);
-    element.querySelectorAll('[role="tab"]').forEach((tab) => observer.observe(tab));
-    return () => {
-      element.removeEventListener("scroll", measure);
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, [reveal]);
   useEffect(() => reveal(!prefersReducedMotion), [selected, prefersReducedMotion, reveal]);
-  // A page is whole tabs: forward, the first tab cut off at the right edge
-  // comes to the start; back, the last one hidden on the left comes fully
-  // in at the end. No page lands with a tab half shown.
-  const page = (direction: -1 | 1) => {
-    const element = list.current;
-    if (!element) return;
-    const tabs = [...element.querySelectorAll<HTMLElement>('[role="tab"]')];
-    const start = element.scrollLeft;
-    const end = start + element.clientWidth;
-    let target: number | undefined;
-    if (direction === 1) {
-      const cut = tabs.find((tab) => tab.offsetLeft + tab.offsetWidth > end + 1);
-      target = cut?.offsetLeft;
-    } else {
-      const hidden = tabs.filter((tab) => tab.offsetLeft < start - 1).pop();
-      if (hidden)
-        target = Math.max(0, hidden.offsetLeft + hidden.offsetWidth - element.clientWidth);
-    }
-    if (target === undefined) return;
-    element.scrollTo({ left: target, behavior: prefersReducedMotion ? "auto" : "smooth" });
-  };
 
   if (projects.length === 0) return null;
 
@@ -384,62 +317,34 @@ const ProjectIndex = ({
       onValueChange={setValue}
       className={cn("flex flex-col gap-6", className)}
     >
-      {/* Each tab is as wide as its content and grows to fill the row;
-          where the row is too narrow for all of them, it scrolls sideways
-          rather than cut a name short. From sm up, the arrows at its ends page it; on a phone it swipes. */}
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          className="hidden shrink-0 sm:inline-flex"
-          aria-label={labels.previous}
-          disabled={!edges.before}
-          onClick={() => page(-1)}
-        >
-          <ChevronLeft />
-        </Button>
-        <TabsPrimitive.List
-          ref={list}
-          style={{
-            maskImage: `linear-gradient(to right, ${edges.before ? "transparent" : "black"}, black 32px, black calc(100% - 32px), ${edges.after ? "transparent" : "black"})`,
-          }}
-          className="relative -mx-6 flex min-w-0 flex-1 gap-1 overflow-x-auto px-6 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0"
-        >
-          {well && (
-            <span
-              aria-hidden="true"
-              style={{ translate: `${well.left}px 0`, width: well.width }}
-              className={cn(
-                "pointer-events-none absolute bottom-1 left-0 top-0 rounded-xl border border-control-border bg-background shadow-press",
-                well.moved &&
-                  "transition-[translate,width] duration-300 ease-brand motion-reduce:transition-none",
-              )}
-            />
-          )}
-          {projects.map((project) => (
-            <TabsPrimitive.Trigger
-              key={project.title}
-              value={project.title}
-              className="group relative flex min-h-11 shrink-0 grow basis-auto items-center gap-2 rounded-xl px-2 py-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-[3px] focus-visible:ring-offset-background lg:min-h-16"
-            >
-              <ProjectIcon project={project} className="size-8 rounded-lg" />
-              <span className="whitespace-nowrap text-base font-semibold tracking-[-0.02em] text-muted-foreground transition-colors duration-200 group-hover:text-foreground group-data-[state=active]:text-foreground">
+      {/* The cards: one row of equal cards from xl, as many columns as
+          projects; narrower, a row that scrolls sideways, the page gutter
+          kept at both ends. */}
+      <TabsPrimitive.List
+        ref={list}
+        style={{ "--cards": projects.length } as CSSProperties}
+        className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-1 pt-0.5 [scrollbar-width:none] sm:mx-0 sm:px-0.5 xl:grid xl:grid-cols-[repeat(var(--cards),minmax(0,1fr))] xl:overflow-visible xl:p-0"
+      >
+        {projects.map((project) => (
+          <TabsPrimitive.Trigger
+            key={project.title}
+            value={project.title}
+            className="group flex w-40 shrink-0 flex-col gap-2 rounded-xl border border-border bg-card p-3 text-left outline-none transition-[border-color,background-color,box-shadow] duration-200 hover:border-iris/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-[3px] focus-visible:ring-offset-background data-[state=active]:border-iris data-[state=active]:bg-lavender/60 data-[state=active]:shadow-[0_0_0_1px_hsl(var(--iris))] xl:w-auto"
+          >
+            <span className="flex items-center gap-1.5">
+              <ProjectIcon project={project} className="size-6 rounded-md" />
+              <span className="truncate text-[15px] font-semibold tracking-[-0.02em] text-foreground">
                 {project.title}
               </span>
-            </TabsPrimitive.Trigger>
-          ))}
-        </TabsPrimitive.List>
-        <Button
-          variant="outline"
-          size="icon"
-          className="hidden shrink-0 sm:inline-flex"
-          aria-label={labels.next}
-          disabled={!edges.after}
-          onClick={() => page(1)}
-        >
-          <ChevronRight />
-        </Button>
-      </div>
+            </span>
+            {subtitles[project.title] && (
+              <span className="text-sm leading-snug text-muted-foreground group-data-[state=active]:text-foreground/80">
+                {subtitles[project.title]}
+              </span>
+            )}
+          </TabsPrimitive.Trigger>
+        ))}
+      </TabsPrimitive.List>
 
       {/* Every project's panel is kept in one cell, the hidden ones invisible
           rather than removed, so the cell is as tall as the tallest and
