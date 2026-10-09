@@ -41,8 +41,6 @@ const copy = {
       openMenu: "Open navigation menu",
       chatWithVex: "Chat with Vex",
       loading: "Loading…",
-      /** The language's quotation marks around `{text}`. */
-      quoted: "“{text}”",
     },
     chat: {
       prompt: "Ask Vex anything about Dawid.",
@@ -693,7 +691,6 @@ const copy = {
       openMenu: "Otwórz menu nawigacji",
       chatWithVex: "Porozmawiaj z Vexem",
       loading: "Wczytywanie…",
-      quoted: "„{text}”",
     },
     chat: {
       prompt: "Zapytaj Vexa o Dawida.",

@@ -265,7 +265,6 @@ const Experience = () => {
     keyAchievements: t.experience.keyAchievements,
     askVex: t.experience.askVex,
     askVexQuestions: t.experience.askVexQuestions,
-    quoted: t.common.quoted,
   };
   const timelineLabels = {
     figure: t.experience.timeline.figure,

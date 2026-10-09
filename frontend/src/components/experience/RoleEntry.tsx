@@ -39,8 +39,6 @@ export type RoleEntryLabels = {
    * the same role always asks the same.
    */
   askVexQuestions: readonly string[];
-  /** The language's quotation marks around `{text}`, for the question shown. */
-  quoted: string;
 };
 
 type RoleEntryProps = {
@@ -189,7 +187,6 @@ const RoleEntry = ({ experience, order, labels, onAsk, Heading = "h2" }: RoleEnt
         <Names title={labels.topics} names={experience.topics} />
         <AskVexPrompt
           question={question}
-          quoted={labels.quoted}
           hint={fillTemplate(labels.askVex, { company: experience.company })}
           onAsk={onAsk}
         />

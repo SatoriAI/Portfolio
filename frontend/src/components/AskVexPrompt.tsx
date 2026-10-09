@@ -1,12 +1,11 @@
 import { useId } from "react";
 import { ArrowUp } from "lucide-react";
 
-import { fillTemplate } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
 /**
  * Asking Vex, made to look like what it is: the chat's own input, already
- * holding the question it will send, in the language's quotation marks. The
+ * holding the question it will send, set plainly, as typed. The
  * whole pill sends it. Used wherever the site offers to ask Vex about
  * something in particular (a project, a role), so it reads the same
  * everywhere. Its accessible name is what it shows, so a reader who says the
@@ -14,15 +13,12 @@ import { cn } from "@/lib/utils";
  */
 const AskVexPrompt = ({
   question,
-  quoted,
   hint,
   onAsk,
   className,
 }: {
   /** What is sent to the chat, and shown. */
   question: string;
-  /** The language's quotation marks around `{text}`. */
-  quoted: string;
   /** What pressing it does, e.g. "Ask Vex about Xperi", read after its name. */
   hint: string;
   onAsk: (question: string) => void;
@@ -41,8 +37,8 @@ const AskVexPrompt = ({
         )}
       >
         <span className="shrink-0 font-mono text-meta text-iris">Vex</span>
-        <span className="min-w-0 flex-1 text-sm text-muted-foreground transition-colors duration-200 group-hover:text-foreground sm:truncate">
-          {fillTemplate(quoted, { text: question })}
+        <span className="min-w-0 flex-1 text-sm text-muted-foreground transition-colors duration-200 group-hover:text-foreground">
+          {question}
         </span>
         <span
           aria-hidden="true"
