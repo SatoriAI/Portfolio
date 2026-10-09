@@ -89,8 +89,6 @@ const Index = () => {
     askVex: t.projects.askVex,
     askVexQuestion: t.projects.askVexQuestion,
     screenshotAlt: t.projects.screenshotAlt,
-    previous: t.projects.previous,
-    next: t.projects.next,
     live: t.projects.live,
   };
 
