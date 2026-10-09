@@ -69,13 +69,23 @@ const Part = ({
   </section>
 );
 
-/** Names set as a quiet run of mono words: technologies, tools, topics. */
+/**
+ * Names set as a quiet run of mono words: technologies, tools, topics. A
+ * muted dot between them, as between a role's period and place, so a name of
+ * two words ("REST API") reads as one; it ends the name before it, so a
+ * wrapped line never starts with a dot.
+ */
 const Names = ({ title, names }: { title: string; names: readonly string[] }) =>
   names.length > 0 ? (
     <Part title={title}>
-      <ul className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-sm text-foreground">
+      <ul className="flex flex-wrap gap-x-2 gap-y-1 font-mono text-sm text-foreground">
         {names.map((name, index) => (
-          <li key={index}>{name}</li>
+          <li
+            key={index}
+            className="after:ml-2 after:text-muted-foreground after:content-['·'] last:after:content-none"
+          >
+            {name}
+          </li>
         ))}
       </ul>
     </Part>
