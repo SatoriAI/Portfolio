@@ -231,7 +231,9 @@ const ProjectFrame = ({
             the chat button, so the question wraps rather than losing the
             project's name. */}
         <AskVexPrompt
-          question={fillTemplate(labels.askVexQuestion, { title: project.title })}
+          question={
+            project.vexQuestion || fillTemplate(labels.askVexQuestion, { title: project.title })
+          }
           hint={fillTemplate(labels.askVex, { title: project.title })}
           onAsk={onAsk}
           className="max-sm:w-[calc(100%-4rem)] sm:w-fit sm:self-center lg:mt-auto"

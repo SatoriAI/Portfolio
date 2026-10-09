@@ -4,7 +4,7 @@ import { apiClient } from "./apiClient";
 
 export type ApiProject = {
   id: number;
-  translations: Record<string, { description?: string }>;
+  translations: Record<string, { description?: string; vex_question?: string }>;
   created_at: string;
   updated_at: string;
   title: string;
@@ -17,6 +17,8 @@ export type ApiProject = {
 export type UiProject = {
   title: string;
   description: string;
+  /** The question its Vex prompt offers, or empty for the general one. */
+  vexQuestion: string;
   technologies: string[];
   github: string;
   demo: string;
@@ -30,6 +32,7 @@ export function mapApiProjectToUi(project: ApiProject, language: string): UiProj
   return {
     title: project.title,
     description,
+    vexQuestion: localized.vex_question || "",
     technologies: project.tags || [],
     github: project.repository || "",
     demo: project.demo || "",

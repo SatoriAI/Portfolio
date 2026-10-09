@@ -6,6 +6,7 @@ import type { UiProject } from "@/lib/projectsService";
 const project = (github: string, demo: string): UiProject => ({
   title: "Example",
   description: "",
+  vexQuestion: "",
   technologies: [],
   image: "",
   github,
@@ -34,6 +35,7 @@ describe("isThisSite", () => {
   const project = (demo: string) => ({
     title: "Portfolio",
     description: "",
+    vexQuestion: "",
     technologies: [],
     github: "",
     demo,

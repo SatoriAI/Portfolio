@@ -115,4 +115,13 @@ describe("mapApiExperienceToUi", () => {
     expect(ui.tools).toEqual([]);
     expect(ui.topics).toEqual([]);
   });
+
+  it("carries the role's own Vex question, or none", () => {
+    const own = mapApiExperienceToUi(
+      role({ pl: { location: "Online", vex_question: "Jak wyglądał pipeline w Argo?" } }),
+      "pl",
+    );
+    expect(own.vexQuestion).toBe("Jak wyglądał pipeline w Argo?");
+    expect(mapApiExperienceToUi(role({ en: { location: "Warsaw" } }), "en").vexQuestion).toBe("");
+  });
 });

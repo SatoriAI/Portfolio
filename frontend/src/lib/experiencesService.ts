@@ -19,6 +19,8 @@ export type ApiExperience = {
       /** The old write-up, read only where the new sections are empty. */
       description?: string | null;
       achievements?: string[] | null;
+      /** The question its Vex prompt offers; empty for a general one. */
+      vex_question?: string;
     }
   >;
   created_at: string;
@@ -61,6 +63,8 @@ export type UiExperience = {
    */
   description: string;
   achievements: string[];
+  /** The question its Vex prompt offers, or empty for a general one. */
+  vexQuestion: string;
   technologies: string[];
   tools: string[];
   topics: string[];
@@ -107,6 +111,7 @@ export function mapApiExperienceToUi(experience: ApiExperience, language: string
     results,
     description: written ? "" : set(localized.description || ""),
     achievements: listed ? [] : (localized.achievements || []).map(set),
+    vexQuestion: localized.vex_question || "",
     technologies: experience.technologies || [],
     tools: experience.tools || [],
     topics: experience.topics || [],

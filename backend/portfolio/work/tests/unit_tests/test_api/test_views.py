@@ -85,7 +85,8 @@ class ProjectListViewTestCase(TestCase):
             demo="https://example.com/demo",
             repository="https://github.com/example/repo",
             description="HTTP API for clients",
-            i18n={"pl": {"description": "Interfejs HTTP dla klientów"}},
+            vex_question="How does the API handle auth?",
+            i18n={"pl": {"description": "Interfejs HTTP dla klientów", "vex_question": "Jak API obsługuje logowanie?"}},
         )
 
         url = reverse("work:projects")
@@ -105,6 +106,13 @@ class ProjectListViewTestCase(TestCase):
         self.assertIn("translations", item)
         self.assertEqual(item["translations"]["en"]["description"], "HTTP API for clients")
         self.assertEqual(item["translations"]["pl"]["description"], "Interfejs HTTP dla klientów")
+        self.assertEqual(item["translations"]["en"]["vex_question"], "How does the API handle auth?")
+        self.assertEqual(item["translations"]["pl"]["vex_question"], "Jak API obsługuje logowanie?")
+
+    def test_vex_question_is_empty_until_written(self) -> None:
+        ProjectFactory()
+        item = self.client.get(reverse("work:projects")).json()[0]
+        self.assertEqual(item["translations"]["en"]["vex_question"], "")
 
 
 class ExperienceListViewTestCase(TestCase):
@@ -174,6 +182,7 @@ class ExperienceListViewTestCase(TestCase):
             responsibilities="Backend and data model",
             contributions=["Designed the API", "Wrote the importer"],
             results=["Applications filed in half the time"],
+            vex_question="What did the importer do?",
             i18n={
                 "pl": {
                     "role": "Inżynier backendu Python",
@@ -182,6 +191,7 @@ class ExperienceListViewTestCase(TestCase):
                     "responsibilities": "Backend i model danych",
                     "contributions": ["Projekt API", "Importer danych"],
                     "results": ["Wnioski składane w połowę czasu"],
+                    "vex_question": "Co robił importer?",
                 }
             },
         )
@@ -205,6 +215,13 @@ class ExperienceListViewTestCase(TestCase):
         self.assertEqual(pl["product"], "Serwis do wniosków grantowych")
         self.assertListEqual(pl["contributions"], ["Projekt API", "Importer danych"])
         self.assertListEqual(pl["results"], ["Wnioski składane w połowę czasu"])
+        self.assertEqual(en["vex_question"], "What did the importer do?")
+        self.assertEqual(pl["vex_question"], "Co robił importer?")
+
+    def test_vex_question_is_empty_until_written(self) -> None:
+        ExperienceFactory()
+        item = self.client.get(reverse("work:experiences")).json()[0]
+        self.assertEqual(item["translations"]["en"]["vex_question"], "")
 
     def test_list_experiences_leaves_out_hidden_roles(self) -> None:
         shown = ExperienceFactory(company="Shown Corp")
