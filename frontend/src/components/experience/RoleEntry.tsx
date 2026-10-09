@@ -33,14 +33,20 @@ export type RoleEntryLabels = {
   keyAchievements: string;
   /** What the ask-Vex control does, read after its name; `{company}` is replaced. */
   askVex: string;
-  /** The question sent when it is pressed; `{company}` is replaced. */
-  askVexQuestion: string;
+  /**
+   * The questions it may send, `{company}` replaced; each role asks one,
+   * picked by its place among the roles, so neighbours ask differently and
+   * the same role always asks the same.
+   */
+  askVexQuestions: readonly string[];
   /** The language's quotation marks around `{text}`, for the question shown. */
   quoted: string;
 };
 
 type RoleEntryProps = {
   experience: UiExperience;
+  /** The role's place among the roles, from the earliest; picks its question. */
+  order: number;
   labels: RoleEntryLabels;
   onAsk: (question: string) => void;
   /** The company's heading; a dialog passes its own, which names it. */
@@ -139,10 +145,11 @@ const Results = ({ title, points }: { title: string; points: readonly string[] }
     </Part>
   ) : null;
 
-const RoleEntry = ({ experience, labels, onAsk, Heading = "h2" }: RoleEntryProps) => {
+const RoleEntry = ({ experience, order, labels, onAsk, Heading = "h2" }: RoleEntryProps) => {
   const gist = useRef<HTMLElement>(null);
   const fits = useFitsScrollport(gist);
-  const question = fillTemplate(labels.askVexQuestion, { company: experience.company });
+  const asked = labels.askVexQuestions[order % labels.askVexQuestions.length];
+  const question = fillTemplate(asked, { company: experience.company });
   return (
     <article className="grid grid-cols-4 gap-x-6 gap-y-8 md:grid-cols-12">
       {/* The gist stays in view beside a long story, Vex with it, but only

@@ -264,7 +264,7 @@ const Experience = () => {
     results: t.experience.results,
     keyAchievements: t.experience.keyAchievements,
     askVex: t.experience.askVex,
-    askVexQuestion: t.experience.askVexQuestion,
+    askVexQuestions: t.experience.askVexQuestions,
     quoted: t.common.quoted,
   };
   const timelineLabels = {
@@ -331,6 +331,8 @@ const Experience = () => {
                     role && (
                       <RoleEntry
                         experience={role.experience}
+                        // Its place on the timeline: neighbours ask differently.
+                        order={roles.indexOf(role)}
                         labels={entryLabels}
                         Heading={Heading}
                         // Shrink the entry away first, so the chat opens on the page.

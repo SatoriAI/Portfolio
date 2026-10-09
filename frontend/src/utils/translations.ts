@@ -314,7 +314,18 @@ const copy = {
       contributions: "Selected contributions",
       results: "Results",
       askVex: "Ask Vex about {company}",
-      askVexQuestion: "What did he do at {company}?",
+      /**
+       * The questions the Vex prompt offers about a role, one per role (picked
+       * by its place on the timeline), so the cards do not all ask the same; `{company}` is
+       * replaced. Kept in step with the Polish list, question for question.
+       */
+      askVexQuestions: [
+        "What did he do at {company}?",
+        "What was he responsible for at {company}?",
+        "What came of his work at {company}?",
+        "Which technologies did he use at {company}?",
+        "What did he learn at {company}?",
+      ],
       error: "Failed to load work experience data",
       tryAgain: "Try again",
       noData: "No work experience data available.",
@@ -944,7 +955,13 @@ const copy = {
       contributions: "Wybrany wkład",
       results: "Efekty",
       askVex: "Zapytaj Vexa o firmę {company}",
-      askVexQuestion: "Co robił w firmie {company}?",
+      askVexQuestions: [
+        "Co robił w firmie {company}?",
+        "Za co odpowiadał w firmie {company}?",
+        "Jakie efekty przyniosła jego praca w firmie {company}?",
+        "Z jakich technologii korzystał w firmie {company}?",
+        "Czego się nauczył w firmie {company}?",
+      ],
       error: "Nie udało się załadować danych o doświadczeniu zawodowym",
       tryAgain: "Spróbuj ponownie",
       noData: "Brak dostępnych danych o doświadczeniu zawodowym.",
