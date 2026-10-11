@@ -234,8 +234,13 @@ const copy = {
       askVex: "Ask Vex about {title}",
       askVexQuestion: "Tell me about {title}.",
       screenshotAlt: "{title}: screenshot",
-      previous: "Show previous projects",
-      next: "Show more projects",
+      field: {
+        field: "Projects",
+        hint: "Move over the field to warm it · click a project to open it",
+        hintTouch: "Tap a project to open it",
+        open: "Open",
+        opened: "open below",
+      },
       live: {
         check: "Check it live",
         again: "Check again",
@@ -876,8 +881,13 @@ const copy = {
       askVex: "Zapytaj Vexa o projekt {title}",
       askVexQuestion: "Opowiedz o projekcie {title}.",
       screenshotAlt: "{title}: zrzut ekranu",
-      previous: "Pokaż poprzednie projekty",
-      next: "Pokaż kolejne projekty",
+      field: {
+        field: "Projekty",
+        hint: "Przesuń kursor po polu, by je ogrzać · kliknij projekt, by go otworzyć",
+        hintTouch: "Dotknij projektu, by go otworzyć",
+        open: "Otwórz",
+        opened: "otwarty niżej",
+      },
       live: {
         check: "Sprawdź na żywo",
         again: "Sprawdź ponownie",

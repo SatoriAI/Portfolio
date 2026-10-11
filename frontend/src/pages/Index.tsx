@@ -89,8 +89,7 @@ const Index = () => {
     askVex: t.projects.askVex,
     askVexQuestion: t.projects.askVexQuestion,
     screenshotAlt: t.projects.screenshotAlt,
-    previous: t.projects.previous,
-    next: t.projects.next,
+    field: t.projects.field,
     live: t.projects.live,
   };
 
@@ -120,8 +119,8 @@ const Index = () => {
         </Section>
 
         {/* Projects come first after the hero, as the kit's structure asks:
-            an index of titles with the selected one opened beside them and read
-            in sequence. The images the backend holds are app icons and are shown
+            the projects as pucks on a heat field, the chosen one opened below
+            it and read in sequence. The images the backend holds are app icons and are shown
             at icon size. */}
         <Section id="projects" tone="surface">
           <SectionHeading
