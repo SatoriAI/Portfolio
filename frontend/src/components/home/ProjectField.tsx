@@ -1,4 +1,5 @@
 import {
+  type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
   type PointerEvent,
@@ -236,6 +237,7 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const puckRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const faceRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const roomRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<Gesture | null>(null);
   const swallowClick = useRef(-1);
@@ -249,13 +251,15 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
   /** The puck named in the line under the field, or -1. */
   const [named, setNamed] = useState(-1);
 
-  // The field's width, before the first paint and on every resize.
+  // The room there is, before the first paint and on every resize; not the
+  // field's own width, since a still grid is narrower than the room (see
+  // fieldLayout).
   useLayoutEffect(() => {
-    const field = fieldRef.current;
-    if (!field) return;
-    setWidth(field.clientWidth);
+    const room = roomRef.current;
+    if (!room) return;
+    setWidth(room.clientWidth);
     const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
-    observer.observe(field);
+    observer.observe(room);
     return () => observer.disconnect();
   }, []);
 
@@ -328,8 +332,15 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
     s.frame = null;
     // Physics steps at most 1/30 s at a time, however long the pause.
     const dt = Math.min(1 / 30, Math.max(1 / 240, (now - (s.last ?? now)) / 1000 || 1 / 60));
+    // After a pause (off screen, a hidden tab) pucks still waiting in the
+    // arrival keep their stagger instead of all leaving at once.
+    const paused = s.last === null ? 0 : (now - s.last) / 1000 - 1 / 30;
+    if (paused > 0) {
+      for (const puck of s.pucks) if (puck.releaseAt !== null) puck.releaseAt += paused;
+    }
     s.last = now;
-    s.clock = now / 1000;
+    // The same clock the sources are stamped with (see heat).
+    s.clock = wallClock();
     for (const kind of KIND_NAMES) {
       s.sources[kind] = s.sources[kind].filter(
         (source) => !expired(source, KINDS[kind].model, s.clock),
@@ -513,15 +524,19 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
       name();
       schedule();
     },
-    onFocus: () => {
+    onFocus: (event: FocusEvent<HTMLButtonElement>) => {
       const s = sim.current;
       if (!s) return;
       // Reached by the keyboard before the arrival played: just show them.
       arrive();
-      s.focused = index;
       const puck = s.pucks[index];
       // Focus does not wait for its turn in the arrival.
       if (puck.releaseAt !== null) puck.releaseAt = wallClock();
+      // Only keyboard focus lifts, warms and names a puck; the focus a click
+      // leaves behind (see onClick) is not the reader pointing at it.
+      if (!event.currentTarget.matches(":focus-visible")) return;
+      s.focused = index;
+      s.holdName = false;
       heat("pointer", { x: puck.hx, y: puck.hy });
       name();
     },
@@ -572,15 +587,14 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
     onPointerUp: () => endGesture(index),
     onPointerCancel: () => endGesture(index),
     onClick: (event: MouseEvent<HTMLButtonElement>) => {
-      // From the keyboard (no pointer, detail 0) the tabs have opened it already.
-      if (event.detail === 0) return;
       if (swallowClick.current === index) {
         swallowClick.current = -1;
         return;
       }
-      // Pressing does not focus (see onMouseDown), so the click does: Tab
-      // then moves on from the chosen puck, and an older focus lets go.
-      event.currentTarget.focus({ preventScroll: true });
+      // Pressing does not focus (see onMouseDown), so a pointer's click
+      // does: Tab then moves on from the chosen puck. From the keyboard or
+      // assistive technology (detail 0) focus is already where it should be.
+      if (event.detail > 0) event.currentTarget.focus({ preventScroll: true });
       onOpen(title);
     },
     onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => {
@@ -620,13 +634,13 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div ref={roomRef} className="flex flex-col gap-3">
       <div
         ref={fieldRef}
-        style={{ height: layout.height }}
+        style={{ height: layout.height, width: layout.width || undefined }}
         onPointerMove={onFieldPointerMove}
         onClick={onFieldClick}
-        className="relative isolate select-none overflow-hidden rounded-card border border-border bg-background"
+        className="relative isolate max-w-full select-none self-center overflow-hidden rounded-card border border-border bg-background"
       >
         <canvas
           ref={canvasRef}
@@ -678,23 +692,33 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
         </TabsPrimitive.List>
       </div>
 
-      {/* The warm one, or the open one, named; at rest, how to choose. */}
+      {/* The warm one named, with its subtitle and the way to open it; at
+          rest, the open one, briefly (the panel below says the rest), and how
+          to choose, on a line of its own on a phone. */}
       <div
         ref={barRef}
         onPointerEnter={holdName(true)}
         onPointerLeave={holdName(false)}
-        className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 px-1"
+        style={{ maxWidth: layout.width || undefined }}
+        className="flex min-h-11 w-full flex-wrap items-center gap-x-3 gap-y-1 self-center px-1"
       >
         {shown && (
-          <p className="min-w-0 flex-1 truncate text-base">
+          <p className="min-w-[8rem] flex-1 truncate text-base">
             <span className="font-semibold">{shown.title}</span>
-            {subtitles[shown.title] && (
+            {named >= 0 && subtitles[shown.title] ? (
               <span className="text-muted-foreground"> · {subtitles[shown.title]}</span>
+            ) : (
+              named < 0 && (
+                <span className="font-mono text-meta text-muted-foreground">
+                  {" "}
+                  · {labels.opened}
+                </span>
+              )
             )}
           </p>
         )}
         {named < 0 ? (
-          <p className="font-mono text-meta text-muted-foreground">
+          <p className="basis-full font-mono text-meta text-muted-foreground sm:shrink-0 sm:basis-auto">
             {!canHover ? labels.hintTouch : layout.still ? labels.hintStill : labels.hint}
           </p>
         ) : shown?.title === selected ? (

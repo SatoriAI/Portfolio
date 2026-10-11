@@ -49,7 +49,8 @@ const scaleFor = (width: number): Scale =>
  * and one); a short last row is centred; full rows lean alternately left and
  * right and every home strays a fixed amount, so the field looks scattered
  * but each puck comes back to the same place every time. The field grows by
- * a row as projects are added, so any number fits.
+ * a row as projects are added, so any number fits. `width` is the room
+ * there is; the layout's own width is the field's.
  */
 export const fieldLayout = (count: number, width: number, reducedMotion: boolean): FieldLayout => {
   const scale = scaleFor(width);
@@ -57,8 +58,11 @@ export const fieldLayout = (count: number, width: number, reducedMotion: boolean
   const rows = Math.max(1, Math.ceil(count / scale.perRow));
   const perRow = Math.max(1, Math.ceil(count / rows));
   const cell = Math.min(width / perRow, scale.maxCell);
-  // A grid narrower than the field is centred in it.
-  const inset = (width - cell * perRow) / 2;
+  // The still grid is a block of its own, as wide as its cells, so it never
+  // sits parked in a wide empty field; a field to play in keeps the width and
+  // centres a narrower grid in it.
+  const fieldWidth = still ? Math.min(width, cell * perRow) : width;
+  const inset = (fieldWidth - cell * perRow) / 2;
   const slots: Point[] = [];
   for (let i = 0; i < count; i++) {
     const row = Math.floor(i / perRow);
@@ -74,7 +78,7 @@ export const fieldLayout = (count: number, width: number, reducedMotion: boolean
     });
   }
   return {
-    width,
+    width: fieldWidth,
     height: scale.pad * 2 + rows * scale.rowHeight,
     size: scale.size,
     slots,

@@ -51,6 +51,12 @@ describe("fieldLayout", () => {
     expect(many.still).toBe(true);
     expect(new Set(many.slots.map((s) => s.y)).size).toBe(3);
   });
+
+  it("makes a still grid as wide as its cells, not the room", () => {
+    const still = fieldLayout(9, 928, true);
+    expect(still.width).toBe(600);
+    expect(fieldLayout(9, 928, false).width).toBe(928);
+  });
 });
 
 const envFor = (n: number): StepEnv => ({

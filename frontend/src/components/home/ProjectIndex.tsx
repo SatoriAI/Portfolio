@@ -283,7 +283,14 @@ const ProjectIndex = ({
   // starts below the fold, so a choice is never answered off screen.
   const prefersReducedMotion = usePrefersReducedMotion();
   const panels = useRef<HTMLDivElement>(null);
+  // Idempotent: Enter on a puck opens it through the tabs and again through
+  // the click the browser sends after it, and assistive technology opens it
+  // with a click alone; whichever comes first opens it, once.
+  const opened = useRef(selected);
+  opened.current = selected;
   const open = (title: string) => {
+    if (title === opened.current) return;
+    opened.current = title;
     setValue(title);
     const panel = panels.current;
     if (panel && panel.getBoundingClientRect().top > window.innerHeight * 0.85) {

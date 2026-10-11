@@ -27,8 +27,11 @@ export type HeatSource = { x: number; y: number; bornAt: number };
 /** How the sources of one kind behave: fresh peak, its age, spread, and how long they last. */
 export type HeatModel = { peak: number; scale: number; diffusivity: number; lifetime: number };
 
+// Never younger than at birth: a source stamped a moment after the clock was
+// read (late in a long frame) must not have a negative age, where the
+// kernel is no longer a kernel.
 const ageOf = (source: HeatSource, model: HeatModel, clock: number) =>
-  clock - source.bornAt + model.scale;
+  Math.max(0, clock - source.bornAt) + model.scale;
 
 /** Whether a source has faded past its model's lifetime. */
 export const expired = (source: HeatSource, model: HeatModel, clock: number) =>

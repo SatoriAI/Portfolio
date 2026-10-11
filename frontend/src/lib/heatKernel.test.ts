@@ -38,6 +38,12 @@ describe("heatAt", () => {
     expect(heatAt(sources, model, 0, 0, 0.3)).toBeCloseTo(0.075 + 0.3);
   });
 
+  it("never ages a source below its birth, even stamped after the clock was read", () => {
+    const late = [{ x: 0, y: 0, bornAt: 0.5 }];
+    expect(heatAt(late, model, 0, 0, 0.4)).toBeCloseTo(0.3);
+    expect(heatGradient(late, model, 1, 0, 0.4).every(Number.isFinite)).toBe(true);
+  });
+
   it("is zero with no sources", () => {
     expect(heatAt([], model, 1, 1, 0)).toBe(0);
   });
