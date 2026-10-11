@@ -93,13 +93,15 @@ const MAX_ALPHA = 0.85;
  * which the page upscales: the field is smooth, so bilinear scaling of a
  * coarse grid is indistinguishable from a per-pixel evaluation and costs a
  * hundredth as much. `alphaAt` receives each cell's centre as fractions of the
- * width and height, and writes the lavender and blush alpha there into `out`.
+ * width and height, and writes the lavender and blush alpha there into `out`;
+ * the colours are mixed over `background`, the page's by default.
  */
 export const paintField = (
   ctx: CanvasRenderingContext2D,
   cols: number,
   rows: number,
   alphaAt: (u: number, v: number, out: [number, number]) => void,
+  background: readonly [number, number, number] = BACKGROUND,
 ) => {
   const image = ctx.createImageData(cols, rows);
   const data = image.data;
@@ -110,9 +112,9 @@ export const paintField = (
       alpha[0] = 0;
       alpha[1] = 0;
       alphaAt((col + 0.5) / cols, v, alpha);
-      let r: number = BACKGROUND[0];
-      let g: number = BACKGROUND[1];
-      let b: number = BACKGROUND[2];
+      let r: number = background[0];
+      let g: number = background[1];
+      let b: number = background[2];
       for (let channel = 0; channel < 2; channel++) {
         const a = Math.min(alpha[channel], MAX_ALPHA);
         if (a <= 0) continue;

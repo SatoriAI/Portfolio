@@ -21,11 +21,9 @@ import { useMediaQuery, usePrefersReducedMotion } from "@/hooks/use-media-query"
 import {
   expired,
   fitCanvas,
-  grainStyle,
   heatAt,
   type HeatModel,
   type HeatSource,
-  kernel,
   paintField,
 } from "@/lib/heatKernel";
 import {
@@ -49,7 +47,8 @@ import { cn } from "@/lib/utils";
  * (lib/heatKernel), given room to play.
  *
  * Every project is a white round puck with its icon, its name under it, at a
- * home of its own (lib/projectField). The first time the field is well in
+ * home of its own (lib/projectField), on the section's own white: the field
+ * has no colour until there is heat, and all its heat is lavender. The first time the field is well in
  * view one pulse of heat spreads from its centre and the pucks burst out from
  * it to their homes; after that nothing moves on its own. The reader is the
  * only heat: a mouse moving over the field leaves kernels that spread and
@@ -93,13 +92,8 @@ type ProjectFieldProps = {
   labels: ProjectFieldLabels;
 };
 
-/** The resting field: lavender from the lower left, blush from the upper right. */
-const RESTING = [
-  { x: 0.06, y: 1, peak: 0.5, channel: 0 },
-  { x: 0.94, y: 0, peak: 0.42, channel: 1 },
-] as const;
-/** A resting source's e-fold radius, in widths, as HeatField's (RESTING_SPREAD). */
-const RESTING_RADIUS = 0.34;
+/** The field at rest is the section's own white; heat tints it lavender. */
+const WHITE = [255, 255, 255] as const;
 
 /** The kinds of heat, each a kernel model in pixels and seconds, born `radius` wide. */
 const model = (peak: number, scale: number, radius: number, lifetime: number): HeatModel => ({
@@ -109,14 +103,19 @@ const model = (peak: number, scale: number, radius: number, lifetime: number): H
   lifetime,
 });
 const KINDS = {
-  /** Left by a moving mouse, or by focus: the menu bar's heat at a puck's size. */
-  pointer: { model: model(0.26, 0.12, 44, 1.6), channel: 0, pulls: true },
+  /**
+   * Left by a moving mouse, or by focus: the menu bar's heat at a puck's
+   * size, but twice as strong. On white it is the field's only colour, and
+   * no text is set on it (the names sit on their own white pills), so it
+   * need not stay as faint as the bar's.
+   */
+  pointer: { model: model(0.55, 0.12, 44, 1.6), pulls: true },
   /** A click on the empty field. */
-  pulse: { model: model(0.5, 0.08, 60, 1.4), channel: 1, pulls: true },
+  pulse: { model: model(0.7, 0.08, 60, 1.4), pulls: true },
   /** The one arrival, from the centre, filling the field over 2.4 s. */
-  arrival: { model: model(0.55, 0.1, 120, 2.4), channel: 0, pulls: false },
+  arrival: { model: model(0.55, 0.1, 120, 2.4), pulls: false },
   /** Opening a project: a short warm flood from its puck. */
-  flood: { model: model(0.5, 0.03, 115, 0.3), channel: 1, pulls: false },
+  flood: { model: model(0.5, 0.03, 115, 0.3), pulls: false },
 } as const;
 type Kind = keyof typeof KINDS;
 const KIND_NAMES = Object.keys(KINDS) as Kind[];
@@ -145,8 +144,7 @@ type Sim = {
   pucks: Puck[];
   clock: number;
   sources: Record<Kind, HeatSource[]>;
-  /** The resting field per cell, lavender then blush. */
-  rest: Float32Array;
+  /** Rows of the field's grid, for its aspect. */
   rows: number;
   hovered: number;
   focused: number;
@@ -170,27 +168,10 @@ const noSources = (): Record<Kind, HeatSource[]> => ({
   flood: [],
 });
 
-const restingField = (layout: FieldLayout) => {
+/** The field's grid: 96 columns, and rows for its aspect. */
+const rowsFor = (layout: FieldLayout) => {
   const aspect = layout.width > 0 ? layout.height / layout.width : 0.5;
-  const rows = Math.max(16, Math.min(160, Math.round(COLS * aspect)));
-  const rest = new Float32Array(COLS * rows * 2);
-  for (let row = 0; row < rows; row++) {
-    const y = ((row + 0.5) / rows) * aspect;
-    for (let col = 0; col < COLS; col++) {
-      const x = (col + 0.5) / COLS;
-      for (const source of RESTING) {
-        const r2 = (x - source.x) ** 2 + (y - source.y * aspect) ** 2;
-        rest[(row * COLS + col) * 2 + source.channel] += kernel(
-          source.peak,
-          1,
-          RESTING_RADIUS ** 2 / 4,
-          1,
-          r2,
-        );
-      }
-    }
-  }
-  return { rest, rows };
+  return Math.max(16, Math.min(160, Math.round(COLS * aspect)));
 };
 
 /** The icon on a white face, or the initial where a project has none. */
@@ -283,15 +264,17 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
     fitCanvas(canvas, COLS, s.rows);
     const { width: w, height: h } = s.layout;
     const live = KIND_NAMES.filter((kind) => s.sources[kind].length > 0);
-    paintField(ctx, COLS, s.rows, (u, v, alpha) => {
-      const cell = (Math.floor(v * s.rows) * COLS + Math.floor(u * COLS)) * 2;
-      alpha[0] += s.rest[cell];
-      alpha[1] += s.rest[cell + 1];
-      for (const kind of live) {
-        const { model: m, channel } = KINDS[kind];
-        alpha[channel] += heatAt(s.sources[kind], m, u * w, v * h, s.clock);
-      }
-    });
+    paintField(
+      ctx,
+      COLS,
+      s.rows,
+      (u, v, alpha) => {
+        for (const kind of live) {
+          alpha[0] += heatAt(s.sources[kind], KINDS[kind].model, u * w, v * h, s.clock);
+        }
+      },
+      WHITE,
+    );
   };
 
   /** Each puck's place and shape, written straight to its element. */
@@ -399,7 +382,7 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
   useLayoutEffect(() => {
     if (width === 0) return;
     const s = sim.current;
-    const field = restingField(layout);
+    const rows = rowsFor(layout);
     if (!s || s.pucks.length !== layout.slots.length || s.layout.still !== layout.still) {
       if (s?.frame != null) cancelAnimationFrame(s.frame);
       sim.current = {
@@ -407,7 +390,7 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
         pucks: layout.slots.map(restingPuck),
         clock: wallClock(),
         sources: noSources(),
-        ...field,
+        rows,
         hovered: -1,
         focused: -1,
         lastPointer: null,
@@ -421,8 +404,7 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
     } else {
       s.layout = layout;
       s.clock = wallClock();
-      s.rest = field.rest;
-      s.rows = field.rows;
+      s.rows = rows;
       layout.slots.forEach((slot, i) => {
         const puck = s.pucks[i];
         puck.hx = slot.x;
@@ -666,11 +648,6 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
           aria-hidden="true"
           style={fade}
           className="pointer-events-none absolute inset-0 -z-10 size-full"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10"
-          style={{ ...grainStyle, ...fade }}
         />
         <TabsPrimitive.List aria-label={labels.field} className="absolute inset-0">
           {projects.map((project, index) => (
