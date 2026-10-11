@@ -52,12 +52,12 @@ import { cn } from "@/lib/utils";
  * it to their homes; after that nothing moves on its own. The reader is the
  * only heat: a mouse moving over the field leaves kernels that spread and
  * fade, as over the menu bar, and the pucks lean a few pixels toward the
- * warmth and spring back. The warmest one, or the one under the pointer or
- * focus, is named in the line under the field. A click on the empty field
- * sends a pulse that nudges the pucks near it; a puck can be dragged and
- * flung, and bounces off the others back home. Choosing one gives it the
- * site's lavender ring and a short warm flood, under 300 ms, and the panel
- * below shows it.
+ * warmth and spring back. The one under the pointer or focus, or else the
+ * warmest, or else the open one, is named in the line under the field. A
+ * click on the empty field sends a pulse that nudges the pucks near it; a
+ * puck can be dragged and flung, and bounces off the others back home.
+ * Choosing one gives it an iris rim inside the site's lavender ring and a
+ * short warm flood, under 300 ms, and the panel below shows it.
  *
  * The pucks are the tabs of the panels below (see ProjectIndex): Tab reaches
  * the field, the arrows move to the nearest puck that way, and Enter opens.
@@ -70,10 +70,12 @@ import { cn } from "@/lib/utils";
 export type ProjectFieldLabels = {
   /** Accessible name of the field's list of projects. */
   field: string;
-  /** The line under the field while nothing is warm, where a mouse can warm it. */
+  /** Beside the open project in the line under the field while nothing is warm, where a mouse can play. */
   hint: string;
   /** The same, on touch. */
   hintTouch: string;
+  /** The same, on the still grid, where nothing can be dragged. */
+  hintStill: string;
   /** The action beside a named project. */
   open: string;
   /** Beside a named project that is already the open one. */
@@ -129,6 +131,13 @@ const NAME_ROOM = 30;
 /** Warmth below this does not name a puck. */
 const NAMED_WARMTH = 0.06;
 
+/**
+ * The field's clock, in seconds of wall time: heat left while the loop is
+ * paused (off screen, a hidden tab) has aged by the time it is drawn, rather
+ * than playing back when the field returns.
+ */
+const wallClock = () => performance.now() / 1000;
+
 type Sim = {
   layout: FieldLayout;
   pucks: Puck[];
@@ -140,6 +149,8 @@ type Sim = {
   hovered: number;
   focused: number;
   lastPointer: Point | null;
+  /** While the pointer is on the line under the field, it keeps naming what it named. */
+  holdName: boolean;
   /** Whether the arrival has begun (or was never to be played). */
   arrived: boolean;
   visible: boolean;
@@ -220,11 +231,12 @@ const ARROWS: Record<string, Direction> = {
 
 const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: ProjectFieldProps) => {
   const reducedMotion = usePrefersReducedMotion();
-  const canHover = useMediaQuery("(hover: hover)");
+  const canHover = useMediaQuery("(hover: hover) and (pointer: fine)");
   const fieldRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const puckRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const faceRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const barRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<Gesture | null>(null);
   const swallowClick = useRef(-1);
   const sim = useRef<Sim | null>(null);
@@ -276,7 +288,10 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
       const face = faceRefs.current[i];
       if (!element || !face) return;
       element.style.transform = `translate3d(${(puck.x - half).toFixed(2)}px, ${(puck.y - half).toFixed(2)}px, 0)`;
-      element.style.opacity = !s.arrived || puck.releaseAt !== null ? "0" : "";
+      // Waiting to arrive: unseen, and not to be pressed where it cannot be seen.
+      const waiting = !s.arrived || puck.releaseAt !== null;
+      element.style.opacity = waiting ? "0" : "";
+      element.style.pointerEvents = waiting ? "none" : "";
       // Squashed along its motion, so a flung puck reads as soft.
       const stretch = Math.min(0.2, Math.hypot(puck.vx, puck.vy) / 2800);
       const angle = Math.atan2(puck.vy, puck.vx);
@@ -289,7 +304,7 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
 
   const name = () => {
     const s = sim.current;
-    if (!s) return;
+    if (!s || s.holdName) return;
     let index = s.hovered >= 0 ? s.hovered : s.focused;
     if (index < 0) {
       let warmest = NAMED_WARMTH;
@@ -304,15 +319,17 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
   };
 
   const busy = (s: Sim) =>
-    KIND_NAMES.some((kind) => s.sources[kind].length > 0) || !settled(s.pucks);
+    KIND_NAMES.some((kind) => s.sources[kind].length > 0) ||
+    !settled(s.pucks, s.hovered >= 0 ? s.hovered : s.focused);
 
   const frame = (now: number) => {
     const s = sim.current;
     if (!s) return;
     s.frame = null;
+    // Physics steps at most 1/30 s at a time, however long the pause.
     const dt = Math.min(1 / 30, Math.max(1 / 240, (now - (s.last ?? now)) / 1000 || 1 / 60));
     s.last = now;
-    s.clock += dt;
+    s.clock = now / 1000;
     for (const kind of KIND_NAMES) {
       s.sources[kind] = s.sources[kind].filter(
         (source) => !expired(source, KINDS[kind].model, s.clock),
@@ -348,7 +365,7 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
     const s = sim.current;
     if (!s || s.layout.still) return;
     const list = s.sources[kind];
-    list.push({ ...at, bornAt: s.clock });
+    list.push({ ...at, bornAt: wallClock() });
     if (list.length > POINTER_MAX) list.shift();
     schedule();
   };
@@ -365,12 +382,13 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
       sim.current = {
         layout,
         pucks: layout.slots.map(restingPuck),
-        clock: s?.clock ?? 0,
+        clock: wallClock(),
         sources: noSources(),
         ...field,
         hovered: -1,
         focused: -1,
         lastPointer: null,
+        holdName: false,
         arrived: layout.still || (s?.arrived ?? false),
         visible: s?.visible ?? false,
         frame: null,
@@ -379,6 +397,7 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
       };
     } else {
       s.layout = layout;
+      s.clock = wallClock();
       s.rest = field.rest;
       s.rows = field.rows;
       layout.slots.forEach((slot, i) => {
@@ -399,6 +418,7 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
     const s = sim.current;
     if (!s || s.arrived) return;
     s.arrived = true;
+    s.clock = wallClock();
     s.pucks = arrivingPucks(s.layout, s.clock);
     heat("arrival", { x: s.layout.width / 2, y: s.layout.height / 2 });
     write();
@@ -482,10 +502,13 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
       name();
       schedule();
     },
-    onPointerLeave: () => {
+    onPointerLeave: (event: PointerEvent<HTMLButtonElement>) => {
       const s = sim.current;
       if (!s) return;
       if (s.hovered === index) s.hovered = -1;
+      // Down to the line under the field, to press its Open: keep its name.
+      if (event.relatedTarget instanceof Node && barRef.current?.contains(event.relatedTarget))
+        s.holdName = true;
       s.pucks[index].pressed = false;
       name();
       schedule();
@@ -497,6 +520,8 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
       arrive();
       s.focused = index;
       const puck = s.pucks[index];
+      // Focus does not wait for its turn in the arrival.
+      if (puck.releaseAt !== null) puck.releaseAt = wallClock();
       heat("pointer", { x: puck.hx, y: puck.hy });
       name();
     },
@@ -513,6 +538,8 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
     onPointerDown: (event: PointerEvent<HTMLButtonElement>) => {
       const s = sim.current;
       if (!s) return;
+      // A new press: any click left over from an earlier drag is forgotten.
+      swallowClick.current = -1;
       s.pucks[index].pressed = true;
       schedule();
       if (s.layout.still || event.pointerType === "touch" || event.button !== 0) return;
@@ -544,11 +571,16 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
     },
     onPointerUp: () => endGesture(index),
     onPointerCancel: () => endGesture(index),
-    onClick: () => {
+    onClick: (event: MouseEvent<HTMLButtonElement>) => {
+      // From the keyboard (no pointer, detail 0) the tabs have opened it already.
+      if (event.detail === 0) return;
       if (swallowClick.current === index) {
         swallowClick.current = -1;
         return;
       }
+      // Pressing does not focus (see onMouseDown), so the click does: Tab
+      // then moves on from the chosen puck, and an older focus lets go.
+      event.currentTarget.focus({ preventScroll: true });
       onOpen(title);
     },
     onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => {
@@ -576,7 +608,16 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
     schedule();
   };
 
-  const namedProject = named >= 0 ? projects[named] : undefined;
+  // The line names the warm one, or else the open one.
+  const selectedIndex = projects.findIndex((project) => project.title === selected);
+  const shown = projects[named >= 0 ? named : selectedIndex];
+
+  const holdName = (hold: boolean) => () => {
+    const s = sim.current;
+    if (!s) return;
+    s.holdName = hold;
+    if (!hold) name();
+  };
 
   return (
     <div className="flex flex-col gap-3">
@@ -614,13 +655,22 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
                   faceRefs.current[index] = element;
                 }}
                 className={cn(
-                  "flex size-full items-center justify-center overflow-hidden rounded-full bg-card shadow-rim group-focus-visible:shadow-rim-focus",
-                  project.title === selected ? MARKED : HOVER_RING,
+                  "flex size-full items-center justify-center overflow-hidden rounded-full bg-card",
+                  // Chosen: the iris rim and the lavender ring, which turns
+                  // iris under keyboard focus.
+                  project.title === selected
+                    ? cn("shadow-rim-chosen group-focus-visible:outline-iris", MARKED)
+                    : cn("shadow-puck group-focus-visible:shadow-puck-focus", HOVER_RING),
                 )}
               >
                 <PuckFace project={project} />
               </span>
-              <span className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-full bg-card/80 px-2 text-sm font-semibold tracking-[-0.01em] text-foreground">
+              <span
+                className={cn(
+                  "pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-full px-2 text-sm font-semibold tracking-[-0.01em]",
+                  project.title === selected ? "bg-card text-iris" : "bg-card/80 text-foreground",
+                )}
+              >
                 {project.title}
               </span>
             </TabsPrimitive.Trigger>
@@ -628,38 +678,43 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
         </TabsPrimitive.List>
       </div>
 
-      {/* The warm one, named; or how to warm them. */}
-      <div className="flex min-h-11 items-center gap-3 px-1">
-        {namedProject ? (
-          <>
-            <p className="min-w-0 flex-1 truncate text-base">
-              <span className="font-semibold">{namedProject.title}</span>
-              {subtitles[namedProject.title] && (
-                <span className="text-muted-foreground"> · {subtitles[namedProject.title]}</span>
-              )}
-            </p>
-            {namedProject.title === selected ? (
-              <span className="shrink-0 font-mono text-meta text-muted-foreground">
-                {labels.opened}
-              </span>
-            ) : (
-              // The keyboard opens the focused puck with Enter; this is for the pointer.
-              <Button
-                variant="outline"
-                size="sm"
-                tabIndex={-1}
-                className="shrink-0"
-                onClick={() => onOpen(namedProject.title)}
-              >
-                {labels.open}
-                <ArrowDown aria-hidden="true" />
-              </Button>
+      {/* The warm one, or the open one, named; at rest, how to choose. */}
+      <div
+        ref={barRef}
+        onPointerEnter={holdName(true)}
+        onPointerLeave={holdName(false)}
+        className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 px-1"
+      >
+        {shown && (
+          <p className="min-w-0 flex-1 truncate text-base">
+            <span className="font-semibold">{shown.title}</span>
+            {subtitles[shown.title] && (
+              <span className="text-muted-foreground"> · {subtitles[shown.title]}</span>
             )}
-          </>
-        ) : (
-          <p className="font-mono text-meta text-muted-foreground">
-            {canHover ? labels.hint : labels.hintTouch}
           </p>
+        )}
+        {named < 0 ? (
+          <p className="font-mono text-meta text-muted-foreground">
+            {!canHover ? labels.hintTouch : layout.still ? labels.hintStill : labels.hint}
+          </p>
+        ) : shown?.title === selected ? (
+          <span className="shrink-0 font-mono text-meta text-muted-foreground">
+            {labels.opened}
+          </span>
+        ) : (
+          shown && (
+            // The keyboard opens the focused puck with Enter; this is for the pointer.
+            <Button
+              variant="outline"
+              size="sm"
+              tabIndex={-1}
+              className="shrink-0"
+              onClick={() => onOpen(shown.title)}
+            >
+              {labels.open}
+              <ArrowDown aria-hidden="true" />
+            </Button>
+          )
         )}
       </div>
     </div>

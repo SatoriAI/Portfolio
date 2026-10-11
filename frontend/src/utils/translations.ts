@@ -236,10 +236,11 @@ const copy = {
       screenshotAlt: "{title}: screenshot",
       field: {
         field: "Projects",
-        hint: "Move over the field to warm it · click a project to open it",
-        hintTouch: "Tap a project to open it",
+        hint: "Choose a project to see it below · drag one to play",
+        hintTouch: "Tap a project to see it below",
+        hintStill: "Choose a project to see it below",
         open: "Open",
-        opened: "open below",
+        opened: "shown below",
       },
       live: {
         check: "Check it live",
@@ -883,10 +884,11 @@ const copy = {
       screenshotAlt: "{title}: zrzut ekranu",
       field: {
         field: "Projekty",
-        hint: "Przesuń kursor po polu, by je ogrzać · kliknij projekt, by go otworzyć",
-        hintTouch: "Dotknij projektu, by go otworzyć",
+        hint: "Wybierz projekt, by zobaczyć go niżej · przeciągnij, by się pobawić",
+        hintTouch: "Dotknij projektu, by zobaczyć go niżej",
+        hintStill: "Wybierz projekt, by zobaczyć go niżej",
         open: "Otwórz",
-        opened: "otwarty niżej",
+        opened: "pokazany niżej",
       },
       live: {
         check: "Sprawdź na żywo",

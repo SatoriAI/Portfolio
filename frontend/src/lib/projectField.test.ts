@@ -101,6 +101,15 @@ describe("stepPucks", () => {
     expect(settled(pucks)).toBe(true);
   });
 
+  it("lets the loop rest while the pointer rests on a puck", () => {
+    const env = { ...envFor(7), lifted: 2 };
+    const pucks = env.layout.slots.map(restingPuck);
+    run(pucks, env, 3);
+    expect(pucks[2].s).toBeCloseTo(1.08, 2);
+    expect(settled(pucks, 2)).toBe(true);
+    expect(settled(pucks)).toBe(false);
+  });
+
   it("does not let a dragged puck sit on another", () => {
     const env = envFor(7);
     const pucks = env.layout.slots.map(restingPuck);

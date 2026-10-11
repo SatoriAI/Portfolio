@@ -32,14 +32,16 @@ type Scale = {
   pad: number;
   /** How far a home strays from its cell, at most, so the field reads as scattered, not ruled. */
   jitter: number;
+  /** The widest a cell grows, so a few pucks on a wide field stay a group. */
+  maxCell: number;
 };
 
 const scaleFor = (width: number): Scale =>
   width < 640
-    ? { perRow: 3, size: 64, rowHeight: 128, pad: 20, jitter: 5 }
+    ? { perRow: 3, size: 64, rowHeight: 112, pad: 16, jitter: 5, maxCell: Infinity }
     : width < 1024
-      ? { perRow: 4, size: 80, rowHeight: 160, pad: 28, jitter: 10 }
-      : { perRow: 6, size: 96, rowHeight: 184, pad: 32, jitter: 14 };
+      ? { perRow: 4, size: 80, rowHeight: 136, pad: 20, jitter: 10, maxCell: 200 }
+      : { perRow: 6, size: 96, rowHeight: 148, pad: 20, jitter: 14, maxCell: 240 };
 
 /**
  * Stable homes for `count` pucks across `width`. Rows hold as many as fit the
@@ -54,12 +56,14 @@ export const fieldLayout = (count: number, width: number, reducedMotion: boolean
   const still = reducedMotion || (width < 640 && count > PHONE_PLAY_LIMIT);
   const rows = Math.max(1, Math.ceil(count / scale.perRow));
   const perRow = Math.max(1, Math.ceil(count / rows));
-  const cell = width / perRow;
+  const cell = Math.min(width / perRow, scale.maxCell);
+  // A grid narrower than the field is centred in it.
+  const inset = (width - cell * perRow) / 2;
   const slots: Point[] = [];
   for (let i = 0; i < count; i++) {
     const row = Math.floor(i / perRow);
     const inRow = Math.min(perRow, count - row * perRow);
-    const offset = ((perRow - inRow) * cell) / 2;
+    const offset = inset + ((perRow - inRow) * cell) / 2;
     const lean = !still && rows > 1 && inRow === perRow ? (row % 2 ? 1 : -1) * cell * 0.12 : 0;
     const strayX = still ? 0 : Math.sin(i * 12.9898) * scale.jitter;
     const strayY = still ? 0 : Math.cos(i * 78.233) * scale.jitter;
@@ -150,6 +154,10 @@ export const pushFrom = (pucks: Puck[], at: Point, strength = 1) => {
     puck.sv -= 4 * f;
   }
 };
+
+/** The scale a puck's face settles at: pressed in, lifted, or swollen by its warmth. */
+const targetScale = (puck: Puck, lifted: boolean) =>
+  puck.pressed ? 0.9 : lifted ? 1.08 : 1 + puck.warmth * 0.08;
 
 export type StepEnv = {
   layout: FieldLayout;
@@ -270,23 +278,27 @@ export const stepPucks = (pucks: Puck[], dt: number, env: StepEnv) => {
       (sum, { sources, model }) => sum + heatAt(sources, model, puck.x, puck.y, clock),
       0,
     );
-    const target = puck.pressed ? 0.9 : i === env.lifted ? 1.08 : 1 + puck.warmth * 0.08;
+    const target = targetScale(puck, i === env.lifted);
     puck.sv += (230 * (target - puck.s) - 15 * puck.sv) * dt;
     puck.s += puck.sv * dt;
     puck.warmth += (Math.min(1, heat) - puck.warmth) * Math.min(1, dt * 6);
   });
 };
 
-/** Whether every puck is home and still, so the loop can stop. */
-export const settled = (pucks: readonly Puck[]) =>
+/**
+ * Whether every puck is home and still, so the loop can stop. A lifted or
+ * pressed puck is still once its face has reached its size: resting the
+ * pointer on a puck must not keep the field painting.
+ */
+export const settled = (pucks: readonly Puck[], lifted = -1) =>
   pucks.every(
-    (puck) =>
+    (puck, i) =>
       puck.releaseAt === null &&
       !puck.drag &&
       Math.abs(puck.x - puck.hx) < 0.3 &&
       Math.abs(puck.y - puck.hy) < 0.3 &&
       Math.hypot(puck.vx, puck.vy) < 2 &&
-      Math.abs(puck.s - 1) < 0.004 &&
+      Math.abs(puck.s - targetScale(puck, i === lifted)) < 0.004 &&
       Math.abs(puck.sv) < 0.05 &&
       puck.warmth < 0.01,
   );
