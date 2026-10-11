@@ -20,6 +20,9 @@ export type FieldLayout = {
   still: boolean;
 };
 
+/** How far inside the field's sides and top a puck turns back, in pixels; every home is further in. */
+export const EDGE = 12;
+
 /** Above this many projects a phone shows a plain grid rather than a field to play in. */
 export const PHONE_PLAY_LIMIT = 8;
 
@@ -32,16 +35,18 @@ type Scale = {
   pad: number;
   /** How far a home strays from its cell, at most, so the field reads as scattered, not ruled. */
   jitter: number;
+  /** How far full rows lean alternately left and right, in cells. */
+  lean: number;
   /** The widest a cell grows, so a few pucks on a wide field stay a group. */
   maxCell: number;
 };
 
 const scaleFor = (width: number): Scale =>
   width < 640
-    ? { perRow: 3, size: 64, rowHeight: 112, pad: 16, jitter: 5, maxCell: Infinity }
+    ? { perRow: 3, size: 64, rowHeight: 112, pad: 16, jitter: 5, lean: 0.06, maxCell: Infinity }
     : width < 1024
-      ? { perRow: 4, size: 80, rowHeight: 136, pad: 20, jitter: 10, maxCell: 200 }
-      : { perRow: 6, size: 96, rowHeight: 148, pad: 20, jitter: 14, maxCell: 240 };
+      ? { perRow: 4, size: 80, rowHeight: 136, pad: 20, jitter: 10, lean: 0.12, maxCell: 200 }
+      : { perRow: 6, size: 96, rowHeight: 148, pad: 20, jitter: 14, lean: 0.12, maxCell: 240 };
 
 /**
  * Stable homes for `count` pucks across `width`. Rows hold as many as fit the
@@ -68,7 +73,8 @@ export const fieldLayout = (count: number, width: number, reducedMotion: boolean
     const row = Math.floor(i / perRow);
     const inRow = Math.min(perRow, count - row * perRow);
     const offset = inset + ((perRow - inRow) * cell) / 2;
-    const lean = !still && rows > 1 && inRow === perRow ? (row % 2 ? 1 : -1) * cell * 0.12 : 0;
+    const lean =
+      !still && rows > 1 && inRow === perRow ? (row % 2 ? 1 : -1) * cell * scale.lean : 0;
     const strayX = still ? 0 : Math.sin(i * 12.9898) * scale.jitter;
     const strayY = still ? 0 : Math.cos(i * 78.233) * scale.jitter;
     slots.push({
@@ -259,21 +265,28 @@ export const stepPucks = (pucks: Puck[], dt: number, env: StepEnv) => {
       puck.x += puck.vx * dt;
       puck.y += puck.vy * dt;
       const bounce = (speed: number) => (puck.sv -= Math.min(4, Math.abs(speed) * 0.01));
-      if (puck.x < radius) {
-        puck.x = radius;
+      // The walls stand EDGE inside the field: it has no visible edge (it
+      // fades into the page), so a flung puck turns back inside the fade
+      // rather than against nothing.
+      const left = EDGE + radius;
+      const right = layout.width - EDGE - radius;
+      const top = EDGE + radius;
+      const bottom = layout.height - radius - env.nameRoom;
+      if (puck.x < left) {
+        puck.x = left;
         puck.vx = Math.abs(puck.vx) * 0.6;
         bounce(puck.vx);
-      } else if (puck.x > layout.width - radius) {
-        puck.x = layout.width - radius;
+      } else if (puck.x > right) {
+        puck.x = right;
         puck.vx = -Math.abs(puck.vx) * 0.6;
         bounce(puck.vx);
       }
-      if (puck.y < radius) {
-        puck.y = radius;
+      if (puck.y < top) {
+        puck.y = top;
         puck.vy = Math.abs(puck.vy) * 0.6;
         bounce(puck.vy);
-      } else if (puck.y > layout.height - radius - env.nameRoom) {
-        puck.y = layout.height - radius - env.nameRoom;
+      } else if (puck.y > bottom) {
+        puck.y = bottom;
         puck.vy = -Math.abs(puck.vy) * 0.6;
         bounce(puck.vy);
       }

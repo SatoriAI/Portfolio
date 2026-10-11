@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   arrivingPucks,
+  EDGE,
   fieldLayout,
   neighbour,
   pushFrom,
@@ -32,9 +33,9 @@ describe("fieldLayout", () => {
     ]) {
       const layout = fieldLayout(n, w, false);
       for (const { x, y } of layout.slots) {
-        expect(x - layout.size / 2).toBeGreaterThanOrEqual(0);
-        expect(x + layout.size / 2).toBeLessThanOrEqual(w);
-        expect(y - layout.size / 2).toBeGreaterThanOrEqual(0);
+        expect(x - layout.size / 2).toBeGreaterThanOrEqual(EDGE);
+        expect(x + layout.size / 2).toBeLessThanOrEqual(layout.width - EDGE);
+        expect(y - layout.size / 2).toBeGreaterThanOrEqual(EDGE);
         expect(y + layout.size / 2 + 24).toBeLessThanOrEqual(layout.height);
       }
     }

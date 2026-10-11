@@ -1,4 +1,5 @@
 import {
+  type CSSProperties,
   type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
@@ -222,6 +223,17 @@ const PuckFace = ({ project }: { project: UiProject }) => {
 /** A faint ring under a real pointer, as on the company circles. */
 const HOVER_RING =
   "[@media(hover:hover)]:group-hover:outline [@media(hover:hover)]:group-hover:outline-2 [@media(hover:hover)]:group-hover:outline-offset-[3px] [@media(hover:hover)]:group-hover:outline-iris/40";
+
+/** A mask fading an element out over `x` pixels at its sides and `y` at its top and bottom. */
+const fadeMask = (x: number, y: number): CSSProperties => {
+  const image = `linear-gradient(to right, transparent, #000 ${x}px, #000 calc(100% - ${x}px), transparent), linear-gradient(to bottom, transparent, #000 ${y}px, #000 calc(100% - ${y}px), transparent)`;
+  return {
+    maskImage: image,
+    WebkitMaskImage: image,
+    maskComposite: "intersect",
+    WebkitMaskComposite: "source-in",
+  };
+};
 
 const ARROWS: Record<string, Direction> = {
   ArrowLeft: "left",
@@ -622,6 +634,11 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
     schedule();
   };
 
+  // No box: the warmth fades into the page at every side, by a fixed width
+  // so the pucks at the corners keep warmth under them at any size.
+  const phone = layout.width < 640;
+  const fade = fadeMask(phone ? 24 : 48, phone ? 32 : 40);
+
   // The line names the warm one, or else the open one.
   const selectedIndex = projects.findIndex((project) => project.title === selected);
   const shown = projects[named >= 0 ? named : selectedIndex];
@@ -634,23 +651,26 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
   };
 
   return (
-    <div ref={roomRef} className="flex flex-col gap-3">
+    // The field has no edge of its own, so its top pad is all the gap the
+    // heading above needs: drawn up into the section's usual gap.
+    <div ref={roomRef} className="-mt-6 flex flex-col gap-3">
       <div
         ref={fieldRef}
         style={{ height: layout.height, width: layout.width || undefined }}
         onPointerMove={onFieldPointerMove}
         onClick={onFieldClick}
-        className="relative isolate max-w-full select-none self-center overflow-hidden rounded-card border border-border bg-background"
+        className="relative isolate max-w-full select-none self-center overflow-hidden"
       >
         <canvas
           ref={canvasRef}
           aria-hidden="true"
+          style={fade}
           className="pointer-events-none absolute inset-0 -z-10 size-full"
         />
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 -z-10"
-          style={grainStyle}
+          style={{ ...grainStyle, ...fade }}
         />
         <TabsPrimitive.List aria-label={labels.field} className="absolute inset-0">
           {projects.map((project, index) => (
