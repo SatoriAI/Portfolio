@@ -105,8 +105,12 @@ export type Puck = {
   sv: number;
   /** How warm it is, smoothed: 0 cold, about 1 hot. */
   warmth: number;
-  /** Waiting at the centre for its moment in the arrival; it does not move or collide until then. */
-  releaseAt: number | null;
+  /**
+   * Its flight in the arrival: from where, and when it leaves. Until then
+   * it waits unseen; in flight it glides home on a fixed curve, through the
+   * others, and only joins the physics when it lands.
+   */
+  flight: { from: Point; startAt: number } | null;
   /** Where the pointer holds it, while dragged. */
   drag: Point | null;
   pressed: boolean;
@@ -122,7 +126,7 @@ export const restingPuck = ({ x, y }: Point): Puck => ({
   s: 1,
   sv: 0,
   warmth: 0,
-  releaseAt: null,
+  flight: null,
   drag: null,
   pressed: false,
 });
@@ -132,29 +136,52 @@ const SPRING = 38;
 const DAMPING = 6.2;
 const PULL = 60000;
 const PULL_MAX = 620;
-/** The speed a released puck leaves the centre at, per pixel to its home. */
-const BURST = 4.2;
+/** Passes that separate overlapping pucks each step. */
+const COLLISION_PASSES = 3;
+/** How long a puck's flight home in the arrival takes, in seconds. */
+const FLIGHT = 0.7;
+/** The scale a puck leaves the centre at, growing to its own as it flies. */
+const FLIGHT_SCALE = 0.6;
 
 /**
- * Pucks waiting at the centre to burst out to their homes, one after another
+ * Pucks waiting at the centre to fly out to their homes, one after another
  * from `clock`; with many projects they leave closer together, so the
- * arrival takes the same time.
+ * arrival takes the same time. A flight is a curve, not physics: the pucks
+ * leave from one point, and as bodies they would pile up and scatter there.
  */
 export const arrivingPucks = (layout: FieldLayout, clock: number): Puck[] => {
   const gap = layout.slots.length > PHONE_PLAY_LIMIT ? 0.045 : 0.09;
+  const from = { x: layout.width / 2, y: layout.height / 2 };
   return layout.slots.map((slot, i) => ({
     ...restingPuck(slot),
-    x: layout.width / 2 + Math.cos(i * 2.4) * 6,
-    y: layout.height / 2 + Math.sin(i * 2.4) * 6,
-    s: 0.2,
-    releaseAt: clock + 0.25 + i * gap,
+    ...from,
+    s: FLIGHT_SCALE,
+    flight: { from, startAt: clock + 0.25 + i * gap },
   }));
 };
+
+/** Whether a puck is still waiting to leave in the arrival, and so unseen. */
+export const waiting = (puck: Puck, clock: number) =>
+  puck.flight !== null && clock < puck.flight.startAt;
+
+/** Ends a puck's flight where it should end: at home, settling with a soft squash. */
+export const land = (puck: Puck) => {
+  puck.flight = null;
+  puck.x = puck.hx;
+  puck.y = puck.hy;
+  puck.vx = 0;
+  puck.vy = 0;
+  puck.s = 1;
+  puck.sv = -1.5;
+};
+
+/** The ease of a flight: fast out of the centre, slowing into its home. */
+const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
 
 /** A pulse sent from a click: every puck nearby is pushed away and squashed. */
 export const pushFrom = (pucks: Puck[], at: Point, strength = 1) => {
   for (const puck of pucks) {
-    if (puck.releaseAt !== null) continue;
+    if (puck.flight) continue;
     const dx = puck.x - at.x;
     const dy = puck.y - at.y;
     const d = Math.hypot(dx, dy) || 1;
@@ -192,12 +219,24 @@ export const stepPucks = (pucks: Puck[], dt: number, env: StepEnv) => {
   const apart = layout.size + (layout.width < 640 ? 18 : 28);
 
   pucks.forEach((puck) => {
-    if (puck.releaseAt !== null) {
-      if (clock < puck.releaseAt) return;
-      puck.releaseAt = null;
-      puck.vx = (puck.hx - puck.x) * BURST;
-      puck.vy = (puck.hy - puck.y) * BURST;
-      puck.sv = 6;
+    if (puck.flight) {
+      const t = (clock - puck.flight.startAt) / FLIGHT;
+      if (t < 0) return;
+      if (t >= 1) {
+        land(puck);
+        return;
+      }
+      const k = easeOutCubic(t);
+      const { from } = puck.flight;
+      const x = from.x + (puck.hx - from.x) * k;
+      const y = from.y + (puck.hy - from.y) * k;
+      // Its speed along the curve, so it stretches as it flies.
+      puck.vx = (x - puck.x) / dt;
+      puck.vy = (y - puck.y) / dt;
+      puck.x = x;
+      puck.y = y;
+      puck.s = FLIGHT_SCALE + (1 - FLIGHT_SCALE) * k;
+      return;
     }
     if (puck.drag) {
       puck.vx = puck.vx * 0.5 + ((puck.drag.x - puck.x) / dt) * 0.5;
@@ -222,45 +261,51 @@ export const stepPucks = (pucks: Puck[], dt: number, env: StepEnv) => {
     puck.vy += (SPRING * (puck.hy - puck.y) - DAMPING * puck.vy + fy) * dt;
   });
 
-  for (let a = 0; a < pucks.length; a++) {
-    for (let b = a + 1; b < pucks.length; b++) {
-      const A = pucks[a];
-      const B = pucks[b];
-      if (A.releaseAt !== null || B.releaseAt !== null) continue;
-      const dx = B.x - A.x;
-      const dy = B.y - A.y;
-      const d = Math.hypot(dx, dy);
-      if (d >= apart || d === 0) continue;
-      const nx = dx / d;
-      const ny = dy / d;
-      const overlap = apart - d;
-      // A held puck does not give way; the other takes all of it.
-      const wa = A.drag ? 0 : B.drag ? 1 : 0.5;
-      const wb = 1 - wa;
-      A.x -= nx * overlap * wa;
-      A.y -= ny * overlap * wa;
-      B.x += nx * overlap * wb;
-      B.y += ny * overlap * wb;
-      const closing = (B.vx - A.vx) * nx + (B.vy - A.vy) * ny;
-      if (closing < 0) {
-        const j = -1.5 * closing;
-        if (!A.drag) {
-          A.vx -= nx * j * wa;
-          A.vy -= ny * j * wa;
+  // Overlaps are resolved in a few passes: pushing one pair apart can push
+  // one of them into a third, and a single pass left a cluster of three
+  // shoving each other back and forth from frame to frame. Only the first
+  // pass bounces; the others only separate.
+  for (let pass = 0; pass < COLLISION_PASSES; pass++) {
+    for (let a = 0; a < pucks.length; a++) {
+      for (let b = a + 1; b < pucks.length; b++) {
+        const A = pucks[a];
+        const B = pucks[b];
+        if (A.flight || B.flight) continue;
+        const dx = B.x - A.x;
+        const dy = B.y - A.y;
+        const d = Math.hypot(dx, dy);
+        if (d >= apart || d === 0) continue;
+        const nx = dx / d;
+        const ny = dy / d;
+        const overlap = apart - d;
+        // A held puck does not give way; the other takes all of it.
+        const wa = A.drag ? 0 : B.drag ? 1 : 0.5;
+        const wb = 1 - wa;
+        A.x -= nx * overlap * wa;
+        A.y -= ny * overlap * wa;
+        B.x += nx * overlap * wb;
+        B.y += ny * overlap * wb;
+        const closing = (B.vx - A.vx) * nx + (B.vy - A.vy) * ny;
+        if (pass === 0 && closing < 0) {
+          const j = -1.5 * closing;
+          if (!A.drag) {
+            A.vx -= nx * j * wa;
+            A.vy -= ny * j * wa;
+          }
+          if (!B.drag) {
+            B.vx += nx * j * wb;
+            B.vy += ny * j * wb;
+          }
+          const kick = Math.min(5, -closing * 0.012);
+          A.sv -= kick;
+          B.sv -= kick;
         }
-        if (!B.drag) {
-          B.vx += nx * j * wb;
-          B.vy += ny * j * wb;
-        }
-        const kick = Math.min(5, -closing * 0.012);
-        A.sv -= kick;
-        B.sv -= kick;
       }
     }
   }
 
   pucks.forEach((puck, i) => {
-    if (puck.releaseAt !== null) return;
+    if (puck.flight) return;
     if (!puck.drag) {
       puck.x += puck.vx * dt;
       puck.y += puck.vy * dt;
@@ -310,7 +355,7 @@ export const stepPucks = (pucks: Puck[], dt: number, env: StepEnv) => {
 export const settled = (pucks: readonly Puck[], lifted = -1) =>
   pucks.every(
     (puck, i) =>
-      puck.releaseAt === null &&
+      puck.flight === null &&
       !puck.drag &&
       Math.abs(puck.x - puck.hx) < 0.3 &&
       Math.abs(puck.y - puck.hy) < 0.3 &&

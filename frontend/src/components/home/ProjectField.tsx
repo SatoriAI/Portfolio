@@ -31,6 +31,7 @@ import {
   type Direction,
   type FieldLayout,
   fieldLayout,
+  land,
   neighbour,
   type Point,
   type Puck,
@@ -38,6 +39,7 @@ import {
   restingPuck,
   settled,
   stepPucks,
+  waiting,
 } from "@/lib/projectField";
 import type { UiProject } from "@/lib/projectsService";
 import { cn } from "@/lib/utils";
@@ -288,9 +290,9 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
       if (!element || !face) return;
       element.style.transform = `translate3d(${(puck.x - half).toFixed(2)}px, ${(puck.y - half).toFixed(2)}px, 0)`;
       // Waiting to arrive: unseen, and not to be pressed where it cannot be seen.
-      const waiting = !s.arrived || puck.releaseAt !== null;
-      element.style.opacity = waiting ? "0" : "";
-      element.style.pointerEvents = waiting ? "none" : "";
+      const unseen = !s.arrived || waiting(puck, s.clock);
+      element.style.opacity = unseen ? "0" : "";
+      element.style.pointerEvents = unseen ? "none" : "";
       // Squashed along its motion, so a flung puck reads as soft.
       const stretch = Math.min(0.2, Math.hypot(puck.vx, puck.vy) / 2800);
       const angle = Math.atan2(puck.vy, puck.vx);
@@ -331,7 +333,7 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
     // arrival keep their stagger instead of all leaving at once.
     const paused = s.last === null ? 0 : (now - s.last) / 1000 - 1 / 30;
     if (paused > 0) {
-      for (const puck of s.pucks) if (puck.releaseAt !== null) puck.releaseAt += paused;
+      for (const puck of s.pucks) if (puck.flight) puck.flight.startAt += paused;
     }
     s.last = now;
     // The same clock the sources are stamped with (see heat).
@@ -525,7 +527,7 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
       arrive();
       const puck = s.pucks[index];
       // Focus does not wait for its turn in the arrival.
-      if (puck.releaseAt !== null) puck.releaseAt = wallClock();
+      if (puck.flight) land(puck);
       // Only keyboard focus lifts, warms and names a puck; the focus a click
       // leaves behind (see onClick) is not the reader pointing at it.
       if (!event.currentTarget.matches(":focus-visible")) return;

@@ -84,6 +84,50 @@ describe("stepPucks", () => {
     expect(settled(pucks)).toBe(true);
   });
 
+  it("flies each puck home on a smooth curve, never through a collision", () => {
+    const env = envFor(9);
+    const pucks = arrivingPucks(env.layout, 0);
+    const centre = { x: env.layout.width / 2, y: env.layout.height / 2 };
+    let worst = 0;
+    for (let t = 0; t < 2; t += 1 / 60) {
+      env.clock += 1 / 60;
+      stepPucks(pucks, 1 / 60, env);
+      // Every puck stays on the straight line from the centre to its home.
+      for (const p of pucks) {
+        const hx = p.hx - centre.x;
+        const hy = p.hy - centre.y;
+        const off = Math.abs((p.x - centre.x) * hy - (p.y - centre.y) * hx) / Math.hypot(hx, hy);
+        worst = Math.max(worst, off);
+      }
+    }
+    expect(worst).toBeLessThan(0.5);
+    expect(pucks.every((p) => p.x === p.hx && p.y === p.hy)).toBe(true);
+    run(pucks, env, 1);
+    expect(settled(pucks)).toBe(true);
+  });
+
+  it("parts three pucks pressed together in one step", () => {
+    const env = envFor(7);
+    const pucks = env.layout.slots.map(restingPuck);
+    const at = { x: pucks[1].hx, y: pucks[1].hy };
+    [0, 1, 2].forEach((i, k) => {
+      pucks[i].x = at.x + k * 4;
+      pucks[i].y = at.y + (k % 2) * 3;
+    });
+    stepPucks(pucks, 1 / 60, env);
+    const apart = env.layout.size + 28;
+    for (const [a, b] of [
+      [0, 1],
+      [1, 2],
+      [0, 2],
+    ]) {
+      expect(Math.hypot(pucks[a].x - pucks[b].x, pucks[a].y - pucks[b].y)).toBeGreaterThan(
+        // One pass left them at about 0.6 of it, shoving on for frames.
+        apart * 0.8,
+      );
+    }
+  });
+
   it("springs a pushed puck back home", () => {
     const env = envFor(7);
     const pucks = env.layout.slots.map(restingPuck);
