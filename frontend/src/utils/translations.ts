@@ -9,7 +9,7 @@ const copy = {
           "Ideas, experiments and conclusions from research and successive prototypes: software in production and mathematics.",
       },
       home: {
-        title: "Dawid Hanrahan · Mathematician by training, engineer by trade",
+        title: "Dawid Hanrahan · Design tomorrow, ship today",
         description:
           "Python backend engineer and PhD candidate in harmonic analysis. In production since 2019: Nokia, PeakData, Xperi, CloudFerro. Projects and pieces from the workshop.",
       },
@@ -662,7 +662,7 @@ const copy = {
           "Pomysły, eksperymenty i wnioski z badań i kolejnych prototypów: oprogramowanie na produkcji i matematyka.",
       },
       home: {
-        title: "Dawid Hanrahan · Matematyk z wykształcenia, inżynier z zawodu",
+        title: "Dawid Hanrahan · Projektuję jutro, wdrażam dziś",
         description:
           "Inżynier backendu w Pythonie, doktorant z analizy harmonicznej. Na produkcji od 2019 roku: Nokia, PeakData, Xperi, CloudFerro. Projekty i teksty z warsztatu.",
       },
