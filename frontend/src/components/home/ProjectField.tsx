@@ -11,10 +11,8 @@ import {
   useState,
 } from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import { ArrowDown } from "lucide-react";
 
 import { MARKED } from "@/components/experience/circleStyles";
-import { Button } from "@/components/ui/button";
 import { projectIcons } from "@/config/projectIcons";
 import { useOnceInView } from "@/hooks/use-in-view";
 import { useMediaQuery, usePrefersReducedMotion } from "@/hooks/use-media-query";
@@ -79,8 +77,6 @@ export type ProjectFieldLabels = {
   hintTouch: string;
   /** The same, on the still grid, where nothing can be dragged. */
   hintStill: string;
-  /** The action beside a named project. */
-  open: string;
   /** Beside a named project that is already the open one. */
   opened: string;
 };
@@ -151,8 +147,6 @@ type Sim = {
   hovered: number;
   focused: number;
   lastPointer: Point | null;
-  /** While the pointer is on the line under the field, it keeps naming what it named. */
-  holdName: boolean;
   /** Whether the arrival has begun (or was never to be played). */
   arrived: boolean;
   visible: boolean;
@@ -233,7 +227,6 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
   const puckRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const faceRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const roomRef = useRef<HTMLDivElement>(null);
-  const barRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<Gesture | null>(null);
   const swallowClick = useRef(-1);
   const sim = useRef<Sim | null>(null);
@@ -305,7 +298,7 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
 
   const name = () => {
     const s = sim.current;
-    if (!s || s.holdName) return;
+    if (!s) return;
     let index = s.hovered >= 0 ? s.hovered : s.focused;
     if (index < 0) {
       let warmest = NAMED_WARMTH;
@@ -396,7 +389,6 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
         hovered: -1,
         focused: -1,
         lastPointer: null,
-        holdName: false,
         arrived: layout.still || (s?.arrived ?? false),
         visible: s?.visible ?? false,
         frame: null,
@@ -509,13 +501,10 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
       name();
       schedule();
     },
-    onPointerLeave: (event: PointerEvent<HTMLButtonElement>) => {
+    onPointerLeave: () => {
       const s = sim.current;
       if (!s) return;
       if (s.hovered === index) s.hovered = -1;
-      // Down to the line under the field, to press its Open: keep its name.
-      if (event.relatedTarget instanceof Node && barRef.current?.contains(event.relatedTarget))
-        s.holdName = true;
       s.pucks[index].pressed = false;
       name();
       schedule();
@@ -532,7 +521,6 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
       // leaves behind (see onClick) is not the reader pointing at it.
       if (!event.currentTarget.matches(":focus-visible")) return;
       s.focused = index;
-      s.holdName = false;
       heat("pointer", { x: puck.hx, y: puck.hy });
       name();
     },
@@ -627,13 +615,6 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
   const selectedIndex = projects.findIndex((project) => project.title === selected);
   const shown = projects[named >= 0 ? named : selectedIndex];
 
-  const holdName = (hold: boolean) => () => {
-    const s = sim.current;
-    if (!s) return;
-    s.holdName = hold;
-    if (!hold) name();
-  };
-
   return (
     // The field has no edge of its own, so its top pad is all the gap the
     // heading above needs: drawn up into the section's usual gap.
@@ -691,13 +672,10 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
         </TabsPrimitive.List>
       </div>
 
-      {/* The warm one named, with its subtitle and the way to open it; at
-          rest, the open one, briefly (the panel below says the rest), and how
-          to choose, on a line of its own on a phone. */}
+      {/* The warm one named, with its subtitle (the puck itself is what
+          opens it); at rest, the open one, briefly (the panel below says the
+          rest), and how to choose, on a line of its own on a phone. */}
       <div
-        ref={barRef}
-        onPointerEnter={holdName(true)}
-        onPointerLeave={holdName(false)}
         style={{ maxWidth: layout.width || undefined }}
         className="flex min-h-11 w-full flex-wrap items-center gap-x-3 gap-y-1 self-center px-1"
       >
@@ -720,23 +698,11 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
           <p className="basis-full font-mono text-meta text-muted-foreground sm:shrink-0 sm:basis-auto">
             {!canHover ? labels.hintTouch : layout.still ? labels.hintStill : labels.hint}
           </p>
-        ) : shown?.title === selected ? (
-          <span className="shrink-0 font-mono text-meta text-muted-foreground">
-            {labels.opened}
-          </span>
         ) : (
-          shown && (
-            // The keyboard opens the focused puck with Enter; this is for the pointer.
-            <Button
-              variant="outline"
-              size="sm"
-              tabIndex={-1}
-              className="shrink-0"
-              onClick={() => onOpen(shown.title)}
-            >
-              {labels.open}
-              <ArrowDown aria-hidden="true" />
-            </Button>
+          shown?.title === selected && (
+            <span className="shrink-0 font-mono text-meta text-muted-foreground">
+              {labels.opened}
+            </span>
           )
         )}
       </div>

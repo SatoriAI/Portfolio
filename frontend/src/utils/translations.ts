@@ -239,7 +239,6 @@ const copy = {
         hint: "Choose a project to see it below · drag one to play",
         hintTouch: "Tap a project to see it below",
         hintStill: "Choose a project to see it below",
-        open: "Open",
         opened: "shown below",
       },
       live: {
@@ -887,7 +886,6 @@ const copy = {
         hint: "Wybierz projekt, by zobaczyć go niżej · przeciągnij, by się pobawić",
         hintTouch: "Dotknij projektu, by zobaczyć go niżej",
         hintStill: "Wybierz projekt, by zobaczyć go niżej",
-        open: "Otwórz",
         opened: "pokazany niżej",
       },
       live: {
