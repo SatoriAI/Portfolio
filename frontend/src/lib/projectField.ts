@@ -400,3 +400,32 @@ export const neighbour = (slots: readonly Point[], from: number, direction: Dire
   const step = d.x + d.y > 0 ? 1 : -1;
   return (from + step + slots.length) % slots.length;
 };
+
+/** The home nearest a point: where a dropped puck settles. */
+export const nearestSlot = (slots: readonly Point[], at: Point) => {
+  let best = 0;
+  let bestDistance = Infinity;
+  slots.forEach((slot, i) => {
+    const distance = Math.hypot(slot.x - at.x, slot.y - at.y);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = i;
+    }
+  });
+  return best;
+};
+
+/**
+ * The reader's own order after dropping puck `puck` on home `slot`: it takes
+ * that home and the pucks between its old home and the new one move one
+ * home along to make room, as items do in a list. `slotOf[i]` is the home
+ * of puck i.
+ */
+export const moveToSlot = (slotOf: readonly number[], puck: number, slot: number) => {
+  const order = [...slotOf.keys()].sort((a, b) => slotOf[a] - slotOf[b]);
+  order.splice(order.indexOf(puck), 1);
+  order.splice(slot, 0, puck);
+  const next = [...slotOf];
+  order.forEach((i, home) => (next[i] = home));
+  return next;
+};

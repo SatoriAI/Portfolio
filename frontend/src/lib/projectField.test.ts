@@ -4,6 +4,8 @@ import {
   arrivingPucks,
   EDGE,
   fieldLayout,
+  moveToSlot,
+  nearestSlot,
   neighbour,
   pushFrom,
   restingPuck,
@@ -186,5 +188,35 @@ describe("neighbour", () => {
   it("wraps in reading order at an edge", () => {
     expect(neighbour(grid, 3, "right")).toBe(4);
     expect(neighbour(grid, 0, "left")).toBe(6);
+  });
+});
+
+describe("moveToSlot", () => {
+  it("puts the dropped puck on its new home and moves the ones between along", () => {
+    // Four pucks in order; drop the first on the third home.
+    expect(moveToSlot([0, 1, 2, 3], 0, 2)).toEqual([2, 0, 1, 3]);
+    // And back the other way: the last onto the first home.
+    expect(moveToSlot([0, 1, 2, 3], 3, 0)).toEqual([1, 2, 3, 0]);
+  });
+
+  it("changes nothing when a puck is dropped on its own home", () => {
+    expect(moveToSlot([2, 0, 1, 3], 1, 0)).toEqual([2, 0, 1, 3]);
+  });
+
+  it("works from an order already changed", () => {
+    // Homes: puck 1 first, then 2, then 0, then 3. Puck 3 to the front.
+    expect(moveToSlot([2, 0, 1, 3], 3, 0)).toEqual([3, 1, 2, 0]);
+  });
+});
+
+describe("nearestSlot", () => {
+  it("finds the home nearest a drop", () => {
+    const slots = [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 0, y: 100 },
+    ];
+    expect(nearestSlot(slots, { x: 70, y: 20 })).toBe(1);
+    expect(nearestSlot(slots, { x: 10, y: 60 })).toBe(2);
   });
 });

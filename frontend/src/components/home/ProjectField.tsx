@@ -30,6 +30,8 @@ import {
   type FieldLayout,
   fieldLayout,
   land,
+  moveToSlot,
+  nearestSlot,
   neighbour,
   type Point,
   type Puck,
@@ -55,7 +57,9 @@ import { cn } from "@/lib/utils";
  * fade, as over the menu bar, and the pucks lean a few pixels toward the
  * warmth and spring back; under the field one line says how to choose. A
  * click on the empty field sends a pulse that nudges the pucks near it; a
- * puck can be dragged and flung, and bounces off the others back home.
+ * puck can be dragged and flung, bouncing off the others, and where it is
+ * let go it stays: it takes the home nearest it and the others move along
+ * to make room, for this visit.
  * Choosing one gives it an iris rim inside the site's lavender ring and a
  * short warm flood, under 300 ms, and the panel below shows it.
  *
@@ -229,6 +233,18 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
     () => fieldLayout(projects.length, width, reducedMotion),
     [projects.length, width, reducedMotion],
   );
+  /**
+   * The reader's own order: the home of each puck, by index into the
+   * layout's homes. A puck dropped on the field takes the home nearest it
+   * and the others move along (see moveToSlot). For this visit only: every
+   * reader first sees the order set in the admin.
+   */
+  const [ownOrder, setOwnOrder] = useState<number[]>([]);
+  const order = useMemo(
+    () => (ownOrder.length === projects.length ? ownOrder : projects.map((_, i) => i)),
+    [ownOrder, projects],
+  );
+  const homes = useMemo(() => order.map((slot) => layout.slots[slot]), [order, layout]);
 
   // The room there is, before the first paint and on every resize; not the
   // field's own width, since a still grid is narrower than the room (see
@@ -342,8 +358,8 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
     schedule();
   };
 
-  // A new layout: the pucks keep their state and move home to the new
-  // homes; a new number of projects, or a change to or from the still grid,
+  // A new layout or a new order: the pucks keep their state and move to
+  // their new homes; a new number of projects, or a change to or from the still grid,
   // starts them afresh.
   useLayoutEffect(() => {
     if (width === 0) return;
@@ -353,7 +369,7 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
       if (s?.frame != null) cancelAnimationFrame(s.frame);
       sim.current = {
         layout,
-        pucks: layout.slots.map(restingPuck),
+        pucks: homes.map(restingPuck),
         clock: wallClock(),
         sources: noSources(),
         rows,
@@ -369,10 +385,10 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
       s.layout = layout;
       s.clock = wallClock();
       s.rows = rows;
-      layout.slots.forEach((slot, i) => {
+      homes.forEach((home, i) => {
         const puck = s.pucks[i];
-        puck.hx = slot.x;
-        puck.hy = slot.y;
+        puck.hx = home.x;
+        puck.hy = home.y;
       });
       schedule();
     }
@@ -380,7 +396,7 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
     paint();
     // write, paint and schedule read refs only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layout, width]);
+  }, [layout, homes, width]);
 
   // The arrival, once, the first time the field is well in view.
   const arrive = () => {
@@ -552,7 +568,7 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
       if (!direction) return;
       // Instead of the tab list's own arrows, which only know a line.
       event.preventDefault();
-      puckRefs.current[neighbour(layout.slots, index, direction)]?.focus();
+      puckRefs.current[neighbour(homes, index, direction)]?.focus();
     },
   });
 
@@ -566,6 +582,10 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
       // Thrown: it keeps its speed, and the click that ends a drag opens nothing.
       swallowClick.current = index;
       puck.sv += 3;
+      // Dropped: it stays, taking the home nearest where it was let go, and
+      // the others move along to make room.
+      const slot = nearestSlot(s.layout.slots, { x: puck.x, y: puck.y });
+      if (slot !== order[index]) setOwnOrder(moveToSlot(order, index, slot));
     }
     puck.drag = null;
     gesture.current = null;
@@ -595,42 +615,47 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
           className="pointer-events-none absolute inset-0 -z-10 size-full"
         />
         <TabsPrimitive.List aria-label={labels.field} className="absolute inset-0">
-          {projects.map((project, index) => (
-            <TabsPrimitive.Trigger
-              key={project.title}
-              value={project.title}
-              ref={(element) => {
-                puckRefs.current[index] = element;
-              }}
-              style={{ width: layout.size, height: layout.size }}
-              {...puckHandlers(index, project.title)}
-              className="group absolute left-0 top-0 touch-manipulation rounded-full outline-none [-webkit-tap-highlight-color:transparent]"
-            >
-              <span
+          {/* In the reader's order, so Tab and a screen reader follow what
+              they see. */}
+          {projects
+            .map((project, index) => ({ project, index }))
+            .sort((a, b) => order[a.index] - order[b.index])
+            .map(({ project, index }) => (
+              <TabsPrimitive.Trigger
+                key={project.title}
+                value={project.title}
                 ref={(element) => {
-                  faceRefs.current[index] = element;
+                  puckRefs.current[index] = element;
                 }}
-                className={cn(
-                  "flex size-full items-center justify-center overflow-hidden rounded-full bg-card",
-                  // Chosen: the iris rim and the lavender ring, which turns
-                  // iris under keyboard focus.
-                  project.title === selected
-                    ? cn("shadow-rim-chosen group-focus-visible:outline-iris", MARKED)
-                    : cn("shadow-puck group-focus-visible:shadow-puck-focus", HOVER_RING),
-                )}
+                style={{ width: layout.size, height: layout.size }}
+                {...puckHandlers(index, project.title)}
+                className="group absolute left-0 top-0 touch-manipulation rounded-full outline-none [-webkit-tap-highlight-color:transparent]"
               >
-                <PuckFace project={project} />
-              </span>
-              <span
-                className={cn(
-                  "pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-full px-2 text-sm font-semibold tracking-[-0.01em]",
-                  project.title === selected ? "bg-card text-iris" : "bg-card/80 text-foreground",
-                )}
-              >
-                {project.title}
-              </span>
-            </TabsPrimitive.Trigger>
-          ))}
+                <span
+                  ref={(element) => {
+                    faceRefs.current[index] = element;
+                  }}
+                  className={cn(
+                    "flex size-full items-center justify-center overflow-hidden rounded-full bg-card",
+                    // Chosen: the iris rim and the lavender ring, which turns
+                    // iris under keyboard focus.
+                    project.title === selected
+                      ? cn("shadow-rim-chosen group-focus-visible:outline-iris", MARKED)
+                      : cn("shadow-puck group-focus-visible:shadow-puck-focus", HOVER_RING),
+                  )}
+                >
+                  <PuckFace project={project} />
+                </span>
+                <span
+                  className={cn(
+                    "pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-full px-2 text-sm font-semibold tracking-[-0.01em]",
+                    project.title === selected ? "bg-card text-iris" : "bg-card/80 text-foreground",
+                  )}
+                >
+                  {project.title}
+                </span>
+              </TabsPrimitive.Trigger>
+            ))}
         </TabsPrimitive.List>
       </div>
 
