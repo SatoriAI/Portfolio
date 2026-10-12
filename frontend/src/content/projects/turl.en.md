@@ -8,7 +8,7 @@ context: personal
 stack: Python, FastAPI, SQLAlchemy, Alembic, PostgreSQL, React, TypeScript, Vite, Tailwind CSS, Docker, Railway, Cloudflare
 demo: https://turl.info
 repository: https://github.com/SatoriAI/tURL
-summary: tURL is a link shortener that lets you set an expiry date and choose a short code of 2, 4, 6 or 8 characters. You can check a link's status and change its settings at any time. All without creating an account.
+summary: tURL is a link shortener whose links expire when you decide, anywhere from one day to never. A short code can be 2, 4, 6 or 8 characters long, and each length shows roughly how many different codes it allows. At any time you can check whether a link works and how many days it has left, then extend an active one or lift its time limit. All without an account or a login.
 ---
 
 # tURL
@@ -31,7 +31,7 @@ summary: tURL is a link shortener that lets you set an expiry date and choose a 
 
 ## Short summary
 
-tURL is a link shortener with expiry. You paste a long address, choose how long the link should last (from one day to forever) and how long its code is: 2, 4, 6 or 8 characters. You get a short link with a copy button. Later you can check whether the link is still active and how many days it has left. You can extend it or remove its expiry. No account is needed.
+tURL is a link shortener whose links expire when you decide, anywhere from one day to never. A short code can be 2, 4, 6 or 8 characters long, and each length shows roughly how many different codes it allows. At any time you can check whether a link works and how many days it has left, then extend an active one or lift its time limit. All without an account or a login.
 
 ## Problem
 

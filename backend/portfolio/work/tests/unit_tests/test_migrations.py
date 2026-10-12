@@ -72,3 +72,27 @@ class CarryLevelsOverTestCase(TransactionTestCase):
                 "Since launch": (2025, True),
             },
         )
+
+
+class MarkPhoneAppsTestCase(TransactionTestCase):
+    """0012 marks Slip as a phone app and leaves every other project as it is."""
+
+    BEFORE = [("work", "0011_project_mobile")]
+    AFTER = [("work", "0012_mark_slip_mobile")]
+
+    def setUp(self) -> None:
+        executor = MigrationExecutor(connection)
+        executor.migrate(self.BEFORE)
+        self.addCleanup(
+            lambda: MigrationExecutor(connection).migrate(MigrationExecutor(connection).loader.graph.leaf_nodes())
+        )
+        Project = executor.loader.project_state(self.BEFORE).apps.get_model("work", "Project")
+        self.pks = {title: Project.objects.create(title=title).pk for title in ("Slip", "tURL")}
+
+    def test_slip_is_marked_and_the_rest_are_not(self) -> None:
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()
+        executor.migrate(self.AFTER)
+        Project = executor.loader.project_state(self.AFTER).apps.get_model("work", "Project")
+        marked = dict(Project.objects.filter(pk__in=self.pks.values()).values_list("title", "mobile"))
+        self.assertDictEqual(marked, {"Slip": True, "tURL": False})

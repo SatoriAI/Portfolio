@@ -85,6 +85,13 @@ class Project(TranslatableModel, TimestampedModel, DescriptiveModel):
     tags = ArrayField(models.CharField(_("Tags"), max_length=128), null=True, blank=True)
     demo = models.URLField(_("Demo"), null=True, blank=True)
     repository = models.URLField(_("Repository"), null=True, blank=True)
+    mobile = models.BooleanField(
+        _("Mobile"),
+        default=False,
+        # In the database too, so the release before this one can still add a project.
+        db_default=False,
+        help_text=_("A phone app: the site shows it in a phone rather than a browser window."),
+    )
 
     translations = TranslatedFields(
         description=models.TextField(_("Description"), null=True, blank=True),

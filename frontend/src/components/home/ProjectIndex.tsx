@@ -151,8 +151,12 @@ const ProjectFrame = ({
 }: ProjectFrameProps) => {
   const self = isThisSite(project);
   return (
-    <article className="grid gap-6 lg:grid-cols-12 lg:gap-x-6">
-      <div className="self-start overflow-hidden rounded-card border border-border bg-card lg:col-span-6 xl:col-span-7">
+    // The panel fills the cell all panels share (as tall as the longest),
+    // so no project leaves a gap under it: side by side, the frame grows to
+    // its foot, its window showing more of the page; stacked, the frame keeps
+    // its height and the story takes the rest, its Vex prompt at the foot.
+    <article className="grid h-full grid-rows-[auto_1fr] gap-6 lg:grid-cols-12 lg:grid-rows-1 lg:gap-x-6">
+      <div className="flex flex-col self-start overflow-hidden rounded-card border border-border bg-card lg:col-span-6 lg:self-stretch xl:col-span-7">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-background px-3 py-2.5 sm:px-4">
           <span aria-hidden="true" className="hidden gap-1.5 sm:max-lg:flex xl:flex">
             {[0, 1, 2].map((dot) => (
@@ -192,6 +196,7 @@ const ProjectFrame = ({
           subtitle={subtitle}
           checkState={checkState}
           always={self}
+          phone={project.mobile}
         />
       </div>
 
@@ -220,17 +225,17 @@ const ProjectFrame = ({
           nextLabel={labels.stackNext}
         />
 
-        {/* Pinned to the column's foot, so it ends level with the frame
-            beside it when the text is shorter. On a phone it makes room for
-            the chat button, so the question wraps rather than losing the
-            project's name. */}
+        {/* Pinned to the column's foot at every width, so it ends level with
+            the panel's foot when the text is shorter. On a phone it makes
+            room for the chat button, so the question wraps rather than losing
+            the project's name. */}
         <AskVexPrompt
           question={
             project.vexQuestion || fillTemplate(labels.askVexQuestion, { title: project.title })
           }
           hint={fillTemplate(labels.askVex, { title: project.title })}
           onAsk={onAsk}
-          className="max-sm:w-[calc(100%-4rem)] sm:w-fit sm:self-center lg:mt-auto"
+          className="mt-auto max-sm:w-[calc(100%-4rem)] sm:w-fit sm:self-center"
         />
       </div>
     </article>
