@@ -20,8 +20,10 @@ class ProjectAdmin(TranslatableAdmin):
     list_display = (
         "title",
         "demo",
+        "mobile",
         "created_at",
     )
+    list_filter = ("mobile",)
     search_fields = ("title",)
 
 

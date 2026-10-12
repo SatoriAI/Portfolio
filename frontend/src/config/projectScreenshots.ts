@@ -6,13 +6,18 @@ import type { Language } from "@/utils/translations";
  * revealed when the live check of its address comes back. A project without
  * one shows a short band with its app icon and one-line description instead.
  *
- * Screenshots live in `public/projects/` as WebP at 1280 × 720 (16:9): real
- * captures of the running site at a 1600px-wide window, nothing staged or
- * mocked up; crop only to keep a cookie banner out. This site's own is a
- * capture of its home page at a 1280px-wide window, one per language, since
- * the page it sits on is in one language and its public address still serves
- * the previous version until this one is deployed. Retake it when the top of
- * the home page changes.
+ * Screenshots live in `public/projects/` as WebP at 1280 × 960 (4:3): real
+ * captures of the running site at a 1600 × 1200 window, nothing staged or
+ * mocked up, any cookie notice declined first (or cropped out). 4:3 rather
+ * than 16:9 because the frame's window grows to the panel's height beside
+ * the story (see ProjectWindow) and is about 4:3 there: a wider capture lost
+ * its logo and navigation at the sides. A phone app (`mobile` in the admin)
+ * is captured as a phone sees it instead: a 390 × 844 window at twice the
+ * density (780 × 1688), one per language, since the app follows the phone's.
+ * This site's own is a capture of its home page at a 1280 × 960 window, one
+ * per language, since the page it sits on is in one language and its public
+ * address still serves the previous version until this one is deployed.
+ * Retake it when the top of the home page changes.
  */
 const SCREENSHOTS: Readonly<Record<string, string | Readonly<Record<Language, string>>>> = {
   tURL: "/projects/turl.webp",
@@ -22,7 +27,7 @@ const SCREENSHOTS: Readonly<Record<string, string | Readonly<Record<Language, st
   AdLume: "/projects/adlume.webp",
   Portfolio: { pl: "/projects/portfolio.pl.webp", en: "/projects/portfolio.en.webp" },
   Picko: "/projects/picko.webp",
-  Slip: "/projects/slip.webp",
+  Slip: { pl: "/projects/slip.pl.webp", en: "/projects/slip.en.webp" },
 };
 
 /** Each project's screenshot for a page in this language. */

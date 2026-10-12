@@ -13,9 +13,19 @@ import { cn } from "@/lib/utils";
  * answer arrived shows the page at once; under reduced motion it appears
  * without the wipe.
  *
+ * A phone app's window holds a phone instead, its screen painting in the
+ * same way.
+ *
  * Without a screenshot the window is a short band, the icon beside the
  * project's one line, so no tall empty field stands in for a picture.
  */
+
+/**
+ * 16:9 on its own; side by side with the story (lg up) the window grows to
+ * the frame's foot instead, showing more of the page, cropped at the sides
+ * rather than leaving a gap under a short frame (see ProjectFrame).
+ */
+const FILL = "aspect-video lg:aspect-auto lg:min-h-0 lg:flex-1";
 
 /** How long the page takes to paint in, top to bottom. */
 const PAINT_MS = 480;
@@ -28,6 +38,8 @@ type ProjectWindowProps = {
   checkState: CheckState;
   /** This site, which has nothing to check: its page is shown as it is. */
   always?: boolean;
+  /** A phone app: its screen in a phone standing in the window. */
+  phone?: boolean;
 };
 
 const answered = (state: CheckState) => state.phase === "done" && state.result.answered;
@@ -39,6 +51,7 @@ const ProjectWindow = ({
   subtitle,
   checkState,
   always = false,
+  phone = false,
 }: ProjectWindowProps) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const image = useRef<HTMLImageElement>(null);
@@ -62,7 +75,7 @@ const ProjectWindow = ({
 
   if (!screenshot) {
     return (
-      <div className="flex items-center gap-5 bg-lavender px-6 py-8 md:px-8">
+      <div className="flex items-center gap-5 bg-lavender px-6 py-8 md:px-8 lg:flex-1">
         {icon}
         {subtitle && (
           <p className="text-xl font-semibold leading-snug tracking-[-0.02em] text-foreground md:text-h2-sm">
@@ -73,18 +86,44 @@ const ProjectWindow = ({
     );
   }
 
+  const shot = (
+    <img
+      ref={image}
+      src={screenshot}
+      alt={alt}
+      className={cn(
+        "absolute inset-0 h-full w-full object-cover object-top",
+        !painted && "[clip-path:inset(0_0_100%_0)]",
+      )}
+    />
+  );
+
+  if (phone) {
+    // A phone app in the same window as every project, so its panel is no
+    // taller than theirs: the phone stands on the lavender, a white body
+    // round its screen, cut off at the window's foot like a product shot.
+    // Sized by the window's width while the window is 16:9, and by its
+    // height once it grows to the panel (lg up), where a near-square window
+    // would otherwise leave the phone short of the foot; on a phone, half the
+    // window, so its screen stays legible. The body's ratio is
+    // the screen's plus its 8px rim. The icon waits on its screen until the
+    // page paints in.
+    return (
+      <div className={cn("relative overflow-hidden bg-lavender", FILL)}>
+        <div className="absolute left-1/2 top-[6%] aspect-[406/860] w-[41%] -translate-x-1/2 rounded-card border border-border bg-card p-2 max-sm:w-1/2 lg:h-[115%] lg:w-auto">
+          <div className="relative grid size-full place-items-center overflow-hidden rounded-lg bg-lavender">
+            {icon}
+            {shot}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative grid aspect-video place-items-center bg-lavender">
+    <div className={cn("relative grid place-items-center bg-lavender", FILL)}>
       {icon}
-      <img
-        ref={image}
-        src={screenshot}
-        alt={alt}
-        className={cn(
-          "absolute inset-0 h-full w-full object-cover object-top",
-          !painted && "[clip-path:inset(0_0_100%_0)]",
-        )}
-      />
+      {shot}
     </div>
   );
 };

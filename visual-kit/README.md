@@ -109,6 +109,8 @@ Suggested responsive scale, desktop → mobile: hero 64/70 → 36/41 px (a masth
 - Keyboard focus uses a visible 2 px iris outline with a 3 px offset.
 - Radius scale: 2 px for motif modules, 12 px for buttons and controls, 20 px for cards and panels. There is no fourth value.
 - Project cards use a white surface, a 20 px radius, and a subtle outline. Motion or elevation should imply interactivity only when the whole card is actionable.
+- A project marked as a phone app (`mobile` in the admin) keeps the same browser frame as every project, so every panel has one footprint: its window is the lavender field, the phone standing in it (a white body with the subtle outline and the card radius, no shadow, round its real capture at phone size in a 12 px screen), cut off at the window's foot like a product shot.
+- Every project's panel is as tall as the longest one (switching never moves the page) and fills it: side by side, the frame grows to the panel's foot and its window shows more of the page, cropped at the sides; stacked, the story takes the rest, the Vex prompt at its foot. No project leaves a gap under it.
 - Form errors must be described in words; colour cannot be the only signal.
 
 ## Elevation

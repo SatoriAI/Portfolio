@@ -8,7 +8,7 @@ context: personal
 stack: Python, FastAPI, SQLAlchemy, Alembic, PostgreSQL, React, TypeScript, Vite, Tailwind CSS, Docker, Railway, Cloudflare
 demo: https://turl.info
 repository: https://github.com/SatoriAI/tURL
-summary: tURL to serwis do skracania linków, który pozwala ustawić ich termin ważności oraz wybrać skrót o długości 2, 4, 6 lub 8 znaków. Użytkownik może w dowolnym momencie sprawdzić status utworzonego linku i edytować jego ustawienia. Wszystko bez zakładania konta.
+summary: tURL to serwis do skracania linków z terminem ważności: od jednego dnia do bezterminowo. Skrót może mieć 2, 4, 6 lub 8 znaków, a przy każdej długości widać, ile mniej więcej kodów jest dostępnych. W każdej chwili można sprawdzić, czy link działa i ile dni mu zostało, a aktywny przedłużyć lub zdjąć z niego limit czasu. Wszystko bez zakładania konta i logowania.
 ---
 
 # tURL
@@ -31,7 +31,7 @@ summary: tURL to serwis do skracania linków, który pozwala ustawić ich termin
 
 ## Krótkie podsumowanie
 
-tURL to serwis do skracania linków z terminem ważności. Wklejasz długi adres i wybierasz okres działania linku (od jednego dnia do braku terminu) oraz długość kodu: 2, 4, 6 lub 8 znaków. Dostajesz krótki link do skopiowania. Później możesz sprawdzić, czy link jest aktywny i ile dni mu zostało. Możesz go przedłużyć albo zdjąć limit czasu. Bez zakładania konta.
+tURL to serwis do skracania linków z terminem ważności: od jednego dnia do bezterminowo. Skrót może mieć 2, 4, 6 lub 8 znaków, a przy każdej długości widać, ile mniej więcej kodów jest dostępnych. W każdej chwili można sprawdzić, czy link działa i ile dni mu zostało, a aktywny przedłużyć lub zdjąć z niego limit czasu. Wszystko bez zakładania konta i logowania.
 
 ## Problem
 
