@@ -12,7 +12,8 @@
 .DEFAULT_GOAL := help
 .PHONY: help install install-backend install-frontend \
         lint lint-backend lint-frontend format-frontend typecheck \
-        test test-backend test-frontend build translations check
+        test test-backend test-frontend build translations check \
+        sync-work-check sync-work
 
 help:  ## Show this help
 	@grep -hE '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | sort | \
@@ -62,3 +63,12 @@ lint: lint-backend lint-frontend  ## Lint both halves
 test: test-backend test-frontend  ## Test both halves
 
 check: lint typecheck format-frontend test build  ## Everything CI runs, minus the hooks
+
+# ── Content ──────────────────────────────────────────────────────────────
+# Skills and roles are edited locally; these make production's match, matched
+# by id, translations included. Run by hand, with Railway logged in.
+sync-work-check:  ## Show what syncing skills and roles to production would change
+	scripts/sync-work-to-prod.sh
+
+sync-work:  ## Make production's skills and roles match the local database
+	scripts/sync-work-to-prod.sh --apply
