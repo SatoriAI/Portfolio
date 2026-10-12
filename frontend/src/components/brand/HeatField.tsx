@@ -1,12 +1,7 @@
-import {
-  type CSSProperties,
-  type HTMLAttributes,
-  type PointerEvent,
-  useEffect,
-  useRef,
-} from "react";
+import { type HTMLAttributes, type PointerEvent, useEffect, useRef } from "react";
 
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { fitCanvas, grainStyle, kernel, paintField } from "@/lib/heatKernel";
 import { easeOutCubic } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -63,14 +58,6 @@ const SOURCES: Record<HeatPlacement, readonly Source[]> = {
     { x: 0.92, y: 0.0, peak: 0.7, channel: 1 },
   ],
 };
-
-// Kit tokens, as RGB. `background` is the page; the deep tints are the kit's
-// illustration-only colours and appear nowhere else in the interface.
-const BACKGROUND = [248, 249, 252] as const;
-const CHANNEL_RGB = [
-  [198, 180, 231], // lavender-deep
-  [237, 194, 215], // blush-deep
-] as const;
 
 const COLS = 96;
 /**
@@ -144,7 +131,7 @@ const pointerModel = (placement: HeatPlacement, aspect: number): PointerModel =>
       }
     : { peak: POINTER_PEAK, diffusivity: RESTING_SPREAD, insulated: false };
 
-/** One evaluation of the summed kernels onto the canvas. */
+/** One evaluation of the summed kernels onto the canvas (see lib/heatKernel). */
 const paint = (
   ctx: CanvasRenderingContext2D,
   geometry: FieldGeometry,
@@ -153,81 +140,43 @@ const paint = (
   model: PointerModel,
 ) => {
   const { cols, rows, aspect } = geometry;
-  const image = ctx.createImageData(cols, rows);
-  const data = image.data;
   const tau = Math.max(state.tau, INTRO_START);
-  const mainVariance = 4 * RESTING_SPREAD * tau;
+  const pointers = state.pointer.map((p) => ({
+    x: p.x,
+    y: p.y,
+    age: state.clock - p.bornAt + POINTER_SOFTENING,
+  }));
 
-  const pointers = state.pointer.map((p) => {
-    const age = state.clock - p.bornAt + POINTER_SOFTENING;
-    return {
-      x: p.x,
-      y: p.y,
-      variance: 4 * model.diffusivity * age,
-      // Q / 4πt, scaled so a fresh source peaks at the placement's peak.
-      peak: (model.peak * POINTER_SOFTENING) / age,
-    };
-  });
-
-  for (let row = 0; row < rows; row++) {
+  paintField(ctx, cols, rows, (x, v, alpha) => {
     // Positions in units of the width, so a kernel is round on screen.
-    const y = ((row + 0.5) / rows) * aspect;
-    for (let col = 0; col < cols; col++) {
-      const x = (col + 0.5) / cols;
-      const alpha = [0, 0];
-
-      for (const source of sources) {
-        const dx = x - source.x;
-        const dy = y - source.y * aspect;
-        // Q / 4πt · e^(−r²/4t), with Q chosen so the resting peak is `peak`;
-        // the cap keeps the text above the field on the contrast it was
-        // measured against while the source is still concentrated.
-        const value = (source.peak / tau) * Math.exp(-(dx * dx + dy * dy) / mainVariance);
-        alpha[source.channel] += Math.min(value, source.peak);
-      }
-      for (const p of pointers) {
-        const dx = x - p.x;
-        const near = (sourceY: number) =>
-          p.peak * Math.exp(-(dx * dx + (y - sourceY) ** 2) / p.variance);
-        alpha[0] += near(p.y * aspect);
-        if (model.insulated) {
-          // Mirror images across the top (y = 0) and bottom (y = aspect).
-          alpha[0] += near(-p.y * aspect) + near((2 - p.y) * aspect);
-        }
-      }
-
-      let r = BACKGROUND[0];
-      let g = BACKGROUND[1];
-      let b = BACKGROUND[2];
-      for (let channel = 0; channel < 2; channel++) {
-        const a = Math.min(alpha[channel], 0.85);
-        if (a <= 0) continue;
-        const [cr, cg, cb] = CHANNEL_RGB[channel];
-        r += (cr - r) * a;
-        g += (cg - g) * a;
-        b += (cb - b) * a;
-      }
-      const offset = (row * cols + col) * 4;
-      data[offset] = r;
-      data[offset + 1] = g;
-      data[offset + 2] = b;
-      data[offset + 3] = 255;
+    const y = v * aspect;
+    for (const source of sources) {
+      const r2 = (x - source.x) ** 2 + (y - source.y * aspect) ** 2;
+      // A kernel whose resting peak (τ = 1) is `peak`; the cap keeps the
+      // text above the field on the contrast it was measured against while
+      // the source is still concentrated.
+      alpha[source.channel] += Math.min(
+        kernel(source.peak, 1, RESTING_SPREAD, tau, r2),
+        source.peak,
+      );
     }
-  }
-  ctx.putImageData(image, 0, 0);
-};
-
-// Static grain rendered once into a small tile and repeated, instead of a
-// full-size feTurbulence filter that mobile Safari repaints slowly.
-const GRAIN_TILE = `url("data:image/svg+xml;utf8,${encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0.09 0 0 0 0 0.14 0 0 0 0 0.24 0 0 0 1 0"/></filter><rect width="160" height="160" filter="url(#n)"/></svg>',
-)}")`;
-
-const grainStyle: CSSProperties = {
-  backgroundImage: GRAIN_TILE,
-  backgroundSize: "160px 160px",
-  opacity: 0.06,
-  mixBlendMode: "multiply",
+    for (const p of pointers) {
+      // Scaled so a fresh source peaks at the placement's peak.
+      const near = (sourceY: number) =>
+        kernel(
+          model.peak,
+          POINTER_SOFTENING,
+          model.diffusivity,
+          p.age,
+          (x - p.x) ** 2 + (y - sourceY) ** 2,
+        );
+      alpha[0] += near(p.y * aspect);
+      if (model.insulated) {
+        // Mirror images across the top (y = 0) and bottom (y = aspect).
+        alpha[0] += near(-p.y * aspect) + near((2 - p.y) * aspect);
+      }
+    }
+  });
 };
 
 type HeatFieldProps = HTMLAttributes<HTMLDivElement> & {
@@ -264,11 +213,7 @@ const HeatField = ({
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
-    const { cols, rows } = geometryRef.current;
-    if (canvas.width !== cols || canvas.height !== rows) {
-      canvas.width = cols;
-      canvas.height = rows;
-    }
+    fitCanvas(canvas, geometryRef.current.cols, geometryRef.current.rows);
     paint(
       ctx,
       geometryRef.current,
