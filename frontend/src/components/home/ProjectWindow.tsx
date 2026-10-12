@@ -110,8 +110,8 @@ const ProjectWindow = ({
     // page paints in.
     return (
       <div className={cn("relative overflow-hidden bg-lavender", FILL)}>
-        <div className="absolute left-1/2 top-[6%] aspect-[406/860] w-[41%] -translate-x-1/2 rounded-[2rem] border border-border bg-card p-2 max-sm:w-1/2 lg:h-[115%] lg:w-auto">
-          <div className="relative grid size-full place-items-center overflow-hidden rounded-3xl bg-lavender">
+        <div className="absolute left-1/2 top-[6%] aspect-[406/860] w-[41%] -translate-x-1/2 rounded-card border border-border bg-card p-2 max-sm:w-1/2 lg:h-[115%] lg:w-auto">
+          <div className="relative grid size-full place-items-center overflow-hidden rounded-lg bg-lavender">
             {icon}
             {shot}
           </div>
