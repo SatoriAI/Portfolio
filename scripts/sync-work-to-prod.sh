@@ -47,7 +47,7 @@ target=/tmp/work-content-$sum.json
 # fold leaves the last line without a newline, and read would drop it.
 { base64 < "$work/work.json" | tr -d '\n' | fold -w "$CHUNK"; echo; } > "$work/chunks"
 total=$(wc -l < "$work/chunks" | tr -d ' ')
-echo "Sending $(wc -c < "$work/work.json" | tr -d ' ') bytes in $total chunk(s) to $REMOTE…"
+echo "Sending $(wc -c < "$work/work.json" | tr -d ' ') bytes in $total chunk(s) to ${REMOTE}..."
 n=0
 while IFS= read -r chunk; do
   n=$((n + 1))
