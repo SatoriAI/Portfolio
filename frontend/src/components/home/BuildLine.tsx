@@ -15,13 +15,15 @@ import { cn } from "@/lib/utils";
  * and splits into iris and blush, its mark flickers) and the next takes its
  * place, through the whole stack and round again; between jolts the slot
  * crackles faintly, as a line under current. A counter beside it says
- * where in the stack it is. Pointing at the slot stops it where it is, and a
- * click steps on to the next, as does the next control beside it. It runs
- * only for the open project, while
- * it is on screen and the page is visible. It is one of the site's two
- * loops, named exceptions in the kit. Under reduced motion there is no cycling: the
- * whole stack is shown as one line. Assistive technology always gets the
- * whole stack.
+ * where in the stack it is. A pointer resting anywhere on the row (the
+ * name, the counter or the next control) stops it where it is, as keyboard
+ * focus on its controls does; a click on the name or the next control steps
+ * on, and after a step by hand it stays put for a while once the pointer
+ * leaves (or after a tap, where nothing hovers), so what was stepped to can
+ * be read. It runs only for the open project, while it is on screen and the
+ * page is visible. It is one of the site's two loops, named exceptions in the
+ * kit. Under reduced motion there is no cycling: the whole stack is shown as
+ * one line. Assistive technology always gets the whole stack.
  */
 
 /**
@@ -56,6 +58,12 @@ const CONTROL =
 
 /** How long each technology stays before the next jolt. */
 const DWELL_MS = 1600;
+/**
+ * How long it stays put after a step by hand, from the moment the pointer
+ * leaves (about three dwells): long enough to read what was stepped to, the
+ * same in every browser and on touch, where nothing hovers.
+ */
+const LINGER_MS = 5000;
 /** The jolt; the next technology takes the slot at its midpoint. */
 const JOLT_MS = 260;
 /**
@@ -88,8 +96,19 @@ const BuildLine = ({ technologies, active, label, nextLabel }: BuildLineProps) =
   }, [active]);
   const [held, setHeld] = useState(false);
   // Keyboard focus on the row's controls holds it too, as a resting pointer
-  // does, so stepping with "next" is not raced by the timer.
+  // does, so stepping with "next" is not raced by the timer. Only keyboard
+  // focus: the focus a click leaves behind (Chrome's, not Safari's) would
+  // hold it, unseen, until the reader clicked elsewhere; a step by hand
+  // lingers instead, alike everywhere.
   const [focused, setFocused] = useState(false);
+  const [lingering, setLingering] = useState(false);
+  const lingerTimer = useRef(0);
+  const linger = useCallback(() => {
+    window.clearTimeout(lingerTimer.current);
+    setLingering(true);
+    lingerTimer.current = window.setTimeout(() => setLingering(false), LINGER_MS);
+  }, []);
+  useEffect(() => () => window.clearTimeout(lingerTimer.current), []);
   // In state, not a ref: the slot is drawn only with motion allowed, and can
   // appear mid-visit, when the in-view hook must see it.
   const [slot, setSlot] = useState<HTMLDivElement | null>(null);
@@ -99,7 +118,13 @@ const BuildLine = ({ technologies, active, label, nextLabel }: BuildLineProps) =
   const visible = useInView(slot);
 
   const running =
-    active && visible && !held && !focused && !prefersReducedMotion && parts.length > 1;
+    active &&
+    visible &&
+    !held &&
+    !focused &&
+    !lingering &&
+    !prefersReducedMotion &&
+    parts.length > 1;
 
   // One jolt: the text jitters and splits, the mark flickers, and halfway
   // through the next technology takes the slot. The timer runs it, and so
@@ -186,6 +211,12 @@ const BuildLine = ({ technologies, active, label, nextLabel }: BuildLineProps) =
     return () => window.clearTimeout(timer);
   }, [running, slot]);
 
+  // A step by hand: on, and then a while to read it.
+  const step = () => {
+    jolt();
+    linger();
+  };
+
   const at = index % Math.max(parts.length, 1);
   const part = parts[at];
 
@@ -219,19 +250,25 @@ const BuildLine = ({ technologies, active, label, nextLabel }: BuildLineProps) =
         // the next control too, so stepping on by hand is never overtaken by
         // the cycle stepping on under the pointer.
         <div
-          onFocus={() => setFocused(true)}
+          onFocus={(event) => {
+            if (event.target.matches(":focus-visible")) setFocused(true);
+          }}
           onBlur={(event) => {
             if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
           }}
           onPointerEnter={() => setHeld(true)}
-          onPointerLeave={() => setHeld(false)}
+          onPointerLeave={() => {
+            setHeld(false);
+            // The while to read a step by hand counts from leaving.
+            if (lingering) linger();
+          }}
           className="flex flex-wrap items-center gap-x-3 sm:flex-nowrap"
         >
           <div
             aria-hidden="true"
             // A click on the slot steps on, with the same jolt. Assistive
             // technology has the whole stack in the list above.
-            onClick={jolt}
+            onClick={step}
             className="flex min-w-0 cursor-pointer select-none max-sm:basis-full sm:flex-1"
           >
             <div ref={setSlot} className="flex min-w-0 items-baseline gap-2">
@@ -250,7 +287,7 @@ const BuildLine = ({ technologies, active, label, nextLabel }: BuildLineProps) =
           <button
             type="button"
             aria-label={nextLabel}
-            onClick={jolt}
+            onClick={step}
             className={cn(CONTROL, "-my-2")}
           >
             <ChevronRight className="size-4" />
