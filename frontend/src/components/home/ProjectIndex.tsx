@@ -309,13 +309,7 @@ const ProjectIndex = ({
       activationMode="manual"
       className={cn("flex flex-col gap-6", className)}
     >
-      <ProjectField
-        projects={projects}
-        subtitles={subtitles}
-        selected={selected}
-        onOpen={open}
-        labels={labels.field}
-      />
+      <ProjectField projects={projects} selected={selected} onOpen={open} labels={labels.field} />
 
       {/* Every project's panel is kept in one cell, the hidden ones invisible
           rather than removed, so the cell is as tall as the tallest and

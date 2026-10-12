@@ -77,13 +77,10 @@ export type ProjectFieldLabels = {
   hintTouch: string;
   /** The same, on the still grid, where nothing can be dragged. */
   hintStill: string;
-  /** Beside a named project that is already the open one. */
-  opened: string;
 };
 
 type ProjectFieldProps = {
   projects: readonly UiProject[];
-  subtitles: Record<string, string>;
   /** The open project's title. */
   selected: string;
   onOpen: (title: string) => void;
@@ -219,7 +216,7 @@ const ARROWS: Record<string, Direction> = {
   ArrowDown: "down",
 };
 
-const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: ProjectFieldProps) => {
+const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps) => {
   const reducedMotion = usePrefersReducedMotion();
   const canHover = useMediaQuery("(hover: hover) and (pointer: fine)");
   const fieldRef = useRef<HTMLDivElement>(null);
@@ -672,38 +669,20 @@ const ProjectField = ({ projects, subtitles, selected, onOpen, labels }: Project
         </TabsPrimitive.List>
       </div>
 
-      {/* The warm one named, with its subtitle (the puck itself is what
-          opens it); at rest, the open one, briefly (the panel below says the
-          rest), and how to choose, on a line of its own on a phone. */}
+      {/* Just a name: the warm one, or at rest the open one, whose panel
+          below says the rest; at rest also how to choose, on a line of its
+          own on a phone. */}
       <div
         style={{ maxWidth: layout.width || undefined }}
         className="flex min-h-11 w-full flex-wrap items-center gap-x-3 gap-y-1 self-center px-1"
       >
         {shown && (
-          <p className="min-w-[8rem] flex-1 truncate text-base">
-            <span className="font-semibold">{shown.title}</span>
-            {named >= 0 && subtitles[shown.title] ? (
-              <span className="text-muted-foreground"> · {subtitles[shown.title]}</span>
-            ) : (
-              named < 0 && (
-                <span className="font-mono text-meta text-muted-foreground">
-                  {" "}
-                  · {labels.opened}
-                </span>
-              )
-            )}
-          </p>
+          <p className="min-w-[8rem] flex-1 truncate text-base font-semibold">{shown.title}</p>
         )}
-        {named < 0 ? (
+        {named < 0 && (
           <p className="basis-full font-mono text-meta text-muted-foreground sm:shrink-0 sm:basis-auto">
             {!canHover ? labels.hintTouch : layout.still ? labels.hintStill : labels.hint}
           </p>
-        ) : (
-          shown?.title === selected && (
-            <span className="shrink-0 font-mono text-meta text-muted-foreground">
-              {labels.opened}
-            </span>
-          )
         )}
       </div>
     </div>
