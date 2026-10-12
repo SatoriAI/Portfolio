@@ -99,14 +99,19 @@ const ProjectWindow = ({
   );
 
   if (phone) {
-    // A phone app in the same 16:9 window as every project, so its panel is
-    // no taller than theirs: the phone stands on the lavender, a white body
+    // A phone app in the same window as every project, so its panel is no
+    // taller than theirs: the phone stands on the lavender, a white body
     // round its screen, cut off at the window's foot like a product shot.
-    // The icon waits on its screen until the page paints in.
+    // Sized by the window's width while the window is 16:9, and by its
+    // height once it grows to the panel (lg up), where a near-square window
+    // would otherwise leave the phone short of the foot; on a phone, half the
+    // window, so its screen stays legible. The body's ratio is
+    // the screen's plus its 8px rim. The icon waits on its screen until the
+    // page paints in.
     return (
       <div className={cn("relative overflow-hidden bg-lavender", FILL)}>
-        <div className="absolute left-1/2 top-[6%] w-[41%] -translate-x-1/2 rounded-[2rem] border border-border bg-card p-2">
-          <div className="relative grid aspect-[390/844] place-items-center overflow-hidden rounded-3xl bg-lavender">
+        <div className="absolute left-1/2 top-[6%] aspect-[406/860] w-[41%] -translate-x-1/2 rounded-[2rem] border border-border bg-card p-2 max-sm:w-1/2 lg:h-[115%] lg:w-auto">
+          <div className="relative grid size-full place-items-center overflow-hidden rounded-3xl bg-lavender">
             {icon}
             {shot}
           </div>

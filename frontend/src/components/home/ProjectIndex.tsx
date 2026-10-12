@@ -225,11 +225,10 @@ const ProjectFrame = ({
           nextLabel={labels.stackNext}
         />
 
-        {/* Pinned to the column's foot, so it ends level with the frame
-            beside it, or with the panel's foot when stacked, when the text is
-            shorter. On a phone it makes room for
-            the chat button, so the question wraps rather than losing the
-            project's name. */}
+        {/* Pinned to the column's foot at every width, so it ends level with
+            the panel's foot when the text is shorter. On a phone it makes
+            room for the chat button, so the question wraps rather than losing
+            the project's name. */}
         <AskVexPrompt
           question={
             project.vexQuestion || fillTemplate(labels.askVexQuestion, { title: project.title })
