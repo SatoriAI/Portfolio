@@ -216,6 +216,30 @@ describe("stepPucks", () => {
     expect(crossed).toBe(false);
     expect(settled(pucks)).toBe(true);
   });
+
+  it("never plows a row: a pushed puck gives way after a short shove", () => {
+    const env = envFor(7);
+    const pucks = env.layout.slots.map(restingPuck);
+    const y = pucks[1].hy;
+    let worst = 0;
+    // Drag puck 0 right along the whole first row.
+    for (let x = pucks[0].hx; x < env.layout.width; x += 8) {
+      pucks[0].drag = { x, y };
+      env.clock += 1 / 60;
+      stepPucks(pucks, 1 / 60, env);
+      for (const p of pucks.slice(1)) worst = Math.max(worst, Math.hypot(p.x - p.hx, p.y - p.hy));
+    }
+    expect(worst).toBeLessThan(1.5 * env.layout.size);
+  });
+
+  it("keeps a dragged puck inside the walls", () => {
+    const env = envFor(7);
+    const pucks = env.layout.slots.map(restingPuck);
+    pucks[0].drag = { x: env.layout.width + 200, y: -200 };
+    run(pucks, env, 0.1);
+    expect(pucks[0].x + env.layout.size / 2).toBeLessThanOrEqual(env.layout.width - EDGE);
+    expect(pucks[0].y - env.layout.size / 2).toBeGreaterThanOrEqual(EDGE);
+  });
 });
 
 describe("neighbour", () => {
@@ -226,6 +250,15 @@ describe("neighbour", () => {
     expect(neighbour(grid, 1, "left")).toBe(0);
     expect(neighbour(grid, 1, "down")).toBe(4);
     expect(neighbour(grid, 5, "up")).toBe(1);
+  });
+
+  it("wraps in the reader's own order after a reorder", () => {
+    // Puck 3 moved to the front: reading order 3, 0, 1, 2, 4, 5, 6.
+    const order = moveToSlot([0, 1, 2, 3, 4, 5, 6], 3, 0);
+    const homes = order.map((slot) => grid[slot]);
+    // Rightward from the last of the first row (puck 2) goes on to puck 4.
+    expect(neighbour(homes, 2, "right", order)).toBe(4);
+    expect(neighbour(homes, 3, "left", order)).toBe(6);
   });
 
   it("wraps in reading order at an edge", () => {

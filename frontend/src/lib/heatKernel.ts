@@ -38,6 +38,55 @@ export const expired = (source: HeatSource, model: HeatModel, clock: number) =>
   clock - source.bornAt >= model.lifetime;
 
 /** The summed heat of the sources at (x, y). */
+/** A source's kernel at one moment, ready to sample at many points (see prepare). */
+export type PreparedKernel = {
+  x: number;
+  y: number;
+  amplitude: number;
+  spread: number;
+  reach: number;
+};
+
+/** Below this a kernel adds nothing a painted cell can show (half of one 8-bit step). */
+const INVISIBLE = 1 / 512;
+
+/**
+ * The sources' kernels at `clock`, worked out once for a whole painting:
+ * each one's amplitude, its 4Dt, and the squared distance beyond which it
+ * is invisible, so a cell far from a source skips it without an exp().
+ */
+export const prepare = (
+  sources: readonly HeatSource[],
+  model: HeatModel,
+  clock: number,
+): PreparedKernel[] => {
+  const kernels: PreparedKernel[] = [];
+  for (const source of sources) {
+    const age = ageOf(source, model, clock);
+    const amplitude = (model.peak * model.scale) / age;
+    if (amplitude <= INVISIBLE) continue;
+    const spread = 4 * model.diffusivity * age;
+    kernels.push({
+      x: source.x,
+      y: source.y,
+      amplitude,
+      spread,
+      reach: spread * Math.log(amplitude / INVISIBLE),
+    });
+  }
+  return kernels;
+};
+
+/** The summed heat of prepared kernels at (x, y). */
+export const preparedHeatAt = (kernels: readonly PreparedKernel[], x: number, y: number) => {
+  let sum = 0;
+  for (const k of kernels) {
+    const r2 = (x - k.x) ** 2 + (y - k.y) ** 2;
+    if (r2 < k.reach) sum += k.amplitude * Math.exp(-r2 / k.spread);
+  }
+  return sum;
+};
+
 export const heatAt = (
   sources: readonly HeatSource[],
   model: HeatModel,
@@ -96,6 +145,17 @@ const MAX_ALPHA = 0.85;
  * width and height, and writes the lavender and blush alpha there into `out`;
  * the colours are mixed over `background`, the page's by default.
  */
+// One image per canvas, kept while its size holds: painting every frame
+// should not allocate a new one each time. Every pixel is rewritten.
+const images = new WeakMap<CanvasRenderingContext2D, ImageData>();
+const imageFor = (ctx: CanvasRenderingContext2D, cols: number, rows: number) => {
+  const cached = images.get(ctx);
+  if (cached && cached.width === cols && cached.height === rows) return cached;
+  const image = ctx.createImageData(cols, rows);
+  images.set(ctx, image);
+  return image;
+};
+
 export const paintField = (
   ctx: CanvasRenderingContext2D,
   cols: number,
@@ -103,7 +163,7 @@ export const paintField = (
   alphaAt: (u: number, v: number, out: [number, number]) => void,
   background: readonly [number, number, number] = BACKGROUND,
 ) => {
-  const image = ctx.createImageData(cols, rows);
+  const image = imageFor(ctx, cols, rows);
   const data = image.data;
   const alpha: [number, number] = [0, 0];
   for (let row = 0; row < rows; row++) {

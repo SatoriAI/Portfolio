@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { expired, heatAt, heatGradient, type HeatModel, kernel } from "./heatKernel";
+import {
+  expired,
+  heatAt,
+  heatGradient,
+  type HeatModel,
+  kernel,
+  prepare,
+  preparedHeatAt,
+} from "./heatKernel";
 
 const model: HeatModel = { peak: 0.3, scale: 0.1, diffusivity: 2, lifetime: 1 };
 
@@ -86,5 +94,30 @@ describe("expired", () => {
     const source = { x: 0, y: 0, bornAt: 1 };
     expect(expired(source, model, 1.99)).toBe(false);
     expect(expired(source, model, 2)).toBe(true);
+  });
+});
+
+describe("prepare", () => {
+  it("samples as heatAt does, to within what a painted cell can show", () => {
+    const sources = [
+      { x: 0, y: 0, bornAt: 0 },
+      { x: 3, y: 1, bornAt: 0.3 },
+    ];
+    const kernels = prepare(sources, model, 0.5);
+    for (const [x, y] of [
+      [0, 0],
+      [1, 1],
+      [3, 1],
+      [6, -2],
+      [20, 20],
+    ]) {
+      expect(
+        Math.abs(preparedHeatAt(kernels, x, y) - heatAt(sources, model, x, y, 0.5)),
+      ).toBeLessThan(2 / 512);
+    }
+  });
+
+  it("leaves out a source too faint to show anywhere", () => {
+    expect(prepare([{ x: 0, y: 0, bornAt: 0 }], { ...model, peak: 0.001 }, 1)).toEqual([]);
   });
 });

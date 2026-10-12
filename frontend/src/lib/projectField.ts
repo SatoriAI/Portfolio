@@ -24,7 +24,7 @@ export type FieldLayout = {
 export const EDGE = 12;
 
 /** Above this many projects a phone shows a plain grid rather than a field to play in. */
-export const PHONE_PLAY_LIMIT = 8;
+const PHONE_PLAY_LIMIT = 8;
 
 type Scale = {
   /** The most pucks in a row. */
@@ -115,6 +115,12 @@ export type Puck = {
   /** Where the pointer holds it, while dragged. */
   drag: Point | null;
   pressed: boolean;
+  /**
+   * Has given way to the puck in the hand: pushed far enough from home, it
+   * lets that one pass over it and slides back underneath, instead of being
+   * plowed along the whole row. Until the drag ends.
+   */
+  yielded: boolean;
 };
 
 export const restingPuck = ({ x, y }: Point): Puck => ({
@@ -130,6 +136,7 @@ export const restingPuck = ({ x, y }: Point): Puck => ({
   flight: null,
   drag: null,
   pressed: false,
+  yielded: false,
 });
 
 /** The spring to home, its damping, and how hard the heat pulls (capped). */
@@ -146,8 +153,8 @@ const PULL_MAX = 620;
 const COLLISION_PASSES = 3;
 /** How long a puck's flight home in the arrival takes, in seconds. */
 const FLIGHT = 0.7;
-/** How long a puck takes to glide to a new home after a drop. */
-const MOVE = 0.45;
+/** How far a puck in the way of the one in the hand is pushed before it gives way, in sizes. */
+const YIELD = 0.75;
 /** The scale a puck leaves the centre at, growing to its own as it flies. */
 const FLIGHT_SCALE = 0.6;
 
@@ -190,10 +197,12 @@ export const land = (puck: Puck) => {
  * instead of springing and colliding their way, which looked chaotic.
  */
 export const glideHome = (puck: Puck, clock: number) => {
+  // Longer for longer ways, so a far glide is not a swoosh: 0.3 to 0.6 s.
+  const distance = Math.hypot(puck.hx - puck.x, puck.hy - puck.y);
   puck.flight = {
     from: { x: puck.x, y: puck.y },
     startAt: clock,
-    duration: MOVE,
+    duration: Math.min(0.6, 0.3 + distance / 1400),
     kind: "move",
   };
   puck.drag = null;
@@ -237,13 +246,24 @@ export type StepEnv = {
 /**
  * One step of `dt` seconds. A free puck is a damped spring to its home plus
  * the pull of the heat's gradient, so it leans toward warmth and comes back;
- * a dragged one follows the pointer and keeps the speed it was flung with.
- * Pucks then push apart where they overlap and bounce off the field's edges.
+ * a dragged one follows the pointer, inside the walls. Pucks then push
+ * apart where they overlap, and turn back at the walls.
  */
 export const stepPucks = (pucks: Puck[], dt: number, env: StepEnv) => {
   const { layout, clock } = env;
   const radius = layout.size / 2;
   const apart = layout.size + (layout.width < 640 ? 18 : 28);
+  // The walls stand EDGE inside the field: it has no visible edge (it fades
+  // into the page), so a puck turns back inside the fade rather than against
+  // nothing, and one in the hand stays where it can be seen.
+  const left = EDGE + radius;
+  const right = layout.width - EDGE - radius;
+  const top = EDGE + radius;
+  const bottom = layout.height - radius - env.nameRoom;
+  const clampX = (x: number) => Math.min(right, Math.max(left, x));
+  const clampY = (y: number) => Math.min(bottom, Math.max(top, y));
+  // Giving way lasts only while something is in the hand.
+  if (!pucks.some((puck) => puck.drag)) for (const puck of pucks) puck.yielded = false;
 
   pucks.forEach((puck) => {
     if (puck.flight) {
@@ -268,10 +288,12 @@ export const stepPucks = (pucks: Puck[], dt: number, env: StepEnv) => {
       return;
     }
     if (puck.drag) {
-      puck.vx = puck.vx * 0.5 + ((puck.drag.x - puck.x) / dt) * 0.5;
-      puck.vy = puck.vy * 0.5 + ((puck.drag.y - puck.y) / dt) * 0.5;
-      puck.x = puck.drag.x;
-      puck.y = puck.drag.y;
+      const x = clampX(puck.drag.x);
+      const y = clampY(puck.drag.y);
+      puck.vx = puck.vx * 0.5 + ((x - puck.x) / dt) * 0.5;
+      puck.vy = puck.vy * 0.5 + ((y - puck.y) / dt) * 0.5;
+      puck.x = x;
+      puck.y = y;
       return;
     }
     let fx = 0;
@@ -292,16 +314,24 @@ export const stepPucks = (pucks: Puck[], dt: number, env: StepEnv) => {
 
   // Overlaps are resolved in a few passes: pushing one pair apart can push
   // one of them into a third, and a single pass left a cluster of three
-  // shoving each other back and forth from frame to frame. Only the first
-  // pass bounces; the others only separate.
+  // shoving each other back and forth from frame to frame.
   for (let pass = 0; pass < COLLISION_PASSES; pass++) {
     for (let a = 0; a < pucks.length; a++) {
       for (let b = a + 1; b < pucks.length; b++) {
         const A = pucks[a];
         const B = pucks[b];
         // A puck in flight passes over the others; one in the hand shoves
-        // them out of its way and does not give way itself.
+        // them out of its way and does not give way itself, until one it
+        // shoves has gone far enough from home to give way (see yielded).
         if (A.flight || B.flight) continue;
+        const pushed = A.drag ? B : B.drag ? A : null;
+        if (pushed) {
+          if (!pushed.yielded) {
+            const away = Math.hypot(pushed.x - pushed.hx, pushed.y - pushed.hy);
+            if (away > YIELD * layout.size) pushed.yielded = true;
+          }
+          if (pushed.yielded) continue;
+        }
         const dx = B.x - A.x;
         const dy = B.y - A.y;
         const d = Math.hypot(dx, dy);
@@ -339,13 +369,6 @@ export const stepPucks = (pucks: Puck[], dt: number, env: StepEnv) => {
       puck.x += puck.vx * dt;
       puck.y += puck.vy * dt;
       const bounce = (speed: number) => (puck.sv -= Math.min(4, Math.abs(speed) * 0.01));
-      // The walls stand EDGE inside the field: it has no visible edge (it
-      // fades into the page), so a flung puck turns back inside the fade
-      // rather than against nothing.
-      const left = EDGE + radius;
-      const right = layout.width - EDGE - radius;
-      const top = EDGE + radius;
-      const bottom = layout.height - radius - env.nameRoom;
       if (puck.x < left) {
         puck.x = left;
         puck.vx = Math.abs(puck.vx) * 0.6;
@@ -408,7 +431,13 @@ const VECTORS: Record<Direction, Point> = {
  * favouring one straight ahead over one off to the side. With none that way,
  * the next or previous puck in reading order, so focus never sticks.
  */
-export const neighbour = (slots: readonly Point[], from: number, direction: Direction) => {
+export const neighbour = (
+  slots: readonly Point[],
+  from: number,
+  direction: Direction,
+  /** Each puck's place in reading order, when the reader has changed it. */
+  order: readonly number[] = slots.map((_, i) => i),
+) => {
   const d = VECTORS[direction];
   const here = slots[from];
   let best = -1;
@@ -427,7 +456,8 @@ export const neighbour = (slots: readonly Point[], from: number, direction: Dire
   });
   if (best >= 0) return best;
   const step = d.x + d.y > 0 ? 1 : -1;
-  return (from + step + slots.length) % slots.length;
+  const next = (order[from] + step + slots.length) % slots.length;
+  return order.indexOf(next);
 };
 
 /** The home nearest a point: where a dropped puck settles. */

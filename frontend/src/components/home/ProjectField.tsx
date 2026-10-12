@@ -19,10 +19,11 @@ import { useMediaQuery, usePrefersReducedMotion } from "@/hooks/use-media-query"
 import {
   expired,
   fitCanvas,
-  heatAt,
   type HeatModel,
   type HeatSource,
   paintField,
+  prepare,
+  preparedHeatAt,
 } from "@/lib/heatKernel";
 import {
   arrivingPucks,
@@ -266,15 +267,16 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
     if (!s || !canvas || !ctx) return;
     fitCanvas(canvas, COLS, s.rows);
     const { width: w, height: h } = s.layout;
-    const live = KIND_NAMES.filter((kind) => s.sources[kind].length > 0);
+    // Every kind's kernels worked out once for the whole painting.
+    const kernels = KIND_NAMES.flatMap((kind) =>
+      prepare(s.sources[kind], KINDS[kind].model, s.clock),
+    );
     paintField(
       ctx,
       COLS,
       s.rows,
       (u, v, alpha) => {
-        for (const kind of live) {
-          alpha[0] += heatAt(s.sources[kind], KINDS[kind].model, u * w, v * h, s.clock);
-        }
+        alpha[0] += preparedHeatAt(kernels, u * w, v * h);
       },
       WHITE,
     );
@@ -318,7 +320,10 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
     const dt = Math.min(1 / 30, Math.max(1 / 240, (now - (s.last ?? now)) / 1000 || 1 / 60));
     // After a pause (off screen, a hidden tab) pucks still waiting in the
     // arrival keep their stagger instead of all leaving at once.
-    const paused = s.last === null ? 0 : (now - s.last) / 1000 - 1 / 30;
+    // A real pause, not a slow frame: on a slow device every frame is long,
+    // and shifting by each would stretch every flight.
+    const gap = s.last === null ? 0 : (now - s.last) / 1000;
+    const paused = gap > 0.1 ? gap - 1 / 30 : 0;
     if (paused > 0) {
       for (const puck of s.pucks) if (puck.flight) puck.flight.startAt += paused;
     }
@@ -551,6 +556,12 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
       if (!g.moved && Math.hypot(at.x - g.start.x, at.y - g.start.y) > DRAG_THRESHOLD) {
         g.moved = true;
         puck.pressed = false;
+        // Taken mid-glide (just after a drop, say): the glide ends here, and
+        // the hold is measured from where the puck is now, so it neither
+        // keeps gliding away from the pointer nor jumps.
+        puck.flight = null;
+        puck.s = 1;
+        g.offset = { x: puck.x - at.x, y: puck.y - at.y };
       }
       if (g.moved) {
         puck.drag = { x: at.x + g.offset.x, y: at.y + g.offset.y };
@@ -560,7 +571,8 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
     onPointerUp: () => endGesture(index),
     onPointerCancel: () => endGesture(index),
     onClick: (event: MouseEvent<HTMLButtonElement>) => {
-      if (swallowClick.current === index) {
+      // Only a pointer's click ends a drag; one from the keyboard never is.
+      if (swallowClick.current === index && event.detail > 0) {
         swallowClick.current = -1;
         return;
       }
@@ -571,11 +583,14 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
       onOpen(title);
     },
     onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => {
+      // A drag whose closing click never came (a browser may not send it)
+      // must not swallow a key press.
+      swallowClick.current = -1;
       const direction = ARROWS[event.key];
       if (!direction) return;
       // Instead of the tab list's own arrows, which only know a line.
       event.preventDefault();
-      puckRefs.current[neighbour(homes, index, direction)]?.focus();
+      puckRefs.current[neighbour(homes, index, direction, order)]?.focus();
     },
   });
 
