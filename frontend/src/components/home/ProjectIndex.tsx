@@ -97,20 +97,34 @@ const ProjectIcon = ({ project, className }: { project: UiProject; className?: s
 /**
  * The way to the code: a control when the repository is public, a plain note
  * when it is not. Where the bar is narrow (a phone, and lg to xl where the
- * frame is half the row) it is the icon alone, so the bar stays one row; the
- * words stay for assistive technology.
+ * frame is half the row, and always in a phone's frame) it is the icon
+ * alone, so the bar stays one row; the words stay for assistive technology.
  */
-const CodeDoor = ({ github, labels }: { github: string; labels: ProjectIndexLabels }) =>
+const CodeDoor = ({
+  github,
+  labels,
+  compact = false,
+}: {
+  github: string;
+  labels: ProjectIndexLabels;
+  compact?: boolean;
+}) =>
   github ? (
     <a
       href={github}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={labels.codeOnGithub}
-      className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-control-border bg-card font-mono text-meta text-foreground outline-none transition-colors duration-200 hover:border-iris focus-visible:ring-2 focus-visible:ring-ring sm:max-lg:px-4 xl:px-4"
+      className={cn(
+        "inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-control-border bg-card font-mono text-meta text-foreground outline-none transition-colors duration-200 hover:border-iris focus-visible:ring-2 focus-visible:ring-ring",
+        !compact && "sm:max-lg:px-4 xl:px-4",
+      )}
     >
       <CodeXml aria-hidden="true" className="size-4 text-iris" />
-      <span aria-hidden="true" className="contents max-sm:hidden lg:max-xl:hidden">
+      <span
+        aria-hidden="true"
+        className={cn("contents", compact ? "hidden" : "max-sm:hidden lg:max-xl:hidden")}
+      >
         {labels.code}
         <ExternalLink className="size-3.5 text-muted-foreground" />
       </span>
@@ -118,7 +132,9 @@ const CodeDoor = ({ github, labels }: { github: string; labels: ProjectIndexLabe
   ) : (
     <span className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 px-2 font-mono text-meta text-muted-foreground">
       <Lock aria-hidden="true" className="size-3.5" />
-      <span className="max-sm:sr-only lg:max-xl:sr-only">{labels.codePrivate}</span>
+      <span className={compact ? "sr-only" : "max-sm:sr-only lg:max-xl:sr-only"}>
+        {labels.codePrivate}
+      </span>
     </span>
   );
 
@@ -150,56 +166,87 @@ const ProjectFrame = ({
   active,
 }: ProjectFrameProps) => {
   const self = isThisSite(project);
+  // A phone app is shown in a phone, not a browser window: a narrow column
+  // of its own (five of twelve up to xl, four from there, so the phone keeps
+  // its full width), the story beside it taking the rest of the row, so no
+  // empty space stands beside the phone.
+  const phone = project.mobile;
+  const bar = (
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-y-2 border-b border-border bg-background py-2.5",
+        // A phone's bar is a third of the row: tighter, so the address is
+        // not the first thing to give way.
+        phone ? "gap-x-1 px-2" : "gap-x-4 px-3 sm:px-4",
+      )}
+    >
+      {!phone && (
+        <span aria-hidden="true" className="hidden gap-1.5 sm:max-lg:flex xl:flex">
+          {[0, 1, 2].map((dot) => (
+            <span key={dot} className="size-2.5 rounded-full border border-border bg-card" />
+          ))}
+        </span>
+      )}
+      {project.demo && !self ? (
+        <LiveCheck url={project.demo} state={checkState} onCheck={onCheck} labels={labels.live} />
+      ) : (
+        <p className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-lg border border-border bg-card px-4 font-mono text-meta">
+          {project.demo || project.github ? (
+            <span className="text-foreground">{hostOf(project.demo || project.github)}</span>
+          ) : (
+            <span className="text-muted-foreground">{labels.notPublic}</span>
+          )}
+          {/* Left out on the narrowest phones, where it would push the bar onto
+              a second row; the frame shows this very page anyway. */}
+          {self && (
+            <span className="ml-auto text-iris max-[379px]:hidden">← {labels.youAreHere}</span>
+          )}
+        </p>
+      )}
+      {/* Where it runs and where its code is, side by side: two doors in
+          one bar, always one row (see CodeDoor). */}
+      <CodeDoor github={project.github} labels={labels} compact={phone} />
+    </div>
+  );
+  const window = (
+    <ProjectWindow
+      screenshot={screenshot}
+      alt={fillTemplate(labels.screenshotAlt, { title: project.title })}
+      icon={<ProjectIcon project={project} className="size-16 rounded-card md:size-20" />}
+      subtitle={subtitle}
+      checkState={checkState}
+      always={self}
+      phone={phone}
+    />
+  );
   return (
     <article className="grid gap-6 lg:grid-cols-12 lg:gap-x-6">
-      <div className="self-start overflow-hidden rounded-card border border-border bg-card lg:col-span-6 xl:col-span-7">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-background px-3 py-2.5 sm:px-4">
-          <span aria-hidden="true" className="hidden gap-1.5 sm:max-lg:flex xl:flex">
-            {[0, 1, 2].map((dot) => (
-              <span key={dot} className="size-2.5 rounded-full border border-border bg-card" />
-            ))}
-          </span>
-          {project.demo && !self ? (
-            <LiveCheck
-              url={project.demo}
-              state={checkState}
-              onCheck={onCheck}
-              labels={labels.live}
-            />
-          ) : (
-            <p className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-lg border border-border bg-card px-4 font-mono text-meta">
-              {project.demo || project.github ? (
-                <span className="text-foreground">{hostOf(project.demo || project.github)}</span>
-              ) : (
-                <span className="text-muted-foreground">{labels.notPublic}</span>
-              )}
-              {/* Left out on the narrowest phones, where it would push the bar onto
-                  a second row; the frame shows this very page anyway. */}
-              {self && (
-                <span className="ml-auto text-iris max-[379px]:hidden">← {labels.youAreHere}</span>
-              )}
-            </p>
-          )}
-          {/* Where it runs and where its code is, side by side: two doors in
-              one bar, always one row (see CodeDoor). */}
-          <CodeDoor github={project.github} labels={labels} />
+      {phone ? (
+        // The phone: a white body round its screen, the kit's outline and no
+        // shadow, as the browser frame.
+        <div className="mx-auto w-full max-w-80 self-start rounded-[2.5rem] border border-border bg-card p-2.5 lg:col-span-5 xl:col-span-4">
+          <div className="overflow-hidden rounded-[2rem] border border-border">
+            {bar}
+            {window}
+          </div>
         </div>
-
-        <ProjectWindow
-          screenshot={screenshot}
-          alt={fillTemplate(labels.screenshotAlt, { title: project.title })}
-          icon={<ProjectIcon project={project} className="size-16 rounded-card md:size-20" />}
-          subtitle={subtitle}
-          checkState={checkState}
-          always={self}
-        />
-      </div>
+      ) : (
+        <div className="self-start overflow-hidden rounded-card border border-border bg-card lg:col-span-6 xl:col-span-7">
+          {bar}
+          {window}
+        </div>
+      )}
 
       {/* What the project is, beside what it looks like, so both are read
           at once. */}
       {/* Six and six below xl: at 1024 a five-column story ran up to 95px
           past the frame. */}
-      <div className="flex min-w-0 flex-col gap-5 lg:col-span-6 xl:col-span-5">
+      <div
+        className={cn(
+          "flex min-w-0 flex-col gap-5",
+          phone ? "lg:col-span-7 xl:col-span-8" : "lg:col-span-6 xl:col-span-5",
+        )}
+      >
         <header>
           <h3 className="text-h2-sm font-semibold">{project.title}</h3>
           {/* Without a screenshot the band above already carries this line. */}

@@ -100,6 +100,13 @@ class WorkModelsTestCase(TestCase):
         self.assertEqual(obj.repository, "https://github.com/example/repo")
         self.assertEqual(obj.description, "HTTP API for clients")
         self.assertIsNotNone(obj.representation_for("en"))
+        # A web project unless marked as a phone app.
+        self.assertFalse(obj.mobile)
+
+    def test_project_can_be_marked_as_a_phone_app(self) -> None:
+        obj = Project.objects.create(title="Slip", mobile=True)
+        obj.refresh_from_db()
+        self.assertTrue(obj.mobile)
 
     def test_project_tags_optional(self) -> None:
         obj = Project.objects.create(

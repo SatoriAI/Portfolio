@@ -102,12 +102,17 @@ class ProjectListViewTestCase(TestCase):
         self.assertListEqual(item["tags"], ["django", "rest", "postgres"])
         self.assertEqual(item["demo"], "https://example.com/demo")
         self.assertEqual(item["repository"], "https://github.com/example/repo")
+        self.assertFalse(item["mobile"])
 
         self.assertIn("translations", item)
         self.assertEqual(item["translations"]["en"]["description"], "HTTP API for clients")
         self.assertEqual(item["translations"]["pl"]["description"], "Interfejs HTTP dla klientów")
         self.assertEqual(item["translations"]["en"]["vex_question"], "How does the API handle auth?")
         self.assertEqual(item["translations"]["pl"]["vex_question"], "Jak API obsługuje logowanie?")
+
+    def test_a_phone_app_says_so(self) -> None:
+        ProjectFactory(mobile=True)
+        self.assertTrue(self.client.get(reverse("work:projects")).json()[0]["mobile"])
 
     def test_vex_question_is_empty_until_written(self) -> None:
         ProjectFactory()

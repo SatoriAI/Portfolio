@@ -28,6 +28,8 @@ type ProjectWindowProps = {
   checkState: CheckState;
   /** This site, which has nothing to check: its page is shown as it is. */
   always?: boolean;
+  /** A phone's screen, tall, rather than a browser's 16:9 window. */
+  phone?: boolean;
 };
 
 const answered = (state: CheckState) => state.phase === "done" && state.result.answered;
@@ -39,6 +41,7 @@ const ProjectWindow = ({
   subtitle,
   checkState,
   always = false,
+  phone = false,
 }: ProjectWindowProps) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const image = useRef<HTMLImageElement>(null);
@@ -74,7 +77,14 @@ const ProjectWindow = ({
   }
 
   return (
-    <div className="relative grid aspect-video place-items-center bg-lavender">
+    <div
+      className={cn(
+        "relative grid place-items-center bg-lavender",
+        // A phone's screen with its foot cropped, so the frame is no taller
+        // than the story beside it needs.
+        phone ? "aspect-[390/720]" : "aspect-video",
+      )}
+    >
       {icon}
       <img
         ref={image}

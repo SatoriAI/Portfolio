@@ -12,6 +12,8 @@ export type ApiProject = {
   tags: string[];
   demo: string;
   repository: string;
+  /** A phone app; absent from an API older than the field. */
+  mobile?: boolean;
 };
 
 export type UiProject = {
@@ -23,6 +25,8 @@ export type UiProject = {
   github: string;
   demo: string;
   image: string;
+  /** A phone app: shown in a phone rather than a browser window. */
+  mobile: boolean;
 };
 
 export function mapApiProjectToUi(project: ApiProject, language: string): UiProject {
@@ -37,6 +41,7 @@ export function mapApiProjectToUi(project: ApiProject, language: string): UiProj
     github: project.repository || "",
     demo: project.demo || "",
     image: project.image || "",
+    mobile: project.mobile ?? false,
   };
 }
 

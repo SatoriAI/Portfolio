@@ -11,6 +11,7 @@ const project = (github: string, demo: string): UiProject => ({
   image: "",
   github,
   demo,
+  mobile: false,
 });
 
 describe("projectPrimaryHref", () => {
@@ -40,6 +41,7 @@ describe("isThisSite", () => {
     github: "",
     demo,
     image: "",
+    mobile: false,
   });
 
   it("recognises the site by its demo host, with or without www", () => {
