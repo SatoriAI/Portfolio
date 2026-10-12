@@ -37,7 +37,6 @@ const ageOf = (source: HeatSource, model: HeatModel, clock: number) =>
 export const expired = (source: HeatSource, model: HeatModel, clock: number) =>
   clock - source.bornAt >= model.lifetime;
 
-/** The summed heat of the sources at (x, y). */
 /** A source's kernel at one moment, ready to sample at many points (see prepare). */
 export type PreparedKernel = {
   x: number;
@@ -87,6 +86,7 @@ export const preparedHeatAt = (kernels: readonly PreparedKernel[], x: number, y:
   return sum;
 };
 
+/** The summed heat of the sources at (x, y). */
 export const heatAt = (
   sources: readonly HeatSource[],
   model: HeatModel,
@@ -137,14 +137,6 @@ const CHANNEL_RGB = [
 /** No cell is ever painted more than this deep: the text above stays legible. */
 const MAX_ALPHA = 0.85;
 
-/**
- * Paints a field onto a canvas of `cols` × `rows` cells, one colour per cell,
- * which the page upscales: the field is smooth, so bilinear scaling of a
- * coarse grid is indistinguishable from a per-pixel evaluation and costs a
- * hundredth as much. `alphaAt` receives each cell's centre as fractions of the
- * width and height, and writes the lavender and blush alpha there into `out`;
- * the colours are mixed over `background`, the page's by default.
- */
 // One image per canvas, kept while its size holds: painting every frame
 // should not allocate a new one each time. Every pixel is rewritten.
 const images = new WeakMap<CanvasRenderingContext2D, ImageData>();
@@ -156,6 +148,14 @@ const imageFor = (ctx: CanvasRenderingContext2D, cols: number, rows: number) => 
   return image;
 };
 
+/**
+ * Paints a field onto a canvas of `cols` × `rows` cells, one colour per cell,
+ * which the page upscales: the field is smooth, so bilinear scaling of a
+ * coarse grid is indistinguishable from a per-pixel evaluation and costs a
+ * hundredth as much. `alphaAt` receives each cell's centre as fractions of the
+ * width and height, and writes the lavender and blush alpha there into `out`;
+ * the colours are mixed over `background`, the page's by default.
+ */
 export const paintField = (
   ctx: CanvasRenderingContext2D,
   cols: number,

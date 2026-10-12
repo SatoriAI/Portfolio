@@ -52,16 +52,18 @@ import { cn } from "@/lib/utils";
  *
  * Every project is a white round puck with its icon, its name under it, at a
  * home of its own (lib/projectField), on the section's own white: the field
- * has no colour until there is heat, and all its heat is lavender. The first time the field is well in
- * view one pulse of heat spreads from its centre and the pucks burst out from
- * it to their homes; after that nothing moves on its own. The reader is the
+ * has no colour until there is heat, and all its heat is lavender. The first
+ * time the field is well in view one pulse of heat spreads from its centre
+ * and the pucks glide out from it to their homes, one after another; after
+ * that nothing moves on its own. The reader is the
  * only heat: a mouse moving over the field leaves kernels that spread and
  * fade, as over the menu bar, and the pucks lean a few pixels toward the
  * warmth and spring back; under the field one line says how to choose. A
  * click on the empty field sends a pulse that nudges the pucks near it; a
  * puck can be dragged, shoving the others out of its way (they slide back
- * without a wobble), and where it is let go it stays: it takes the home nearest it and the others move along to make
- * room, for this visit, each gliding straight to its new home.
+ * without a wobble), and where it is let go it stays: it takes the home
+ * nearest it and the others move along to make room, for this visit, each
+ * gliding straight to its new home.
  * Choosing one gives it an iris rim inside the site's lavender ring and a
  * short warm flood, under 300 ms, and the panel below shows it.
  *
@@ -76,7 +78,10 @@ import { cn } from "@/lib/utils";
 export type ProjectFieldLabels = {
   /** Accessible name of the field's list of projects. */
   field: string;
-  /** The line under the field, saying how to choose, where there is a mouse. Dragging is left for the reader to find. */
+  /**
+   * The line under the field, saying how to choose, where there is a mouse.
+   * Dragging is left for the reader to find.
+   */
   hint: string;
   /** The same, on touch. */
   hintTouch: string;

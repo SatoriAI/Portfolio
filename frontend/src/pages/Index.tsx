@@ -120,8 +120,8 @@ const Index = () => {
 
         {/* Projects come first after the hero, as the kit's structure asks:
             the projects as pucks on a heat field, the chosen one opened below
-            it and read in sequence. The images the backend holds are app icons and are shown
-            at icon size. */}
+            it and read in sequence. The images the backend holds are app
+            icons and are shown at icon size. */}
         <Section id="projects" tone="surface">
           <SectionHeading
             eyebrow={eyebrow(1)}
