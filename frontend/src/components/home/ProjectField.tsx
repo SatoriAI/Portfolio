@@ -76,12 +76,10 @@ import { cn } from "@/lib/utils";
 export type ProjectFieldLabels = {
   /** Accessible name of the field's list of projects. */
   field: string;
-  /** The line under the field, saying how to choose, where a mouse can play. */
+  /** The line under the field, saying how to choose, where there is a mouse. Dragging is left for the reader to find. */
   hint: string;
   /** The same, on touch. */
   hintTouch: string;
-  /** The same, on the still grid, where nothing can be dragged. */
-  hintStill: string;
 };
 
 type ProjectFieldProps = {
@@ -685,9 +683,11 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
       {/* How to choose: the pucks say the rest, the panel below the open one. */}
       <p
         style={{ maxWidth: layout.width || undefined }}
-        className="w-full self-center px-1 font-mono text-meta text-muted-foreground"
+        // Drawn up 20px toward the pucks it is about, so it does not read
+        // as a caption of the panel below.
+        className="-mt-5 w-full self-center px-1 font-mono text-meta text-muted-foreground"
       >
-        {!canHover ? labels.hintTouch : layout.still ? labels.hintStill : labels.hint}
+        {canHover ? labels.hint : labels.hintTouch}
       </p>
     </div>
   );
