@@ -28,7 +28,17 @@ const twMerge = extendTailwindMerge({
       ],
       shadow: [
         {
-          shadow: ["lift", "float", "press", "rim", "rim-focus", "rim-chosen", "rim-chosen-focus"],
+          shadow: [
+            "lift",
+            "float",
+            "press",
+            "rim",
+            "rim-focus",
+            "rim-chosen",
+            "rim-chosen-focus",
+            "puck",
+            "puck-focus",
+          ],
         },
       ],
       rounded: [{ rounded: ["card", "motif"] }],

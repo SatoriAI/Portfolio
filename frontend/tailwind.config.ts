@@ -142,6 +142,12 @@ export default {
         // ring outside it.
         "rim-chosen-focus":
           "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 8px hsl(var(--surface)), 0 0 0 10px hsl(var(--iris)), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
+        // A project's puck on the home page's heat field: the circle's white
+        // gap with a hairline instead of the control rim, which on a pale
+        // field and at phone size read as a disabled control.
+        puck: "0 0 0 3px hsl(var(--surface)), 0 0 0 4px hsl(var(--border)), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
+        "puck-focus":
+          "0 0 0 3px hsl(var(--surface)), 0 0 0 4px hsl(var(--border)), 0 0 0 7px hsl(var(--surface)), 0 0 0 9px hsl(var(--iris)), 0 8px 24px -12px hsl(var(--ink) / 0.35)",
       },
       transitionTimingFunction: {
         brand: "cubic-bezier(0.22, 1, 0.36, 1)",

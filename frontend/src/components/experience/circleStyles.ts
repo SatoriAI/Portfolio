@@ -27,8 +27,11 @@ export const circleControl = [
  * page's focus outline kept off the rim, where it would read as chosen. */
 const PLAIN =
   "focus-visible:outline-none [@media(hover:hover)]:hover:outline [@media(hover:hover)]:hover:outline-2 [@media(hover:hover)]:hover:outline-offset-[3px] [@media(hover:hover)]:hover:outline-iris/40";
-/** Chosen, or used by the chosen skill: a soft lavender ring outside the rim. */
-const MARKED = "outline outline-[3px] outline-offset-[5px] outline-lavender-deep";
+/**
+ * Chosen, or used by the chosen skill: a soft lavender ring outside the rim.
+ * Worn by a chosen project too (ProjectField).
+ */
+export const MARKED = "outline outline-[3px] outline-offset-[5px] outline-lavender-deep";
 /**
  * Neither, while something is chosen: grey and faint, still legible and
  * pressable. A filter rather than opacity, so it can fade on its own while the
