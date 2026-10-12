@@ -174,7 +174,7 @@ describe("stepPucks", () => {
     env.pull = [{ sources: [{ x: pucks[0].hx + 30, y: pucks[0].hy, bornAt: 0 }], model }];
     run(pucks, env, 0.3);
     const lean = pucks[0].x - pucks[0].hx;
-    expect(lean).toBeGreaterThan(1.5);
+    expect(lean).toBeGreaterThan(1);
     expect(lean).toBeLessThan(20);
     env.pull = [];
     run(pucks, env, 4);
@@ -190,13 +190,31 @@ describe("stepPucks", () => {
     expect(settled(pucks)).toBe(false);
   });
 
-  it("lifts a dragged puck over the others, which stay home", () => {
+  it("lets a dragged puck shove the others aside, and they come back without a wobble", () => {
     const env = envFor(7);
     const pucks = env.layout.slots.map(restingPuck);
     pucks[0].drag = { x: pucks[1].hx - 10, y: pucks[1].hy };
     run(pucks, env, 0.5);
     expect(pucks[0].x).toBe(pucks[1].hx - 10);
-    expect(pucks.slice(1).every((p) => p.x === p.hx && p.y === p.hy)).toBe(true);
+    // Pushed out of the way, not sat upon.
+    expect(Math.hypot(pucks[1].x - pucks[0].x, pucks[1].y - pucks[0].y)).toBeGreaterThanOrEqual(
+      env.layout.size,
+    );
+    // Let go: puck 1 heads home and never passes it.
+    pucks[0].drag = null;
+    pucks[0].x = pucks[0].hx;
+    pucks[0].y = pucks[0].hy;
+    pucks[0].vx = pucks[0].vy = 0;
+    const side = Math.sign(pucks[1].x - pucks[1].hx);
+    let crossed = false;
+    for (let t = 0; t < 3; t += 1 / 60) {
+      env.clock += 1 / 60;
+      stepPucks(pucks, 1 / 60, env);
+      if (Math.sign(pucks[1].x - pucks[1].hx) === -side && Math.abs(pucks[1].x - pucks[1].hx) > 0.5)
+        crossed = true;
+    }
+    expect(crossed).toBe(false);
+    expect(settled(pucks)).toBe(true);
   });
 });
 

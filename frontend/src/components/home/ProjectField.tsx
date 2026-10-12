@@ -58,8 +58,8 @@ import { cn } from "@/lib/utils";
  * fade, as over the menu bar, and the pucks lean a few pixels toward the
  * warmth and spring back; under the field one line says how to choose. A
  * click on the empty field sends a pulse that nudges the pucks near it; a
- * puck can be dragged, lifted over the others, and where it is let go it
- * stays: it takes the home nearest it and the others move along to make
+ * puck can be dragged, shoving the others out of its way (they slide back
+ * without a wobble), and where it is let go it stays: it takes the home nearest it and the others move along to make
  * room, for this visit, each gliding straight to its new home.
  * Choosing one gives it an iris rim inside the site's lavender ring and a
  * short warm flood, under 300 ms, and the panel below shows it.
@@ -294,7 +294,7 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
       const unseen = !s.arrived || waiting(puck, s.clock);
       element.style.opacity = unseen ? "0" : "";
       element.style.pointerEvents = unseen ? "none" : "";
-      // In the hand it is lifted over the others, which it passes over.
+      // In the hand it is drawn over the others it shoves aside.
       element.style.zIndex = puck.drag ? "1" : "";
       // Squashed along its motion, so a pushed or arriving puck reads as soft.
       const stretch = Math.min(0.2, Math.hypot(puck.vx, puck.vy) / 2800);

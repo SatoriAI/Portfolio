@@ -134,7 +134,12 @@ export const restingPuck = ({ x, y }: Point): Puck => ({
 
 /** The spring to home, its damping, and how hard the heat pulls (capped). */
 const SPRING = 38;
-const DAMPING = 6.2;
+/**
+ * Critically damped: a displaced puck comes home in one smooth motion,
+ * never overshooting and swinging back (at about half this it wobbled, and
+ * a few wobbling at once read as chaos).
+ */
+const DAMPING = 2 * Math.sqrt(SPRING);
 const PULL = 60000;
 const PULL_MAX = 620;
 /** Passes that separate overlapping pucks each step. */
@@ -294,10 +299,9 @@ export const stepPucks = (pucks: Puck[], dt: number, env: StepEnv) => {
       for (let b = a + 1; b < pucks.length; b++) {
         const A = pucks[a];
         const B = pucks[b];
-        // A puck in flight or in the hand passes over the others: a drag
-        // that shoved its way through left a trail of pucks to spring back
-        // and collide when it was dropped.
-        if (A.flight || B.flight || A.drag || B.drag) continue;
+        // A puck in flight passes over the others; one in the hand shoves
+        // them out of its way and does not give way itself.
+        if (A.flight || B.flight) continue;
         const dx = B.x - A.x;
         const dy = B.y - A.y;
         const d = Math.hypot(dx, dy);
@@ -305,20 +309,25 @@ export const stepPucks = (pucks: Puck[], dt: number, env: StepEnv) => {
         const nx = dx / d;
         const ny = dy / d;
         const overlap = apart - d;
-        A.x -= nx * overlap * 0.5;
-        A.y -= ny * overlap * 0.5;
-        B.x += nx * overlap * 0.5;
-        B.y += ny * overlap * 0.5;
+        const wa = A.drag ? 0 : B.drag ? 1 : 0.5;
+        const wb = 1 - wa;
+        A.x -= nx * overlap * wa;
+        A.y -= ny * overlap * wa;
+        B.x += nx * overlap * wb;
+        B.y += ny * overlap * wb;
+        // A push, not a bounce: they stop closing on each other and go on
+        // together, with no rebound and no squash, so one contact does not
+        // set off the next.
         const closing = (B.vx - A.vx) * nx + (B.vy - A.vy) * ny;
         if (pass === 0 && closing < 0) {
-          const j = -0.75 * closing;
-          A.vx -= nx * j;
-          A.vy -= ny * j;
-          B.vx += nx * j;
-          B.vy += ny * j;
-          const kick = Math.min(5, -closing * 0.012);
-          A.sv -= kick;
-          B.sv -= kick;
+          if (!A.drag) {
+            A.vx += nx * closing * wa;
+            A.vy += ny * closing * wa;
+          }
+          if (!B.drag) {
+            B.vx -= nx * closing * wb;
+            B.vy -= ny * closing * wb;
+          }
         }
       }
     }
