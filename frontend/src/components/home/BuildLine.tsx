@@ -215,20 +215,22 @@ const BuildLine = ({ technologies, active, label, nextLabel }: BuildLineProps) =
       {!prefersReducedMotion && part && (
         // On a phone the name takes the first line, so a long one is never
         // cut, and where it stands and the controls take the second.
+        // A pointer resting anywhere on the row holds it: on the slot, and on
+        // the next control too, so stepping on by hand is never overtaken by
+        // the cycle stepping on under the pointer.
         <div
           onFocus={() => setFocused(true)}
           onBlur={(event) => {
             if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
           }}
+          onPointerEnter={() => setHeld(true)}
+          onPointerLeave={() => setHeld(false)}
           className="flex flex-wrap items-center gap-x-3 sm:flex-nowrap"
         >
           <div
             aria-hidden="true"
-            onPointerEnter={() => setHeld(true)}
-            onPointerLeave={() => setHeld(false)}
-            // A pointer resting on the slot holds it; a click steps on, with
-            // the same jolt. Assistive technology has the whole stack in the
-            // list above.
+            // A click on the slot steps on, with the same jolt. Assistive
+            // technology has the whole stack in the list above.
             onClick={jolt}
             className="flex min-w-0 cursor-pointer select-none max-sm:basis-full sm:flex-1"
           >
