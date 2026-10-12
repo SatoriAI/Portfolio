@@ -106,11 +106,12 @@ export type Puck = {
   /** How warm it is, smoothed: 0 cold, about 1 hot. */
   warmth: number;
   /**
-   * Its flight in the arrival: from where, and when it leaves. Until then
-   * it waits unseen; in flight it glides home on a fixed curve, through the
-   * others, and only joins the physics when it lands.
+   * A glide home on a fixed curve, through the others, joining the physics
+   * only when it lands: from where, when it leaves (until then it waits
+   * unseen) and for how long. An arrival grows, stretches and lands with a
+   * squash; a move to a new home after a drop is calm, none of those.
    */
-  flight: { from: Point; startAt: number } | null;
+  flight: { from: Point; startAt: number; duration: number; kind: "arrival" | "move" } | null;
   /** Where the pointer holds it, while dragged. */
   drag: Point | null;
   pressed: boolean;
@@ -140,6 +141,8 @@ const PULL_MAX = 620;
 const COLLISION_PASSES = 3;
 /** How long a puck's flight home in the arrival takes, in seconds. */
 const FLIGHT = 0.7;
+/** How long a puck takes to glide to a new home after a drop. */
+const MOVE = 0.45;
 /** The scale a puck leaves the centre at, growing to its own as it flies. */
 const FLIGHT_SCALE = 0.6;
 
@@ -156,23 +159,42 @@ export const arrivingPucks = (layout: FieldLayout, clock: number): Puck[] => {
     ...restingPuck(slot),
     ...from,
     s: FLIGHT_SCALE,
-    flight: { from, startAt: clock + 0.25 + i * gap },
+    flight: { from, startAt: clock + 0.25 + i * gap, duration: FLIGHT, kind: "arrival" },
   }));
 };
 
 /** Whether a puck is still waiting to leave in the arrival, and so unseen. */
 export const waiting = (puck: Puck, clock: number) =>
-  puck.flight !== null && clock < puck.flight.startAt;
+  puck.flight?.kind === "arrival" && clock < puck.flight.startAt;
 
-/** Ends a puck's flight where it should end: at home, settling with a soft squash. */
+/** Ends a puck's flight where it should end: at home, an arrival settling with a soft squash. */
 export const land = (puck: Puck) => {
+  const arrival = puck.flight?.kind === "arrival";
   puck.flight = null;
   puck.x = puck.hx;
   puck.y = puck.hy;
   puck.vx = 0;
   puck.vy = 0;
   puck.s = 1;
-  puck.sv = -1.5;
+  puck.sv = arrival ? -1.5 : 0;
+};
+
+/**
+ * Sends a puck calmly to its home from where it is: after a drop, the
+ * dropped puck and every puck that moved along glide straight there,
+ * instead of springing and colliding their way, which looked chaotic.
+ */
+export const glideHome = (puck: Puck, clock: number) => {
+  puck.flight = {
+    from: { x: puck.x, y: puck.y },
+    startAt: clock,
+    duration: MOVE,
+    kind: "move",
+  };
+  puck.drag = null;
+  puck.vx = 0;
+  puck.vy = 0;
+  puck.sv = 0;
 };
 
 /** The ease of a flight: fast out of the centre, slowing into its home. */
@@ -220,22 +242,24 @@ export const stepPucks = (pucks: Puck[], dt: number, env: StepEnv) => {
 
   pucks.forEach((puck) => {
     if (puck.flight) {
-      const t = (clock - puck.flight.startAt) / FLIGHT;
+      const t = (clock - puck.flight.startAt) / puck.flight.duration;
       if (t < 0) return;
       if (t >= 1) {
         land(puck);
         return;
       }
       const k = easeOutCubic(t);
-      const { from } = puck.flight;
+      const { from, kind } = puck.flight;
       const x = from.x + (puck.hx - from.x) * k;
       const y = from.y + (puck.hy - from.y) * k;
-      // Its speed along the curve, so it stretches as it flies.
-      puck.vx = (x - puck.x) / dt;
-      puck.vy = (y - puck.y) / dt;
+      if (kind === "arrival") {
+        // Its speed along the curve, so it stretches as it flies, and it grows.
+        puck.vx = (x - puck.x) / dt;
+        puck.vy = (y - puck.y) / dt;
+        puck.s = FLIGHT_SCALE + (1 - FLIGHT_SCALE) * k;
+      }
       puck.x = x;
       puck.y = y;
-      puck.s = FLIGHT_SCALE + (1 - FLIGHT_SCALE) * k;
       return;
     }
     if (puck.drag) {
@@ -270,7 +294,10 @@ export const stepPucks = (pucks: Puck[], dt: number, env: StepEnv) => {
       for (let b = a + 1; b < pucks.length; b++) {
         const A = pucks[a];
         const B = pucks[b];
-        if (A.flight || B.flight) continue;
+        // A puck in flight or in the hand passes over the others: a drag
+        // that shoved its way through left a trail of pucks to spring back
+        // and collide when it was dropped.
+        if (A.flight || B.flight || A.drag || B.drag) continue;
         const dx = B.x - A.x;
         const dy = B.y - A.y;
         const d = Math.hypot(dx, dy);
@@ -278,24 +305,17 @@ export const stepPucks = (pucks: Puck[], dt: number, env: StepEnv) => {
         const nx = dx / d;
         const ny = dy / d;
         const overlap = apart - d;
-        // A held puck does not give way; the other takes all of it.
-        const wa = A.drag ? 0 : B.drag ? 1 : 0.5;
-        const wb = 1 - wa;
-        A.x -= nx * overlap * wa;
-        A.y -= ny * overlap * wa;
-        B.x += nx * overlap * wb;
-        B.y += ny * overlap * wb;
+        A.x -= nx * overlap * 0.5;
+        A.y -= ny * overlap * 0.5;
+        B.x += nx * overlap * 0.5;
+        B.y += ny * overlap * 0.5;
         const closing = (B.vx - A.vx) * nx + (B.vy - A.vy) * ny;
         if (pass === 0 && closing < 0) {
-          const j = -1.5 * closing;
-          if (!A.drag) {
-            A.vx -= nx * j * wa;
-            A.vy -= ny * j * wa;
-          }
-          if (!B.drag) {
-            B.vx += nx * j * wb;
-            B.vy += ny * j * wb;
-          }
+          const j = -0.75 * closing;
+          A.vx -= nx * j;
+          A.vy -= ny * j;
+          B.vx += nx * j;
+          B.vy += ny * j;
           const kick = Math.min(5, -closing * 0.012);
           A.sv -= kick;
           B.sv -= kick;

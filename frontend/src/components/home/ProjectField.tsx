@@ -29,6 +29,7 @@ import {
   type Direction,
   type FieldLayout,
   fieldLayout,
+  glideHome,
   land,
   moveToSlot,
   nearestSlot,
@@ -57,9 +58,9 @@ import { cn } from "@/lib/utils";
  * fade, as over the menu bar, and the pucks lean a few pixels toward the
  * warmth and spring back; under the field one line says how to choose. A
  * click on the empty field sends a pulse that nudges the pucks near it; a
- * puck can be dragged and flung, bouncing off the others, and where it is
- * let go it stays: it takes the home nearest it and the others move along
- * to make room, for this visit.
+ * puck can be dragged, lifted over the others, and where it is let go it
+ * stays: it takes the home nearest it and the others move along to make
+ * room, for this visit, each gliding straight to its new home.
  * Choosing one gives it an iris rim inside the site's lavender ring and a
  * short warm flood, under 300 ms, and the panel below shows it.
  *
@@ -293,7 +294,9 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
       const unseen = !s.arrived || waiting(puck, s.clock);
       element.style.opacity = unseen ? "0" : "";
       element.style.pointerEvents = unseen ? "none" : "";
-      // Squashed along its motion, so a flung puck reads as soft.
+      // In the hand it is lifted over the others, which it passes over.
+      element.style.zIndex = puck.drag ? "1" : "";
+      // Squashed along its motion, so a pushed or arriving puck reads as soft.
       const stretch = Math.min(0.2, Math.hypot(puck.vx, puck.vy) / 2800);
       const angle = Math.atan2(puck.vy, puck.vx);
       face.style.transform =
@@ -387,8 +390,12 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
       s.rows = rows;
       homes.forEach((home, i) => {
         const puck = s.pucks[i];
+        const moved = Math.hypot(home.x - puck.hx, home.y - puck.hy) > 0.5;
         puck.hx = home.x;
         puck.hy = home.y;
+        // A new home (the order changed, or the layout): glide there calmly.
+        // An arrival already in flight just heads for the new home.
+        if (moved && !puck.drag && puck.flight?.kind !== "arrival") glideHome(puck, wallClock());
       });
       schedule();
     }
@@ -579,13 +586,14 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
     puck.pressed = false;
     const g = gesture.current;
     if (g?.index === index && g.moved) {
-      // Thrown: it keeps its speed, and the click that ends a drag opens nothing.
+      // The click that ends a drag opens nothing.
       swallowClick.current = index;
-      puck.sv += 3;
       // Dropped: it stays, taking the home nearest where it was let go, and
-      // the others move along to make room.
+      // the others move along to make room. It glides there, with no throw
+      // left in it; the others glide to theirs as their homes change.
       const slot = nearestSlot(s.layout.slots, { x: puck.x, y: puck.y });
       if (slot !== order[index]) setOwnOrder(moveToSlot(order, index, slot));
+      glideHome(puck, wallClock());
     }
     puck.drag = null;
     gesture.current = null;

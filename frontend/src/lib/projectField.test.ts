@@ -4,6 +4,7 @@ import {
   arrivingPucks,
   EDGE,
   fieldLayout,
+  glideHome,
   moveToSlot,
   nearestSlot,
   neighbour,
@@ -108,6 +109,32 @@ describe("stepPucks", () => {
     expect(settled(pucks)).toBe(true);
   });
 
+  it("glides a dropped puck and the ones it displaced straight home, calmly", () => {
+    const env = envFor(7);
+    const pucks = env.layout.slots.map(restingPuck);
+    // Puck 0 dropped near home 2: it and the two it displaced change homes.
+    pucks[0].x = env.layout.slots[2].x + 30;
+    pucks[0].y = env.layout.slots[2].y;
+    [
+      [0, 2],
+      [1, 0],
+      [2, 1],
+    ].forEach(([puck, slot]) => {
+      pucks[puck].hx = env.layout.slots[slot].x;
+      pucks[puck].hy = env.layout.slots[slot].y;
+      glideHome(pucks[puck], 0);
+    });
+    let squash = 0;
+    for (let t = 0; t < 0.6; t += 1 / 60) {
+      env.clock += 1 / 60;
+      stepPucks(pucks, 1 / 60, env);
+      squash = Math.max(squash, ...pucks.map((p) => Math.abs(p.s - 1)));
+    }
+    expect(pucks.every((p) => p.x === p.hx && p.y === p.hy)).toBe(true);
+    expect(squash).toBe(0);
+    expect(settled(pucks)).toBe(true);
+  });
+
   it("parts three pucks pressed together in one step", () => {
     const env = envFor(7);
     const pucks = env.layout.slots.map(restingPuck);
@@ -163,15 +190,13 @@ describe("stepPucks", () => {
     expect(settled(pucks)).toBe(false);
   });
 
-  it("does not let a dragged puck sit on another", () => {
+  it("lifts a dragged puck over the others, which stay home", () => {
     const env = envFor(7);
     const pucks = env.layout.slots.map(restingPuck);
     pucks[0].drag = { x: pucks[1].hx - 10, y: pucks[1].hy };
     run(pucks, env, 0.5);
-    expect(Math.hypot(pucks[1].x - pucks[0].x, pucks[1].y - pucks[0].y)).toBeGreaterThanOrEqual(
-      env.layout.size,
-    );
     expect(pucks[0].x).toBe(pucks[1].hx - 10);
+    expect(pucks.slice(1).every((p) => p.x === p.hx && p.y === p.hy)).toBe(true);
   });
 });
 
