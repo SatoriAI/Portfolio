@@ -53,8 +53,7 @@ import { cn } from "@/lib/utils";
  * it to their homes; after that nothing moves on its own. The reader is the
  * only heat: a mouse moving over the field leaves kernels that spread and
  * fade, as over the menu bar, and the pucks lean a few pixels toward the
- * warmth and spring back. The one under the pointer or focus, or else the
- * warmest, or else the open one, is named in the line under the field. A
+ * warmth and spring back; under the field one line says how to choose. A
  * click on the empty field sends a pulse that nudges the pucks near it; a
  * puck can be dragged and flung, and bounces off the others back home.
  * Choosing one gives it an iris rim inside the site's lavender ring and a
@@ -71,7 +70,7 @@ import { cn } from "@/lib/utils";
 export type ProjectFieldLabels = {
   /** Accessible name of the field's list of projects. */
   field: string;
-  /** Beside the open project in the line under the field while nothing is warm, where a mouse can play. */
+  /** The line under the field, saying how to choose, where a mouse can play. */
   hint: string;
   /** The same, on touch. */
   hintTouch: string;
@@ -124,8 +123,6 @@ const DRAG_THRESHOLD = 6;
 const COLS = 96;
 /** Clear under each puck for its name. */
 const NAME_ROOM = 30;
-/** Warmth below this does not name a puck. */
-const NAMED_WARMTH = 0.06;
 
 /**
  * The field's clock, in seconds of wall time: heat left while the loop is
@@ -149,7 +146,6 @@ type Sim = {
   visible: boolean;
   frame: number | null;
   last: number | null;
-  frames: number;
 };
 
 type Gesture = { index: number; id: number; start: Point; offset: Point; moved: boolean };
@@ -233,8 +229,6 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
     () => fieldLayout(projects.length, width, reducedMotion),
     [projects.length, width, reducedMotion],
   );
-  /** The puck named in the line under the field, or -1. */
-  const [named, setNamed] = useState(-1);
 
   // The room there is, before the first paint and on every resize; not the
   // field's own width, since a still grid is narrower than the room (see
@@ -293,22 +287,6 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
     });
   };
 
-  const name = () => {
-    const s = sim.current;
-    if (!s) return;
-    let index = s.hovered >= 0 ? s.hovered : s.focused;
-    if (index < 0) {
-      let warmest = NAMED_WARMTH;
-      s.pucks.forEach((puck, i) => {
-        if (puck.warmth > warmest) {
-          warmest = puck.warmth;
-          index = i;
-        }
-      });
-    }
-    setNamed(index);
-  };
-
   const busy = (s: Sim) =>
     KIND_NAMES.some((kind) => s.sources[kind].length > 0) ||
     !settled(s.pucks, s.hovered >= 0 ? s.hovered : s.focused);
@@ -345,12 +323,8 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
     });
     write();
     paint();
-    if ((s.frames++ & 3) === 0) name();
     if (busy(s)) schedule();
-    else {
-      s.last = null;
-      name();
-    }
+    else s.last = null;
   };
 
   const schedule = () => {
@@ -390,7 +364,6 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
         visible: s?.visible ?? false,
         frame: null,
         last: null,
-        frames: 0,
       };
     } else {
       s.layout = layout;
@@ -495,7 +468,6 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
       const s = sim.current;
       if (!s || event.pointerType === "touch") return;
       s.hovered = index;
-      name();
       schedule();
     },
     onPointerLeave: () => {
@@ -503,7 +475,6 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
       if (!s) return;
       if (s.hovered === index) s.hovered = -1;
       s.pucks[index].pressed = false;
-      name();
       schedule();
     },
     onFocus: (event: FocusEvent<HTMLButtonElement>) => {
@@ -514,18 +485,16 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
       const puck = s.pucks[index];
       // Focus does not wait for its turn in the arrival.
       if (puck.flight) land(puck);
-      // Only keyboard focus lifts, warms and names a puck; the focus a click
+      // Only keyboard focus lifts and warms a puck; the focus a click
       // leaves behind (see onClick) is not the reader pointing at it.
       if (!event.currentTarget.matches(":focus-visible")) return;
       s.focused = index;
       heat("pointer", { x: puck.hx, y: puck.hy });
-      name();
     },
     onBlur: () => {
       const s = sim.current;
       if (!s) return;
       if (s.focused === index) s.focused = -1;
-      name();
       schedule();
     },
     // A press must not choose the project at once, as a tab otherwise does:
@@ -608,10 +577,6 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
   const phone = layout.width < 640;
   const fade = fadeMask(phone ? 24 : 48, phone ? 32 : 40);
 
-  // The line names the warm one, or else the open one.
-  const selectedIndex = projects.findIndex((project) => project.title === selected);
-  const shown = projects[named >= 0 ? named : selectedIndex];
-
   return (
     // The field has no edge of its own, so its top pad is all the gap the
     // heading above needs: drawn up into the section's usual gap.
@@ -669,22 +634,13 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
         </TabsPrimitive.List>
       </div>
 
-      {/* Just a name: the warm one, or at rest the open one, whose panel
-          below says the rest; at rest also how to choose, on a line of its
-          own on a phone. */}
-      <div
+      {/* How to choose: the pucks say the rest, the panel below the open one. */}
+      <p
         style={{ maxWidth: layout.width || undefined }}
-        className="flex min-h-11 w-full flex-wrap items-center gap-x-3 gap-y-1 self-center px-1"
+        className="w-full self-center px-1 font-mono text-meta text-muted-foreground"
       >
-        {shown && (
-          <p className="min-w-[8rem] flex-1 truncate text-base font-semibold">{shown.title}</p>
-        )}
-        {named < 0 && (
-          <p className="basis-full font-mono text-meta text-muted-foreground sm:shrink-0 sm:basis-auto">
-            {!canHover ? labels.hintTouch : layout.still ? labels.hintStill : labels.hint}
-          </p>
-        )}
-      </div>
+        {!canHover ? labels.hintTouch : layout.still ? labels.hintStill : labels.hint}
+      </p>
     </div>
   );
 };
