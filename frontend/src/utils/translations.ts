@@ -66,6 +66,9 @@ const copy = {
       },
       pasteCut: "Cut to 1,000 characters",
       typing: "Vex is typing",
+      // Read out once a reply has finished, before its text.
+      replied: "Vex replied:",
+      noAnswer: "Vex couldn't find an answer. Try asking another way.",
       conversation: "Conversation with Vex",
       clear: "Clear",
       send: "Send",
@@ -726,6 +729,8 @@ const copy = {
       },
       pasteCut: "Przycięto do 1000 znaków",
       typing: "Vex pisze",
+      replied: "Vex odpowiedział:",
+      noAnswer: "Vex nie znalazł odpowiedzi — spróbuj zapytać inaczej.",
       conversation: "Rozmowa z Vexem",
       clear: "Wyczyść",
       send: "Wyślij",

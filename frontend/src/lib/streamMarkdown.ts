@@ -109,3 +109,16 @@ export const normalizeMarkdown = (input: string): string => {
 
   return endWithNewline(s);
 };
+
+// A line of only `-` or `=` under a paragraph turns the paragraph into a
+// heading (a setext heading), and a lone `-` is how a list item starts. Mid-
+// stream such a line is usually unfinished: the model is part-way through a
+// rule, or a list item.
+const PARTIAL_UNDERLINE = /\n {0,3}(?:-+|=+)[ \t]*$/;
+
+/**
+ * Hold back the last line of a reply still streaming while it consists only of
+ * `-` or `=`, so the paragraph above it does not flash as a heading before the
+ * rest of the line arrives. Once the line ends, or the reply does, it shows.
+ */
+export const holdBackUnderline = (text: string): string => text.replace(PARTIAL_UNDERLINE, "\n");

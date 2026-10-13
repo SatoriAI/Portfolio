@@ -1,6 +1,26 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizeMarkdown } from "./streamMarkdown";
+import { holdBackUnderline, normalizeMarkdown } from "./streamMarkdown";
+
+describe("holdBackUnderline", () => {
+  it("holds back a trailing line of dashes or equals signs", () => {
+    expect(holdBackUnderline("A paragraph\n-")).toBe("A paragraph\n");
+    expect(holdBackUnderline("A paragraph\n---")).toBe("A paragraph\n");
+    expect(holdBackUnderline("A paragraph\n  ==")).toBe("A paragraph\n");
+    expect(normalizeMarkdown(holdBackUnderline("A paragraph\n--"))).toBe("A paragraph\n");
+  });
+
+  it("shows the line once more of it arrives", () => {
+    expect(holdBackUnderline("Intro\n- item")).toBe("Intro\n- item");
+    expect(holdBackUnderline("Intro\n---\n")).toBe("Intro\n---\n");
+    expect(holdBackUnderline("Intro\n-- not a rule")).toBe("Intro\n-- not a rule");
+  });
+
+  it("leaves dashes inside a line alone", () => {
+    expect(holdBackUnderline("one - two")).toBe("one - two");
+    expect(holdBackUnderline("---")).toBe("---");
+  });
+});
 
 describe("normalizeMarkdown", () => {
   it("always ends with a newline", () => {

@@ -54,36 +54,30 @@ interface ChatWidgetProps {
   onInitialQuestionSent?: () => void;
 }
 
-class MarkdownBoundary extends React.Component<
-  { fallback: React.ReactNode; resetKey: string; children: React.ReactNode },
-  { hasError: boolean }
-> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false };
-  }
+interface MarkdownBoundaryProps {
+  fallback: React.ReactNode;
+  resetKey: string;
+  children: React.ReactNode;
+}
+
+/** Shows a reply as plain text if its markdown fails to render, and retries when the text changes. */
+class MarkdownBoundary extends React.Component<MarkdownBoundaryProps, { hasError: boolean }> {
+  state = { hasError: false };
   static getDerivedStateFromError() {
     return { hasError: true };
   }
-  componentDidCatch(err: any) {
+  componentDidCatch(err: unknown) {
     console.error("Markdown render error", err);
   }
-  componentDidUpdate(
-    prevProps: Readonly<{ fallback: React.ReactNode; resetKey: string; children: React.ReactNode }>,
-  ): void {
+  componentDidUpdate(prevProps: Readonly<MarkdownBoundaryProps>): void {
     if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
       this.setState({ hasError: false });
     }
   }
   render() {
-    if (this.state.hasError) return this.props.fallback as any;
-    return this.props.children as any;
+    return this.state.hasError ? this.props.fallback : this.props.children;
   }
 }
-
-// Note: We previously used an error boundary fallback for markdown.
-// Rendering errors are unlikely with react-markdown, and the fallback could mask formatting.
-// We render markdown directly to ensure live formatting.
 
 const ChatWidget = ({
   isOpen,
@@ -109,8 +103,8 @@ const ChatWidget = ({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const initialScrollDoneRef = useRef(false);
   // Starter questions must not flash for a returning visitor whose history is
-  // still being fetched.
-  const [hydrated, setHydrated] = useState(false);
+  // still being fetched, and a question waits for it (see chatReducer).
+  const { hydrated } = chat;
 
   // A key the backend turned away (left over from an older format, or edited)
   // is dropped, so the next question starts a new conversation instead of
@@ -126,24 +120,21 @@ const ChatWidget = ({
   const hydrateMessagesIfNeeded = async () => {
     const run = ++hydration.current;
     const storedKey = localStorage.getItem(SESSION_STORAGE_KEY);
-    if (!storedKey) {
-      setHydrated(true);
-      return;
+    let stored: StoredMessage[] | null = null;
+    if (storedKey) {
+      try {
+        // The key goes in a header, not the URL, so it never lands in access logs.
+        stored = await apiFetch<StoredMessage[]>(endpoints.vex.messages.list, {
+          headers: { "X-Vex-Session": storedKey },
+        });
+      } catch (err) {
+        // A rejected key has no history to load: with it gone, the chat starts
+        // empty and the first question opens a new conversation.
+        if (vexRequestErrorCode(err) === "invalid_session") forgetSession();
+        else console.error("Failed to hydrate chat history", err);
+      }
     }
-    try {
-      // The key goes in a header, not the URL, so it never lands in access logs.
-      const stored = await apiFetch<StoredMessage[]>(endpoints.vex.messages.list, {
-        headers: { "X-Vex-Session": storedKey },
-      });
-      if (run === hydration.current) dispatch({ type: "hydrated", stored });
-    } catch (err) {
-      // A rejected key has no history to load: with it gone, the chat starts
-      // empty and the first question opens a new conversation.
-      if (vexRequestErrorCode(err) === "invalid_session") forgetSession();
-      else console.error("Failed to hydrate chat history", err);
-    } finally {
-      if (run === hydration.current) setHydrated(true);
-    }
+    if (run === hydration.current) dispatch({ type: "hydrated", stored });
   };
 
   // Body scroll locking is handled by the Dialog while it is open.
@@ -155,11 +146,11 @@ const ChatWidget = ({
 
     // Every open reloads the history (the server keeps only finished answers,
     // so one cut off by closing is gone, question and all), and a question
-    // handed over waits for it: sent first, it would be overwritten by the
-    // history arriving after it.
-    setHydrated(false);
+    // asked or handed over meanwhile waits for it in the queue: sent first, it
+    // would be overwritten by the history arriving after it.
     hydrateMessagesIfNeeded();
-    // Closing abandons the reply in flight; the answer effect aborts its request.
+    // Closing abandons the reply in flight (the answer effect aborts its
+    // request) and marks the history stale for the next open.
     return () => dispatch({ type: "stop" });
   }, [isOpen]);
 
@@ -211,14 +202,12 @@ const ChatWidget = ({
 
   // Answers one question. Every failure — a refusal, a server error, or
   // silence — ends in the same visible state: an inline notice that says why,
-  // with a way to reach me instead. The toast is only a secondary signal, in
-  // the site's words, never the provider's. An aborted request (the chat
-  // closed or cleared, or the watchdog gave up) reports nothing more.
-  const answer = async (question: string, signal: AbortSignal) => {
-    const fail = (code: VexErrorCode) => {
-      dispatch({ type: "fail", code });
-      notify.error(t.chat.errors[code]);
-    };
+  // in the site's words, never the provider's, with a way to reach me instead.
+  // An aborted request (the chat closed or cleared, or the watchdog gave up)
+  // reports nothing more. Every action names its turn, so a request that
+  // outlives its turn cannot write into the next one.
+  const answer = async (question: string, turn: number, signal: AbortSignal) => {
+    const fail = (code: VexErrorCode) => dispatch({ type: "fail", turn, code });
     let watchdog = 0;
     const arm = () => {
       window.clearTimeout(watchdog);
@@ -236,11 +225,11 @@ const ChatWidget = ({
         signal,
         onDelta: (text) => {
           arm();
-          dispatch({ type: "delta", text });
+          dispatch({ type: "delta", turn, text });
         },
       });
       if (signal.aborted) return;
-      if (end.kind === "done") dispatch({ type: "done" });
+      if (end.kind === "done") dispatch({ type: "done", turn });
       else fail(end.code);
     } catch (err) {
       if (signal.aborted) return;
@@ -261,7 +250,7 @@ const ChatWidget = ({
   useEffect(() => {
     if (turn === undefined || activeQuestion === undefined) return;
     const controller = new AbortController();
-    void answerRef.current(activeQuestion, controller.signal);
+    void answerRef.current(activeQuestion, turn, controller.signal);
     return () => controller.abort();
   }, [turn, activeQuestion, answerRef]);
 
@@ -272,6 +261,9 @@ const ChatWidget = ({
     setInputValue("");
     setPasteCut(false);
     setIsMultilineInput(false);
+    // Focus stays in the composer, also when the question came from a starter
+    // button, which the conversation replaces.
+    textareaRef.current?.focus();
     // Reset textarea height back to a single line
     requestAnimationFrame(() => {
       const el = textareaRef.current;
@@ -282,19 +274,22 @@ const ChatWidget = ({
   };
 
   // A question handed over from the page (the hero's ask bar, a project's
-  // "ask Vex about this") goes out once history has loaded, so it lands after
-  // any earlier conversation rather than before it. One handed over while a
-  // reply is streaming waits its turn in the queue and goes out after it.
+  // "ask Vex about this") waits in the queue until history has loaded, so it
+  // lands after any earlier conversation rather than before it, and after any
+  // reply still streaming.
   useEffect(() => {
-    if (!isOpen || !hydrated || !initialQuestion) return;
+    if (!isOpen || !initialQuestion) return;
     onInitialQuestionSent?.();
     dispatch({ type: "ask", question: initialQuestion });
-  }, [isOpen, hydrated, initialQuestion, onInitialQuestionSent]);
+  }, [isOpen, initialQuestion, onInitialQuestionSent]);
 
   const handleClearChat = () => {
+    // A history load still in flight belongs to the forgotten conversation.
+    hydration.current++;
     dispatch({ type: "clear" });
     forgetSession();
-    notify.success(t.chat.clear);
+    // At the top: the default corner is where the chat's composer sits.
+    notify.success(t.chat.clear, { position: "top-center" });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -332,6 +327,15 @@ const ChatWidget = ({
   ) : null;
 
   const showEmptyState = messages.length === 0 && !isStreaming;
+
+  // What the status region reads out once a turn finishes: the whole reply in
+  // one go, rather than the log announcing it word by word as it streams.
+  const finished = messages.find((m) => m.id === chat.finishedId);
+  const announcement = !finished
+    ? ""
+    : finished.noAnswer
+      ? t.chat.noAnswer
+      : `${t.chat.replied} ${finished.text}`;
 
   const lengthId = useId();
   const showLength = pasteCut || inputValue.length >= LENGTH_COUNTER_FROM;
@@ -379,16 +383,10 @@ const ChatWidget = ({
         <div className="flex min-h-0 flex-1 flex-col">
           <ScrollArea className="flex-1 p-4">
             {showEmptyState && emptyState}
-            {/* The conversation is a log: what is added to it is read out
-                politely. While a reply streams it is busy, so a screen reader
-                waits and reads the finished reply once, not every word. */}
-            <div
-              role="log"
-              aria-live="polite"
-              aria-busy={isStreaming}
-              aria-label={t.chat.conversation}
-              className="space-y-4"
-            >
+            {/* The conversation is a log, but a silent one: streamed in word
+                by word, it would be read out word by word. A finished reply is
+                read once by the status region below; a failure by its alert. */}
+            <div role="log" aria-live="off" aria-label={t.chat.conversation} className="space-y-4">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -414,6 +412,10 @@ const ChatWidget = ({
                     {message.isUser ? (
                       <p className="not-prose m-0 whitespace-pre-wrap break-words text-sm leading-6">
                         {message.text}
+                      </p>
+                    ) : message.noAnswer ? (
+                      <p className="not-prose m-0 text-sm leading-relaxed text-muted-foreground">
+                        {t.chat.noAnswer}
                       </p>
                     ) : message.error ? (
                       <p
@@ -445,7 +447,10 @@ const ChatWidget = ({
                             </p>
                           }
                         >
-                          <MarkdownMessage text={message.text} />
+                          <MarkdownMessage
+                            text={message.text}
+                            streaming={message.id === chat.replyId}
+                          />
                         </Suspense>
                       </MarkdownBoundary>
                     )}
@@ -480,6 +485,9 @@ const ChatWidget = ({
             )}
             <div ref={bottomRef} />
           </ScrollArea>
+          <div role="status" className="sr-only">
+            {announcement}
+          </div>
 
           <div className="border-t border-border p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
             <div
@@ -506,7 +514,10 @@ const ChatWidget = ({
                 maxLength={VEX_QUESTION_MAX_LENGTH}
                 rows={1}
                 className={`max-h-40 w-full resize-none break-all border-0 bg-transparent p-0 leading-6 text-foreground shadow-none outline-none ring-0 ring-offset-0 placeholder:text-muted-foreground focus:shadow-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${!isMultilineInput ? "pr-12" : ""}`}
-                disabled={isLoading || isStreaming}
+                // Read-only rather than disabled while a reply streams: a
+                // disabled field drops the focus to the page.
+                readOnly={isStreaming}
+                aria-disabled={isStreaming}
                 style={{ height: "auto" }}
                 onInput={(e) => {
                   const el = e.currentTarget;

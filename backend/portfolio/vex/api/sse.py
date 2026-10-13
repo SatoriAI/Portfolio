@@ -28,7 +28,8 @@ logger = logging.getLogger(__name__)
 
 # The longest one answer may stream. Under gunicorn's threaded workers the worker timeout no longer bounds a request
 # (the worker stays alive while a thread streams), so this is what stops one answer holding a thread indefinitely.
-# It is checked between chunks: a provider that stalls mid-answer is bounded by its own client timeout.
+# It is checked between chunks; a provider that stalls mid-answer is bounded instead by the client's read timeout
+# (vex.ai.provider), which ends the stream with an error.
 STREAM_MAX_SECONDS = 120
 
 

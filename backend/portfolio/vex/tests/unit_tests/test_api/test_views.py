@@ -24,7 +24,7 @@ class ChatViewTestCase(TestCase):
         url = reverse("vex:chat")
         resp = self.client.post(url, data={})
         self.assertEqual(resp.status_code, 400)
-        self.assertEqual(resp.json()["error"], "Empty question")
+        self.assertEqual(resp.json(), {"code": "invalid_question"})
 
     def test_post_returns_session_and_csrf(self) -> None:
         url = reverse("vex:chat")

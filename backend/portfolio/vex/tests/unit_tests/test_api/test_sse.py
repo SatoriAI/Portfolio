@@ -164,11 +164,11 @@ class ChatStreamViewTestCase(TestCase):
 
     def test_requires_a_question(self) -> None:
         with patch("vex.ai.rag.get_rag_chain") as chain:
-            for data in ({}, {"question": ""}):
+            for data in ({}, {"question": ""}, {"question": " \n\t "}, {"question": 5}):
                 with self.subTest(data=data):
-                    self.assertEqual(self.post(data, session_key()).status_code, 400)
-            resp = self.post({"question": 5}, session_key())
-        self.assertEqual(resp.json(), {"code": "invalid_question"})
+                    resp = self.post(data, session_key())
+                    self.assertEqual(resp.status_code, 400)
+                    self.assertEqual(resp.json(), {"code": "invalid_question"})
         chain.assert_not_called()
 
     def test_rejects_an_overlong_question(self) -> None:

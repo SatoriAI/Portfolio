@@ -7,15 +7,16 @@ from pathlib import Path
 from typing import Any, cast
 
 from django.conf import settings
-from langchain_core.messages import AIMessage, HumanMessage
-from langchain_core.output_parsers import StrOutputParser
+from django.db import transaction
+from langchain_core.messages import AIMessage, BaseMessageChunk, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables import RunnablePassthrough, RunnableSerializable
+from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import ChatOpenAI
 
 from vex.ai.database.relational import RelationalContextGetter
 from vex.ai.database.vector import retriever_topk
 from vex.ai.history import MessageHistory
+from vex.ai.provider import MAX_RETRIES, TIMEOUT
 from vex.models import Configuration
 
 
@@ -39,7 +40,9 @@ class RagChain:
 
     def __init__(self) -> None:
         self.config = self._get_config()
-        self.llm = ChatOpenAI(model=self.config.model, temperature=self.config.temperature)
+        self.llm = ChatOpenAI(
+            model=self.config.model, temperature=self.config.temperature, timeout=TIMEOUT, max_retries=MAX_RETRIES
+        )
 
     @staticmethod
     def _get_config() -> RagConfig | Configuration:
@@ -57,8 +60,19 @@ class RagChain:
             user_prompt="Question: {question}\nContext: {context}",
         )
 
-    def build(self) -> RunnableSerializable[dict[str, Any], str]:
-        return RunnablePassthrough.assign(context=self._merge_context) | self.prompt | self.llm | StrOutputParser()
+    def stream(self, inputs: dict[str, Any]) -> Generator[str]:
+        """The model's answer to `inputs`, as text chunks.
+
+        The model is streamed on its own rather than as the last step of one LangChain pipeline: a pipeline's stream
+        swallows GeneratorExit and reads its input to the end, so closing it would still receive (and pay for) the
+        whole answer. Closing this generator closes the model's stream, and with it the provider's HTTP response."""
+        values = RunnablePassthrough.assign(context=self._merge_context).invoke(inputs)
+        prompt = self.prompt(values).invoke(values)
+        # BaseChatModel.stream is a generator, typed as a plain Iterator.
+        with closing(cast(Generator[BaseMessageChunk], self.llm.stream(prompt))) as chunks:
+            for chunk in chunks:
+                if isinstance(chunk.content, str) and chunk.content:
+                    yield chunk.content
 
     def prompt(self, values: dict[str, Any]) -> ChatPromptTemplate:
         locale = values.get("locale") or settings.LANGUAGE_CODE
@@ -106,21 +120,13 @@ class RagChain:
             f.write(merged)
 
 
-Chain = RunnableSerializable[dict[str, Any], str]
+_rag_chain: RagChain | None = None
 
 
-def build_rag_chain() -> Chain:
-    pipeline = RagChain()
-    return pipeline.build()
-
-
-_rag_chain: Chain | None = None
-
-
-def get_rag_chain() -> Chain:
+def get_rag_chain() -> RagChain:
     global _rag_chain  # pylint: disable=global-statement
     if _rag_chain is None:
-        _rag_chain = build_rag_chain()
+        _rag_chain = RagChain()
     return _rag_chain
 
 
@@ -129,15 +135,16 @@ def stream_answer(question: str, locale: str, session_key: str) -> Generator[str
 
     The exchange is saved once the answer is complete, and only then. An answer cut short (the visitor left, the
     provider failed, the stream ran out of time) saves nothing, so the history the model reads back never holds half
-    a turn. Closing this generator closes the chain's stream with it, which closes the provider's response: a
-    visitor who leaves stops the generation, not only the reading of it."""
+    a turn, and the question and its answer are saved together or not at all. Closing this generator closes the
+    model's stream with it (see RagChain.stream), which closes the provider's response: a visitor who leaves stops
+    the generation, not only the reading of it."""
     history = MessageHistory(session_key)
     answer: list[str] = []
     inputs = {"question": question, "locale": locale, "history": history.messages}
-    # Runnable.stream is a generator, typed as a plain Iterator.
-    with closing(cast(Generator[str], get_rag_chain().stream(inputs))) as chunks:
+    with closing(get_rag_chain().stream(inputs)) as chunks:
         for chunk in chunks:
             if chunk:
                 answer.append(chunk)
                 yield chunk
-    history.add_messages([HumanMessage(question), AIMessage("".join(answer))])
+    with transaction.atomic():
+        history.add_messages([HumanMessage(question), AIMessage("".join(answer))])

@@ -28,8 +28,8 @@ def question_refusal(question: object) -> Response | None:
     """Why a question cannot be put to the model, as the 400 that says so, or None when it can."""
     if question is not None and not isinstance(question, str):
         return Response({"code": "invalid_question"}, status=status.HTTP_400_BAD_REQUEST)
-    if not question:
-        return Response({"error": "Empty question"}, status=status.HTTP_400_BAD_REQUEST)
+    if not question or not question.strip():
+        return Response({"code": "invalid_question"}, status=status.HTTP_400_BAD_REQUEST)
     if len(question) > QUESTION_MAX_LENGTH:
         return Response({"code": "question_too_long"}, status=status.HTTP_400_BAD_REQUEST)
     return None
