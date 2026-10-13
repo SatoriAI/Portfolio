@@ -1,87 +1,100 @@
 import json
 import logging
+import time
 from collections.abc import Iterator, Mapping
-from typing import Any
+from contextlib import closing
 
 from django.conf import settings
 from django.http import StreamingHttpResponse
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
-from rest_framework.renderers import BaseRenderer, JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from utils.functions import ensure_session
-from vex.ai.rag import get_rag_chain
+from vex.ai.rag import stream_answer
 from vex.api.limits import (
-    QUESTION_MAX_LENGTH,
+    SESSION_HEADER,
     RateLimitedMixin,
     VexDailyThrottle,
     VexSessionThrottle,
     VexThrottle,
+    body_field,
+    question_refusal,
 )
 from vex.utils.session import is_valid_session_key
 
 logger = logging.getLogger(__name__)
 
-
-class EventStreamRenderer(BaseRenderer):
-    """Lets an EventSource (Accept: text/event-stream) through content negotiation. The stream itself bypasses
-    renderers; only a refusal (400, 429) is rendered, as the same small JSON a plain client would get."""
-
-    media_type = "text/event-stream"
-    format = "sse"
-
-    def render(
-        self, data: Any, accepted_media_type: str | None = None, renderer_context: Mapping[str, Any] | None = None
-    ) -> bytes:
-        return json.dumps(data).encode()
+# The longest one answer may stream. Under gunicorn's threaded workers the worker timeout no longer bounds a request
+# (the worker stays alive while a thread streams), so this is what stops one answer holding a thread indefinitely.
+# It is checked between chunks; a provider that stalls mid-answer is bounded instead by the client's read timeout
+# (vex.ai.provider), which ends the stream with an error.
+STREAM_MAX_SECONDS = 120
 
 
+def sse_event(event: str, data: Mapping[str, object]) -> str:
+    """One server-sent event. The payload is always JSON on a single data line: json.dumps escapes every newline,
+    so no text the model writes can end an event early or start a field of its own."""
+    return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+@extend_schema(summary="Stream an answer", tags=["Vex"])
 class ChatStreamView(RateLimitedMixin, APIView):
-    # The key still rides in the query string here, because EventSource cannot send headers; that lasts only until
-    # streaming moves to a POST. EventSource also cannot read a refusal's body or status, so a 400 or 429 here
-    # reaches the visitor as "unavailable". In practice they are not reached: the question POST that precedes every
-    # stream is validated and throttled first, and turns the visitor away with the right code.
-    renderer_classes = [JSONRenderer, EventStreamRenderer]
+    """Answers one question as a text/event-stream: `delta` events carrying `{"t": text}`, then `done`, or an
+    `error` carrying only `{"code": …}`. A POST, so the question rides in the body and the conversation in the
+    X-Vex-Session header (as for the history), and neither lands in an access log. A refusal (400, 429) comes back
+    as ordinary JSON with its status, which fetch can read."""
+
     throttle_scope = "vex_stream"
     throttle_classes = [VexThrottle, VexDailyThrottle, VexSessionThrottle]
 
     @staticmethod
     def get_session_key(request: Request) -> str | None:
-        return request.query_params.get("session_key")
+        return request.headers.get(SESSION_HEADER)
 
-    def get(self, request: Request) -> StreamingHttpResponse | Response:
-        if not (question := (request.query_params.get("question") or "").strip()):
-            return Response({"error": "You request must contain a question."}, status=status.HTTP_400_BAD_REQUEST)
-        if len(question) > QUESTION_MAX_LENGTH:
-            return Response({"code": "question_too_long"}, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request: Request) -> StreamingHttpResponse | Response:
+        question = body_field(request, "question")
+        if refusal := question_refusal(question):
+            return refusal
 
         session_key = self.get_session_key(request)
-        if session_key and not is_valid_session_key(session_key):
+        if not session_key:
+            return Response({"code": "session_required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not is_valid_session_key(session_key):
             return Response({"code": "invalid_session"}, status=status.HTTP_400_BAD_REQUEST)
-        session_key = session_key or ensure_session(request=request)
-        locale = request.query_params.get("locale") or settings.LANGUAGE_CODE
 
-        def event_stream() -> Iterator[str]:
-            yield "event: received\ndata: ok\n\n"
-            try:
-                chain = get_rag_chain()
-                for chunk in chain.stream(
-                    {"question": question, "locale": locale},
-                    config={"configurable": {"session_id": session_key}},
-                ):
-                    if not chunk:
-                        continue
-                    yield f"data: {chunk}\n\n"
-                yield "event: finished\ndata: done\n\n"
-            except Exception:  # pylint: disable=broad-exception-caught
-                # The provider's own message (billing, quota, keys) is for the log, never for the visitor.
-                logger.exception("Vex stream failed")
-                yield f"event: error\ndata: {json.dumps({'code': 'unavailable'})}\n\n"
+        locale = body_field(request, "locale")
+        if locale not in dict(settings.LANGUAGES):
+            locale = settings.LANGUAGE_CODE
 
-        response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+        response = StreamingHttpResponse(
+            self.events(question=question, locale=locale, session_key=session_key),
+            content_type="text/event-stream",
+        )
         response["Cache-Control"] = "no-cache"
         response["X-Accel-Buffering"] = "no"
-
         return response
+
+    @staticmethod
+    def events(question: str, locale: str, session_key: str) -> Iterator[str]:
+        deadline = time.monotonic() + STREAM_MAX_SECONDS
+        try:
+            # A visitor who leaves surfaces here as GeneratorExit, raised by the server at the next write: closing
+            # the answer's stream on the way out stops the generation and saves nothing (see stream_answer).
+            with closing(stream_answer(question=question, locale=locale, session_key=session_key)) as chunks:
+                for chunk in chunks:
+                    yield sse_event("delta", {"t": chunk})
+                    if time.monotonic() > deadline:
+                        logger.warning("Vex stream stopped after %ss", STREAM_MAX_SECONDS)
+                        yield sse_event("error", {"code": "timeout"})
+                        return
+            yield sse_event("done", {})
+        except GeneratorExit:
+            # A warning, so it reaches the log without a LOGGING setting: an abandoned answer still cost a call.
+            logger.warning("Vex stream stopped: the client went away mid-answer")
+            raise
+        except Exception:  # pylint: disable=broad-exception-caught
+            # The provider's own message (billing, quota, keys) is for the log, never for the visitor.
+            logger.exception("Vex stream failed")
+            yield sse_event("error", {"code": "unavailable"})

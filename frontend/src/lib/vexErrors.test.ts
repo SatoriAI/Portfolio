@@ -49,8 +49,8 @@ describe("vexStreamErrorCode", () => {
     expect(vexStreamErrorCode('{"code": "rate_limited"}')).toBe("rate_limited");
   });
 
-  it("falls back to unavailable for the browser's own error event or provider text", () => {
-    expect(vexStreamErrorCode(undefined)).toBe("unavailable");
+  it("falls back to unavailable for anything that is not a known code", () => {
+    expect(vexStreamErrorCode("{}")).toBe("unavailable");
     expect(vexStreamErrorCode("You exceeded your current quota")).toBe("unavailable");
   });
 });

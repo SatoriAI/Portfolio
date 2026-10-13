@@ -30,7 +30,9 @@ function codeIn(json: string): VexErrorCode | null {
 
 /** A failed request: the backend's code when it sent one, otherwise "unavailable". */
 export function vexRequestErrorCode(err: unknown): VexErrorCode {
-  // An aborted fetch is the widget's own timeout giving up on the request.
+  // An abort is the widget giving up on the request. The widget settles its
+  // own aborts (closing, Clear, the watchdog) before asking, so this is only
+  // a fallback.
   if ((err as { name?: unknown } | null)?.name === "AbortError") return "timeout";
   if (!(err instanceof ApiError)) return "unavailable";
   if (err.status === 429) {
@@ -40,10 +42,7 @@ export function vexRequestErrorCode(err: unknown): VexErrorCode {
   return codeIn(err.body) ?? "unavailable";
 }
 
-/**
- * An `error` event on the stream. The backend's own event carries `{"code": …}`;
- * the browser's native one (dropped connection, refused request) carries nothing.
- */
-export function vexStreamErrorCode(data: unknown): VexErrorCode {
-  return (typeof data === "string" && codeIn(data)) || "unavailable";
+/** The `error` event that ends a stream: the backend's code, never the provider's words. */
+export function vexStreamErrorCode(data: string): VexErrorCode {
+  return codeIn(data) ?? "unavailable";
 }

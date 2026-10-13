@@ -5,13 +5,17 @@ from langchain_community.vectorstores import PGVector
 from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_openai import OpenAIEmbeddings
 
+from vex.ai.provider import MAX_RETRIES, TIMEOUT
+
 
 @lru_cache(maxsize=1)
 def store() -> PGVector:
     return PGVector(
         connection_string=settings.DATABASE_URL,
         collection_name=settings.VECTOR_DB_COLLECTION,
-        embedding_function=OpenAIEmbeddings(model=settings.VECTOR_TEXT_EMBEDDING_MODEL),
+        embedding_function=OpenAIEmbeddings(
+            model=settings.VECTOR_TEXT_EMBEDDING_MODEL, timeout=TIMEOUT, max_retries=MAX_RETRIES
+        ),
         use_jsonb=settings.VECTOR_USE_JSONB,
     )
 

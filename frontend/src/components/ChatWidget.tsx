@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
+import React, { lazy, Suspense, useEffect, useId, useReducer, useRef, useState } from "react";
 import { AlertCircle, Bot, MessageSquare, Send, Trash2, User } from "lucide-react";
 
 import { BrandSymbol } from "@/components/brand/BrandLogo";
@@ -8,18 +8,14 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { toast as notify } from "@/components/ui/sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { EMAIL } from "@/config/contact";
-import { buildUrl, endpoints } from "@/config/endpoints";
+import { endpoints } from "@/config/endpoints";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useLatest } from "@/hooks/use-latest";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { apiFetch } from "@/lib/apiClient";
-import { decodeStreamData, finalizeMarkdown } from "@/lib/streamMarkdown";
-import {
-  VEX_QUESTION_MAX_LENGTH,
-  type VexErrorCode,
-  vexRequestErrorCode,
-  vexStreamErrorCode,
-} from "@/lib/vexErrors";
+import { chatReducer, initialChatState, isWaiting, type StoredMessage } from "@/lib/vexChat";
+import { VEX_QUESTION_MAX_LENGTH, type VexErrorCode, vexRequestErrorCode } from "@/lib/vexErrors";
+import { streamVexAnswer } from "@/lib/vexStream";
 import { translations } from "@/utils/translations";
 
 // react-markdown and its remark pipeline are the heaviest part of the widget;
@@ -34,15 +30,6 @@ const STREAM_TIMEOUT_MS = 30_000;
 const LENGTH_COUNTER_FROM = VEX_QUESTION_MAX_LENGTH - 100;
 
 const SESSION_STORAGE_KEY = "vex_chat_session_key";
-
-interface Message {
-  id: string;
-  text: string;
-  isUser: boolean;
-  timestamp: Date;
-  /** Set on the inline notice appended when a request fails or stalls: why it did. */
-  error?: VexErrorCode;
-}
 
 /** The fallback sentence, with the address in it as a mailto link. */
 const ContactFallback = ({ sentence }: { sentence: string }) => {
@@ -61,42 +48,36 @@ const ContactFallback = ({ sentence }: { sentence: string }) => {
 interface ChatWidgetProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Sent as the visitor's first message as soon as the chat is open and hydrated. */
+  /** Sent as the visitor's message once the chat is open and hydrated, after any reply in flight. */
   initialQuestion?: string | null;
   /** Called once the initial question has been taken, so it is not sent twice. */
   onInitialQuestionSent?: () => void;
 }
 
-class MarkdownBoundary extends React.Component<
-  { fallback: React.ReactNode; resetKey: string; children: React.ReactNode },
-  { hasError: boolean }
-> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false };
-  }
+interface MarkdownBoundaryProps {
+  fallback: React.ReactNode;
+  resetKey: string;
+  children: React.ReactNode;
+}
+
+/** Shows a reply as plain text if its markdown fails to render, and retries when the text changes. */
+class MarkdownBoundary extends React.Component<MarkdownBoundaryProps, { hasError: boolean }> {
+  state = { hasError: false };
   static getDerivedStateFromError() {
     return { hasError: true };
   }
-  componentDidCatch(err: any) {
+  componentDidCatch(err: unknown) {
     console.error("Markdown render error", err);
   }
-  componentDidUpdate(
-    prevProps: Readonly<{ fallback: React.ReactNode; resetKey: string; children: React.ReactNode }>,
-  ): void {
+  componentDidUpdate(prevProps: Readonly<MarkdownBoundaryProps>): void {
     if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
       this.setState({ hasError: false });
     }
   }
   render() {
-    if (this.state.hasError) return this.props.fallback as any;
-    return this.props.children as any;
+    return this.state.hasError ? this.props.fallback : this.props.children;
   }
 }
-
-// Note: We previously used an error boundary fallback for markdown.
-// Rendering errors are unlikely with react-markdown, and the fallback could mask formatting.
-// We render markdown directly to ensure live formatting.
 
 const ChatWidget = ({
   isOpen,
@@ -107,49 +88,28 @@ const ChatWidget = ({
   const { language } = useSettings();
   const t = translations[language];
   const prefersReducedMotion = usePrefersReducedMotion();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [chat, dispatch] = useReducer(chatReducer, initialChatState);
+  const { messages } = chat;
+  // A reply is in flight from the question until its stream ends.
+  const isStreaming = chat.active !== null;
+  // Waiting for its first word: the typing indicator shows.
+  const isLoading = isWaiting(chat);
   const [inputValue, setInputValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isStreaming, setIsStreaming] = useState(false);
   const [isMultilineInput, setIsMultilineInput] = useState(false);
   // A paste the length limit cut short, said once beside the counter.
   const [pasteCut, setPasteCut] = useState(false);
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const sessionKeyRef = useRef<string | null>(null);
   const csrfTokenRef = useRef<string | null>(null);
-  const hasReceivedFirstChunkRef = useRef(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const initialScrollDoneRef = useRef(false);
-  const watchdogRef = useRef<number | null>(null);
   // Starter questions must not flash for a returning visitor whose history is
-  // still being fetched.
-  const [hydrated, setHydrated] = useState(false);
-
-  const clearWatchdog = () => {
-    if (watchdogRef.current !== null) {
-      window.clearTimeout(watchdogRef.current);
-      watchdogRef.current = null;
-    }
-  };
-
-  const closeExistingStream = () => {
-    clearWatchdog();
-    if (eventSourceRef.current) {
-      try {
-        eventSourceRef.current.close();
-      } catch {
-        /* noop */
-      }
-      eventSourceRef.current = null;
-    }
-  };
+  // still being fetched, and a question waits for it (see chatReducer).
+  const { hydrated } = chat;
 
   // A key the backend turned away (left over from an older format, or edited)
   // is dropped, so the next question starts a new conversation instead of
   // failing on the old one for good.
   const forgetSession = () => {
-    sessionKeyRef.current = null;
     csrfTokenRef.current = null;
     localStorage.removeItem(SESSION_STORAGE_KEY);
   };
@@ -160,43 +120,21 @@ const ChatWidget = ({
   const hydrateMessagesIfNeeded = async () => {
     const run = ++hydration.current;
     const storedKey = localStorage.getItem(SESSION_STORAGE_KEY);
-    sessionKeyRef.current = storedKey;
-    if (!storedKey) {
-      setHydrated(true);
-      return;
-    }
-    try {
-      // The key goes in a header, not the URL, so it never lands in access logs.
-      const data = await apiFetch<any>(endpoints.vex.messages.list, {
-        headers: { "X-Vex-Session": storedKey },
-      });
-      const items: any[] = Array.isArray(data?.results)
-        ? data.results
-        : Array.isArray(data)
-          ? data
-          : [];
-      if (items.length) {
-        const mapped: Message[] = items.map((m, idx) => {
-          const isUser = m.role === "user" || m.is_user === true || m.sender === "user";
-          const text = m.text || m.content || m.message || "";
-          const ts = m.created_at || m.timestamp || new Date().toISOString();
-          return {
-            id: String(m.id ?? idx),
-            text: String(text),
-            isUser,
-            timestamp: new Date(ts),
-          };
+    let stored: StoredMessage[] | null = null;
+    if (storedKey) {
+      try {
+        // The key goes in a header, not the URL, so it never lands in access logs.
+        stored = await apiFetch<StoredMessage[]>(endpoints.vex.messages.list, {
+          headers: { "X-Vex-Session": storedKey },
         });
-        if (run === hydration.current) setMessages(mapped);
+      } catch (err) {
+        // A rejected key has no history to load: with it gone, the chat starts
+        // empty and the first question opens a new conversation.
+        if (vexRequestErrorCode(err) === "invalid_session") forgetSession();
+        else console.error("Failed to hydrate chat history", err);
       }
-    } catch (err) {
-      // A rejected key has no history to load: with it gone, the chat starts
-      // empty and the first question opens a new conversation.
-      if (vexRequestErrorCode(err) === "invalid_session") forgetSession();
-      else console.error("Failed to hydrate chat history", err);
-    } finally {
-      if (run === hydration.current) setHydrated(true);
     }
+    if (run === hydration.current) dispatch({ type: "hydrated", stored });
   };
 
   // Body scroll locking is handled by the Dialog while it is open.
@@ -206,26 +144,15 @@ const ChatWidget = ({
     // Ensure the first scroll after opening is instant (no animation)
     initialScrollDoneRef.current = false;
 
-    // Every open reloads the history (an answer cut off by closing comes back
-    // whole), and a question handed over waits for it: sent first, it would
-    // be overwritten by the history arriving after it.
-    setHydrated(false);
+    // Every open reloads the history (the server keeps only finished answers,
+    // so one cut off by closing is gone, question and all), and a question
+    // asked or handed over meanwhile waits for it in the queue: sent first, it
+    // would be overwritten by the history arriving after it.
     hydrateMessagesIfNeeded();
-    return () => {
-      // Close stream when widget closes
-      closeExistingStream();
-      setIsStreaming(false);
-      setIsLoading(false);
-      hasReceivedFirstChunkRef.current = false;
-    };
+    // Closing abandons the reply in flight (the answer effect aborts its
+    // request) and marks the history stale for the next open.
+    return () => dispatch({ type: "stop" });
   }, [isOpen]);
-
-  useEffect(() => {
-    return () => {
-      // Cleanup on unmount
-      closeExistingStream();
-    };
-  }, []);
 
   // Scroll to bottom on open and on any message or loading change
   useEffect(() => {
@@ -243,49 +170,100 @@ const ChatWidget = ({
     return () => cancelAnimationFrame(id);
   }, [isOpen, messages, isLoading, isStreaming, prefersReducedMotion]);
 
-  // Every failure — request error, server error, or silence — ends in the same
-  // visible state: an inline notice that says why, with a way to reach me
-  // instead. The toast is only a secondary signal, in the site's words, never
-  // the provider's.
-  const failConversation = (code: VexErrorCode) => {
-    closeExistingStream();
-    setIsLoading(false);
-    setIsStreaming(false);
-    hasReceivedFirstChunkRef.current = false;
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `error-${Date.now()}`,
-        text: "",
-        isUser: false,
-        timestamp: new Date(),
-        error: code,
-      },
-    ]);
-    notify.error(t.chat.errors[code]);
-  };
-
-  const armWatchdog = () => {
-    clearWatchdog();
-    watchdogRef.current = window.setTimeout(() => failConversation("timeout"), STREAM_TIMEOUT_MS);
-  };
-
-  const handleSendMessage = async (text?: string) => {
-    const question = (text ?? inputValue).trim();
-    if (!question || isStreaming) return;
-    const locale = localStorage.getItem("language") || "en";
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: question,
-      isUser: true,
-      timestamp: new Date(),
+  // The session key, from the question POST that precedes every stream. A
+  // stored key the backend refuses is replaced, once: the question goes again
+  // without it and opens a new conversation.
+  const openSession = async (question: string, signal: AbortSignal): Promise<string> => {
+    const postQuestion = (key: string | null) => {
+      const form = new FormData();
+      form.append("question", question);
+      if (key) form.append("session_key", key);
+      return apiFetch<{ session_key: string; csrftoken: string }>(endpoints.vex.chat.post, {
+        method: "POST",
+        headers: csrfTokenRef.current ? { "X-CSRFToken": csrfTokenRef.current } : undefined,
+        body: form as unknown as any,
+        signal,
+      });
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const existingKey = localStorage.getItem(SESSION_STORAGE_KEY);
+    let resp: { session_key: string; csrftoken: string };
+    try {
+      resp = await postQuestion(existingKey);
+    } catch (err) {
+      if (!existingKey || vexRequestErrorCode(err) !== "invalid_session") throw err;
+      forgetSession();
+      resp = await postQuestion(null);
+    }
+    csrfTokenRef.current = resp.csrftoken;
+    localStorage.setItem(SESSION_STORAGE_KEY, resp.session_key);
+    return resp.session_key;
+  };
+
+  // Answers one question. Every failure — a refusal, a server error, or
+  // silence — ends in the same visible state: an inline notice that says why,
+  // in the site's words, never the provider's, with a way to reach me instead.
+  // An aborted request (the chat closed or cleared, or the watchdog gave up)
+  // reports nothing more. Every action names its turn, so a request that
+  // outlives its turn cannot write into the next one.
+  const answer = async (question: string, turn: number, signal: AbortSignal) => {
+    const fail = (code: VexErrorCode) => dispatch({ type: "fail", turn, code });
+    let watchdog = 0;
+    const arm = () => {
+      window.clearTimeout(watchdog);
+      watchdog = window.setTimeout(() => fail("timeout"), STREAM_TIMEOUT_MS);
+    };
+    try {
+      arm();
+      const sessionKey = await openSession(question, signal);
+      arm();
+      const end = await streamVexAnswer({
+        question,
+        locale: language,
+        sessionKey,
+        csrfToken: csrfTokenRef.current,
+        signal,
+        onDelta: (text) => {
+          arm();
+          dispatch({ type: "delta", turn, text });
+        },
+      });
+      if (signal.aborted) return;
+      if (end.kind === "done") dispatch({ type: "done", turn });
+      else fail(end.code);
+    } catch (err) {
+      if (signal.aborted) return;
+      console.error("Chat send failed", err);
+      fail(vexRequestErrorCode(err));
+    } finally {
+      window.clearTimeout(watchdog);
+    }
+  };
+
+  // One request per turn. Anything that ends the turn early (closing, Clear,
+  // the watchdog's failure, unmounting) clears it, and the cleanup aborts the
+  // request: the server sees the visitor leave and stops generating. The
+  // handler is read through a ref because it closes over state.
+  const answerRef = useLatest(answer);
+  const turn = chat.active?.turn;
+  const activeQuestion = chat.active?.question;
+  useEffect(() => {
+    if (turn === undefined || activeQuestion === undefined) return;
+    const controller = new AbortController();
+    void answerRef.current(activeQuestion, turn, controller.signal);
+    return () => controller.abort();
+  }, [turn, activeQuestion, answerRef]);
+
+  const handleSendMessage = (text?: string) => {
+    const question = (text ?? inputValue).trim();
+    if (!question || isStreaming) return;
+    dispatch({ type: "ask", question });
     setInputValue("");
     setPasteCut(false);
     setIsMultilineInput(false);
+    // Focus stays in the composer, also when the question came from a starter
+    // button, which the conversation replaces.
+    textareaRef.current?.focus();
     // Reset textarea height back to a single line
     requestAnimationFrame(() => {
       const el = textareaRef.current;
@@ -293,164 +271,25 @@ const ChatWidget = ({
         el.style.height = "auto";
       }
     });
-
-    try {
-      setIsLoading(true);
-      setIsStreaming(true);
-      hasReceivedFirstChunkRef.current = false;
-      // Step 1-3: POST to obtain/confirm session_key (multipart/form-data)
-      const postQuestion = async (key: string | null) => {
-        const form = new FormData();
-        form.append("question", question);
-        if (key) form.append("session_key", key);
-        const postController = new AbortController();
-        const postTimeout = window.setTimeout(() => postController.abort(), STREAM_TIMEOUT_MS);
-        try {
-          return await apiFetch<{ session_key: string; csrftoken: string }>(
-            endpoints.vex.chat.post,
-            {
-              method: "POST",
-              // Include CSRF token if we have one from previous round
-              headers: csrfTokenRef.current ? { "X-CSRFToken": csrfTokenRef.current } : undefined,
-              body: form as unknown as any,
-              signal: postController.signal,
-            },
-          );
-        } finally {
-          window.clearTimeout(postTimeout);
-        }
-      };
-
-      const existingKey = localStorage.getItem(SESSION_STORAGE_KEY);
-      let postResp: { session_key: string; csrftoken: string };
-      try {
-        postResp = await postQuestion(existingKey);
-      } catch (err) {
-        // A stored key the backend refuses is replaced, once: the question
-        // goes again without it and opens a new conversation.
-        if (!existingKey || vexRequestErrorCode(err) !== "invalid_session") throw err;
-        forgetSession();
-        postResp = await postQuestion(null);
-      }
-
-      const newSessionKey = postResp?.session_key;
-      const newCsrf = postResp?.csrftoken;
-      if (newSessionKey) {
-        sessionKeyRef.current = newSessionKey;
-        localStorage.setItem(SESSION_STORAGE_KEY, newSessionKey);
-      }
-      if (newCsrf) {
-        csrfTokenRef.current = newCsrf;
-      }
-
-      const sessionKey = sessionKeyRef.current;
-      if (!sessionKey) {
-        throw new Error("No session key provided by server");
-      }
-
-      // Step 4: Open SSE stream
-      closeExistingStream();
-      const streamUrl = buildUrl(endpoints.vex.chat.stream, {
-        question: question,
-        locale: locale,
-        session_key: sessionKey,
-      });
-      const es = new EventSource(streamUrl);
-      eventSourceRef.current = es;
-      armWatchdog();
-
-      es.addEventListener("received", () => {
-        // Keep typing indicator until first data chunk arrives
-        armWatchdog();
-      });
-
-      es.addEventListener("finished", () => {
-        clearWatchdog();
-        setIsStreaming(false);
-        // Finalize the last assistant message markdown once stream completes
-        setMessages((prev) => {
-          const next = [...prev];
-          for (let i = next.length - 1; i >= 0; i--) {
-            if (!next[i].isUser) {
-              next[i] = { ...next[i], text: finalizeMarkdown(next[i].text) };
-              break;
-            }
-          }
-          return next;
-        });
-        try {
-          es.close();
-        } catch {
-          /* noop */
-        }
-        if (eventSourceRef.current === es) eventSourceRef.current = null;
-      });
-
-      es.addEventListener("error", (ev: any) => {
-        // The native error event carries no payload; only the server's named
-        // event does, and it carries a code, never the provider's message.
-        failConversation(vexStreamErrorCode(ev?.data));
-      });
-
-      es.onmessage = (e: MessageEvent) => {
-        // Streamed text chunks come as default messages without an event name
-        const chunk = decodeStreamData(String(e.data ?? ""));
-        if (!chunk) return;
-        armWatchdog();
-        if (!hasReceivedFirstChunkRef.current) {
-          hasReceivedFirstChunkRef.current = true;
-          setIsLoading(false); // remove typing indicator once streaming starts
-          // Create an assistant message to append chunks to
-          const assistantMsg: Message = {
-            id: `assistant-${Date.now()}`,
-            text: chunk,
-            isUser: false,
-            timestamp: new Date(),
-          };
-          setMessages((prev) => [...prev, assistantMsg]);
-        } else {
-          // Append to last assistant message
-          setMessages((prev) => {
-            const next = [...prev];
-            for (let i = next.length - 1; i >= 0; i--) {
-              if (!next[i].isUser) {
-                next[i] = { ...next[i], text: next[i].text + chunk };
-                break;
-              }
-            }
-            return next;
-          });
-        }
-      };
-    } catch (err: any) {
-      console.error("Chat send failed", err);
-      failConversation(vexRequestErrorCode(err));
-    }
   };
 
   // A question handed over from the page (the hero's ask bar, a project's
-  // "ask Vex about this") goes out the moment history has loaded, so it lands
-  // after any earlier conversation rather than before it. The handler is read
-  // through a ref because it closes over state and is recreated every render.
-  const sendRef = useLatest(handleSendMessage);
+  // "ask Vex about this") waits in the queue until history has loaded, so it
+  // lands after any earlier conversation rather than before it, and after any
+  // reply still streaming.
   useEffect(() => {
-    if (!isOpen || !hydrated || !initialQuestion) return;
+    if (!isOpen || !initialQuestion) return;
     onInitialQuestionSent?.();
-    void sendRef.current(initialQuestion);
-  }, [isOpen, hydrated, initialQuestion, onInitialQuestionSent, sendRef]);
+    dispatch({ type: "ask", question: initialQuestion });
+  }, [isOpen, initialQuestion, onInitialQuestionSent]);
 
   const handleClearChat = () => {
-    try {
-      closeExistingStream();
-    } catch {
-      /* noop */
-    }
+    // A history load still in flight belongs to the forgotten conversation.
+    hydration.current++;
+    dispatch({ type: "clear" });
     forgetSession();
-    setMessages([]);
-    setIsLoading(false);
-    setIsStreaming(false);
-    hasReceivedFirstChunkRef.current = false;
-    notify.success(t.chat.clear);
+    // At the top: the default corner is where the chat's composer sits.
+    notify.success(t.chat.clear, { position: "top-center" });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -486,6 +325,17 @@ const ChatWidget = ({
       </ul>
     </div>
   ) : null;
+
+  const showEmptyState = messages.length === 0 && !isStreaming;
+
+  // What the status region reads out once a turn finishes: the whole reply in
+  // one go, rather than the log announcing it word by word as it streams.
+  const finished = messages.find((m) => m.id === chat.finishedId);
+  const announcement = !finished
+    ? ""
+    : finished.noAnswer
+      ? t.chat.noAnswer
+      : `${t.chat.replied} ${finished.text}`;
 
   const lengthId = useId();
   const showLength = pasteCut || inputValue.length >= LENGTH_COUNTER_FROM;
@@ -532,102 +382,112 @@ const ChatWidget = ({
 
         <div className="flex min-h-0 flex-1 flex-col">
           <ScrollArea className="flex-1 p-4">
-            {messages.length === 0 && !isLoading && !isStreaming ? (
-              emptyState
-            ) : (
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex gap-3 ${message.isUser ? "justify-end" : "justify-start"}`}
-                  >
-                    {!message.isUser && (
-                      <div
-                        aria-hidden="true"
-                        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-iris text-primary-foreground"
-                      >
-                        <Bot className="h-4 w-4" />
-                      </div>
-                    )}
+            {showEmptyState && emptyState}
+            {/* The conversation is a log, but a silent one: streamed in word
+                by word, it would be read out word by word. A finished reply is
+                read once by the status region below; a failure by its alert. */}
+            <div role="log" aria-live="off" aria-label={t.chat.conversation} className="space-y-4">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex gap-3 ${message.isUser ? "justify-end" : "justify-start"}`}
+                >
+                  {!message.isUser && (
                     <div
-                      className={`prose prose-sm max-w-[85%] rounded-xl px-4 prose-headings:font-semibold prose-headings:leading-tight prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-p:my-2 prose-a:text-iris prose-a:underline prose-a:decoration-1 prose-a:underline-offset-2 prose-code:before:content-[''] prose-code:after:content-[''] prose-pre:rounded-lg prose-pre:bg-primary prose-pre:p-3 prose-pre:text-primary-foreground prose-ol:my-2 prose-ol:ml-5 prose-ol:list-decimal prose-ul:my-2 prose-ul:ml-5 prose-ul:list-disc prose-li:my-1 prose-hr:my-3 ${
-                        message.isUser
-                          ? "prose-invert bg-primary py-2 text-primary-foreground"
-                          : message.error
-                            ? "border border-destructive/40 bg-blush py-2 text-foreground"
-                            : "border border-border bg-lavender/40 py-2 text-foreground"
-                      }`}
+                      aria-hidden="true"
+                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-iris text-primary-foreground"
                     >
-                      {message.isUser ? (
-                        <p className="not-prose m-0 whitespace-pre-wrap break-words text-sm leading-6">
-                          {message.text}
-                        </p>
-                      ) : message.error ? (
-                        <p
-                          role="alert"
-                          className="not-prose m-0 flex items-start gap-2 text-sm leading-relaxed"
-                        >
-                          <AlertCircle
-                            className="mt-0.5 h-4 w-4 shrink-0 text-destructive"
-                            aria-hidden="true"
-                          />
-                          <span>
-                            <span className="font-medium">{t.chat.errors[message.error]}</span>{" "}
-                            <ContactFallback sentence={t.chat.errorFallback} />
-                          </span>
-                        </p>
-                      ) : (
-                        <MarkdownBoundary
+                      <Bot className="h-4 w-4" />
+                    </div>
+                  )}
+                  <div
+                    className={`prose prose-sm max-w-[85%] rounded-xl px-4 prose-headings:font-semibold prose-headings:leading-tight prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-p:my-2 prose-a:text-iris prose-a:underline prose-a:decoration-1 prose-a:underline-offset-2 prose-code:before:content-[''] prose-code:after:content-[''] prose-pre:rounded-lg prose-pre:bg-primary prose-pre:p-3 prose-pre:text-primary-foreground prose-ol:my-2 prose-ol:ml-5 prose-ol:list-decimal prose-ul:my-2 prose-ul:ml-5 prose-ul:list-disc prose-li:my-1 prose-hr:my-3 ${
+                      message.isUser
+                        ? "prose-invert bg-primary py-2 text-primary-foreground"
+                        : message.error
+                          ? "border border-destructive/40 bg-blush py-2 text-foreground"
+                          : "border border-border bg-lavender/40 py-2 text-foreground"
+                    }`}
+                  >
+                    {message.isUser ? (
+                      <p className="not-prose m-0 whitespace-pre-wrap break-words text-sm leading-6">
+                        {message.text}
+                      </p>
+                    ) : message.noAnswer ? (
+                      <p className="not-prose m-0 text-sm leading-relaxed text-muted-foreground">
+                        {t.chat.noAnswer}
+                      </p>
+                    ) : message.error ? (
+                      <p
+                        role="alert"
+                        className="not-prose m-0 flex items-start gap-2 text-sm leading-relaxed"
+                      >
+                        <AlertCircle
+                          className="mt-0.5 h-4 w-4 shrink-0 text-destructive"
+                          aria-hidden="true"
+                        />
+                        <span>
+                          <span className="font-medium">{t.chat.errors[message.error]}</span>{" "}
+                          <ContactFallback sentence={t.chat.errorFallback} />
+                        </span>
+                      </p>
+                    ) : (
+                      <MarkdownBoundary
+                        fallback={
+                          <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                            {message.text}
+                          </p>
+                        }
+                        resetKey={`${message.id}:${message.text.length}`}
+                      >
+                        <Suspense
                           fallback={
                             <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
                               {message.text}
                             </p>
                           }
-                          resetKey={`${message.id}:${message.text.length}`}
                         >
-                          <Suspense
-                            fallback={
-                              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
-                                {message.text}
-                              </p>
-                            }
-                          >
-                            <MarkdownMessage text={message.text} />
-                          </Suspense>
-                        </MarkdownBoundary>
-                      )}
-                    </div>
-                    {message.isUser && (
-                      <div
-                        aria-hidden="true"
-                        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
-                      >
-                        <User className="h-4 w-4" />
-                      </div>
+                          <MarkdownMessage
+                            text={message.text}
+                            streaming={message.id === chat.replyId}
+                          />
+                        </Suspense>
+                      </MarkdownBoundary>
                     )}
                   </div>
-                ))}
-                {isLoading && (
-                  <div className="flex gap-3" role="status" aria-label={t.chat.typing}>
+                  {message.isUser && (
                     <div
                       aria-hidden="true"
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-iris text-primary-foreground"
+                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
                     >
-                      <Bot className="h-4 w-4" />
+                      <User className="h-4 w-4" />
                     </div>
-                    <div className="rounded-xl border border-border bg-lavender/40 px-4 py-3">
-                      <div className="flex gap-1.5">
-                        <div className="h-2 w-2 animate-pulse rounded-full bg-iris motion-reduce:animate-none"></div>
-                        <div className="h-2 w-2 animate-pulse rounded-full bg-iris delay-100 motion-reduce:animate-none"></div>
-                        <div className="h-2 w-2 animate-pulse rounded-full bg-iris delay-200 motion-reduce:animate-none"></div>
-                      </div>
-                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            {isLoading && (
+              <div className="mt-4 flex gap-3" role="status" aria-label={t.chat.typing}>
+                <div
+                  aria-hidden="true"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-iris text-primary-foreground"
+                >
+                  <Bot className="h-4 w-4" />
+                </div>
+                <div className="rounded-xl border border-border bg-lavender/40 px-4 py-3">
+                  <div className="flex gap-1.5">
+                    <div className="h-2 w-2 animate-pulse rounded-full bg-iris motion-reduce:animate-none"></div>
+                    <div className="h-2 w-2 animate-pulse rounded-full bg-iris delay-100 motion-reduce:animate-none"></div>
+                    <div className="h-2 w-2 animate-pulse rounded-full bg-iris delay-200 motion-reduce:animate-none"></div>
                   </div>
-                )}
+                </div>
               </div>
             )}
             <div ref={bottomRef} />
           </ScrollArea>
+          <div role="status" className="sr-only">
+            {announcement}
+          </div>
 
           <div className="border-t border-border p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
             <div
@@ -654,7 +514,10 @@ const ChatWidget = ({
                 maxLength={VEX_QUESTION_MAX_LENGTH}
                 rows={1}
                 className={`max-h-40 w-full resize-none break-all border-0 bg-transparent p-0 leading-6 text-foreground shadow-none outline-none ring-0 ring-offset-0 placeholder:text-muted-foreground focus:shadow-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${!isMultilineInput ? "pr-12" : ""}`}
-                disabled={isLoading || isStreaming}
+                // Read-only rather than disabled while a reply streams: a
+                // disabled field drops the focus to the page.
+                readOnly={isStreaming}
+                aria-disabled={isStreaming}
                 style={{ height: "auto" }}
                 onInput={(e) => {
                   const el = e.currentTarget;

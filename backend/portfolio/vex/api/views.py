@@ -10,13 +10,13 @@ from rest_framework.views import APIView
 
 from utils.functions import ensure_session
 from vex.api.limits import (
-    QUESTION_MAX_LENGTH,
     SESSION_HEADER,
     RateLimitedMixin,
     VexDailyThrottle,
     VexSessionThrottle,
     VexThrottle,
     body_field,
+    question_refusal,
 )
 from vex.api.serializers import MessageSerializer
 from vex.models import Message
@@ -34,13 +34,8 @@ class ChatView(RateLimitedMixin, APIView):
         return body_field(request, "session_key")
 
     def post(self, request: Request) -> Response:
-        question = body_field(request, "question")
-        if question is not None and not isinstance(question, str):
-            return Response({"code": "invalid_question"}, status=status.HTTP_400_BAD_REQUEST)
-        if not question:
-            return Response({"error": "Empty question"}, status=status.HTTP_400_BAD_REQUEST)
-        if len(question) > QUESTION_MAX_LENGTH:
-            return Response({"code": "question_too_long"}, status=status.HTTP_400_BAD_REQUEST)
+        if refusal := question_refusal(body_field(request, "question")):
+            return refusal
 
         session_key = self.get_session_key(request)
         if session_key not in (None, "") and not is_valid_session_key(session_key):
