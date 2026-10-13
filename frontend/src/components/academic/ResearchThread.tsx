@@ -2,16 +2,16 @@ import {
   type KeyboardEvent,
   useCallback,
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import { ArrowUpRight, Award, Undo2 } from "lucide-react";
+import { ArrowUpRight, Award } from "lucide-react";
 
-import DomainGlyph, { type DomainKind, GLYPH_SCALE } from "@/components/academic/DomainGlyph";
-import { Button } from "@/components/ui/button";
+import DomainGlyph, { type DomainKind } from "@/components/academic/DomainGlyph";
 import { useElementSize } from "@/hooks/use-element-size";
 import { useMediaQuery, usePrefersReducedMotion } from "@/hooks/use-media-query";
 import {
@@ -23,6 +23,7 @@ import {
   unwindMs,
   windMs,
 } from "@/lib/degreeRoad";
+import { GLYPH_SCALE } from "@/lib/domainGlyph";
 import { linkedSlug, replaceHash } from "@/lib/hash";
 import { MEDIA } from "@/lib/media";
 import { clamp01, EASE_BRAND } from "@/lib/motion";
@@ -45,15 +46,19 @@ import { cn } from "@/lib/utils";
  * circle on the site wears, and winds the road up: it is reeled in from its
  * far end onto a lavender coil round the first stop, the other stops riding
  * the thread in, the chosen one on top; the coil travels up to the top of
- * the section and unrolls into a row of three small discs, the chosen one's
- * name beside the row, and the degree's card rises in under it, the full
- * width of the column (windMs(), the kit's ease; the geometry and every
- * frame are in lib/degreeRoad). In the row, another disc takes the ring and
- * swaps the card; "Show whole road" or Escape winds it all back out, and
- * brings the row back into view first when the reader has scrolled down the
- * card. Either way can be turned round half-way. Below md the stops are a
- * list, and they simply cross over to the row (280 ms), the name on a line
- * under it. With reduced motion the two states swap with a 150 ms fade.
+ * the section and unrolls into a row the column's whole width, three small
+ * discs along a dotted line, and the chosen degree's name (where it was and
+ * when beside it) and its card rise in under the row, the full width of the
+ * column (windMs(), the kit's ease; the geometry and every frame are in
+ * lib/degreeRoad). Chosen from high up the page, the page scrolls to the row
+ * as the card starts to rise, when the card would otherwise start low on
+ * the screen. In the row, another disc takes the ring and swaps the card.
+ * Escape, or a click anywhere in the section but on the card or another
+ * disc (the chosen disc, the row's line, the heading, empty space), winds
+ * it all back out, and brings the row back into view first when the reader
+ * has scrolled down the card. Either way can be turned round half-way.
+ * Below md the stops are a list, and they simply cross over to the row
+ * (280 ms). With reduced motion the two states swap with a 150 ms fade.
  *
  * The motion is the Web Animations API on transforms, opacity, stroke and
  * clipping, sampled from the frames; each run's end state is also set as
@@ -65,7 +70,8 @@ import { cn } from "@/lib/utils";
  * with no winding; it is replaced rather than pushed, so Back leaves the
  * page, as on Experience. The stops are tabs: Tab reaches them, the arrows
  * move between them (and in the row choose as they move), Enter or Space
- * chooses.
+ * chooses, and on the chosen stop goes back to the road (as its description
+ * says).
  *
  * In each degree the topic is the heading, because the subject is the same
  * three times over and the topic is what changes. Each degree is one card:
@@ -81,8 +87,8 @@ export type ResearchThreadLabels = {
   steps: string;
   /** Over the road: a stop can be chosen. */
   hint: string;
-  /** Winds the row back out into the road; also the control's name on a phone, where it is an icon. */
-  wholeRoad: string;
+  /** Read with the chosen stop: pressing it again winds the row back out into the road. */
+  backToRoad: string;
   /** Read after a link that opens in a new tab. */
   newTab: string;
 };
@@ -207,10 +213,18 @@ const slugOf = (school: UiSchool) => school.startDate.slice(0, 4);
  */
 type Phase = "road" | "winding" | "compact" | "unwinding";
 
-/** How far the page is brought back when a stop is chosen below its top, to keep the row in view. */
-const SCROLL_MARGIN = { wide: 140, phone: 96 };
-/** What the control at the row's right end takes, with a gap before it, from md. */
-const BACK_ROOM = 192;
+/**
+ * Where the stage's top is brought to when the page scrolls to the row: under
+ * the sticky menu bar, as the site's other scroll targets are.
+ */
+const ROW_MARGIN = 96;
+/**
+ * Choosing scrolls down to the card as it starts to rise (t 0.55 of the
+ * winding), so the two read as one motion...
+ */
+const REVEAL_AT = 0.55;
+/** ...far enough to leave this much under the card's end. */
+const REVEAL_ROOM = 32;
 /** The card's fade as the road unwinds. */
 const CARD_OUT_MS = 150;
 /** A card's rise in when another degree is chosen in the row. */
@@ -222,7 +236,7 @@ const FRAMES = 60;
 
 /** The road's dots: a 3px round dot every 11px, in a faint control border. */
 const ROAD_STROKE = "hsl(var(--control-border) / 0.35)";
-const ROW_DOTS = `radial-gradient(circle at 1.5px 1.5px, ${ROAD_STROKE} 1.5px, transparent 1.6px) 0 0 / 11px 3px repeat-x`;
+const ROW_DOTS = `radial-gradient(circle at 1.5px 1.5px, ${ROAD_STROKE} 1.5px, transparent 1.6px) 0 50% / 11px 3px repeat-x`;
 const SPIRAL = spiralPath();
 
 type Style = Record<string, string>;
@@ -266,9 +280,8 @@ const ResearchThread = ({
   const spool = useRef<HTMLDivElement>(null);
   const spiral = useRef<SVGPathElement>(null);
   const rowLine = useRef<HTMLDivElement>(null);
-  const currentName = useRef<HTMLParagraphElement>(null);
-  const back = useRef<HTMLButtonElement>(null);
   const card = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
   const stops = useRef<(HTMLButtonElement | null)[]>([]);
   const discs = useRef<(HTMLSpanElement | null)[]>([]);
   const names = useRef<(HTMLSpanElement | null)[]>([]);
@@ -296,8 +309,8 @@ const ResearchThread = ({
       [
         rowLine.current,
         {
-          transform: `translate3d(${frame.rowLine.x.toFixed(2)}px, ${frame.rowLine.y}px, 0)`,
-          clipPath: `inset(0 ${((1 - frame.rowLine.laid) * 100).toFixed(2)}% 0 0)`,
+          transform: `translate3d(0, ${frame.rowLine.y}px, 0)`,
+          clipPath: `inset(0 ${frame.rowLine.right.toFixed(2)}px 0 ${frame.rowLine.left.toFixed(2)}px)`,
         },
       ],
       ...frame.stops.flatMap((stop, index): Part[] => [
@@ -312,8 +325,6 @@ const ResearchThread = ({
         [names.current[index], { opacity: `${frame.names}` }],
         [years.current[index], { opacity: `${frame.years}` }],
       ]),
-      [currentName.current, { opacity: `${frame.years}` }],
-      [back.current, { opacity: `${frame.card}` }],
       [
         card.current,
         {
@@ -404,8 +415,8 @@ const ResearchThread = ({
   }, [phase, geometry, parts, prefersReducedMotion]);
 
   // In the row, another degree: the ring moves over to it (its colour
-  // fades, see the disc), its name and card fade and rise in (a plain fade
-  // under reduced motion).
+  // fades, see the disc), its name and card fade and rise in together (a
+  // plain fade under reduced motion).
   const shown = useRef(selected);
   useLayoutEffect(() => {
     const was = shown.current;
@@ -415,7 +426,6 @@ const ResearchThread = ({
       card.current?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FADE_MS });
       return;
     }
-    currentName.current?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240 });
     card.current?.animate(
       [
         { opacity: 0, transform: "translate3d(0, 8px, 0)" },
@@ -425,6 +435,51 @@ const ResearchThread = ({
     );
   }, [selected, phase, geometry, prefersReducedMotion]);
 
+  // The page is brought to the row (the stage's top under the menu bar)
+  // straight away when the reader has scrolled past it. When a degree is
+  // chosen from higher up, the page scrolls as its card starts to rise, if
+  // the card would end below the screen: only as far as it takes to show the
+  // end, and never so far that the section's heading leaves the screen, so
+  // the reader still sees where they are. The card is only mounted once the
+  // winding starts, so it is measured when the scroll is due, not on the
+  // click. Never smoothly under reduced motion. A later choice or the way
+  // back cancels a scroll still waiting.
+  const revealTimer = useRef(0);
+  const scrollToRow = useCallback(
+    (reveal: boolean) => {
+      window.clearTimeout(revealTimer.current);
+      const box = stage.current?.getBoundingClientRect();
+      if (!box || !geometry) return;
+      const top = box.top + window.scrollY - ROW_MARGIN;
+      const behavior = prefersReducedMotion ? "auto" : "smooth";
+      if (window.scrollY > top) {
+        window.scrollTo({ top, behavior });
+      } else if (reveal) {
+        const delay = prefersReducedMotion ? 0 : windMs(geometry.phone) * REVEAL_AT;
+        revealTimer.current = window.setTimeout(() => {
+          const stageTop = stage.current?.getBoundingClientRect().top;
+          const height = card.current?.offsetHeight;
+          if (stageTop === undefined || height === undefined) return;
+          // Laid out, not drawn: the card's rise is a transform, still under way.
+          const short = stageTop + geometry.cardTop + height + REVEAL_ROOM - window.innerHeight;
+          if (short <= 0) return;
+          // As far as the section's top under its scroll margin, where every
+          // anchor on the site brings a section; if the reader has already
+          // scrolled the heading away, as far as the row under the menu bar.
+          const section = stage.current?.closest("section");
+          const toHeading = section
+            ? section.getBoundingClientRect().top -
+              parseFloat(getComputedStyle(section).scrollMarginTop)
+            : 0;
+          const limit = toHeading > 0 ? toHeading : stageTop - ROW_MARGIN;
+          window.scrollTo({ top: window.scrollY + Math.min(short, limit), behavior });
+        }, delay);
+      }
+    },
+    [geometry, prefersReducedMotion],
+  );
+  useEffect(() => () => window.clearTimeout(revealTimer.current), []);
+
   const choose = (index: number) => {
     const school = schools[index];
     if (!school) return;
@@ -432,19 +487,8 @@ const ResearchThread = ({
     replaceHash(slugOf(school));
     if (phase === "compact" || phase === "winding") return;
     setPhase(prefersReducedMotion ? "compact" : "winding");
-    bringStageBack();
+    scrollToRow(true);
   };
-
-  // The row, and the road it winds back into, are at the top of the stage:
-  // bring it back into view when the reader has scrolled past its top.
-  const bringStageBack = useCallback(() => {
-    const box = stage.current?.getBoundingClientRect();
-    if (!box) return;
-    const top = box.top + window.scrollY - (wide ? SCROLL_MARGIN.wide : SCROLL_MARGIN.phone);
-    if (window.scrollY > top) {
-      window.scrollTo({ top, behavior: prefersReducedMotion ? "auto" : "smooth" });
-    }
-  }, [prefersReducedMotion, wide]);
 
   // Focus goes back to the chosen stop (scrolled to, if need be), and from
   // deep in a long card the stage is brought back too, so the reader sees
@@ -455,8 +499,8 @@ const ResearchThread = ({
     );
     replaceHash(null);
     stops.current[selected]?.focus();
-    bringStageBack();
-  }, [prefersReducedMotion, selected, bringStageBack]);
+    scrollToRow(false);
+  }, [prefersReducedMotion, selected, scrollToRow]);
 
   // Escape winds the row back out, wherever focus is.
   const open = phase === "compact" || phase === "winding";
@@ -468,6 +512,57 @@ const ResearchThread = ({
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open, unwind]);
+
+  // So does a click anywhere in the section but on the card or on another
+  // degree's stop: its empty space, its heading, the row's line, and the
+  // chosen stop itself (Enter or Space on it as well, which click it). What
+  // a click means is settled when it is pressed, before the tabs act on the
+  // press: a press that chose a degree, or moved to another, is not then
+  // read as a way back. A drag that selected text, or a press with any other
+  // button, is not a click here either.
+  const root = useRef<HTMLDivElement>(null);
+  const pressed = useRef<{ open: boolean; stop: number; chosen: number } | null>(null);
+  const latest = useRef({ open, selected, unwind });
+  useLayoutEffect(() => {
+    latest.current = { open, selected, unwind };
+  });
+  useEffect(() => {
+    const section = root.current?.closest("section");
+    if (!section) return;
+    const stopAt = (target: EventTarget | null) =>
+      target instanceof Node ? stops.current.findIndex((stop) => stop?.contains(target)) : -1;
+    const press = (target: EventTarget | null) => {
+      const { open: isOpen, selected: chosen } = latest.current;
+      pressed.current = { open: isOpen, stop: stopAt(target), chosen };
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      pressed.current = null;
+      if (event.button === 0) press(event.target);
+    };
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Enter" || event.key === " ") press(event.target);
+    };
+    const onClick = (event: MouseEvent) => {
+      const was = pressed.current;
+      pressed.current = null;
+      if (!was?.open || event.button !== 0 || event.defaultPrevented) return;
+      if (window.getSelection()?.isCollapsed === false) return;
+      const target = event.target;
+      if (!(target instanceof Element) || panel.current?.contains(target)) return;
+      if (was.stop !== -1 && was.stop !== was.chosen) return;
+      if (was.stop === -1 && target.closest("a, button, input, select, textarea, summary")) return;
+      latest.current.unwind();
+    };
+    section.addEventListener("pointerdown", onPointerDown, true);
+    section.addEventListener("keydown", onKeyDown, true);
+    section.addEventListener("click", onClick);
+    return () => {
+      section.removeEventListener("pointerdown", onPointerDown, true);
+      section.removeEventListener("keydown", onKeyDown, true);
+      section.removeEventListener("click", onClick);
+    };
+  }, []);
+  const backId = useId();
 
   const current = schools[selected] ?? schools[0];
   if (!current) return null;
@@ -495,11 +590,11 @@ const ResearchThread = ({
     if (phase === "compact" && next !== selected) choose(next);
   };
 
-  const lastAt = geometry?.compact[geometry.compact.length - 1];
-  const nameAt = (lastAt?.x ?? 0) + 52;
-
   return (
-    <div className={className}>
+    <div ref={root} className={className}>
+      <span id={backId} className="sr-only">
+        {labels.backToRoad}
+      </span>
       {/* Only while nothing is chosen; it keeps its line, so nothing moves. */}
       <p
         aria-hidden={open || undefined}
@@ -560,15 +655,15 @@ const ResearchThread = ({
                   />
                 </svg>
               </div>
-              {/* The row's own road, laid as the coil unrolls. */}
+              {/* The row's own road, the column's whole width, laid out
+                  from the coil as it unrolls. 24px tall round its 3px of
+                  dots, so it can be pressed to go back to the whole road
+                  (see the section's click). */}
               <div
                 ref={rowLine}
                 aria-hidden="true"
-                className="pointer-events-none absolute left-0 top-0 -mt-[1.5px] h-[3px]"
-                style={{
-                  width: (lastAt?.x ?? 0) - geometry.compact[0].x,
-                  background: ROW_DOTS,
-                }}
+                className="absolute left-0 top-0 -mt-3 h-6 cursor-pointer"
+                style={{ width: geometry.width, background: ROW_DOTS }}
               />
             </>
           )}
@@ -589,6 +684,7 @@ const ResearchThread = ({
                       stops.current[index] = element;
                     }}
                     value={String(school.id)}
+                    aria-describedby={isCurrent ? backId : undefined}
                     aria-label={[school.degree, school.period, domain && domainNames[domain]]
                       .filter(Boolean)
                       .join(", ")}
@@ -687,50 +783,11 @@ const ResearchThread = ({
 
           {geometry && phase !== "road" && (
             <>
-              {/* The chosen degree beside the row, where it was and when
-                  under its name (the university from xl, where there is
-                  room); on a phone, its name on a line of its own under the
-                  row. Kept clear of the control at the right. */}
-              <p
-                ref={currentName}
-                aria-hidden="true"
-                className={cn(
-                  "pointer-events-none absolute flex flex-col",
-                  geometry.phone ? "left-0" : "-translate-y-1/2",
-                )}
-                style={
-                  geometry.phone
-                    ? { top: geometry.compact[0].y + 56, maxWidth: geometry.width }
-                    : {
-                        left: nameAt,
-                        top: geometry.compact[0].y,
-                        maxWidth: geometry.width - nameAt - BACK_ROOM,
-                      }
-                }
-              >
-                <span className="truncate text-lg font-semibold tracking-tight md:text-xl">
-                  {current.degree}
-                </span>
-                {!geometry.phone && (
-                  <span className="truncate text-sm text-muted-foreground">
-                    <span className="hidden xl:inline">{current.university} · </span>
-                    {current.period}
-                  </span>
-                )}
-              </p>
-              <Button
-                ref={back}
-                type="button"
-                variant="outline"
-                onClick={unwind}
-                className="absolute right-0 z-[4] px-4 max-md:w-11 max-md:px-0"
-                style={{ top: geometry.compact[0].y - 22 }}
-              >
-                <Undo2 aria-hidden="true" />
-                <span className="max-md:sr-only">{labels.wholeRoad}</span>
-              </Button>
-              {/* The card, under the row; it only takes the pointer once it
-                  has arrived. Unwinding, it leaves the flow at once and fades
+              {/* The chosen degree's name on a line of its own under the row,
+                  where it was and when beside it (wrapping under it on a
+                  phone), then its card; together they only take the pointer
+                  once they have arrived. Unwinding, they leave the flow at
+                  once and fade
                   where it is, so the page closes up under it the moment the
                   reader asks, not a second later under their eyes. */}
               <div
@@ -746,7 +803,19 @@ const ResearchThread = ({
                     : { marginTop: geometry.cardTop }
                 }
               >
+                <p
+                  aria-hidden="true"
+                  className="mb-6 flex flex-wrap items-baseline gap-x-3 gap-y-1"
+                >
+                  <span className="text-lg font-semibold tracking-tight md:text-xl">
+                    {current.degree}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {current.university} · {current.period}
+                  </span>
+                </p>
                 <TabsPrimitive.Content
+                  ref={panel}
                   key={current.id}
                   value={String(current.id)}
                   forceMount

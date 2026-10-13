@@ -4,8 +4,10 @@
  * frame. The CSS side has them as Tailwind's `ease-brand`.
  */
 
+/** The entrance curve's control points, for code that evaluates it itself. */
+export const EASE_BRAND_POINTS = [0.22, 1, 0.36, 1] as const;
 /** The entrance curve, a strong ease-out: things arrive and settle. */
-export const EASE_BRAND = "cubic-bezier(0.22, 1, 0.36, 1)";
+export const EASE_BRAND = `cubic-bezier(${EASE_BRAND_POINTS.join(", ")})`;
 /** The exit curve: things leave quickly, without a settle. */
 export const EASE_EXIT = "cubic-bezier(0.4, 0, 1, 1)";
 /** A symmetric ease, for something that travels from one place to another. */

@@ -57,11 +57,13 @@ describe("roadGeometry", () => {
   ] as const)("spaces the compact row evenly (%ipx)", (width, phone) => {
     const { compact } = roadGeometry(width, phone);
     const gaps = compact.slice(1).map((stop, i) => stop.x - compact[i].x);
-    expect(new Set(gaps).size).toBe(1);
+    for (const gap of gaps) expect(Math.abs(gap - gaps[0])).toBeLessThanOrEqual(1);
     expect(new Set(compact.map((stop) => stop.y)).size).toBe(1);
-    expect(compact[compact.length - 1].x).toBeLessThan(width);
-    // The first disc's years (about 66px wide at 12px mono) stay in the column.
-    expect(compact[0].x - 33).toBeGreaterThanOrEqual(0);
+    // Across the whole column, the middle disc in its middle, and the years
+    // under the outer discs (about 86px at most, at 12px mono) inside it.
+    expect(Math.abs(compact[1].x - width / 2)).toBeLessThanOrEqual(0.5);
+    expect(compact[0].x - 43).toBeGreaterThanOrEqual(0);
+    expect(compact[compact.length - 1].x + 43).toBeLessThanOrEqual(width);
   });
 });
 
@@ -80,6 +82,9 @@ describe("roadFrame", () => {
     });
     expect([start.names, start.years, start.card]).toEqual([1, 0, 0]);
     expect([end.names, end.years, end.card]).toEqual([0, 1, 1]);
+    // The row's line is all laid by the end, and none of it at the start.
+    expect([end.rowLine.left, end.rowLine.right]).toEqual([0, 0]);
+    expect(start.rowLine.left + start.rowLine.right).toBeGreaterThan(road.width - 1);
   });
 
   it("winds the road in from its far end, onto a coil that shows only in between", () => {

@@ -48,7 +48,7 @@ const Education = () => {
     researchAreas: t.academic.researchAreas,
     steps: t.academic.degreeSteps,
     hint: t.academic.degreeHint,
-    wholeRoad: t.academic.wholeRoad,
+    backToRoad: t.academic.backToRoad,
     newTab: t.academic.newTab,
   };
 
