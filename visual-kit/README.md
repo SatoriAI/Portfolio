@@ -96,6 +96,8 @@ As a general composition guide, use approximately 75% light neutrals, 20% pastel
 
 Suggested responsive scale, desktop → mobile: hero 64/70 → 36/41 px (a masthead hero that shares the first screen with content, as on the home page, 48/52 → 36/41 px), section heading 40/48 → 28/34 px, card heading 24/31 → 22/29 px, body 18/29 → 16/26 px, and metadata 13/20 px.
 
+Workshop articles are set on a reading scale of their own, larger than the body copy elsewhere, because they are read end to end in one narrow column: body 20/32 → 18/29 px and section headings 22 → 20 px.
+
 ## Layout and interface
 
 - Maximum content width: 1160 px.
