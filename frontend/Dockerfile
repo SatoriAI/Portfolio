@@ -20,7 +20,7 @@ COPY . .
 ARG VITE_API_BASE_URL
 
 # Set the environment for the build. Vite inlines it into the bundle at
-# build time, so changing them later needs a rebuild, not a restart.
+# build time, so changing it later needs a rebuild, not a restart.
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 # Build the application

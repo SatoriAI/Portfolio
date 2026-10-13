@@ -76,5 +76,9 @@ jobs:
 
       # Last because it is the slowest, and because it is the only step that
       # typechecks the project — `npm run lint` is ESLint, which does not.
+      # The address is never requested here; it only has to be present, or
+      # the bundle CI builds would stop at startup.
       - name: Build
+        env:
+          VITE_API_BASE_URL: http://localhost:8000
         run: make build
