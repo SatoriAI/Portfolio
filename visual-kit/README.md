@@ -88,10 +88,11 @@ As a general composition guide, use approximately 75% light neutrals, 20% pastel
 ## Typography
 
 - **Manrope** is the primary typeface for headings, body copy, and interface text. Use 400 for body copy, 500 for navigation, 600 for headings, and 700 sparingly.
-- **IBM Plex Mono** is reserved for technologies, dates, short labels, and code-like details. Use weights 400–500.
+- **IBM Plex Mono** is reserved for technologies, dates, short labels, and code-like details. Use weights 400–500; `fonts/` carries both cuts, Regular and Medium, so neither is synthesised.
 - Fallback stacks: `system-ui, sans-serif` and `ui-monospace, monospace`.
 - Keep body copy to approximately 55–70 characters per line.
 - Tracking: −0.035em on hero and section headings, −0.02em on card headings, 0 on body copy, and +0.1em on mono labels set in capitals.
+- A label that names a group inside a section (a skill group, what students noticed, the note for the curious under a figure) is one style everywhere: IBM Plex Mono at metadata size, in capitals, +0.1em, weight 500, in `text-secondary`. A stage heading inside a section (a step of the research story) is set the same but in ink, because it heads the content under it rather than naming a group. Section eyebrows and illustration legends keep their iris; measurement legends are ink at 400.
 
 Suggested responsive scale, desktop → mobile: hero 64/70 → 36/41 px (a masthead hero that shares the first screen with content, as on the home page, 48/52 → 36/41 px), section heading 40/48 → 28/34 px, card heading 24/31 → 22/29 px, body 18/29 → 16/26 px, and metadata 13/20 px.
 
@@ -190,6 +191,8 @@ Nothing about the mark, the typography, the spacing scale, the layout grid, the 
 ## Changes since 5.1
 
 - Motion: from xl up the contact graph runs on the page's circuit, shown while it is closed and switched off while it is open (see Motion, Home).
+- Typography: the group label inside a section, and the stage heading set like it in ink, are written down (see Typography); the site had three versions of the label.
+- Fonts: IBM Plex Mono Medium joins the Regular, as WOFF2 with the Regular's character set, so the 500 the labels use is the real cut.
 
 ## Scope and limitations
 

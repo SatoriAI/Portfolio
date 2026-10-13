@@ -315,7 +315,7 @@ const Academic = () => {
                     onAddChange={setAdd}
                   />
                   <div className="mt-8 border-t border-border pt-6">
-                    <p className="mb-2 font-mono text-meta uppercase tracking-widest text-iris">
+                    <p className="mb-2 font-mono text-meta font-medium uppercase tracking-widest text-muted-foreground">
                       {transformers.figure.curious}
                     </p>
                     <p className="text-base text-foreground/80">

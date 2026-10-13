@@ -97,11 +97,14 @@ export default {
       },
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        // The kit has three radii (2, 12, 20) and "no fourth value". The
+        // shadcn defaults derived md and sm from --radius as 10px and 8px,
+        // which put the header links and inline text links off the scale, so
+        // md is a control's 12px and sm the motif's 2px.
+        md: "var(--radius)",
+        sm: "2px",
         card: "20px",
-        // The kit's smallest radius, for motif modules. `rounded-sm` here is
-        // calc(var(--radius) - 4px) = 8px, which turned every module into a pebble.
+        // The kit's smallest radius, for motif modules; the name says why.
         motif: "2px",
       },
       // Elevation, per the kit: every shadow is cast in ink rather than neutral
