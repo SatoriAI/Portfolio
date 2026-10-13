@@ -18,12 +18,10 @@ COPY . .
 
 # Accept build arguments for environment variables
 ARG VITE_API_BASE_URL
-ARG VITE_MOCK
 
-# Set environment variables for the build. Vite inlines these into the bundle at
-# build time, so changing them later needs a rebuild, not a restart.
+# Set the environment for the build. Vite inlines it into the bundle at
+# build time, so changing it later needs a rebuild, not a restart.
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-ENV VITE_MOCK=$VITE_MOCK
 
 # Build the application
 RUN npm run build

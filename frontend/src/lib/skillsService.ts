@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 
 import { endpoints } from "../config/endpoints";
-import { env } from "../config/env";
 
 import { apiClient } from "./apiClient";
 
@@ -67,31 +66,6 @@ export function mapApiSkillToUi(skill: ApiSkill, language: string): UiSkill {
   };
 }
 
-/** Shown in mock mode, where there is no backend; ids match skillEvidence. */
-const mockSkill = (
-  id: number,
-  icon: ApiSkill["icon"],
-  name: string,
-  since: number | null,
-  description: string,
-): ApiSkill => ({
-  id,
-  icon,
-  since,
-  since_launch: false,
-  translations: { en: { name, description } },
-  created_at: "",
-  updated_at: "",
-});
-const mockSkills: ApiSkill[] = [
-  mockSkill(1, "Code", "Python", 2016, "Backend development, APIs, automation"),
-  mockSkill(2, "Database", "PostgreSQL", null, "Schemas, queries, migrations"),
-  mockSkill(5, "Brain", "LLMs & RAG", null, "Pipeline development, vector databases"),
-  mockSkill(6, "Server", "Kubernetes", null, "Helm, deployments, services"),
-];
-
 /** Every translation at once: the page picks its language (see lib/queries.ts). */
 export const fetchSkills = (): Promise<ApiSkill[]> =>
-  env.mock
-    ? Promise.resolve(mockSkills)
-    : apiClient.getList<ApiSkill[]>(endpoints.work.skills.list);
+  apiClient.getList<ApiSkill[]>(endpoints.work.skills.list);

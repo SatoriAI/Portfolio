@@ -16,8 +16,8 @@ export default defineConfig({
     // environment: "jsdom" (and jsdom itself) when component tests arrive.
     environment: "node",
     include: ["src/**/*.test.ts"],
-    // config/env.ts warns at import time when this is unset; the service
-    // tests import it transitively and the warning is noise, not a signal.
+    // config/env.ts throws at import time when this is unset, and the service
+    // tests import it transitively; no test makes a real request to it.
     env: { VITE_API_BASE_URL: "http://localhost:8000" },
   },
 });
