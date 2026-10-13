@@ -1,5 +1,4 @@
 import { endpoints } from "../config/endpoints";
-import { env } from "../config/env";
 
 import { apiClient } from "./apiClient";
 
@@ -76,88 +75,6 @@ export function mapApiTestimonialToUi(
   };
 }
 
-// Mock data for development
-const mockTestimonials: ApiTestimonial[] = [
-  {
-    id: 1,
-    translations: {
-      en: {
-        course: "Advanced Mathematics",
-        content:
-          "Exceptional teaching style! Complex mathematical concepts were explained clearly and patiently. The practical examples really helped bridge theory and application.",
-      },
-      pl: {
-        course: "Matematyka Zaawansowana",
-        content:
-          "Wyjątkowy styl nauczania! Złożone koncepcje matematyczne zostały wyjaśnione jasno i cierpliwie. Praktyczne przykłady naprawdę pomogły połączyć teorię z zastosowaniem.",
-      },
-    },
-    created_at: "2023-12-15T00:00:00Z",
-    updated_at: "2023-12-15T00:00:00Z",
-    semester: "2023/24",
-    season: "Fall",
-  },
-  {
-    id: 2,
-    translations: {
-      en: {
-        course: "Linear Algebra",
-        content:
-          "Best mathematics instructor I've had. The combination of theoretical depth and real-world applications made the subject fascinating and accessible.",
-      },
-      pl: {
-        course: "Algebra Liniowa",
-        content:
-          "Najlepszy instruktor matematyki, jakiego miałem. Połączenie głębi teoretycznej z zastosowaniami w rzeczywistym świecie sprawiło, że przedmiot był fascynujący i przystępny.",
-      },
-    },
-    created_at: "2023-06-20T00:00:00Z",
-    updated_at: "2023-06-20T00:00:00Z",
-    semester: "2022/23",
-    season: "Spring",
-  },
-  {
-    id: 3,
-    translations: {
-      en: {
-        course: "Mathematical Analysis",
-        content:
-          "Outstanding mentor and teacher. Always available for questions and provided excellent guidance on research projects. Highly recommend!",
-      },
-      pl: {
-        course: "Analiza Matematyczna",
-        content:
-          "Wybitny mentor i nauczyciel. Zawsze dostępny na pytania i zapewniał doskonałe wskazówki dotyczące projektów badawczych. Gorąco polecam!",
-      },
-    },
-    created_at: "2022-12-10T00:00:00Z",
-    updated_at: "2022-12-10T00:00:00Z",
-    semester: "2022/23",
-    season: "Winter",
-  },
-  {
-    id: 4,
-    translations: {
-      en: {
-        course: "Topology",
-        content:
-          "Incredible ability to make abstract concepts concrete. The course materials were well-organized and the explanations were crystal clear.",
-      },
-      pl: {
-        course: "Topologia",
-        content:
-          "Niesamowita umiejętność konkretyzowania abstrakcyjnych koncepcji. Materiały do kursu były dobrze zorganizowane, a wyjaśnienia były krystalicznie jasne.",
-      },
-    },
-    created_at: "2023-03-15T00:00:00Z",
-    updated_at: "2023-03-15T00:00:00Z",
-    semester: "2022/23",
-    season: "Winter",
-  },
-];
-
 /** Every translation at once: the page picks its language (see lib/queries.ts). */
 export const fetchTestimonials = (): Promise<ApiTestimonial[]> =>
-  env.mock
-    ? Promise.resolve(mockTestimonials)
-    : apiClient.getList<ApiTestimonial[]>(endpoints.education.testimonials.list);
+  apiClient.getList<ApiTestimonial[]>(endpoints.education.testimonials.list);

@@ -82,7 +82,7 @@ The backend reads `backend/.env`; every key is listed with its default in [`back
 
 Compose overrides `DATABASE_URL`, `DEBUG` and `USE_S3` with local values, so a `.env` pointing at Railway cannot reach production by accident.
 
-The frontend takes `VITE_API_BASE_URL` and `VITE_MOCK` (see [`frontend/.env.example`](./frontend/.env.example)). Vite inlines these at build time, so changing either needs a rebuild rather than a restart.
+The frontend takes `VITE_API_BASE_URL` (see [`frontend/.env.example`](./frontend/.env.example)). Vite inlines it at build time, so changing it needs a rebuild rather than a restart.
 
 ## Limitations and assumptions
 

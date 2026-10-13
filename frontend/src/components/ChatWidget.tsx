@@ -8,7 +8,6 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { toast as notify } from "@/components/ui/sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { buildUrl, endpoints } from "@/config/endpoints";
-import { env } from "@/config/env";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useLatest } from "@/hooks/use-latest";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
@@ -99,39 +98,6 @@ const ChatWidget = ({
   // still being fetched.
   const [hydrated, setHydrated] = useState(false);
 
-  // Sample responses for demonstration - in production, this would connect to your RAG system
-  const sampleResponses: { [key: string]: string } = {
-    experience:
-      "This developer has extensive experience in Python backend development, with a focus on building scalable systems and implementing LLM solutions. They've worked on RAG pipelines, infrastructure automation, and have handled systems processing millions of requests daily.",
-    skills:
-      "Their core skills include Python (expert level), database management (PostgreSQL, MongoDB, Redis), LLM integration and RAG pipeline development, and infrastructure management with AWS, Docker, and Kubernetes.",
-    projects:
-      "Some notable projects include an Intelligent Document RAG System using vector embeddings, a scalable backend architecture handling 1M+ daily requests, and infrastructure automation suites with comprehensive DevOps pipelines.",
-    rag: "They specialize in RAG (Retrieval Augmented Generation) pipelines, having built sophisticated systems for document analysis using vector embeddings, ChromaDB, and various LLM providers. Their RAG implementations focus on accuracy and scalability.",
-    default:
-      "I'd be happy to help you learn more about this developer! You can ask me about their technical skills, project experience, background with LLMs and RAG systems, or anything else you'd like to know.",
-  };
-
-  const getResponse = (message: string): string => {
-    const lowerMessage = message.toLowerCase();
-
-    if (lowerMessage.includes("experience") || lowerMessage.includes("background")) {
-      return sampleResponses.experience;
-    } else if (lowerMessage.includes("skill") || lowerMessage.includes("technical")) {
-      return sampleResponses.skills;
-    } else if (lowerMessage.includes("project") || lowerMessage.includes("work")) {
-      return sampleResponses.projects;
-    } else if (
-      lowerMessage.includes("rag") ||
-      lowerMessage.includes("llm") ||
-      lowerMessage.includes("ai")
-    ) {
-      return sampleResponses.rag;
-    } else {
-      return sampleResponses.default;
-    }
-  };
-
   const clearWatchdog = () => {
     if (watchdogRef.current !== null) {
       window.clearTimeout(watchdogRef.current);
@@ -158,7 +124,7 @@ const ChatWidget = ({
     const run = ++hydration.current;
     const storedKey = localStorage.getItem("vex_chat_session_key");
     sessionKeyRef.current = storedKey;
-    if (!storedKey || env.mock) {
+    if (!storedKey) {
       setHydrated(true);
       return;
     }
@@ -288,21 +254,6 @@ const ChatWidget = ({
         el.style.height = "auto";
       }
     });
-
-    if (env.mock) {
-      setIsLoading(true);
-      setTimeout(() => {
-        const aiResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          text: getResponse(question),
-          isUser: false,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, aiResponse]);
-        setIsLoading(false);
-      }, 800);
-      return;
-    }
 
     try {
       setIsLoading(true);

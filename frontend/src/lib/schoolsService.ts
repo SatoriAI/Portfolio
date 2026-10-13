@@ -1,5 +1,4 @@
 import { endpoints } from "../config/endpoints";
-import { env } from "../config/env";
 
 import { apiClient } from "./apiClient";
 
@@ -95,81 +94,6 @@ export function mapApiSchoolToUi(school: ApiSchool, language: string): UiSchool 
   };
 }
 
-// Mock data for development
-const mockSchools: ApiSchool[] = [
-  {
-    id: 1,
-    translations: {
-      en: {
-        study: "PhD in Theoretical Mathematics",
-        university: "Wrocław University of Technology",
-        research:
-          "Algebraic Topology and Applications to Data Analysis - Developing novel computational methods for topological data analysis and persistent homology with applications in machine learning and data science.",
-        advisor: "prof. Adam Nowak",
-        areas: [
-          "Algebraic Topology",
-          "Topological Data Analysis",
-          "Computational Mathematics",
-          "Machine Learning Theory",
-          "Persistent Homology",
-        ],
-      },
-      pl: {
-        study: "Doktorat z Matematyki Teoretycznej",
-        university: "Politechnika Wrocławska",
-        research:
-          "Topologia Algebraiczna i Zastosowania w Analizie Danych - Opracowywanie nowatorskich metod obliczeniowych dla topologicznej analizy danych i homologii trwałej z zastosowaniami w uczeniu maszynowym i nauce o danych.",
-        advisor: "prof. Adam Nowak",
-        areas: [
-          "Topologia Algebraiczna",
-          "Topologiczna Analiza Danych",
-          "Matematyka Obliczeniowa",
-          "Teoria Uczenia Maszynowego",
-          "Homologia Trwała",
-        ],
-      },
-    },
-    created_at: "2021-10-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
-    start: "2021-10-01",
-    end: "",
-    degree: "Doctoral Studies",
-  },
-  {
-    id: 2,
-    translations: {
-      en: {
-        study: "Master of Science in Mathematics",
-        university: "Wrocław University of Technology",
-        research:
-          "Harmonic Analysis and Functional Analysis - Research focused on operator theory and spectral analysis with applications to signal processing.",
-        advisor: "prof. dr hab. Maria Kowalska",
-        areas: ["Harmonic Analysis", "Functional Analysis", "Operator Theory", "Signal Processing"],
-      },
-      pl: {
-        study: "Magister Matematyki",
-        university: "Politechnika Wrocławska",
-        research:
-          "Analiza Harmoniczna i Analiza Funkcjonalna - Badania skupione na teorii operatorów i analizie spektralnej z zastosowaniami w przetwarzaniu sygnałów.",
-        advisor: "prof. dr hab. Maria Kowalska",
-        areas: [
-          "Analiza Harmoniczna",
-          "Analiza Funkcjonalna",
-          "Teoria Operatorów",
-          "Przetwarzanie Sygnałów",
-        ],
-      },
-    },
-    created_at: "2016-10-01T00:00:00Z",
-    updated_at: "2021-06-30T00:00:00Z",
-    start: "2016-10-01",
-    end: "2021-06-30",
-    degree: "Master's",
-  },
-];
-
 /** Every translation at once: the page picks its language (see lib/queries.ts). */
 export const fetchSchools = (): Promise<ApiSchool[]> =>
-  env.mock
-    ? Promise.resolve(mockSchools)
-    : apiClient.getList<ApiSchool[]>(endpoints.education.schools.list);
+  apiClient.getList<ApiSchool[]>(endpoints.education.schools.list);
