@@ -68,7 +68,6 @@ const copy = {
       skipToContent: "Skip to content",
       mainPage: "Main page",
       pages: "Pages",
-      homeSections: "Home sections",
     },
     navDescriptions: {
       home: "Jump to the top of the Home page.",
@@ -430,14 +429,6 @@ const copy = {
           },
         },
       },
-      figure: {
-        figure: "The Neumann heat kernel on a segment, over time",
-        caption:
-          "The Neumann heat kernel on a segment, $K_t(x, y)$ for fixed $y$. Drag $t$: heat placed at one point spreads and flattens towards the mean, $1/π$, and the field behind this page spreads with it. A sharp estimate bounds a kernel like this one from above and below by the same expression, up to constants. The series is cut at $n = 60$.",
-        play: "Run the diffusion",
-        playing: "Running…",
-        time: "time t",
-      },
       education: "Academic background",
       story: {
         lead: "A hunch says “probably”. Mathematics says “always”.",
@@ -725,7 +716,6 @@ const copy = {
       skipToContent: "Przejdź do treści",
       mainPage: "Strona główna",
       pages: "Strony",
-      homeSections: "Sekcje strony głównej",
     },
     navDescriptions: {
       home: "Przejdź na początek strony głównej.",
@@ -1057,14 +1047,6 @@ const copy = {
               "Fala o częstotliwości $k$ powtarza swój wzór $k$ razy wokół okręgu. Przesunięcie liczb zmienia jej fazę, czyli miejsce, od którego zaczyna się wzór. W modelu badam, czy podobne zależności pojawiają się między jego wewnętrznymi sygnałami.",
           },
         },
-      },
-      figure: {
-        figure: "Jądro ciepła Neumanna na odcinku, w czasie",
-        caption:
-          "Jądro ciepła Neumanna na odcinku, $K_t(x, y)$ dla ustalonego $y$. Przesuń $t$: ciepło z jednego punktu rozchodzi się i wyrównuje do średniej, $1/π$, a razem z nim rozchodzi się pole w tle tej strony. Ostre oszacowanie ogranicza takie jądro z góry i z dołu tym samym wyrażeniem, z dokładnością do stałych. Szereg ucięto na $n = 60$.",
-        play: "Uruchom dyfuzję",
-        playing: "Trwa…",
-        time: "czas t",
       },
       education: "Wykształcenie",
       story: {
