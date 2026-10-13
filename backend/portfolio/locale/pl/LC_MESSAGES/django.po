@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 05:45+0000\n"
+"POT-Creation-Date: 2026-10-13 20:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -44,11 +44,11 @@ msgstr "Studia magisterskie"
 msgid "Doctoral Studies"
 msgstr "Studia doktoranckie"
 
-#: university/models.py:13 work/models.py:135
+#: university/models.py:13 work/models.py:142
 msgid "Start"
 msgstr "Rozpoczęcie"
 
-#: university/models.py:14 work/models.py:136
+#: university/models.py:14 work/models.py:143
 msgid "End"
 msgstr "Koniec"
 
@@ -92,7 +92,7 @@ msgstr "Link"
 msgid "Year"
 msgstr "Rok"
 
-#: university/models.py:52 vex/models.py:33 vex/models.py:56 work/models.py:83
+#: university/models.py:52 vex/models.py:41 vex/models.py:65 work/models.py:83
 msgid "Title"
 msgstr "Tytuł"
 
@@ -120,7 +120,7 @@ msgstr "Sezon"
 msgid "Course"
 msgstr "Kurs"
 
-#: university/models.py:79 vex/models.py:25
+#: university/models.py:79 vex/models.py:25 vex/models.py:49
 msgid "Content"
 msgstr "Treść"
 
@@ -144,15 +144,7 @@ msgstr "Stworzono"
 msgid "Updated At"
 msgstr "Zaktualizowano"
 
-#: vex/actions/inject_documents.py:18
-msgid "Inject Document(s) to Vector Database"
-msgstr "Wstrzyknij Dokument(y) do Wektorowej Bazy Danych"
-
-#: vex/actions/inject_documents.py:24
-msgid "Document(s) injected successfully."
-msgstr "Dokumenty wstrzyknięto pomyślnie."
-
-#: vex/admin.py:41
+#: vex/admin.py:43
 msgid "Number of Messages"
 msgstr "Liczba Wiadomości"
 
@@ -168,67 +160,99 @@ msgstr "Rozmowa"
 msgid "Conversations"
 msgstr "Rozmowy"
 
-#: vex/models.py:24 work/models.py:163
+#: vex/models.py:24 work/models.py:170
 msgid "Role"
 msgstr "Rola"
 
-#: vex/models.py:28
-msgid "Message"
-msgstr "Wiadomość"
-
 #: vex/models.py:29
-msgid "Messages"
-msgstr "Wiadomomści"
-
-#: vex/models.py:34 work/models.py:47 work/models.py:90 work/models.py:186
-msgid "Description"
-msgstr "Opis"
-
-#: vex/models.py:35
-msgid "Language"
-msgstr "Język"
-
-#: vex/models.py:37
-msgid "File"
-msgstr "Plik"
-
-#: vex/models.py:38
-msgid "Source URL"
-msgstr "Adres URL"
-
-#: vex/models.py:40
-msgid "Injected"
-msgstr "Wstrzyknięto"
-
-#: vex/models.py:50
-msgid "Document"
-msgstr "Dokument"
-
-#: vex/models.py:51
-msgid "Documents"
-msgstr "Dokumenty"
-
-#: vex/models.py:57
-msgid "System Prompt"
-msgstr "Prompt Systemowy"
-
-#: vex/models.py:58
-msgid "User Prompt"
-msgstr "Prompt Użytkownika"
-
-#: vex/models.py:60
 msgid "Model"
 msgstr "Model"
 
-#: vex/models.py:61
-msgid "Temperature"
-msgstr "Temperatura"
+#: vex/models.py:30
+msgid "Prompt version"
+msgstr "Wersja promptu"
+
+#: vex/models.py:31
+msgid "Input tokens"
+msgstr "Tokeny wejściowe"
+
+#: vex/models.py:32
+msgid "Cached input tokens"
+msgstr "Tokeny wejściowe z cache"
+
+#: vex/models.py:33
+msgid "Output tokens"
+msgstr "Tokeny wyjściowe"
+
+#: vex/models.py:36
+msgid "Message"
+msgstr "Wiadomość"
+
+#: vex/models.py:37
+msgid "Messages"
+msgstr "Wiadomomści"
+
+#: vex/models.py:42 work/models.py:47 work/models.py:97 work/models.py:193
+msgid "Description"
+msgstr "Opis"
+
+#: vex/models.py:43
+msgid "Language"
+msgstr "Język"
+
+#: vex/models.py:45
+msgid "File"
+msgstr "Plik"
+
+#: vex/models.py:46
+msgid "Source URL"
+msgstr "Adres URL"
+
+#: vex/models.py:52
+msgid ""
+"The text Vex reads. Filled from the file when one is uploaded; edit it "
+"freely."
+msgstr ""
+"Tekst, który czyta Vex. Wypełnia się z pliku przy jego wgraniu; można go "
+"swobodnie edytować."
+
+#: vex/models.py:59
+msgid "Document"
+msgstr "Dokument"
+
+#: vex/models.py:60
+msgid "Documents"
+msgstr "Dokumenty"
 
 #: vex/models.py:67
+msgid "System Prompt"
+msgstr "Prompt Systemowy"
+
+#: vex/models.py:69
+msgid ""
+"Vex's persona: its tone and style. Read with the rules in code, which win "
+"where they disagree."
+msgstr ""
+"Osobowość Vexa: ton i styl. Czytana razem z zasadami w kodzie, które "
+"wygrywają tam, gdzie się różnią."
+
+#: vex/models.py:73
+msgid "User Prompt"
+msgstr "Prompt Użytkownika"
+
+#: vex/models.py:74
+msgid ""
+"No longer read: the question and the knowledge are put together in code. "
+"Kept for reference."
+msgstr ""
+"Już nieużywany: pytanie i wiedzę składa teraz kod. Zachowany dla "
+"porządku."
+
+#: vex/models.py:82
 msgid "Configuration"
 msgstr "Konfiguracja"
 
-#: vex/models.py:68
+#: vex/models.py:83
 msgid "Configurations"
 msgstr "Konfiguracje"
 
@@ -293,11 +317,19 @@ msgstr "Demo"
 msgid "Repository"
 msgstr "Repozytorium"
 
-#: work/models.py:92 work/models.py:189
+#: work/models.py:89
+msgid "Mobile"
+msgstr ""
+
+#: work/models.py:93
+msgid "A phone app: the site shows it in a phone rather than a browser window."
+msgstr ""
+
+#: work/models.py:99 work/models.py:196
 msgid "Vex question"
 msgstr "Pytanie do Vexa"
 
-#: work/models.py:96 work/models.py:193
+#: work/models.py:103 work/models.py:200
 msgid ""
 "What the Ask Vex button offers to ask about this item. Leave empty for a "
 "general question."
@@ -305,57 +337,57 @@ msgstr ""
 "Pytanie, które podpowiada przycisk Zapytaj Vexa. Zostaw puste, by użyć "
 "ogólnego."
 
-#: work/models.py:113
+#: work/models.py:120
 msgid "Project"
 msgstr "Projekt"
 
-#: work/models.py:114
+#: work/models.py:121
 msgid "Projects"
 msgstr "Projekty"
 
-#: work/models.py:134
+#: work/models.py:141
 msgid "Position"
 msgstr "Stanowisko"
 
-#: work/models.py:137
+#: work/models.py:144
 msgid "Company"
 msgstr "Firma"
 
-#: work/models.py:138
+#: work/models.py:145
 msgid "Technologies"
 msgstr "Technologie"
 
-#: work/models.py:141
+#: work/models.py:148
 msgctxt "experience"
 msgid "Tools"
 msgstr "Narzędzia programistyczne"
 
-#: work/models.py:144
+#: work/models.py:151
 msgid "Programming tools used in the role, e.g. Copilot, Claude Code."
 msgstr ""
 "Narzędzia programistyczne używane w tej roli, np. Copilot, Claude Code."
 
-#: work/models.py:148
+#: work/models.py:155
 msgctxt "experience"
 msgid "Topics"
 msgstr "Tematyka zajęć"
 
-#: work/models.py:151
+#: work/models.py:158
 msgid "Subjects taught, for a teaching or training role."
 msgstr "Tematy zajęć, dla roli trenerskiej lub dydaktycznej."
 
-#: work/models.py:154
+#: work/models.py:161
 msgid "Visible"
 msgstr "Widoczne"
 
-#: work/models.py:158
+#: work/models.py:165
 msgid ""
 "Shown on the site and to Vex. Uncheck to keep the role without showing it."
 msgstr ""
 "Pokazywane na stronie i Vexowi. Odznacz, by zachować rolę bez pokazywania "
 "jej."
 
-#: work/models.py:168
+#: work/models.py:175
 msgid ""
 "The role's title in this language; it replaces Position, still shown by the "
 "current site."
@@ -363,38 +395,50 @@ msgstr ""
 "Nazwa roli w tym języku; zastępuje Stanowisko, które obecna strona wciąż "
 "pokazuje."
 
-#: work/models.py:170
+#: work/models.py:177
 msgid "Location"
 msgstr "Lokalizacja"
 
-#: work/models.py:171
+#: work/models.py:178
 msgctxt "experience"
 msgid "Product"
 msgstr "Produkt"
 
-#: work/models.py:172
+#: work/models.py:179
 msgctxt "experience"
 msgid "Responsibilities"
 msgstr "Moja odpowiedzialność"
 
-#: work/models.py:175
+#: work/models.py:182
 msgctxt "experience"
 msgid "Contributions"
 msgstr "Wybrane elementy mojego wkładu"
 
-#: work/models.py:181
+#: work/models.py:188
 msgctxt "experience"
 msgid "Results"
 msgstr "Efekty"
 
-#: work/models.py:187
+#: work/models.py:194
 msgid "Achievements"
 msgstr "Osiągnięcia"
 
-#: work/models.py:246
+#: work/models.py:253
 msgid "Experience"
 msgstr "Doświadczenie"
 
-#: work/models.py:247
+#: work/models.py:254
 msgid "Experiences"
 msgstr "Doświadczenia"
+
+#~ msgid "Inject Document(s) to Vector Database"
+#~ msgstr "Wstrzyknij Dokument(y) do Wektorowej Bazy Danych"
+
+#~ msgid "Document(s) injected successfully."
+#~ msgstr "Dokumenty wstrzyknięto pomyślnie."
+
+#~ msgid "Injected"
+#~ msgstr "Wstrzyknięto"
+
+#~ msgid "Temperature"
+#~ msgstr "Temperatura"

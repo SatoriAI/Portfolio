@@ -17,14 +17,14 @@ A monorepo of two projects that are always developed together. Each half keeps i
 
 | Path | Project | Stack |
 | --- | --- | --- |
-| [`backend/`](./backend) | REST API, admin, and the Vex RAG pipeline | Python 3.13 · Django 5.2 · DRF · PostgreSQL + pgvector · `uv` |
+| [`backend/`](./backend) | REST API, admin, and the Vex assistant | Python 3.13 · Django 5.2 · DRF · PostgreSQL · `uv` |
 | [`frontend/`](./frontend) | The public single-page app | React 18 · TypeScript · Vite · Tailwind · shadcn/ui |
 
 ```text
 backend/            Django project, .railway/ deploy config, tools/chat-tester
 frontend/           Vite SPA
 Makefile            every command this repository runs
-docker-compose.yml  both halves plus a pgvector Postgres
+docker-compose.yml  both halves plus a Postgres
 lefthook.yml        commit hooks for both ecosystems
 ```
 
@@ -42,7 +42,7 @@ docker compose exec backend python portfolio/manage.py migrate
 
 **The migrate step is required, not optional.** Until it runs, the API and `/healthcheck/` both return 500 — the containers are up but the schema does not exist yet.
 
-That leaves the frontend on `:8080`, the API on `:8000` (admin at `/admin/`, OpenAPI docs at `/api/docs/`) and Postgres with pgvector on `:5432`.
+That leaves the frontend on `:8080`, the API on `:8000` (admin at `/admin/`, OpenAPI docs at `/api/docs/`) and Postgres on `:5432`.
 
 A fresh database has **no portfolio content**, so every endpoint returns `[]` and the site renders empty. Add content through the admin:
 
@@ -50,7 +50,7 @@ A fresh database has **no portfolio content**, so every endpoint returns `[]` an
 docker compose exec backend python portfolio/manage.py createsuperuser
 ```
 
-To run either half outside Docker you need a Postgres that has the `vector` extension available — a stock Postgres will not do:
+To run either half outside Docker you need a Postgres of your own:
 
 ```bash
 make install                                        # both halves
@@ -76,9 +76,10 @@ The backend reads `backend/.env`; every key is listed with its default in [`back
 | --- | --- | --- |
 | `SECRET_KEY` | Yes | Django signing; no default |
 | `DATABASE_URL` | Yes | Application database; compose supplies a local one |
-| `VECTOR_DB_COLLECTION` | Yes | Name of the pgvector collection holding Vex's embeddings |
 | `OPENAI_API_KEY` | Yes | Vex only; Django will not start without it, but nothing else uses it |
 | `USE_S3` | No | Media to object storage. Defaults to the inverse of `DEBUG` |
+| `VEX_MODEL`, `VEX_REASONING_EFFORT` | No | Vex's OpenAI model and its reasoning effort; `gpt-6-luna` and `low` by default |
+| `VEX_SITE_CONTENT_URL` | No | The site's origin, where Vex fetches `/vex-kb/<pl\|en>.json`; `http://localhost:8080` with `DEBUG`, otherwise empty |
 
 Compose overrides `DATABASE_URL`, `DEBUG` and `USE_S3` with local values, so a `.env` pointing at Railway cannot reach production by accident.
 
@@ -87,7 +88,7 @@ The frontend takes `VITE_API_BASE_URL` (see [`frontend/.env.example`](./frontend
 ## Limitations and assumptions
 
 - **Vex needs an OpenAI key with credit on it.** Without one the SSE stream opens and then delivers an error event rather than an answer — `401` for a bad key, `429 insufficient_quota` when the account is out of credit. The rest of the site is unaffected.
-- **The database must have pgvector.** Compose and CI both provide it; a stock Postgres image cannot run the vector store.
+- **Vex reads the site's Markdown from the deployed frontend.** The frontend's build publishes it as `/vex-kb/<pl|en>.json`; without `VEX_SITE_CONTENT_URL`, or with the site down, Vex answers from the database alone.
 - **Content lives in the database, not in the repository**, so a fresh checkout has an empty site and there is no seed fixture.
 - **Media requires object storage in production.** With `USE_S3` on, the `BUCKET_*` variables are all required.
 - **Frontend tests cover pure logic only** — the SSE decoding, markdown repair and locale mappings. There are no component or end-to-end tests, and `npm run build` is what typechecks the project.

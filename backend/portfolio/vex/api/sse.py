@@ -12,7 +12,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from vex.ai.rag import stream_answer
+from vex.ai.engine import stream_answer
 from vex.api.limits import (
     SESSION_HEADER,
     RateLimitedMixin,
