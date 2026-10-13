@@ -227,7 +227,7 @@ const CareerTimeline = <Id extends TimelineId>({
                   onBlur={() => onPreview?.(null)}
                   onKeyDown={onKeyDown(index)}
                   className={cn(
-                    "group absolute left-0 top-7 size-10 md:size-14",
+                    "tap-target group absolute left-0 top-7 size-10 md:size-14",
                     circleControl,
                     circleState(selected),
                     circlesAway ? "opacity-30" : "opacity-100",

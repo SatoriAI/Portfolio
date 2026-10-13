@@ -299,9 +299,8 @@ const PublicationStack = ({
               }}
               className={cn(
                 hiddenUntilFiled,
-                "absolute top-0 flex items-center gap-3 rounded-t-card border border-border bg-card px-5 text-left outline-none",
+                "absolute top-0 flex items-center gap-3 rounded-t-card border border-border bg-card px-5 text-left",
                 "transition-[transform,left,right,color,border-color,box-shadow] duration-400 ease-brand motion-reduce:transition-none",
-                "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-[3px] focus-visible:ring-offset-background",
                 isOpen
                   ? "border-b-transparent text-foreground"
                   : "text-muted-foreground hover:text-foreground hover:shadow-lift",
@@ -347,7 +346,7 @@ const PublicationStack = ({
             style={{ zIndex: count + 1 }}
             className={cn(
               hiddenUntilFiled,
-              "relative col-start-1 row-start-1 rounded-b-card border border-t-0 border-border bg-card p-6 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-[3px] focus-visible:ring-offset-background data-[state=inactive]:pointer-events-none data-[state=inactive]:invisible data-[state=active]:duration-400 data-[state=active]:ease-brand data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-2 motion-reduce:data-[state=active]:animate-none md:p-8",
+              "relative col-start-1 row-start-1 rounded-b-card border border-t-0 border-border bg-card p-6 transition-none data-[state=inactive]:pointer-events-none data-[state=inactive]:invisible data-[state=active]:duration-400 data-[state=active]:ease-brand data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-2 motion-reduce:data-[state=active]:animate-none md:p-8",
             )}
           >
             <Sheet

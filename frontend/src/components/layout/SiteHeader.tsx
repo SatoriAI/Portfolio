@@ -121,6 +121,7 @@ const SiteHeader = () => {
                 <SheetContent
                   className="w-[85vw] max-w-sm pb-[env(safe-area-inset-bottom)]"
                   aria-describedby={undefined}
+                  closeLabel={t.common.close}
                 >
                   <SheetTitle className="sr-only">{t.common.menu}</SheetTitle>
                   <nav aria-label={t.common.menu} className="mt-8 flex flex-col gap-1">

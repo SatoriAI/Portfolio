@@ -32,7 +32,7 @@ const AskVexPrompt = ({
         aria-describedby={hintId}
         onClick={() => onAsk(question)}
         className={cn(
-          "group flex min-h-11 w-full items-center gap-3 rounded-lg border border-control-border bg-background py-1.5 pl-4 pr-1.5 text-left outline-none transition-colors duration-200 hover:border-iris focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "group flex min-h-11 w-full items-center gap-3 rounded-lg border border-control-border bg-background py-1.5 pl-4 pr-1.5 text-left transition-colors duration-200 hover:border-iris",
           className,
         )}
       >
