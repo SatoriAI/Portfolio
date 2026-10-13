@@ -622,20 +622,23 @@ const copy = {
           href: "https://www.mat.umk.pl/nauka/konkurs-im-jozefa-marcinkiewicza/",
         },
       } as Record<string, { label: string; text: string; href?: string }>,
-      // The degree's topic, lifted from its own research paragraph (the
-      // bachelor's is its thesis title).
-      // What the drawing beside the degrees shows, named under it.
+      /** Names the degrees' stops for screen readers: the list of tabs. */
       degreeSteps: "Degrees",
-      /** Under the degree's drawing: it can be pressed to set heat on it. */
-      heatHint: "Press the shape to heat it",
+      /** Over the degrees' road: a stop can be chosen. */
+      degreeHint: "Choose a stop on the road to read more",
+      /** Winds the chosen degree's row back out into the road. */
+      wholeRoad: "Show whole road",
       /** Read after a link that opens elsewhere. */
       newTab: "(opens in a new tab)",
+      // What each degree's drawing shows, named under its stop.
       domainNames: {
         "torus-interval": "Torus and interval",
         cone: "Cone",
         revolution: "Solid of revolution",
         "double-cone": "Double cone",
       },
+      // The degree's topic, lifted from its own research paragraph (the
+      // bachelor's is its thesis title).
       educationHeadlines: {
         "2016-10-03": "The heat equation on the torus and the interval",
         "2019-10-03": "The heat equation on the cone",
@@ -1241,7 +1244,8 @@ const copy = {
         },
       } as Record<string, { label: string; text: string; href?: string }>,
       degreeSteps: "Stopnie",
-      heatHint: "Kliknij figurę, by ją ogrzać",
+      degreeHint: "Wybierz etap drogi, by przeczytać więcej",
+      wholeRoad: "Pokaż całą drogę",
       newTab: "(otwiera się w nowej karcie)",
       domainNames: {
         "torus-interval": "Torus i odcinek",
