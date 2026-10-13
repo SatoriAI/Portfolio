@@ -11,8 +11,14 @@ import { buildUrl, endpoints } from "@/config/endpoints";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useLatest } from "@/hooks/use-latest";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
-import { apiClient, apiFetch } from "@/lib/apiClient";
+import { apiFetch } from "@/lib/apiClient";
 import { decodeStreamData, finalizeMarkdown } from "@/lib/streamMarkdown";
+import {
+  VEX_QUESTION_MAX_LENGTH,
+  type VexErrorCode,
+  vexRequestErrorCode,
+  vexStreamErrorCode,
+} from "@/lib/vexErrors";
 import { translations } from "@/utils/translations";
 
 // react-markdown and its remark pipeline are the heaviest part of the widget;
@@ -129,9 +135,9 @@ const ChatWidget = ({
       return;
     }
     try {
-      const data = await apiClient.get<any>(endpoints.vex.messages.list, {
-        session: storedKey,
-        ordering: "created_at",
+      // The key goes in a header, not the URL, so it never lands in access logs.
+      const data = await apiFetch<any>(endpoints.vex.messages.list, {
+        headers: { "X-Vex-Session": storedKey },
       });
       const items: any[] = Array.isArray(data?.results)
         ? data.results
@@ -205,8 +211,8 @@ const ChatWidget = ({
 
   // Every failure — request error, server error, or silence — ends in the same
   // visible state: an inline notice with a way to reach me instead. The toast
-  // is only a secondary signal.
-  const failConversation = (reason: string) => {
+  // is only a secondary signal, in the site's words, never the provider's.
+  const failConversation = (code: VexErrorCode) => {
     closeExistingStream();
     setIsLoading(false);
     setIsStreaming(false);
@@ -221,15 +227,12 @@ const ChatWidget = ({
         status: "error",
       },
     ]);
-    notify.error(reason);
+    notify.error(t.chat.errors[code]);
   };
 
   const armWatchdog = () => {
     clearWatchdog();
-    watchdogRef.current = window.setTimeout(
-      () => failConversation("Vex did not respond in time"),
-      STREAM_TIMEOUT_MS,
-    );
+    watchdogRef.current = window.setTimeout(() => failConversation("timeout"), STREAM_TIMEOUT_MS);
   };
 
   const handleSendMessage = async (text?: string) => {
@@ -337,10 +340,9 @@ const ChatWidget = ({
       });
 
       es.addEventListener("error", (ev: any) => {
-        // The native error event carries no payload; only a named server event
-        // would, so the fallback string is the usual outcome.
-        const dataMsg = typeof ev?.data === "string" ? ev.data : undefined;
-        failConversation(dataMsg || "Streaming error");
+        // The native error event carries no payload; only the server's named
+        // event does, and it carries a code, never the provider's message.
+        failConversation(vexStreamErrorCode(ev?.data));
       });
 
       es.onmessage = (e: MessageEvent) => {
@@ -375,7 +377,7 @@ const ChatWidget = ({
       };
     } catch (err: any) {
       console.error("Chat send failed", err);
-      failConversation(err?.message || "Failed to send message");
+      failConversation(vexRequestErrorCode(err));
     }
   };
 
@@ -587,6 +589,7 @@ const ChatWidget = ({
                 onKeyDown={handleKeyPress}
                 placeholder={t.chat.inputPlaceholder}
                 aria-label={t.chat.inputPlaceholder}
+                maxLength={VEX_QUESTION_MAX_LENGTH}
                 rows={1}
                 className={`max-h-40 w-full resize-none break-all border-0 bg-transparent p-0 leading-6 text-foreground shadow-none outline-none ring-0 ring-offset-0 placeholder:text-muted-foreground focus:shadow-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${!isMultilineInput ? "pr-12" : ""}`}
                 disabled={isLoading || isStreaming}

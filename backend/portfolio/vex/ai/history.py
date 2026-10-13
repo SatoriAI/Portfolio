@@ -3,10 +3,14 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 
 from vex.choices import Roles
 from vex.models import Conversation, Message
+from vex.utils.session import is_valid_session_key
 
 
 class MessageHistory(BaseChatMessageHistory):
     def __init__(self, session_key: str) -> None:
+        # Only a key this server could have issued may open (and so create) a conversation.
+        if not is_valid_session_key(session_key):
+            raise ValueError("Invalid session key")
         self.conversation, _ = Conversation.objects.get_or_create(session=session_key)
 
     @property

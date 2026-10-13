@@ -53,6 +53,13 @@ const copy = {
       ],
       errorFallback:
         "Vex didn't answer. Email me at dawidhanrahan@gmail.com and I'll reply within a few hours.",
+      // Shown in the toast, by the code the backend sends; never the provider's own words.
+      errors: {
+        rate_limited: "That's a lot of questions at once. Give Vex a minute and try again.",
+        question_too_long: "That question is too long for Vex. Try a shorter one.",
+        timeout: "Vex took too long to answer.",
+        unavailable: "Vex is unavailable right now.",
+      },
       typing: "Vex is typing",
       clear: "Clear",
       send: "Send",
@@ -704,6 +711,12 @@ const copy = {
       ],
       errorFallback:
         "Vex nie odpowiedział. Napisz na dawidhanrahan@gmail.com — odpowiem w ciągu kilku godzin.",
+      errors: {
+        rate_limited: "To sporo pytań naraz. Daj Vexowi minutę i spróbuj ponownie.",
+        question_too_long: "To pytanie jest za długie dla Vexa. Spróbuj krócej.",
+        timeout: "Vex za długo nie odpowiadał.",
+        unavailable: "Vex jest teraz niedostępny.",
+      },
       typing: "Vex pisze",
       clear: "Wyczyść",
       send: "Wyślij",

@@ -1,0 +1,37 @@
+import { describe, expect, it } from "vitest";
+
+import { ApiError } from "./apiClient";
+import { vexRequestErrorCode, vexStreamErrorCode } from "./vexErrors";
+
+describe("vexRequestErrorCode", () => {
+  it("reads a throttled request as rate limited, whatever the body", () => {
+    expect(vexRequestErrorCode(new ApiError(429, "Too Many Requests", ""))).toBe("rate_limited");
+  });
+
+  it("takes the backend's code from the body", () => {
+    const err = new ApiError(400, "Bad Request", '{"code":"question_too_long"}');
+    expect(vexRequestErrorCode(err)).toBe("question_too_long");
+  });
+
+  it("never passes on text it does not recognise", () => {
+    expect(vexRequestErrorCode(new ApiError(500, "Server Error", "<html>Traceback"))).toBe(
+      "unavailable",
+    );
+    expect(vexRequestErrorCode(new ApiError(400, "Bad Request", '{"code":"made_up"}'))).toBe(
+      "unavailable",
+    );
+    expect(vexRequestErrorCode(new TypeError("Failed to fetch"))).toBe("unavailable");
+  });
+});
+
+describe("vexStreamErrorCode", () => {
+  it("reads the code from the backend's error event", () => {
+    expect(vexStreamErrorCode('{"code": "unavailable"}')).toBe("unavailable");
+    expect(vexStreamErrorCode('{"code": "rate_limited"}')).toBe("rate_limited");
+  });
+
+  it("falls back to unavailable for the browser's own error event or provider text", () => {
+    expect(vexStreamErrorCode(undefined)).toBe("unavailable");
+    expect(vexStreamErrorCode("You exceeded your current quota")).toBe("unavailable");
+  });
+});

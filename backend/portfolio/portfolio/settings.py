@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 
 import environ
+from corsheaders.defaults import default_headers
 
 # Environment
 env = environ.Env()
@@ -40,6 +41,8 @@ DEBUG = env.bool("DEBUG", default=False)
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+# Vex's history is asked for with the session key in a header, so the key stays out of URLs and access logs.
+CORS_ALLOW_HEADERS = (*default_headers, "x-vex-session")
 
 if DEBUG:  # For development: Allow local file and HTTP server access
     CORS_ALLOW_ALL_ORIGINS = True
@@ -218,7 +221,23 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
     ],
+    # Vex's limits (see vex.api.limits): every endpoint counts per IP and per session, and the two that reach the
+    # model also per day. Counts live in the default cache: per-process memory, as CACHES is not set.
+    "DEFAULT_THROTTLE_RATES": {
+        "vex_chat": "10/min",
+        "vex_chat_daily": "100/day",
+        "vex_chat_session": "10/min",
+        "vex_stream": "10/min",
+        "vex_stream_daily": "100/day",
+        "vex_stream_session": "10/min",
+        "vex_history": "60/min",
+        "vex_history_session": "60/min",
+    },
 }
+
+# The request header that names the visitor's IP for those limits. Railway's edge sets X-Real-IP; X-Forwarded-For
+# can carry whatever the client sent, and REMOTE_ADDR is the proxy. Empty (the local default) means REMOTE_ADDR.
+TRUSTED_CLIENT_IP_HEADER = env("TRUSTED_CLIENT_IP_HEADER", default="" if DEBUG else "X-Real-IP")
 
 # Own Variables
 OPENAI_API_KEY = env("OPENAI_API_KEY")
