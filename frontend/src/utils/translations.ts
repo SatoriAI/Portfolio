@@ -6,32 +6,32 @@ const copy = {
       workshop: {
         title: "In the workshop · Dawid Hanrahan",
         description:
-          "Ideas, experiments and conclusions from research and successive prototypes: software in production and mathematics.",
+          "Every prototype starts as a Mark I. Here I write up the next ones: experiments in AI, production software and mathematics, with numbers and conclusions.",
       },
       home: {
         title: "Dawid Hanrahan · Design tomorrow, ship today",
         description:
-          "Python backend engineer and PhD candidate in harmonic analysis. In production since 2019: Nokia, PeakData, Xperi, CloudFerro. Projects and pieces from the workshop.",
+          "Design tomorrow, ship today: Python backends, AI systems and products of my own, built with a mathematician's precision. See what runs.",
       },
       experience: {
         title: "Work experience · Dawid Hanrahan",
         description:
-          "Roles, achievements and technologies across Nokia, Xperi, CloudFerro and PeakData.",
+          "Less magic, more engineering. Roles, results and the technology behind them on one timeline: what I built, with what, and what it did.",
       },
       research: {
         title: "Research · Dawid Hanrahan",
         description:
-          "Published papers in harmonic analysis and the questions under investigation now.",
+          "I like it when a proof comes together. I study how heat spreads in spaces with edges and corners, and what mathematics can say about how AI learns.",
       },
       education: {
         title: "Education and teaching · Dawid Hanrahan",
         description:
-          "A PhD in harmonic analysis, in progress, and what students say about the teaching.",
+          "I like it when a hard idea turns simple. Studies at Wrocław Tech, the awards along the way, a PhD in progress, and teaching in students' words.",
       },
       notFound: {
         title: "Page not found · Dawid Hanrahan",
         description:
-          "Python backend engineer and PhD candidate in harmonic analysis. In production since 2019: Nokia, PeakData, Xperi, CloudFerro. Projects and pieces from the workshop.",
+          "There is no page at this address, or it has moved. The home page leads to Dawid Hanrahan's experience, research, projects and pieces from the workshop.",
       },
     },
     common: {
@@ -115,7 +115,7 @@ const copy = {
         ],
       },
       routes: {
-        experience: "Nokia, PeakData, Xperi, CloudFerro: roles and skills",
+        experience: "Roles, results and technology",
         research: "Heat kernels, the papers, and grokking",
         education: "Degrees and teaching",
         workshop: "Latest: {title}",
@@ -657,30 +657,32 @@ const copy = {
       workshop: {
         title: "Z warsztatu · Dawid Hanrahan",
         description:
-          "Pomysły, eksperymenty i wnioski z badań i kolejnych prototypów: oprogramowanie na produkcji i matematyka.",
+          "Każdy prototyp zaczyna się od Mark I. Tu opisuję kolejne wersje: eksperymenty z AI, oprogramowaniem na produkcji i matematyką, z liczbami i wnioskami.",
       },
       home: {
         title: "Dawid Hanrahan · Projektuję jutro, wdrażam dziś",
         description:
-          "Inżynier backendu w Pythonie, doktorant z analizy harmonicznej. Na produkcji od 2019 roku: Nokia, PeakData, Xperi, CloudFerro. Projekty i teksty z warsztatu.",
+          "Projektuję jutro, wdrażam dziś: backend w Pythonie, systemy AI i własne produkty, zbudowane z precyzją matematyka. Zobacz, co działa.",
       },
       experience: {
         title: "Doświadczenie zawodowe · Dawid Hanrahan",
-        description: "Stanowiska, osiągnięcia i technologie w Nokii, Xperi, CloudFerro i PeakData.",
+        description:
+          "Mniej magii, więcej inżynierii. Role, osiągnięcia i technologie na jednej osi czasu: co zbudowałem, czym i z jakim efektem.",
       },
       research: {
         title: "Badania naukowe · Dawid Hanrahan",
-        description: "Publikacje z analizy harmonicznej i pytania, nad którymi pracuję teraz.",
+        description:
+          "Lubię, kiedy dowód się domyka. Badam, jak rozchodzi się ciepło w przestrzeniach z brzegiem i wierzchołkiem, i co matematyka mówi o uczeniu się AI.",
       },
       education: {
         title: "Wykształcenie i dydaktyka · Dawid Hanrahan",
         description:
-          "Studia doktoranckie z analizy harmonicznej w toku i opinie studentów o prowadzonych zajęciach.",
+          "Lubię, kiedy trudne staje się proste. Studia na Politechnice Wrocławskiej, nagrody, doktorat w toku i zajęcia opisane słowami studentów.",
       },
       notFound: {
         title: "Nie znaleziono strony · Dawid Hanrahan",
         description:
-          "Inżynier backendu w Pythonie, doktorant z analizy harmonicznej. Na produkcji od 2019 roku: Nokia, PeakData, Xperi, CloudFerro. Projekty i teksty z warsztatu.",
+          "Pod tym adresem nie ma strony albo zmieniła miejsce. Ze strony głównej trafisz do doświadczenia, badań, projektów i tekstów z warsztatu Dawida Hanrahana.",
       },
     },
     common: {
@@ -764,7 +766,7 @@ const copy = {
         ],
       },
       routes: {
-        experience: "Nokia, PeakData, Xperi, CloudFerro: role i umiejętności",
+        experience: "Role, osiągnięcia i technologie",
         research: "Jądra ciepła, publikacje i grokking",
         education: "Studia i nauczanie",
         workshop: "Najnowszy: {title}",
