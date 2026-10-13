@@ -1,6 +1,7 @@
 import json
 import logging
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
+from typing import Any
 
 from django.conf import settings
 from django.http import StreamingHttpResponse
@@ -31,7 +32,9 @@ class EventStreamRenderer(BaseRenderer):
     media_type = "text/event-stream"
     format = "sse"
 
-    def render(self, data, accepted_media_type=None, renderer_context=None) -> bytes:
+    def render(
+        self, data: Any, accepted_media_type: str | None = None, renderer_context: Mapping[str, Any] | None = None
+    ) -> bytes:
         return json.dumps(data).encode()
 
 
