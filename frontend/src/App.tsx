@@ -5,7 +5,6 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import PageLayout from "@/components/layout/PageLayout";
 import ScrollToTop from "@/components/ScrollToTop";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { VexProvider } from "@/contexts/VexContext";
@@ -27,7 +26,6 @@ const App = () => (
     <SettingsProvider>
       <VexProvider>
         <TooltipProvider>
-          <Toaster />
           <Sonner />
           <BrowserRouter>
             <ScrollToTop />

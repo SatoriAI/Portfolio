@@ -3,16 +3,6 @@ import { env } from "./env";
 type QueryParams = Record<string, string | number | boolean | undefined | null>;
 
 export const endpoints = {
-  // Define logical endpoints here. We'll wire them in later.
-  health: "/health",
-  // Example namespaces for future expansion
-  projects: {
-    list: "/projects",
-    byId: (id: string | number) => `/projects/${id}`,
-  },
-  skills: {
-    list: "/skills",
-  },
   work: {
     projects: {
       list: "/api/work/projects/",
