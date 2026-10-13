@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import faker
 from django.core.cache import cache
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from vex.api.limits import QUESTION_MAX_LENGTH, VexThrottle
@@ -72,6 +72,8 @@ class SSEChatViewTestCase(TestCase):
         chain.assert_not_called()
         self.assertEqual(Conversation.objects.count(), 0)
 
+    # REMOTE_ADDR is the visitor, as locally with no proxy; CI runs with DEBUG off, where the header is required.
+    @override_settings(TRUSTED_CLIENT_IP_HEADER="")
     def test_stream_is_rate_limited_for_an_event_source(self) -> None:
         with (
             patch("vex.api.sse.get_rag_chain") as chain,

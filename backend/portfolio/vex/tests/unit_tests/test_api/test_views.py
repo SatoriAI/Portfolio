@@ -77,6 +77,8 @@ class ChatViewTestCase(TestCase):
         resp = self.client.post(reverse("vex:chat"), data=["Hi"], content_type="application/json")
         self.assertEqual(resp.status_code, 400)
 
+    # REMOTE_ADDR is the visitor, as locally with no proxy; CI runs with DEBUG off, where the header is required.
+    @override_settings(TRUSTED_CLIENT_IP_HEADER="")
     def test_post_is_rate_limited_per_ip(self) -> None:
         url = reverse("vex:chat")
         with patch.dict(VexThrottle.THROTTLE_RATES, {"vex_chat": "2/min"}):
@@ -132,6 +134,8 @@ class MessageListViewTestCase(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual([item["id"] for item in resp.json()], [m1.id, m2.id])
 
+    # REMOTE_ADDR is the visitor, as locally with no proxy; CI runs with DEBUG off, where the header is required.
+    @override_settings(TRUSTED_CLIENT_IP_HEADER="")
     def test_is_rate_limited_per_ip(self) -> None:
         with patch.dict(VexThrottle.THROTTLE_RATES, {"vex_history": "2/min"}):
             for _ in range(2):
