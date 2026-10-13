@@ -1,4 +1,4 @@
-import { clamp01, EASE_BRAND } from "@/lib/motion";
+import { clamp01, EASE_BRAND_POINTS } from "@/lib/motion";
 
 /**
  * The degrees' road, as numbers: where each stop sits on the road and in the
@@ -87,10 +87,8 @@ export const cubicBezier = (x1: number, y1: number, x2: number, y2: number) => {
     return y(t);
   };
 };
-/** The kit's ease, read from EASE_BRAND so the two can never drift apart. */
-const easeBrand = cubicBezier(
-  ...((EASE_BRAND.match(/[\d.]+/g) ?? []).map(Number) as [number, number, number, number]),
-);
+/** The kit's ease, from the same points as EASE_BRAND, so the two never drift apart. */
+const easeBrand = cubicBezier(...EASE_BRAND_POINTS);
 const easeInOut = cubicBezier(0.65, 0, 0.35, 1);
 
 /** Progress through the window [from, to] of the whole, 0 before and 1 after. */

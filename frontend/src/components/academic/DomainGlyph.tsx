@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
+import { GLYPH_SCALE } from "@/lib/domainGlyph";
 import { cn } from "@/lib/utils";
 
 /**
@@ -22,11 +23,8 @@ import { cn } from "@/lib/utils";
 /** The drawing's height in its own units; strokes are sized against it. */
 const VIEW_HEIGHT = 88;
 
-/**
- * The custom property a parent sets to the scale it draws the glyph at.
- * Registered as a number, so it can be animated along with the transform.
- */
-export const GLYPH_SCALE = "--glyph-scale";
+// Registered as a number, so a parent can animate the scale it draws a
+// glyph at along with its transform (see GLYPH_SCALE).
 if (typeof CSS !== "undefined" && typeof CSS.registerProperty === "function") {
   try {
     CSS.registerProperty({
@@ -202,16 +200,6 @@ const DomainGlyph = ({ kind, delayMs = 0, entrance = "reveal", className }: Doma
       </svg>
     </span>
   );
-};
-
-/**
- * Which domain a paper's title names. The two papers are on conic and double
- * conic domains; a title naming neither gets no glyph rather than a wrong one.
- */
-export const domainFor = (title: string): DomainKind | null => {
-  if (/double|podwójn/i.test(title)) return "double-cone";
-  if (/conic|cone|stożk/i.test(title)) return "cone";
-  return null;
 };
 
 export default DomainGlyph;

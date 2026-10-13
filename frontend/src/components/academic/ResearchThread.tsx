@@ -10,7 +10,7 @@ import {
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { ArrowUpRight, Award, Undo2 } from "lucide-react";
 
-import DomainGlyph, { type DomainKind, GLYPH_SCALE } from "@/components/academic/DomainGlyph";
+import DomainGlyph, { type DomainKind } from "@/components/academic/DomainGlyph";
 import { Button } from "@/components/ui/button";
 import { useElementSize } from "@/hooks/use-element-size";
 import { useMediaQuery, usePrefersReducedMotion } from "@/hooks/use-media-query";
@@ -23,6 +23,7 @@ import {
   unwindMs,
   windMs,
 } from "@/lib/degreeRoad";
+import { GLYPH_SCALE } from "@/lib/domainGlyph";
 import { linkedSlug, replaceHash } from "@/lib/hash";
 import { MEDIA } from "@/lib/media";
 import { clamp01, EASE_BRAND } from "@/lib/motion";

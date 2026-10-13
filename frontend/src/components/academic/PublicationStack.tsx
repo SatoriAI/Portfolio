@@ -2,11 +2,12 @@ import { useLayoutEffect, useRef, useState } from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { ExternalLink } from "lucide-react";
 
-import DomainGlyph, { domainFor } from "@/components/academic/DomainGlyph";
+import DomainGlyph from "@/components/academic/DomainGlyph";
 import { Button } from "@/components/ui/button";
 import { publicationDetails, type PublicationStatus } from "@/config/publications";
 import { useOnceInView, useOnScreenAtMount } from "@/hooks/use-in-view";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { domainFor } from "@/lib/domainGlyph";
 import { EASE_BRAND, EASE_PRESS } from "@/lib/motion";
 import type { UiPublication } from "@/lib/publicationsService";
 import { cn } from "@/lib/utils";
