@@ -8,12 +8,10 @@ import { useLocation, useNavigationType } from "react-router-dom";
 const LIMIT_MS = 20000;
 
 /**
- * Quiet time after which a scroll the link started counts as finished. It is
- * the fallback for browsers without `scrollend`, and for a re-alignment that
- * had nothing to move; it is generous so that a busy main thread delaying a
- * smooth scroll's first frame does not pass that scroll off as the reader's.
+ * How far, in pixels, the section may sit from its place and still count as
+ * there: scroll anchoring and rounding leave it a fraction off.
  */
-const SCROLL_IDLE_MS = 500;
+const IN_PLACE_PX = 2;
 
 /** Any of these means the reader has taken over, so a late scroll would hijack them. */
 const READER_INPUT = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
@@ -43,41 +41,33 @@ const ScrollToTop = () => {
     // would drag them away from where they left the page.
     if (traversal) return;
 
-    // A page fills in from its data after it commits: a section drawn from
-    // data (the skills, the publications) appears late, and sections above
-    // the target grow as theirs arrives, which leaves an early scroll short.
-    // On a cold API either can take ten seconds or more, and nothing tells
-    // the link when the page is done. So it waits for its section, scrolls to
-    // it, and keeps it at the top until the reader moves the page themselves,
-    // by input or by any scroll the link did not start (a scrollbar drag,
-    // find in page, a screen reader); only a reader who never touches the
-    // page meets the time limit. Browser scroll anchoring already holds a
-    // section that is at rest, but not one a smooth scroll is still
-    // travelling towards, whose destination was fixed before the content
-    // above it grew, nor one near the end of a page that was too short to
-    // reach it, which is where a long wait usually leaves it; re-aligning on
-    // every change of the page's height covers both. A hash that never names
-    // an element, such as a degree's or a role's slug which its own page
-    // opens, simply lapses. The pages' own replaceHash bypasses the router,
-    // so choosing an entry never starts any of this.
+    // A page fills in from its data after it commits, so a section drawn
+    // from data appears late, and sections above it grow, leaving an early
+    // scroll short; on a cold API either can take ten seconds or more. So
+    // the link waits for its section, scrolls to it, and re-aligns it on
+    // every change of the page's height until the reader moves the page
+    // (scroll anchoring holds a section at rest, but not one a smooth scroll
+    // is still travelling to, nor one at the end of a page too short to
+    // reach it). A hash that names no element, such as a degree's or a
+    // role's slug which its page opens itself, simply lapses; the pages'
+    // replaceHash bypasses the router, so choosing an entry starts none of it.
     let target: HTMLElement | null = null;
-    // Whether a scroll now under way is the link's own. A re-alignment also
-    // covers the scroll anchoring's adjustment in the same frame.
-    let ours = false;
-    let idle = 0;
-    const settled = () => {
-      ours = false;
+    // A scroll is told apart by its direction, not its timing: the link's own
+    // only ever move the page towards the section, and scroll anchoring keeps
+    // the section where it is, so a scroll that carries the page away from
+    // the section is the reader's, however soon it comes. Before the section
+    // exists the link has not scrolled at all, so any scroll is the reader's.
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const delta = window.scrollY - lastY;
+      lastY = window.scrollY;
+      if (!target) return release();
+      const offset =
+        target.getBoundingClientRect().top - parseFloat(getComputedStyle(target).scrollMarginTop);
+      const away = (offset > IN_PLACE_PX && delta < 0) || (offset < -IN_PLACE_PX && delta > 0);
+      if (away) release();
     };
-    const expectScroll = () => {
-      ours = true;
-      window.clearTimeout(idle);
-      idle = window.setTimeout(settled, SCROLL_IDLE_MS);
-    };
-    const onScroll = () => (ours ? expectScroll() : release());
-    const align = () => {
-      expectScroll();
-      target?.scrollIntoView({ block: "start" });
-    };
+    const align = () => target?.scrollIntoView({ block: "start" });
 
     const settling = new ResizeObserver(align);
     const arrival = new MutationObserver(() => found(document.getElementById(id)));
@@ -92,14 +82,12 @@ const ScrollToTop = () => {
     const release = () => {
       arrival.disconnect();
       settling.disconnect();
-      [limit, idle].forEach((timer) => window.clearTimeout(timer));
+      window.clearTimeout(limit);
       READER_INPUT.forEach((type) => window.removeEventListener(type, release));
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("scrollend", settled);
     };
     READER_INPUT.forEach((type) => window.addEventListener(type, release, { passive: true }));
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("scrollend", settled);
 
     // Effects run after the new page has committed, so a static section is
     // normally already there.
