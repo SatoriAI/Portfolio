@@ -107,7 +107,7 @@ One repository with two halves, each with its own toolchain, Dockerfile and Rail
 
 - **Hosting.** Backend and frontend run as separate services in one Railway project, built from this repository.
 - **Backend.** Built from a Dockerfile. Migrations run before each deploy. Start-up: compile translations, `collectstatic`, then gunicorn with 2 workers and a 120 s timeout. Railway checks `/healthcheck/`.
-- **Frontend.** Multi-stage Node 24 build. The API address and mock mode are baked in at build time, so changing them needs a rebuild. `serve` serves the bundle.
+- **Frontend.** Multi-stage Node 24 build. The API address is baked in at build time, so changing it needs a rebuild. `serve` serves the bundle.
 - **Files.** Media goes to a private Railway bucket (Tigris), served through presigned URLs. Whitenoise serves static files.
 - **CI.** Three GitHub Actions workflows, each run only for the half that changed: backend (lint, type checks, tests on pgvector with an 85% coverage gate), frontend (format, test, lint, build) and hygiene (Lefthook). Coverage goes to Codecov.
 - **Lesson from deploys.** The Railway config file path is resolved from the repository root, not the service's directory. A wrong path fails the deploy with "service config not found" before any build starts.
