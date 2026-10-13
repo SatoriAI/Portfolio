@@ -4,19 +4,25 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from vex.ai.history import MessageHistory
 from vex.choices import Roles
+from vex.models import Conversation
 from vex.tests.factories import ConversationFactory, MessageFactory
 
 fake = faker.Faker()
 
 
 class MessageHistoryTestCase(TestCase):
+    def test_rejects_a_key_this_server_never_issued(self) -> None:
+        with self.assertRaises(ValueError):
+            MessageHistory("anything-at-all")
+        self.assertFalse(Conversation.objects.exists())
+
     def test_messages_empty_for_new_session(self) -> None:
-        session = fake.uuid4()
+        session = fake.uuid4().replace("-", "")
         history = MessageHistory(session)
         self.assertEqual(history.messages, [])
 
     def test_add_message_persists_with_correct_roles(self) -> None:
-        session = fake.uuid4()
+        session = fake.uuid4().replace("-", "")
         history = MessageHistory(session)
 
         history.add_message(HumanMessage(content="Hi"))
@@ -32,7 +38,7 @@ class MessageHistoryTestCase(TestCase):
         self.assertEqual([m.content for m in msgs], ["Hi", "Hello", "Note"])
 
     def test_messages_property_returns_langchain_messages_in_order(self) -> None:
-        session = fake.uuid4()
+        session = fake.uuid4().replace("-", "")
         conv = ConversationFactory(session=session)
         # Create in order
         m1 = MessageFactory(conversation=conv, role=Roles.USER, content="Q1")
@@ -47,7 +53,7 @@ class MessageHistoryTestCase(TestCase):
         self.assertEqual([x.content for x in msgs], [m1.content, m2.content, m3.content])
 
     def test_clear_deletes_all_messages(self) -> None:
-        session = fake.uuid4()
+        session = fake.uuid4().replace("-", "")
         conv = ConversationFactory(session=session)
         MessageFactory(conversation=conv)
         MessageFactory(conversation=conv)
