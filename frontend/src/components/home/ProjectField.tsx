@@ -220,6 +220,13 @@ const ARROWS: Record<string, Direction> = {
   ArrowDown: "down",
 };
 
+/**
+ * Whether the reader has chosen a project since the page was loaded. Kept
+ * outside the component, so the hint stays away when they come back to the
+ * home page from another one, until the next load.
+ */
+let choseThisVisit = false;
+
 const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps) => {
   const reducedMotion = usePrefersReducedMotion();
   const fieldRef = useRef<HTMLDivElement>(null);
@@ -451,10 +458,11 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
 
   // Opening a project floods warmth from its puck.
   const previous = useRef(selected);
-  const [chosen, setChosen] = useState(false);
+  const [chosen, setChosen] = useState(() => choseThisVisit);
   useEffect(() => {
     if (previous.current === selected) return;
     previous.current = selected;
+    choseThisVisit = true;
     setChosen(true);
     const s = sim.current;
     const index = projects.findIndex((project) => project.title === selected);
@@ -624,11 +632,11 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
   const fade = fadeMask(phone ? 24 : 48, phone ? 32 : 40);
 
   return (
-    // The field has no edge of its own, so its top pad is all the gap the
-    // heading above needs: drawn up into the section's usual gap.
-    <div ref={roomRef} className="-mt-6 flex flex-col gap-3">
+    // The hint takes the gap under the heading, as on every page; the
+    // field's own top pad then sits under the hint.
+    <div ref={roomRef} className="flex flex-col gap-3">
       {/* A project is always open, so the hint stays only until the
-          reader's first choice of the visit. */}
+          reader's first choice of the visit (see choseThisVisit). */}
       <ChoiceHint
         hidden={chosen}
         style={{ maxWidth: layout.width || undefined }}

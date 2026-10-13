@@ -301,7 +301,8 @@ const Experience = () => {
             <StatusMessage variant="empty" message={t.experience.noData} />
           ) : (
             <>
-              <ChoiceHint hidden={open}>{t.experience.rolesHint}</ChoiceHint>
+              {/* On the choice itself, not once the dialog has grown over it. */}
+              <ChoiceHint hidden={selectedId !== null}>{t.experience.rolesHint}</ChoiceHint>
               <div ref={timelineArea}>
                 <Reveal>
                   <CareerTimeline<number>
