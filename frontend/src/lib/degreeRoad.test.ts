@@ -27,6 +27,8 @@ describe("roadGeometry", () => {
       [...road.rest.map((stop) => stop.x)].sort((a, b) => a - b),
     );
     expect(pointAt(road, road.length).x).toBeCloseTo(width, 0);
+    // The first stop's name (about 205px, centred under it) stays in the column.
+    expect(road.rest[0].x - 205 / 2).toBeGreaterThanOrEqual(0);
   });
 
   it.each([...COLUMNS.map((width) => [width, false] as const), [327, true] as const])(
@@ -58,6 +60,8 @@ describe("roadGeometry", () => {
     expect(new Set(gaps).size).toBe(1);
     expect(new Set(compact.map((stop) => stop.y)).size).toBe(1);
     expect(compact[compact.length - 1].x).toBeLessThan(width);
+    // The first disc's years (about 66px wide at 12px mono) stay in the column.
+    expect(compact[0].x - 33).toBeGreaterThanOrEqual(0);
   });
 });
 
@@ -74,8 +78,8 @@ describe("roadFrame", () => {
       expect(end.stops[i].y).toBeCloseTo(road.compact[i].y, 0);
       expect(end.stops[i].scale).toBeCloseTo(road.compactScale);
     });
-    expect([start.names, start.years, start.card, start.ring]).toEqual([1, 0, 0, 0]);
-    expect([end.names, end.years, end.card, end.ring]).toEqual([0, 1, 1, 1]);
+    expect([start.names, start.years, start.card]).toEqual([1, 0, 0]);
+    expect([end.names, end.years, end.card]).toEqual([0, 1, 1]);
   });
 
   it("winds the road in from its far end, onto a coil that shows only in between", () => {
@@ -85,6 +89,9 @@ describe("roadFrame", () => {
     expect(roadFrame(road, 0).spool.opacity).toBe(0);
     expect(roadFrame(road, 0.3).spool.opacity).toBe(1);
     expect(roadFrame(road, 1).spool.opacity).toBe(0);
+    // Nothing of the road or the coil is left once the row has formed.
+    expect(roadFrame(road, 0.5).roadOpacity).toBe(0);
+    expect(roadFrame(road, 0.74).spool.opacity).toBe(0);
     // Mid-way the later stops ride the thread in, never past the first.
     const mid = roadFrame(road, 0.3);
     expect(mid.stops[2].x).toBeLessThan(road.rest[2].x);

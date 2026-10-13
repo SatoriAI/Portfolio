@@ -1,8 +1,6 @@
-import { type PointerEvent, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
-import { useLatest } from "@/hooks/use-latest";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
-import { heatPulseKeyframes } from "@/lib/heatPulse";
 import { cn } from "@/lib/utils";
 
 /**
@@ -19,12 +17,6 @@ import { cn } from "@/lib/utils";
  * These are the multidimensional domains the work estimates heat kernels on,
  * shown in the three dimensions a page can hold. `delayMs` holds a glyph
  * back, so several side by side can draw one after another.
- *
- * With `heat`, the drawing shows what the work is about. Once drawn, a point
- * of heat is set on the shape and spreads over its surface as the heat
- * kernel does, then fades to rest; pressing the shape anywhere sets another
- * there. Each spread settles and stops, so nothing plays on its own after
- * the first. None of it under reduced motion.
  */
 
 /** The drawing's height in its own units; strokes are sized against it. */
@@ -95,69 +87,8 @@ const STROKES: Record<DomainKind, { front: string[]; back: string[]; point?: [nu
   },
 };
 
-/**
- * Each degree's shape as a surface heat can spread over: the outline filled,
- * a hole cut by the even-odd rule. `start` is where the first heat is set:
- * the cone's apex, where the papers' estimates are sharpest; the middle of
- * the others.
- */
-const SURFACES: Partial<Record<DomainKind, { d: string; start: [number, number] }>> = {
-  cone: { d: "M40 12 L8 72 A32 10 0 0 0 72 72 Z", start: [40, 12] },
-  "torus-interval": {
-    d: "M8 30 A32 15 0 1 0 72 30 A32 15 0 1 0 8 30 Z M28 30 A12 3.5 0 1 0 52 30 A12 3.5 0 1 0 28 30 Z M8 71 H72 V77 H8 Z",
-    start: [40, 40],
-  },
-  revolution: {
-    d: "M28 12 C10 30 6 56 12 76 A28 8 0 0 0 68 76 C74 56 70 30 52 12 A12 4 0 0 0 28 12 Z",
-    start: [40, 40],
-  },
-};
-
-/** How wide a spread ends, in the drawing's units, how long it takes, and its first glow. */
-const HEAT_RADIUS = 56;
-const HEAT_MS = 2400;
-const HEAT_PEAK = 1;
-/** More sources than this at once and the first gives way. */
-const HEAT_SOURCES = 4;
-
-/** One point of heat: placed, spread, gone. */
-const HeatSource = ({
-  x,
-  y,
-  fill,
-  onDone,
-}: {
-  x: number;
-  y: number;
-  fill: string;
-  onDone: () => void;
-}) => {
-  const circle = useRef<SVGCircleElement>(null);
-  const done = useLatest(onDone);
-  useLayoutEffect(() => {
-    const spread = circle.current?.animate(heatPulseKeyframes(HEAT_PEAK), {
-      duration: HEAT_MS,
-      fill: "both",
-    });
-    if (spread) spread.onfinish = () => done.current();
-    return () => spread?.cancel();
-  }, [done]);
-  return (
-    <circle
-      ref={circle}
-      cx={x}
-      cy={y}
-      r={HEAT_RADIUS}
-      fill={fill}
-      style={{ transformBox: "fill-box", transformOrigin: "center" }}
-    />
-  );
-};
-
 type DomainGlyphProps = {
   kind: DomainKind;
-  /** Heat spreads over the drawn shape, once and wherever it is pressed. */
-  heat?: boolean;
   /** Held back by this long before the first stroke draws. */
   delayMs?: number;
   /** When the drawing runs: as the glyph scrolls into view, or as soon as it mounts. */
@@ -165,13 +96,7 @@ type DomainGlyphProps = {
   className?: string;
 };
 
-const DomainGlyph = ({
-  kind,
-  heat = false,
-  delayMs = 0,
-  entrance = "reveal",
-  className,
-}: DomainGlyphProps) => {
+const DomainGlyph = ({ kind, delayMs = 0, entrance = "reveal", className }: DomainGlyphProps) => {
   const { ref, isRevealed, isInitiallyVisible, prefersReducedMotion } =
     useScrollReveal<HTMLSpanElement>();
   const { front, back, point } = STROKES[kind];
@@ -224,77 +149,14 @@ const DomainGlyph = ({
   });
   const apexDelayMs = delayMs + (back.length + front.length) * 120;
 
-  const surface = heat && !prefersReducedMotion ? SURFACES[kind] : undefined;
-  const ids = useId();
-  const surfacePath = useRef<SVGPathElement>(null);
-  const [sources, setSources] = useState<{ key: number; x: number; y: number }[]>([]);
-  const nextKey = useRef(0);
-  const addSource = (x: number, y: number) =>
-    setSources((now) => [...now.slice(1 - HEAT_SOURCES), { key: nextKey.current++, x, y }]);
-
-  // The first heat, once the last stroke is drawn.
-  const start = surface?.start;
-  useEffect(() => {
-    if (!start) return;
-    const timer = window.setTimeout(() => addSource(...start), apexDelayMs + 500);
-    return () => window.clearTimeout(timer);
-  }, [start, apexDelayMs]);
-
-  // A press on the shape sets heat where it landed; off the shape, nothing.
-  const onPointerDown = (event: PointerEvent<SVGSVGElement>) => {
-    const matrix = svg.current?.getScreenCTM()?.inverse();
-    if (!surface || !matrix || !surfacePath.current) return;
-    const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix);
-    if (surfacePath.current.isPointInFill(point)) addSource(point.x, point.y);
-  };
-
   return (
     <span ref={ref} className={cn("block", className)}>
       <svg
         ref={svg}
         viewBox={`0 0 80 ${VIEW_HEIGHT}`}
-        className={cn("block h-full w-auto", surface && "cursor-pointer")}
+        className="block h-full w-auto"
         aria-hidden="true"
-        onPointerDown={surface ? onPointerDown : undefined}
       >
-        {/* The heat, under the strokes and inside the shape: iris where it is
-            hottest, the kit's blush around it, its lavender at the edge. */}
-        {surface && (
-          <>
-            <defs>
-              <radialGradient id={`${ids}-heat`}>
-                <stop offset="0" style={{ stopColor: "hsl(var(--iris))", stopOpacity: 0.55 }} />
-                <stop
-                  offset="0.2"
-                  style={{ stopColor: "hsl(var(--blush-deep))", stopOpacity: 1 }}
-                />
-                <stop
-                  offset="0.55"
-                  style={{ stopColor: "hsl(var(--lavender-deep))", stopOpacity: 0.6 }}
-                />
-                <stop
-                  offset="1"
-                  style={{ stopColor: "hsl(var(--lavender-deep))", stopOpacity: 0 }}
-                />
-              </radialGradient>
-              <clipPath id={`${ids}-surface`}>
-                <path d={surface.d} clipRule="evenodd" />
-              </clipPath>
-            </defs>
-            <path ref={surfacePath} d={surface.d} fillRule="evenodd" fill="transparent" />
-            <g clipPath={`url(#${ids}-surface)`}>
-              {sources.map((source) => (
-                <HeatSource
-                  key={source.key}
-                  x={source.x}
-                  y={source.y}
-                  fill={`url(#${ids}-heat)`}
-                  onDone={() => setSources((now) => now.filter((one) => one.key !== source.key))}
-                />
-              ))}
-            </g>
-          </>
-        )}
         <g fill="none" style={{ strokeWidth: `calc(${strokeWidth}px / var(${GLYPH_SCALE}, 1))` }}>
           {back.map((d, index) => (
             <path

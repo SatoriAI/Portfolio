@@ -1,4 +1,4 @@
-import { clamp01 } from "@/lib/motion";
+import { clamp01, EASE_BRAND } from "@/lib/motion";
 
 /**
  * The degrees' road, as numbers: where each stop sits on the road and in the
@@ -87,7 +87,10 @@ export const cubicBezier = (x1: number, y1: number, x2: number, y2: number) => {
     return y(t);
   };
 };
-const easeBrand = cubicBezier(0.22, 1, 0.36, 1);
+/** The kit's ease, read from EASE_BRAND so the two can never drift apart. */
+const easeBrand = cubicBezier(
+  ...((EASE_BRAND.match(/[\d.]+/g) ?? []).map(Number) as [number, number, number, number]),
+);
 const easeInOut = cubicBezier(0.65, 0, 0.35, 1);
 
 /** Progress through the window [from, to] of the whole, 0 before and 1 after. */
@@ -134,15 +137,17 @@ export const roadGeometry = (width: number, phone: boolean, count = 3): RoadGeom
   let cardTop: number;
   if (!phone) {
     // Across the column: the first stop's name centred under it keeps to the
-    // column, and the last leaves room for the road to trail off.
-    const first = 96;
+    // column (the longest, "Studia licencjackie" in the card title's size, is
+    // about 205px), and the last leaves room for the road to trail off.
+    const first = 112;
     const last = Math.max(first + 1, Math.round(width - 250));
     const step = stops > 1 ? (last - first) / (stops - 1) : 0;
     rest = Array.from({ length: stops }, (_, i) => ({
       x: Math.round(first + i * step),
       y: i % 2 ? LOW : HIGH,
     }));
-    compact = Array.from({ length: stops }, (_, i) => ({ x: 30 + i * 112, y: 42 }));
+    // The first disc in the row leaves room for its years, centred under it.
+    compact = Array.from({ length: stops }, (_, i) => ({ x: 36 + i * 112, y: 42 }));
     restScale = 1;
     compactScale = 56 / DISC;
     height = LOW + DISC / 2 + 20 + 96;
@@ -161,11 +166,12 @@ export const roadGeometry = (width: number, phone: boolean, count = 3): RoadGeom
     ]);
   } else {
     rest = Array.from({ length: stops }, (_, i) => ({ x: 30, y: 36 + i * 104 }));
-    compact = Array.from({ length: stops }, (_, i) => ({ x: 26 + i * 84, y: 28 }));
+    compact = Array.from({ length: stops }, (_, i) => ({ x: 34 + i * 84, y: 28 }));
     restScale = 60 / DISC;
     compactScale = 48 / DISC;
     height = rest[stops - 1].y + 70;
-    cardTop = 96;
+    // Room for the chosen degree's name on a line of its own under the row.
+    cardTop = 128;
     pieces = rest.slice(1).map((to, i) => line(rest[i], to));
     const end = rest[stops - 1];
     pieces.push(line(end, { x: end.x, y: end.y + 56 }));
@@ -257,11 +263,10 @@ export type RoadFrame = {
   spool: { x: number; y: number; rotate: number; scale: number; wound: number; opacity: number };
   /** The dotted line through the row: where it starts, and how much of it is laid. */
   rowLine: { x: number; y: number; laid: number };
-  /** Fades: the names on the road, the years in the row, the card, the ring on the chosen. */
+  /** Fades: the names on the road, the years in the row, the card. */
   names: number;
   years: number;
   card: number;
-  ring: number;
 };
 
 /**
@@ -290,7 +295,6 @@ export const roadFrame = (geometry: RoadGeometry, t: number): RoadFrame => {
       names: 1 - within(t, 0, 0.4),
       years: within(t, 0.5, 1),
       card: within(t, 0.6, 1),
-      ring: within(t, 0.5, 1),
     };
   }
 
@@ -318,7 +322,8 @@ export const roadFrame = (geometry: RoadGeometry, t: number): RoadFrame => {
   return {
     stops,
     roadOut: out,
-    roadOpacity: 1,
+    // Gone once it is all wound in, so no dot of it is left at its start.
+    roadOpacity: 1 - within(t, 0.42, 0.5),
     roadCut: pointAt(geometry, out).x,
     spool: {
       x: coil.x,
@@ -326,13 +331,15 @@ export const roadFrame = (geometry: RoadGeometry, t: number): RoadFrame => {
       rotate: (wind - unroll) * 540,
       scale: (DISC * 0.5 * scale + 5) / SPIRAL_INNER,
       wound: wind * (1 - unroll),
-      opacity: wind > 0 && unroll < 1 ? 1 : 0,
+      // Faded as it starts to unroll, so no tick of it is left over the row.
+      opacity: wind > 0 ? 1 - within(t, 0.62, 0.74) : 0,
     },
     rowLine: { x: coil.x, y: compact[0].y, laid: unroll },
     names: 1 - within(t, 0, 0.16),
     years: within(t, 0.86, 1),
-    card: easeBrand(within(t, 0.74, 1)),
-    ring: within(t, 0.8, 1),
+    // The card rises in while the row is still forming, so there is
+    // something to read under the coil early.
+    card: easeBrand(within(t, 0.55, 0.9)),
   };
 };
 

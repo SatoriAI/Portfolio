@@ -8,15 +8,13 @@ import {
   useState,
 } from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import { ArrowUpRight, Award, X } from "lucide-react";
+import { ArrowUpRight, Award, Undo2 } from "lucide-react";
 
 import DomainGlyph, { type DomainKind, GLYPH_SCALE } from "@/components/academic/DomainGlyph";
-import { MARKED } from "@/components/experience/circleStyles";
 import { Button } from "@/components/ui/button";
 import { useElementSize } from "@/hooks/use-element-size";
 import { useMediaQuery, usePrefersReducedMotion } from "@/hooks/use-media-query";
 import {
-  DISC,
   type RoadFrame,
   roadFrame,
   type RoadGeometry,
@@ -41,16 +39,21 @@ import { cn } from "@/lib/utils";
  * solid of revolution) with its name, years and space under it, the road
  * trailing off to the right. Nothing is chosen and no card shows.
  *
- * Choosing a stop winds the road up: it is reeled in from its far end onto a
- * lavender coil round the first stop, the other stops riding the thread in;
- * the coil travels up to the top of the section and unrolls into a row of
- * three small discs, the chosen one ringed, its name beside the row, and the
- * degree's card rises in under it, the full width of the column (WIND_MS,
- * the kit's ease; the geometry and every frame are in lib/degreeRoad). In
- * the row, another disc moves the ring and swaps the card; "Whole road" or
- * Escape winds it all back out. Either way can be turned round half-way.
- * Below md the stops are a list, and they simply cross over to the row
- * (280 ms). With reduced motion the two states swap with a 150 ms fade.
+ * A stop shows it can be pressed under the pointer or keyboard focus: its
+ * name turns iris and its disc lifts, as the company circles on Experience
+ * do. Choosing one rings it at once, in the lavender ring every chosen
+ * circle on the site wears, and winds the road up: it is reeled in from its
+ * far end onto a lavender coil round the first stop, the other stops riding
+ * the thread in, the chosen one on top; the coil travels up to the top of
+ * the section and unrolls into a row of three small discs, the chosen one's
+ * name beside the row, and the degree's card rises in under it, the full
+ * width of the column (windMs(), the kit's ease; the geometry and every
+ * frame are in lib/degreeRoad). In the row, another disc takes the ring and
+ * swaps the card; "Show whole road" or Escape winds it all back out, and
+ * brings the row back into view first when the reader has scrolled down the
+ * card. Either way can be turned round half-way. Below md the stops are a
+ * list, and they simply cross over to the row (280 ms), the name on a line
+ * under it. With reduced motion the two states swap with a 150 ms fade.
  *
  * The motion is the Web Animations API on transforms, opacity, stroke and
  * clipping, sampled from the frames; each run's end state is also set as
@@ -66,8 +69,9 @@ import { cn } from "@/lib/utils";
  *
  * In each degree the topic is the heading, because the subject is the same
  * three times over and the topic is what changes. Each degree is one card:
- * an award as a lavender ribbon across its top, the advisor and the research
- * areas in a footer under a hairline.
+ * an award as a lavender ribbon across its top, then the story; the advisor
+ * and the research areas beside it from lg (eight columns to four, so the
+ * story keeps a readable measure), in a footer under a hairline below.
  */
 
 export type ResearchThreadLabels = {
@@ -77,7 +81,7 @@ export type ResearchThreadLabels = {
   steps: string;
   /** Over the road: a stop can be chosen. */
   hint: string;
-  /** Winds the row back out into the road. */
+  /** Winds the row back out into the road; also the control's name on a phone, where it is an icon. */
   wholeRoad: string;
   /** Read after a link that opens in a new tab. */
   newTab: string;
@@ -116,7 +120,8 @@ type DegreeTextProps = {
 const DegreeText = ({ school, labels, highlight, headline }: DegreeTextProps) => {
   return (
     // The degree as one card: its award as a ribbon across the top, the
-    // story in the middle, who and what it was about in a footer.
+    // story under it, who and what it was about beside it from lg (eight
+    // columns to four) and in a footer below that.
     <article className="min-w-0 overflow-hidden rounded-card border border-border bg-card group-focus-visible/panel:ring-2 group-focus-visible/panel:ring-ring group-focus-visible/panel:ring-offset-2 group-focus-visible/panel:ring-offset-background">
       {/* With a page of its own, the award's words are a link stretched over
           the ribbon, so the whole ribbon opens it; focus rings the words. */}
@@ -148,40 +153,47 @@ const DegreeText = ({ school, labels, highlight, headline }: DegreeTextProps) =>
           </p>
         </div>
       )}
-      <div className="p-6 md:p-7">
-        <h3 className="text-card-title-sm font-semibold md:text-card-title">
-          {headline ?? (school.degree || school.study)}
-        </h3>
-        <p className="mt-1 text-base text-muted-foreground">
-          {school.study} · {school.university}
-        </p>
-        {/* The whole story, never cut short. */}
-        {school.research.trim() && (
-          <p className="mt-5 text-pretty text-base text-foreground/90 md:text-body-lg">
-            {school.research.trim()}
+      <div className="lg:grid lg:grid-cols-12">
+        <div
+          className={cn(
+            "p-6 md:p-7",
+            school.advisor || school.areas.length > 0 ? "lg:col-span-8" : "lg:col-span-12",
+          )}
+        >
+          <h3 className="text-card-title-sm font-semibold md:text-card-title">
+            {headline ?? (school.degree || school.study)}
+          </h3>
+          <p className="mt-1 text-base text-muted-foreground">
+            {school.study} · {school.university}
           </p>
+          {/* The whole story, never cut short. */}
+          {school.research.trim() && (
+            <p className="mt-5 text-pretty text-base text-foreground/90 md:text-body-lg">
+              {school.research.trim()}
+            </p>
+          )}
+        </div>
+        {(school.advisor || school.areas.length > 0) && (
+          <dl className="grid gap-4 border-t border-border px-6 py-5 sm:grid-cols-[1fr_2fr] md:px-7 lg:col-span-4 lg:grid-cols-1 lg:content-start lg:gap-6 lg:border-l lg:border-t-0 lg:py-7">
+            {school.advisor && (
+              <div>
+                <dt className="font-mono text-meta uppercase tracking-widest text-muted-foreground">
+                  {labels.advisor}
+                </dt>
+                <dd className="mt-1 text-sm text-foreground">{school.advisor}</dd>
+              </div>
+            )}
+            {school.areas.length > 0 && (
+              <div>
+                <dt className="font-mono text-meta uppercase tracking-widest text-muted-foreground">
+                  {labels.researchAreas}
+                </dt>
+                <dd className="mt-1 text-sm text-foreground">{school.areas.join(", ")}</dd>
+              </div>
+            )}
+          </dl>
         )}
       </div>
-      {(school.advisor || school.areas.length > 0) && (
-        <dl className="grid gap-4 border-t border-border px-6 py-5 sm:grid-cols-[1fr_2fr] md:px-7">
-          {school.advisor && (
-            <div>
-              <dt className="font-mono text-meta uppercase tracking-widest text-muted-foreground">
-                {labels.advisor}
-              </dt>
-              <dd className="mt-1 text-sm text-foreground">{school.advisor}</dd>
-            </div>
-          )}
-          {school.areas.length > 0 && (
-            <div>
-              <dt className="font-mono text-meta uppercase tracking-widest text-muted-foreground">
-                {labels.researchAreas}
-              </dt>
-              <dd className="mt-1 text-sm text-foreground">{school.areas.join(", ")}</dd>
-            </div>
-          )}
-        </dl>
-      )}
     </article>
   );
 };
@@ -197,8 +209,11 @@ type Phase = "road" | "winding" | "compact" | "unwinding";
 
 /** How far the page is brought back when a stop is chosen below its top, to keep the row in view. */
 const SCROLL_MARGIN = { wide: 140, phone: 96 };
-/** The ring's glide to another disc in the row, and the card's rise in. */
-const GLIDE_MS = 300;
+/** What the control at the row's right end takes, with a gap before it, from md. */
+const BACK_ROOM = 192;
+/** The card's fade as the road unwinds. */
+const CARD_OUT_MS = 150;
+/** A card's rise in when another degree is chosen in the row. */
 const SWAP_MS = 280;
 /** Reduced motion: the states, and the cards, swap with a fade. */
 const FADE_MS = 150;
@@ -251,7 +266,6 @@ const ResearchThread = ({
   const spool = useRef<HTMLDivElement>(null);
   const spiral = useRef<SVGPathElement>(null);
   const rowLine = useRef<HTMLDivElement>(null);
-  const ring = useRef<HTMLSpanElement>(null);
   const currentName = useRef<HTMLParagraphElement>(null);
   const back = useRef<HTMLButtonElement>(null);
   const card = useRef<HTMLDivElement>(null);
@@ -260,9 +274,8 @@ const ResearchThread = ({
   const names = useRef<(HTMLSpanElement | null)[]>([]);
   const years = useRef<(HTMLSpanElement | null)[]>([]);
 
-  /** Every moving part's style in a frame, the ring on the chosen degree. */
-  const parts = useCallback((frame: RoadFrame, shape: RoadGeometry, chosen: number): Part[] => {
-    const at = shape.compact[chosen] ?? shape.compact[0];
+  /** Every moving part's style in a frame. */
+  const parts = useCallback((frame: RoadFrame, shape: RoadGeometry): Part[] => {
     return [
       [
         road.current,
@@ -299,10 +312,6 @@ const ResearchThread = ({
         [names.current[index], { opacity: `${frame.names}` }],
         [years.current[index], { opacity: `${frame.years}` }],
       ]),
-      [
-        ring.current,
-        { opacity: `${frame.ring}`, transform: `translate3d(${at.x}px, ${at.y}px, 0)` },
-      ],
       [currentName.current, { opacity: `${frame.years}` }],
       [back.current, { opacity: `${frame.card}` }],
       [
@@ -344,7 +353,7 @@ const ResearchThread = ({
     const from = progress();
     stopRun();
     settled.current = target;
-    const end = parts(roadFrame(geometry, target), geometry, selected);
+    const end = parts(roadFrame(geometry, target), geometry);
     for (const [element, style] of end) if (element) setStyle(element, style);
 
     // Reduced motion: the whole stage swaps with a fade.
@@ -361,7 +370,7 @@ const ResearchThread = ({
       Math.abs(target - from) * (target ? windMs(geometry.phone) : unwindMs(geometry.phone));
     const count = Math.max(2, Math.ceil(Math.abs(target - from) * FRAMES) + 1);
     const frames = Array.from({ length: count }, (_, k) =>
-      parts(roadFrame(geometry, from + ((target - from) * k) / (count - 1)), geometry, selected),
+      parts(roadFrame(geometry, from + ((target - from) * k) / (count - 1)), geometry),
     );
     const animations = frames[0].flatMap(([element], index) =>
       element
@@ -373,6 +382,13 @@ const ResearchThread = ({
           ]
         : [],
     );
+    // Unwinding, the card has left the flow and lies over whatever follows
+    // the section, so it goes quickly rather than with the road.
+    if (phase === "unwinding" && card.current) {
+      animations.push(
+        card.current.animate([{ opacity: 0 }], { duration: CARD_OUT_MS, fill: "forwards" }),
+      );
+    }
     const now = { from, to: target, ms, animations };
     run.current = now;
     // `finished`, not `onfinish`: it settles even when the run is finished
@@ -385,10 +401,11 @@ const ResearchThread = ({
       },
       () => {},
     );
-  }, [phase, geometry, selected, parts, prefersReducedMotion]);
+  }, [phase, geometry, parts, prefersReducedMotion]);
 
-  // In the row, another degree: the ring glides over to it, its name and
-  // card fade and rise in (a plain fade under reduced motion).
+  // In the row, another degree: the ring moves over to it (its colour
+  // fades, see the disc), its name and card fade and rise in (a plain fade
+  // under reduced motion).
   const shown = useRef(selected);
   useLayoutEffect(() => {
     const was = shown.current;
@@ -397,17 +414,6 @@ const ResearchThread = ({
     if (prefersReducedMotion) {
       card.current?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FADE_MS });
       return;
-    }
-    const from = geometry.compact[was];
-    const to = geometry.compact[selected];
-    if (from && to) {
-      ring.current?.animate(
-        [
-          { transform: `translate3d(${from.x}px, ${from.y}px, 0)` },
-          { transform: `translate3d(${to.x}px, ${to.y}px, 0)` },
-        ],
-        { duration: GLIDE_MS, easing: EASE_BRAND },
-      );
     }
     currentName.current?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240 });
     card.current?.animate(
@@ -426,24 +432,31 @@ const ResearchThread = ({
     replaceHash(slugOf(school));
     if (phase === "compact" || phase === "winding") return;
     setPhase(prefersReducedMotion ? "compact" : "winding");
-    // The row is at the top of the stage: bring it back into view when the
-    // stage's top has scrolled away.
-    const box = stage.current?.getBoundingClientRect();
-    if (box) {
-      const top = box.top + window.scrollY - (wide ? SCROLL_MARGIN.wide : SCROLL_MARGIN.phone);
-      if (window.scrollY > top) {
-        window.scrollTo({ top, behavior: prefersReducedMotion ? "auto" : "smooth" });
-      }
-    }
+    bringStageBack();
   };
 
+  // The row, and the road it winds back into, are at the top of the stage:
+  // bring it back into view when the reader has scrolled past its top.
+  const bringStageBack = useCallback(() => {
+    const box = stage.current?.getBoundingClientRect();
+    if (!box) return;
+    const top = box.top + window.scrollY - (wide ? SCROLL_MARGIN.wide : SCROLL_MARGIN.phone);
+    if (window.scrollY > top) {
+      window.scrollTo({ top, behavior: prefersReducedMotion ? "auto" : "smooth" });
+    }
+  }, [prefersReducedMotion, wide]);
+
+  // Focus goes back to the chosen stop (scrolled to, if need be), and from
+  // deep in a long card the stage is brought back too, so the reader sees
+  // the road come out rather than the page closing up under them.
   const unwind = useCallback(() => {
     setPhase((now) =>
       now === "compact" || now === "winding" ? (prefersReducedMotion ? "road" : "unwinding") : now,
     );
     replaceHash(null);
-    stops.current[selected]?.focus({ preventScroll: true });
-  }, [prefersReducedMotion, selected]);
+    stops.current[selected]?.focus();
+    bringStageBack();
+  }, [prefersReducedMotion, selected, bringStageBack]);
 
   // Escape winds the row back out, wherever focus is.
   const open = phase === "compact" || phase === "winding";
@@ -482,12 +495,21 @@ const ResearchThread = ({
     if (phase === "compact" && next !== selected) choose(next);
   };
 
-  const compactSize = geometry ? DISC * geometry.compactScale : 0;
   const lastAt = geometry?.compact[geometry.compact.length - 1];
+  const nameAt = (lastAt?.x ?? 0) + 52;
 
   return (
     <div className={className}>
-      <p className="mb-6 font-mono text-meta text-muted-foreground">{labels.hint}</p>
+      {/* Only while nothing is chosen; it keeps its line, so nothing moves. */}
+      <p
+        aria-hidden={open || undefined}
+        className={cn(
+          "mb-6 font-mono text-meta text-muted-foreground transition-opacity duration-200",
+          open && "opacity-0",
+        )}
+      >
+        {labels.hint}
+      </p>
       <TabsPrimitive.Root
         value={open ? String(current.id) : ""}
         onValueChange={(value) =>
@@ -570,39 +592,56 @@ const ResearchThread = ({
                     aria-label={[school.degree, school.period, domain && domainNames[domain]]
                       .filter(Boolean)
                       .join(", ")}
-                    style={{ zIndex: 2 + index }}
+                    // The chosen stop rides on top, so its drawing is the one
+                    // that reads on the coil.
+                    style={{ zIndex: isCurrent ? 2 + schools.length : 2 + index }}
                     className="group pointer-events-auto absolute left-0 top-0 size-0 p-0 focus-visible:outline-none"
                   >
                     {/* The disc: a hairline circle at any scale, the drawing
-                        in it kept a hairline too (GLYPH_SCALE); keyboard
-                        focus rings it in iris, at the kit's 2px whatever
-                        its scale. */}
+                        in it kept a hairline too (GLYPH_SCALE). Chosen, it
+                        wears MARKED (circleStyles) with an iris rim, its
+                        widths divided by the scale so they hold at any size;
+                        the ring's colour fades in over 150 ms, so it shows the
+                        moment the stop is pressed. Under the pointer the disc
+                        lifts as the company circles do; keyboard focus rings
+                        it in iris, white between, inside the lavender ring. */}
                     <span
                       ref={(element) => {
                         discs.current[index] = element;
                       }}
-                      className="absolute -left-[60px] -top-[60px] grid size-[120px] place-items-center rounded-full group-focus-visible:outline group-focus-visible:outline-iris group-focus-visible:[outline-offset:calc(3px/var(--glyph-scale,1))] group-focus-visible:[outline-width:calc(2px/var(--glyph-scale,1))]"
-                    >
-                      <svg
-                        aria-hidden="true"
-                        viewBox="0 0 120 120"
-                        className="absolute inset-0 size-full overflow-visible"
-                      >
-                        <circle
-                          cx={60}
-                          cy={60}
-                          r={59.5}
-                          vectorEffect="non-scaling-stroke"
-                          className="fill-card stroke-border transition-[stroke] duration-200 group-hover:stroke-control-border"
-                        />
-                      </svg>
-                      {domain && (
-                        <DomainGlyph
-                          kind={domain}
-                          delayMs={index * 120}
-                          className="relative h-[74px]"
-                        />
+                      className={cn(
+                        "absolute -left-[60px] -top-[60px] size-[120px] rounded-full outline [outline-offset:calc(5px/var(--glyph-scale,1))] [outline-width:calc(3px/var(--glyph-scale,1))]",
+                        "transition-[outline-color] duration-150",
+                        isCurrent ? "outline-lavender-deep" : "outline-transparent",
                       )}
+                    >
+                      <span className="absolute inset-0 grid place-items-center rounded-full transition-[transform,box-shadow] duration-200 ease-brand group-hover:shadow-lift group-focus-visible:[box-shadow:0_0_0_calc(3px/var(--glyph-scale,1))_hsl(var(--surface)),0_0_0_calc(5px/var(--glyph-scale,1))_hsl(var(--iris)),0_8px_24px_-12px_hsl(var(--ink)/0.25)] [@media(hover:hover)]:motion-safe:group-hover:-translate-y-1">
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 120 120"
+                          className="absolute inset-0 size-full overflow-visible"
+                        >
+                          <circle
+                            cx={60}
+                            cy={60}
+                            r={59.5}
+                            vectorEffect="non-scaling-stroke"
+                            className={cn(
+                              "fill-card transition-[stroke] duration-200",
+                              isCurrent
+                                ? "stroke-iris"
+                                : "stroke-border group-hover:stroke-control-border group-focus-visible:stroke-control-border",
+                            )}
+                          />
+                        </svg>
+                        {domain && (
+                          <DomainGlyph
+                            kind={domain}
+                            delayMs={index * 120}
+                            className="relative h-[74px]"
+                          />
+                        )}
+                      </span>
                     </span>
                     {/* On the road: the degree, its years and its space,
                         under the disc (beside it on a phone). */}
@@ -618,7 +657,7 @@ const ResearchThread = ({
                         phase === "compact" && "invisible",
                       )}
                     >
-                      <span className="text-card-title-sm font-semibold text-foreground transition-colors duration-200 group-hover:text-iris md:text-card-title">
+                      <span className="text-card-title-sm font-semibold text-foreground transition-colors duration-200 group-hover:text-iris group-focus-visible:text-iris md:text-card-title">
                         {school.degree}
                       </span>
                       <span className="font-mono text-meta text-iris">{school.period}</span>
@@ -648,31 +687,36 @@ const ResearchThread = ({
 
           {geometry && phase !== "road" && (
             <>
-              {/* The chosen disc's ring: an iris rim in the lavender ring
-                  every chosen circle on the site wears. */}
-              <span
-                ref={ring}
-                aria-hidden="true"
-                className={cn(
-                  "pointer-events-none absolute left-0 top-0 z-10 rounded-full border border-iris",
-                  MARKED,
-                )}
-                style={{
-                  width: compactSize,
-                  height: compactSize,
-                  marginLeft: -compactSize / 2,
-                  marginTop: -compactSize / 2,
-                }}
-              />
+              {/* The chosen degree beside the row, where it was and when
+                  under its name (the university from xl, where there is
+                  room); on a phone, its name on a line of its own under the
+                  row. Kept clear of the control at the right. */}
               <p
                 ref={currentName}
                 aria-hidden="true"
-                className="pointer-events-none absolute left-0 top-0 hidden whitespace-nowrap text-xl font-semibold tracking-tight md:block"
-                style={{
-                  transform: `translate3d(${(lastAt?.x ?? 0) + 64}px, ${geometry.compact[0].y - 14}px, 0)`,
-                }}
+                className={cn(
+                  "pointer-events-none absolute flex flex-col",
+                  geometry.phone ? "left-0" : "-translate-y-1/2",
+                )}
+                style={
+                  geometry.phone
+                    ? { top: geometry.compact[0].y + 56, maxWidth: geometry.width }
+                    : {
+                        left: nameAt,
+                        top: geometry.compact[0].y,
+                        maxWidth: geometry.width - nameAt - BACK_ROOM,
+                      }
+                }
               >
-                {current.degree}
+                <span className="truncate text-lg font-semibold tracking-tight md:text-xl">
+                  {current.degree}
+                </span>
+                {!geometry.phone && (
+                  <span className="truncate text-sm text-muted-foreground">
+                    <span className="hidden xl:inline">{current.university} · </span>
+                    {current.period}
+                  </span>
+                )}
               </p>
               <Button
                 ref={back}
@@ -682,15 +726,25 @@ const ResearchThread = ({
                 className="absolute right-0 z-[4] px-4 max-md:w-11 max-md:px-0"
                 style={{ top: geometry.compact[0].y - 22 }}
               >
-                <X aria-hidden="true" />
+                <Undo2 aria-hidden="true" />
                 <span className="max-md:sr-only">{labels.wholeRoad}</span>
               </Button>
               {/* The card, under the row; it only takes the pointer once it
-                  has arrived. */}
+                  has arrived. Unwinding, it leaves the flow at once and fades
+                  where it is, so the page closes up under it the moment the
+                  reader asks, not a second later under their eyes. */}
               <div
                 ref={card}
-                className={cn("relative z-[3]", phase !== "compact" && "pointer-events-none")}
-                style={{ marginTop: geometry.cardTop }}
+                className={cn(
+                  "z-[3]",
+                  phase === "unwinding" ? "absolute inset-x-0" : "relative",
+                  phase !== "compact" && "pointer-events-none",
+                )}
+                style={
+                  phase === "unwinding"
+                    ? { top: geometry.cardTop }
+                    : { marginTop: geometry.cardTop }
+                }
               >
                 <TabsPrimitive.Content
                   key={current.id}
