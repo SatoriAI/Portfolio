@@ -177,7 +177,6 @@ const QuoteWall = ({ testimonials, themes, evidence, labels, className }: QuoteW
                   onClick={() => setSelected(pressed ? null : theme.key)}
                   className={cn(
                     "flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors duration-200",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                     pressed
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-control-border bg-card text-foreground hover:border-iris hover:text-iris",

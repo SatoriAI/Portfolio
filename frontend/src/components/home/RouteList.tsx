@@ -21,10 +21,7 @@ const RouteList = ({ routes }: { routes: readonly Route[] }) => (
   <ol className="border-t border-border">
     {routes.map((route) => (
       <li key={route.to} className="border-b border-border">
-        <Link
-          to={route.to}
-          className="group flex min-h-11 items-baseline gap-4 rounded-lg py-4 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-[3px] focus-visible:ring-offset-background"
-        >
+        <Link to={route.to} className="group flex min-h-11 items-baseline gap-4 rounded-lg py-4">
           <RouteGlyph kind={route.kind} />
           <span className="min-w-0 flex-1">
             <span className="block text-lg font-semibold text-foreground transition-colors duration-200 group-hover:text-iris">

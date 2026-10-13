@@ -1,5 +1,4 @@
 import { buildUrl } from "../config/endpoints";
-import { env } from "../config/env";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -39,14 +38,6 @@ export async function apiFetch<TResponse extends JsonValue, TBody extends JsonVa
   path: string,
   options: FetchOptions<TBody> = {},
 ): Promise<TResponse> {
-  if (env.mock) {
-    // In mock mode, we do not call the backend.
-    // The calling code should bypass apiFetch and use local sample data.
-    throw new Error(
-      "apiFetch called while VITE_MOCK=true. Use local example values instead of making requests.",
-    );
-  }
-
   const { method = "GET", body, headers, query, signal } = options;
   const url = buildUrl(path, query);
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;

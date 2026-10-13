@@ -299,7 +299,7 @@ const SkillLanes = ({
                         aria-pressed={proof ? undefined : selected}
                         aria-label={labels.show(skill.name)}
                         onClick={() => choose(skill.id, selected ? null : skill.id)}
-                        className="absolute inset-0 z-10 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="absolute inset-0 z-10 rounded-lg"
                       />
 
                       <div className="flex items-center justify-between gap-4">

@@ -54,7 +54,7 @@ const TechMark = ({
 
 /** The next control: a 44px target, quiet until pointed at. */
 const CONTROL =
-  "grid size-11 shrink-0 place-items-center rounded-full text-muted-foreground outline-none transition-colors duration-200 hover:bg-background hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+  "grid size-11 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors duration-200 hover:bg-background hover:text-foreground";
 
 /** How long each technology stays before the next jolt. */
 const DWELL_MS = 1600;

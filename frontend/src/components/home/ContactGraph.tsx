@@ -118,7 +118,7 @@ const GITHUB_MARK =
 const COPIED_MS = 2000;
 
 const NODE =
-  "group block rounded-card border bg-card p-4 text-left outline-none transition-[border-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-[3px] focus-visible:ring-offset-background";
+  "group block rounded-card border bg-card p-4 text-left transition-[border-color,box-shadow] duration-200";
 const NODE_ON = "border-iris shadow-lift";
 const KEY = "font-mono text-meta uppercase tracking-widest text-iris";
 const MAIN = "mt-1 block text-lg text-foreground";
@@ -314,7 +314,7 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
           type="button"
           onClick={copy}
           aria-label={labels.copy}
-          className="relative z-10 -m-2.5 grid size-9 shrink-0 place-items-center rounded-lg text-iris outline-none transition-colors duration-200 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          className="tap-target relative z-10 -m-2.5 grid size-9 shrink-0 place-items-center rounded-lg text-iris transition-colors duration-200 hover:text-foreground"
         >
           {copied ? (
             <Check aria-hidden="true" className="size-4" />

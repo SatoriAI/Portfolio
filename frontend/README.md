@@ -62,12 +62,11 @@ The kit defines no dark theme, so the site has none; adding one later means a se
 
 Copy `.env.example` to `.env.local`:
 
-| Variable            | Meaning                                                       |
-| ------------------- | ------------------------------------------------------------- |
-| `VITE_API_BASE_URL` | Backend origin, e.g. `http://localhost:8000`                  |
-| `VITE_MOCK`         | When true, render from local sample data and make no requests |
+| Variable            | Meaning                                      |
+| ------------------- | -------------------------------------------- |
+| `VITE_API_BASE_URL` | Backend origin, e.g. `http://localhost:8000` |
 
-Vite inlines both at build time, so changing either needs a rebuild rather than a restart. In Docker they are build arguments for the same reason.
+Vite inlines it at build time, so changing it needs a rebuild rather than a restart. In Docker it is a build argument for the same reason. Without it the app stops at startup with an error naming the variable.
 
 ## Testing
 

@@ -140,7 +140,7 @@ const LiveCheck = ({ url, state, onCheck, labels, className }: LiveCheckProps) =
           title={host}
           // A long host gives way first, cut with an ellipsis, so the time
           // at the bar's end always keeps its room.
-          className="flex min-h-11 min-w-0 shrink items-center gap-1.5 rounded-l-lg pl-4 pr-2 font-mono text-meta text-foreground underline-offset-4 outline-none transition-colors duration-200 hover:text-iris hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="flex min-h-11 min-w-0 shrink items-center gap-1.5 rounded-l-lg pl-4 pr-2 font-mono text-meta text-foreground underline-offset-4 transition-colors duration-200 hover:text-iris hover:underline"
         >
           <span className="truncate">{host}</span>
           <ExternalLink aria-hidden="true" className="size-3.5 shrink-0" />
@@ -150,7 +150,7 @@ const LiveCheck = ({ url, state, onCheck, labels, className }: LiveCheckProps) =
           onClick={onCheck}
           disabled={state.phase === "checking"}
           aria-label={`${state.phase === "done" ? labels.again : labels.check}: ${host}`}
-          className="flex min-h-11 flex-1 items-center gap-3 rounded-r-lg pl-1 pr-4 text-left outline-none transition-colors duration-200 hover:bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-progress"
+          className="flex min-h-11 flex-1 items-center gap-3 rounded-r-lg pl-1 pr-4 text-left transition-colors duration-200 hover:bg-background disabled:cursor-progress"
         >
           <span aria-hidden="true" className="relative flex h-3 min-w-6 flex-1 items-center">
             <span className="h-px w-full bg-border" />
