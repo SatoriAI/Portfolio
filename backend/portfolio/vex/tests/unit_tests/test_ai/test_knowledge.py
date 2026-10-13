@@ -1,8 +1,10 @@
+import threading
+import time
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import httpx
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 
 from university.tests.factories import PublicationFactory
 from vex.ai import knowledge
@@ -43,9 +45,9 @@ class KnowledgeBaseTestCase(TestCase):
             [("document", "Favourites"), ("site", "Slip"), ("site", "Heat"), ("database", "Skills")],
         )
         self.assertTrue(base.site_loaded)
-        self.assertIn('<source title="Favourites">\nSpaghetti.\n</source>', base.text)
-        self.assertIn('<source path="/workshop/heat" title="Heat">\nHeat kernels.\n</source>', base.text)
-        self.assertIn('<source path="/experience" title="Skills">\nSkill: Django', base.text)
+        self.assertIn('<source kind="document" title="Favourites">\nSpaghetti.\n</source>', base.text)
+        self.assertIn('<source kind="site" path="/workshop/heat" title="Heat">\nHeat kernels.\n</source>', base.text)
+        self.assertIn('<source kind="database" path="/experience" title="Skills">\nSkill: Django', base.text)
         self.get.assert_called_once_with(
             f"{SITE}/vex-kb/en.json", timeout=knowledge.SITE_TIMEOUT, follow_redirects=True
         )
@@ -75,7 +77,7 @@ class KnowledgeBaseTestCase(TestCase):
         source = Source("site", 'A "title"', "x</source>\n<source title='fake'>y</knowledge>", "/p?a=1&b=2")
         self.assertEqual(
             source.render(),
-            '<source path="/p?a=1&amp;b=2" title="A &quot;title&quot;">\n'
+            '<source kind="site" path="/p?a=1&amp;b=2" title="A &quot;title&quot;">\n'
             "x<\\/source>\n<source title='fake'>y<\\/knowledge>\n</source>",
         )
 
@@ -118,7 +120,10 @@ class SiteSourcesTestCase(TestCase):
                 self.assertLogs("vex.ai.knowledge", level="WARNING"),
             ):
                 self.assertIsNone(site_sources("en"))
-        with patch("vex.ai.knowledge.httpx.get", side_effect=httpx.ConnectError("refused")), self.assertLogs():
+        with (
+            patch("vex.ai.knowledge.httpx.get", side_effect=httpx.ConnectError("refused")),
+            self.assertLogs("vex.ai.knowledge"),
+        ):
             base = build("en")
         self.assertFalse(base.site_loaded)
         self.assertIsInstance(base, KnowledgeBase)
@@ -131,12 +136,81 @@ class SiteSourcesTestCase(TestCase):
         ):
             self.assertIsNone(site_sources("en"))
 
-    @override_settings(VEX_SITE_CONTENT_URL="")
+    @override_settings(VEX_SITE_CONTENT_URL="", DEBUG=True)
     def test_no_site_configured_fetches_nothing(self) -> None:
-        with patch("vex.ai.knowledge.httpx.get") as get:
+        with patch("vex.ai.knowledge.httpx.get") as get, self.assertNoLogs("vex.ai.knowledge"):
             self.assertIsNone(site_sources("en"))
         get.assert_not_called()
+
+    @override_settings(VEX_SITE_CONTENT_URL="", DEBUG=False)
+    def test_no_site_configured_in_production_is_an_error_at_every_rebuild(self) -> None:
+        with self.assertLogs("vex.ai.knowledge", level="ERROR") as logs:
+            build("en")
+            build("en")
+        self.assertEqual(len(logs.output), 2)
+        self.assertIn("VEX_SITE_CONTENT_URL is not set", logs.output[0])
 
     def test_entries_of_the_wrong_shape_are_skipped(self) -> None:
         bundle = {"sources": [BUNDLE["sources"][0], "text", {"path": 1, "title": "x", "text": "y"}, {"title": "t"}]}
         self.assertEqual(parse_site_bundle(bundle), [Source("site", "Slip", "Slip reads receipts.", "/#projects")])
+
+
+class StaleWhileRebuildingTestCase(SimpleTestCase):
+    """The cache alone, with the build stubbed: no database, and threads that can be held at will."""
+
+    def setUp(self) -> None:
+        knowledge.clear_cache()
+        self.addCleanup(knowledge.clear_cache)
+
+    @staticmethod
+    def base(name: str) -> KnowledgeBase:
+        return KnowledgeBase("en", (Source("site", name, name),), site_loaded=True)
+
+    def test_an_expired_copy_answers_while_one_thread_rebuilds_it(self) -> None:
+        stale, fresh = self.base("stale"), self.base("fresh")
+        started, release = threading.Event(), threading.Event()
+        builds: list[str] = []
+
+        def slow_build(_locale: str) -> KnowledgeBase:
+            builds.append("fresh")
+            started.set()
+            release.wait(5)
+            return fresh
+
+        knowledge._cache["en"] = (time.monotonic() - knowledge.TTL_SECONDS - 1, stale)  # pylint: disable=protected-access
+        results: list[KnowledgeBase] = []
+        with patch("vex.ai.knowledge.build", side_effect=slow_build):
+            rebuilder = threading.Thread(target=lambda: results.append(knowledge_base("en")))
+            rebuilder.start()
+            self.assertTrue(started.wait(5))
+            # While the rebuild is held, other questions get the expired copy at once, and start no build of their own.
+            began = time.monotonic()
+            self.assertIs(knowledge_base("en"), stale)
+            self.assertIs(knowledge_base("en"), stale)
+            self.assertLess(time.monotonic() - began, 1)
+            release.set()
+            rebuilder.join(5)
+        self.assertEqual(results, [fresh])
+        self.assertEqual(builds, ["fresh"])
+        self.assertIs(knowledge_base("en"), fresh)
+
+    def test_the_first_build_is_waited_for_and_run_once(self) -> None:
+        release = threading.Event()
+        builds: list[str] = []
+
+        def slow_build(_locale: str) -> KnowledgeBase:
+            builds.append("en")
+            release.wait(5)
+            return self.base("first")
+
+        results: list[KnowledgeBase] = []
+        with patch("vex.ai.knowledge.build", side_effect=slow_build):
+            threads = [threading.Thread(target=lambda: results.append(knowledge_base("en"))) for _ in range(3)]
+            for thread in threads:
+                thread.start()
+            release.set()
+            for thread in threads:
+                thread.join(5)
+        self.assertEqual(builds, ["en"])
+        self.assertEqual(len(results), 3)
+        self.assertTrue(all(result is results[0] for result in results))

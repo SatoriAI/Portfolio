@@ -9,6 +9,13 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        # A default first, so the removal below can be reversed: undone, it adds the column back with this value in
+        # every row rather than failing on the rows' missing model.
+        migrations.AlterField(
+            model_name="configuration",
+            name="model",
+            field=models.CharField(default="gpt-4o-mini", max_length=256, verbose_name="Model"),
+        ),
         migrations.RemoveField(
             model_name="configuration",
             name="model",

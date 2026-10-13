@@ -91,7 +91,7 @@ class ChatStreamView(RateLimitedMixin, APIView):
                         return
             yield sse_event("done", {})
         except GeneratorExit:
-            # A warning, so it reaches the log without a LOGGING setting: an abandoned answer still cost a call.
+            # A warning: an abandoned answer still cost a call (vex.ai.engine records it in Usage).
             logger.warning("Vex stream stopped: the client went away mid-answer")
             raise
         except Exception:  # pylint: disable=broad-exception-caught

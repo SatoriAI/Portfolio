@@ -248,10 +248,30 @@ if VEX_REASONING_EFFORT not in ("none", "minimal", "low", "medium", "high", "xhi
     raise ImproperlyConfigured(
         f"VEX_REASONING_EFFORT={VEX_REASONING_EFFORT!r}: use none, minimal, low, medium, high, xhigh or max."
     )
-# The cap on one answer, reasoning included: a long answer is cut here rather than billed.
-VEX_MAX_OUTPUT_TOKENS = env.int("VEX_MAX_OUTPUT_TOKENS", default=900)
+# The cap on one answer, reasoning included: a long answer is cut here rather than billed. An answer that reaches it
+# is logged (finish_reason "length"), so a cap that cuts real answers shows.
+VEX_MAX_OUTPUT_TOKENS = env.int("VEX_MAX_OUTPUT_TOKENS", default=1200)
+# Each model's price in dollars per million tokens (input, cached input, output; reasoning is billed as output), for
+# the cost of every call Vex makes (vex.models.Usage). A model missing here is recorded without a cost: add its
+# price before switching VEX_MODEL to it.
+VEX_PRICES: dict[str, tuple[float, float, float]] = {
+    "gpt-6-luna": (0.10, 0.01, 0.50),
+}
 # Where the site publishes its Markdown for Vex (/vex-kb/<locale>.json, emitted by the frontend's build). Empty means
 # Vex answers from the database alone. Locally the Vite dev server answers the same path.
 VEX_SITE_CONTENT_URL = env("VEX_SITE_CONTENT_URL", default="http://localhost:8080" if DEBUG else "")
 # The address Vex offers when it does not know; the one the site's contact section shows.
 VEX_CONTACT_EMAIL = env("VEX_CONTACT_EMAIL", default="dawidhanrahan@gmail.com")
+
+# Logs to stdout, which is what Railway keeps: Vex's own INFO lines (one per answer, with its tokens and timings) and
+# Django's warnings and errors. Without this, Vex's INFO lines are dropped and Django's errors go only to email.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"plain": {"format": "%(levelname)s %(name)s: %(message)s"}},
+    "handlers": {"stdout": {"class": "logging.StreamHandler", "stream": "ext://sys.stdout", "formatter": "plain"}},
+    "loggers": {
+        "vex": {"handlers": ["stdout"], "level": "INFO", "propagate": False},
+        "django": {"handlers": ["stdout"], "level": "WARNING", "propagate": False},
+    },
+}

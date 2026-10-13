@@ -4,6 +4,7 @@ import threading
 import time
 from collections.abc import Iterator
 from contextlib import closing, contextmanager
+from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from unittest.mock import patch
@@ -20,10 +21,12 @@ class FakeOpenAI(ThreadingHTTPServer):  # pylint: disable=too-many-instance-attr
     seconds, then a usage chunk, or stalls after the first when `stall` is set. It records the request, how far it
     got and whether the client hung up."""
 
-    def __init__(self, chunks: int = 50, interval: float = 0.05, stall: bool = False) -> None:
+    def __init__(
+        self, chunks: int = 50, interval: float = 0.05, stall: bool = False, finish_reason: str = "stop"
+    ) -> None:
         super().__init__(("127.0.0.1", 0), FakeOpenAIHandler)
         self.daemon_threads = True
-        self.chunks, self.interval, self.stall = chunks, interval, stall
+        self.chunks, self.interval, self.stall, self.finish_reason = chunks, interval, stall, finish_reason
         self.sent = 0
         self.request: dict[str, Any] = {}
         self.disconnected = threading.Event()
@@ -58,6 +61,7 @@ class FakeOpenAIHandler(BaseHTTPRequestHandler):
                     self.server.release.wait(10)
                     return
                 time.sleep(self.server.interval)
+            self.write_chunk(choices=[{"index": 0, "delta": {}, "finish_reason": self.server.finish_reason}])
             usage = {
                 "prompt_tokens": 1200,
                 "completion_tokens": 30,
@@ -103,7 +107,24 @@ class StreamCompletionTestCase(SimpleTestCase):
             chunks = list(stream(usage))
         self.assertEqual(chunks, ["t0 ", "t1 ", "t2 "])
         self.assertEqual(server.sent, 3)
-        self.assertEqual(usage, Usage(input_tokens=1200, cached_tokens=1024, output_tokens=30, reasoning_tokens=12))
+        self.assertEqual(
+            usage,
+            Usage(
+                input_tokens=1200,
+                cached_tokens=1024,
+                output_tokens=30,
+                reasoning_tokens=12,
+                finish_reason="stop",
+                reported=True,
+            ),
+        )
+
+    def test_an_answer_cut_at_the_output_cap_is_logged(self) -> None:
+        usage = Usage()
+        with fake_openai(chunks=2, interval=0, finish_reason="length"), self.assertLogs("vex.ai.provider") as logs:
+            list(stream(usage))
+        self.assertEqual(usage.finish_reason, "length")
+        self.assertIn("VEX_MAX_OUTPUT_TOKENS=900 (30 output tokens, 12 of them reasoning)", logs.output[0])
 
     def test_asks_for_the_configured_model_with_a_bounded_answer_and_a_cache_key(self) -> None:
         with fake_openai(chunks=1, interval=0) as server:
@@ -141,6 +162,17 @@ class StreamCompletionTestCase(SimpleTestCase):
             with self.assertRaises(openai.APITimeoutError):
                 next(chunks)
         self.assertLess(time.monotonic() - started, 2)
+
+
+@override_settings(VEX_PRICES={"gpt-6-luna": (0.10, 0.01, 0.50)})
+class UsageCostTestCase(SimpleTestCase):
+    def test_fresh_and_cached_input_and_output_each_at_their_price(self) -> None:
+        usage = Usage(input_tokens=1_000_000, cached_tokens=600_000, output_tokens=200_000, reasoning_tokens=50_000)
+        # 400k fresh at 0.10, 600k cached at 0.01, 200k output (reasoning included) at 0.50
+        self.assertEqual(usage.cost("gpt-6-luna"), Decimal("0.146"))
+
+    def test_a_model_without_a_price_has_no_cost(self) -> None:
+        self.assertIsNone(Usage(input_tokens=10).cost("gpt-unknown"))
 
 
 class ProviderClientTestCase(SimpleTestCase):

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 20:56+0000\n"
+"POT-Creation-Date: 2026-10-13 21:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -92,7 +92,7 @@ msgstr "Link"
 msgid "Year"
 msgstr "Rok"
 
-#: university/models.py:52 vex/models.py:41 vex/models.py:65 work/models.py:83
+#: university/models.py:52 vex/models.py:70 vex/models.py:94 work/models.py:83
 msgid "Title"
 msgstr "Tytuł"
 
@@ -120,7 +120,7 @@ msgstr "Sezon"
 msgid "Course"
 msgstr "Kurs"
 
-#: university/models.py:79 vex/models.py:25 vex/models.py:49
+#: university/models.py:79 vex/models.py:25 vex/models.py:78
 msgid "Content"
 msgstr "Treść"
 
@@ -136,7 +136,7 @@ msgstr "Referencje"
 msgid "One item per line."
 msgstr "Jedna pozycja w wierszu."
 
-#: utils/models.py:8
+#: utils/models.py:8 vex/models.py:47
 msgid "Created At"
 msgstr "Stworzono"
 
@@ -144,9 +144,29 @@ msgstr "Stworzono"
 msgid "Updated At"
 msgstr "Zaktualizowano"
 
-#: vex/admin.py:43
+#: vex/admin.py:46
 msgid "Number of Messages"
 msgstr "Liczba Wiadomości"
+
+#: vex/admin.py:68
+msgid ""
+"No text could be read from this file. Paste its text into Content, or upload "
+"another file."
+msgstr ""
+"Nie udało się odczytać tekstu z tego pliku. Wklej jego tekst w pole Treść "
+"albo prześlij inny plik."
+
+#: vex/admin.py:74 vex/admin.py:108
+msgid "Text for Vex"
+msgstr "Tekst dla Vexa"
+
+#: vex/admin.py:78
+msgid "Has text"
+msgstr "Ma tekst"
+
+#: vex/admin.py:78
+msgid "Empty"
+msgstr "Pusty"
 
 #: vex/models.py:12
 msgid "Session Key"
@@ -164,23 +184,23 @@ msgstr "Rozmowy"
 msgid "Role"
 msgstr "Rola"
 
-#: vex/models.py:29
+#: vex/models.py:29 vex/models.py:52
 msgid "Model"
 msgstr "Model"
 
-#: vex/models.py:30
+#: vex/models.py:30 vex/models.py:53
 msgid "Prompt version"
 msgstr "Wersja promptu"
 
-#: vex/models.py:31
+#: vex/models.py:31 vex/models.py:56
 msgid "Input tokens"
 msgstr "Tokeny wejściowe"
 
-#: vex/models.py:32
+#: vex/models.py:32 vex/models.py:57
 msgid "Cached input tokens"
 msgstr "Tokeny wejściowe z cache"
 
-#: vex/models.py:33
+#: vex/models.py:33 vex/models.py:58
 msgid "Output tokens"
 msgstr "Tokeny wyjściowe"
 
@@ -192,23 +212,47 @@ msgstr "Wiadomość"
 msgid "Messages"
 msgstr "Wiadomomści"
 
-#: vex/models.py:42 work/models.py:47 work/models.py:97 work/models.py:193
+#: vex/models.py:54
+msgid "Outcome"
+msgstr "Wynik"
+
+#: vex/models.py:55
+msgid "Finish reason"
+msgstr "Powód zakończenia"
+
+#: vex/models.py:59
+msgid "Reasoning tokens"
+msgstr "Tokeny rozumowania"
+
+#: vex/models.py:60
+msgid "Estimated"
+msgstr "Szacowane"
+
+#: vex/models.py:62
+msgid "Cost (USD)"
+msgstr "Koszt (USD)"
+
+#: vex/models.py:65 vex/models.py:66
+msgid "Usage"
+msgstr "Zużycie"
+
+#: vex/models.py:71 work/models.py:47 work/models.py:97 work/models.py:193
 msgid "Description"
 msgstr "Opis"
 
-#: vex/models.py:43
+#: vex/models.py:72
 msgid "Language"
 msgstr "Język"
 
-#: vex/models.py:45
+#: vex/models.py:74
 msgid "File"
 msgstr "Plik"
 
-#: vex/models.py:46
+#: vex/models.py:75
 msgid "Source URL"
 msgstr "Adres URL"
 
-#: vex/models.py:52
+#: vex/models.py:81
 msgid ""
 "The text Vex reads. Filled from the file when one is uploaded; edit it "
 "freely."
@@ -216,19 +260,19 @@ msgstr ""
 "Tekst, który czyta Vex. Wypełnia się z pliku przy jego wgraniu; można go "
 "swobodnie edytować."
 
-#: vex/models.py:59
+#: vex/models.py:88
 msgid "Document"
 msgstr "Dokument"
 
-#: vex/models.py:60
+#: vex/models.py:89
 msgid "Documents"
 msgstr "Dokumenty"
 
-#: vex/models.py:67
+#: vex/models.py:96
 msgid "System Prompt"
 msgstr "Prompt Systemowy"
 
-#: vex/models.py:69
+#: vex/models.py:98
 msgid ""
 "Vex's persona: its tone and style. Read with the rules in code, which win "
 "where they disagree."
@@ -236,23 +280,22 @@ msgstr ""
 "Osobowość Vexa: ton i styl. Czytana razem z zasadami w kodzie, które "
 "wygrywają tam, gdzie się różnią."
 
-#: vex/models.py:73
+#: vex/models.py:102
 msgid "User Prompt"
 msgstr "Prompt Użytkownika"
 
-#: vex/models.py:74
+#: vex/models.py:104
 msgid ""
 "No longer read: the question and the knowledge are put together in code. "
 "Kept for reference."
 msgstr ""
-"Już nieużywany: pytanie i wiedzę składa teraz kod. Zachowany dla "
-"porządku."
+"Już nieużywany: pytanie i wiedzę składa teraz kod. Zachowany dla porządku."
 
-#: vex/models.py:82
+#: vex/models.py:112
 msgid "Configuration"
 msgstr "Konfiguracja"
 
-#: vex/models.py:83
+#: vex/models.py:113
 msgid "Configurations"
 msgstr "Konfiguracje"
 

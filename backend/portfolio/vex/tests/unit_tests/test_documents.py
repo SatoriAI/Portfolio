@@ -12,12 +12,13 @@ from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.db import connection
+from django.http import HttpResponse
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from vex.models import Document
 from vex.tests.factories import DocumentFactory
-from vex.utils.document_text import extract_text
+from vex.utils.document_text import UnreadableDocument, extract_text
 
 backfill_migration = importlib.import_module("vex.migrations.0009_document_content_backfill")
 
@@ -36,7 +37,12 @@ class MediaRootMixin(TestCase):
         media = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, media, ignore_errors=True)
         override = override_settings(
-            MEDIA_ROOT=media, STORAGES={"default": {"BACKEND": "django.core.files.storage.FileSystemStorage"}}
+            MEDIA_ROOT=media,
+            STORAGES={
+                "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+                # The admin pages link their stylesheets; with DEBUG off the manifest would need a collectstatic.
+                "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+            },
         )
         override.enable()
         self.addCleanup(override.disable)
@@ -49,6 +55,11 @@ class ExtractTextTestCase(TestCase):
     def test_reads_anything_else_as_text(self) -> None:
         self.assertEqual(extract_text("notes.md", "  Zażółć\n".encode()), "Zażółć")
 
+    def test_a_file_with_no_text_to_read_is_refused(self) -> None:
+        for name, data in (("broken.pdf", b"not a pdf"), ("scan.pdf", pdf_bytes("")), ("empty.txt", b"  \n")):
+            with self.subTest(name=name), self.assertRaises(UnreadableDocument):
+                extract_text(name, data)
+
 
 class DocumentAdminTestCase(MediaRootMixin):
     def setUp(self) -> None:
@@ -56,13 +67,14 @@ class DocumentAdminTestCase(MediaRootMixin):
         user = get_user_model().objects.create_superuser("admin", "admin@example.com", "pass")
         self.client.force_login(user)
 
-    def post(self, document: Document | None = None, **fields: object) -> None:
+    def post(self, document: Document | None = None, status: int = 302, **fields: object) -> HttpResponse:
         url = (
             reverse("admin:vex_document_change", args=[document.pk]) if document else reverse("admin:vex_document_add")
         )
         data = {"title": "Favourites", "language": "en", "description": "", "url": "", "content": ""} | fields
         response = self.client.post(url, data)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status)
+        return response
 
     def test_an_uploaded_file_becomes_the_text_vex_reads(self) -> None:
         self.post(file=SimpleUploadedFile("favourites.pdf", pdf_bytes("Favourite dish: spaghetti")))
@@ -71,6 +83,20 @@ class DocumentAdminTestCase(MediaRootMixin):
     def test_text_edited_in_the_same_save_wins_over_the_file(self) -> None:
         self.post(file=SimpleUploadedFile("notes.txt", b"From the file"), content="Typed by hand")
         self.assertEqual(Document.objects.get().content, "Typed by hand")
+
+    def test_a_file_with_no_text_is_a_form_error_and_saves_nothing(self) -> None:
+        response = self.post(status=200, file=SimpleUploadedFile("scan.pdf", b"not really a pdf"))
+        self.assertIn("No text could be read from this file", response.content.decode())
+        self.assertFalse(Document.objects.exists())
+
+    def test_the_list_shows_and_filters_documents_without_text(self) -> None:
+        DocumentFactory(title="Filled", content="Spaghetti.", url=None)
+        DocumentFactory(title="Hollow", content="", url=None)
+        url = reverse("admin:vex_document_changelist")
+        self.assertContains(self.client.get(url), "Text for Vex")
+        empty = self.client.get(url, {"has_text": "no"}).content.decode()
+        self.assertIn("Hollow", empty)
+        self.assertNotIn("Filled", empty)
 
     def test_saving_without_a_new_file_keeps_the_text(self) -> None:
         document = DocumentFactory(file=ContentFile(b"From the file", name="notes.txt"), content="Edited", url=None)

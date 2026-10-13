@@ -61,7 +61,7 @@ class Source:
         # pass the rest off as something else.
         body = self.text.strip().replace("</source", "<\\/source").replace("</knowledge", "<\\/knowledge")
         path = f' path="{escape(self.path)}"' if self.path else ""
-        return f'<source{path} title="{escape(self.title)}">\n{body}\n</source>'
+        return f'<source kind="{self.kind}"{path} title="{escape(self.title)}">\n{body}\n</source>'
 
 
 @dataclass(frozen=True)
@@ -114,6 +114,10 @@ def site_sources(locale: str) -> list[Source] | None:
     when it cannot be had: no URL configured, or a fetch that fails with nothing fetched before it."""
     base = settings.VEX_SITE_CONTENT_URL.rstrip("/")
     if not base:
+        if not settings.DEBUG:
+            # Vex still answers, but without the projects' write-ups and the workshop: said at every rebuild, so a
+            # deploy that forgot the variable shows in the log rather than only in thinner answers.
+            logger.error("VEX_SITE_CONTENT_URL is not set: Vex answers without the site's content")
         return None
     url = f"{base}/vex-kb/{locale}.json"
     try:
@@ -154,20 +158,36 @@ def build(locale: str) -> KnowledgeBase:
 
 
 _cache: dict[str, tuple[float, KnowledgeBase]] = {}
-# One lock per language, so rebuilding one never holds up a question in the other.
+# Held by the one thread rebuilding a language's knowledge base. One per language, so rebuilding one never holds up a
+# question in the other.
 _locks = {code: threading.Lock() for code, _name in settings.LANGUAGES}
 
 
 def knowledge_base(locale: str) -> KnowledgeBase:
-    """The knowledge base for `locale`, rebuilt at most once every TTL_SECONDS per process."""
-    with _locks[locale]:
+    """The knowledge base for `locale`, rebuilt at most once every TTL_SECONDS per process.
+
+    One thread rebuilds an expired one while the others keep answering from it, so a slow fetch of the site costs
+    one question its wait, not every question asked meanwhile. Only the first build, with nothing to answer from,
+    makes the others wait for it."""
+    cached = _cache.get(locale)
+    if cached is not None and time.monotonic() - cached[0] < TTL_SECONDS:
+        return cached[1]
+    lock = _locks[locale]
+    if cached is None:
+        lock.acquire()
+    elif not lock.acquire(blocking=False):
+        # Another thread is rebuilding it; the expired copy answers until that is done.
+        return cached[1]
+    try:
+        # The copy may have been rebuilt while this thread waited for the lock.
         cached = _cache.get(locale)
         if cached is not None and time.monotonic() - cached[0] < TTL_SECONDS:
             return cached[1]
-        # Built under the lock: the threads that arrive meanwhile wait for this build rather than each running one.
         knowledge = build(locale)
         _cache[locale] = (time.monotonic(), knowledge)
         return knowledge
+    finally:
+        lock.release()
 
 
 def clear_cache() -> None:

@@ -22,7 +22,9 @@ class PromptTestCase(TestCase):
         prompt = system_prompt("pl")
         rules = prompt.index("You are Vex")
         notes = prompt.index("<persona>\nBądź luzacki.\n</persona>")
-        known = prompt.index('<knowledge>\n<source title="Favourites">\nSpaghetti.\n</source>\n</knowledge>')
+        known = prompt.index(
+            '<knowledge>\n<source kind="document" title="Favourites">\nSpaghetti.\n</source>\n</knowledge>'
+        )
         self.assertLess(rules, notes)
         self.assertLess(notes, known)
         self.assertTrue(prompt.endswith("</knowledge>"))

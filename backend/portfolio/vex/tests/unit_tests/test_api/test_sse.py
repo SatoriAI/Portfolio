@@ -1,5 +1,6 @@
 import json
 from collections.abc import Iterator
+from decimal import Decimal
 from typing import Any
 from unittest.mock import patch
 
@@ -10,10 +11,12 @@ from django.core.signals import request_finished
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from vex.ai.provider import ChatMessage, Usage
+from vex.ai.knowledge import estimate_tokens
+from vex.ai.provider import ChatMessage
+from vex.ai.provider import Usage as ProviderUsage
 from vex.api.limits import QUESTION_MAX_LENGTH, VexThrottle
-from vex.choices import Roles
-from vex.models import Conversation, Message
+from vex.choices import Outcomes, Roles
+from vex.models import Conversation, Message, Usage
 from vex.tests.factories import MessageFactory
 
 fake = faker.Faker()
@@ -59,10 +62,11 @@ class FakeModel:
         self.messages: list[ChatMessage] = []
         self.cache_key = ""
 
-    def __call__(self, messages: list[ChatMessage], *, cache_key: str, usage: Usage) -> Iterator[str]:
+    def __call__(self, messages: list[ChatMessage], *, cache_key: str, usage: ProviderUsage) -> Iterator[str]:
         self.messages, self.cache_key = messages, cache_key
         yield from self.chunks
         usage.input_tokens, usage.cached_tokens, usage.output_tokens = 1000, 900, len(self.chunks)
+        usage.finish_reason, usage.reported = "stop", True
 
 
 STREAM = "vex.ai.provider.stream_completion"
@@ -99,6 +103,7 @@ class ChatStreamViewTestCase(TestCase):
         events, _ = self.stream([*AWKWARD_CHUNKS, ""], session_key())
         self.assertEqual(events, [*(("delta", {"t": chunk}) for chunk in AWKWARD_CHUNKS), ("done", {})])
 
+    @override_settings(VEX_MODEL="gpt-6-luna", VEX_PRICES={"gpt-6-luna": (0.10, 0.01, 0.50)})
     def test_a_complete_answer_is_saved_after_the_conversation_so_far(self) -> None:
         session = session_key()
         earlier = MessageFactory(conversation__session=session, role=Roles.USER, content="Earlier")
@@ -123,6 +128,13 @@ class ChatStreamViewTestCase(TestCase):
             (settings.VEX_MODEL, 1000, 900, 3),
         )
         self.assertTrue(answer.prompt_version)
+        record = Usage.objects.get(conversation__session=session)
+        self.assertEqual(
+            (record.outcome, record.finish_reason, record.input_tokens, record.cached_tokens, record.estimated),
+            (Outcomes.ANSWERED, "stop", 1000, 900, False),
+        )
+        # 100 fresh input tokens at 0.10 a million, 900 cached at 0.01, 3 output at 0.50
+        self.assertEqual(record.cost, Decimal("0.0000205"))
 
     def test_an_unknown_locale_falls_back_to_the_default(self) -> None:
         _, model = self.stream(["x"], session_key(), locale="../../etc")
@@ -134,6 +146,8 @@ class ChatStreamViewTestCase(TestCase):
             events, _ = self.stream([], session)
         self.assertEqual(events, [("error", {"code": "unavailable"})])
         self.assertFalse(Message.objects.filter(conversation__session=session).exists())
+        # The call was billed all the same.
+        self.assertEqual(Usage.objects.get(conversation__session=session).outcome, Outcomes.EMPTY)
 
     def test_a_client_that_leaves_stops_the_generation_and_saves_nothing(self) -> None:
         produced: list[str] = []
@@ -163,6 +177,11 @@ class ChatStreamViewTestCase(TestCase):
         self.assertEqual(closed, [True])
         self.assertFalse(Message.objects.filter(conversation__session=session).exists())
         self.assertIn("client went away", "\n".join(logs.output))
+        # The provider never reported its counts, so they are estimated: the prompt in, the text that came out.
+        record = Usage.objects.get(conversation__session=session)
+        self.assertEqual((record.outcome, record.estimated), (Outcomes.ABANDONED, True))
+        self.assertEqual(record.input_tokens, estimate_tokens("system prompt in en") + estimate_tokens("Q"))
+        self.assertEqual(record.output_tokens, estimate_tokens("one "))
 
     def test_an_error_sends_only_a_code_and_saves_nothing(self) -> None:
         def boom(_messages: list[ChatMessage], **_kwargs: Any) -> Iterator[str]:
@@ -180,6 +199,8 @@ class ChatStreamViewTestCase(TestCase):
         self.assertNotIn("quota", text)
         self.assertIn("quota", "\n".join(logs.output))  # the provider's message goes to the log
         self.assertFalse(Message.objects.filter(conversation__session=session).exists())
+        record = Usage.objects.get(conversation__session=session)
+        self.assertEqual((record.outcome, record.estimated, record.output_tokens), (Outcomes.FAILED, True, 2))
 
     def test_an_answer_that_runs_too_long_is_cut_with_a_timeout(self) -> None:
         with (
