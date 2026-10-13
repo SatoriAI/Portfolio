@@ -126,6 +126,7 @@ const Index = () => {
           <SectionHeading
             eyebrow={eyebrow(1)}
             title={t.projects.title}
+            className="md:mb-6"
             note={
               checked.length > 0 && (
                 <CheckProof

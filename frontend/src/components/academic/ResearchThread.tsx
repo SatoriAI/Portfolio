@@ -12,6 +12,7 @@ import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { ArrowUpRight, Award } from "lucide-react";
 
 import DomainGlyph, { type DomainKind } from "@/components/academic/DomainGlyph";
+import ChoiceHint from "@/components/layout/ChoiceHint";
 import { useElementSize } from "@/hooks/use-element-size";
 import { useMediaQuery, usePrefersReducedMotion } from "@/hooks/use-media-query";
 import {
@@ -595,16 +596,7 @@ const ResearchThread = ({
       <span id={backId} className="sr-only">
         {labels.backToRoad}
       </span>
-      {/* Only while nothing is chosen; it keeps its line, so nothing moves. */}
-      <p
-        aria-hidden={open || undefined}
-        className={cn(
-          "mb-6 font-mono text-meta text-muted-foreground transition-opacity duration-200",
-          open && "opacity-0",
-        )}
-      >
-        {labels.hint}
-      </p>
+      <ChoiceHint hidden={open}>{labels.hint}</ChoiceHint>
       <TabsPrimitive.Root
         value={open ? String(current.id) : ""}
         onValueChange={(value) =>
