@@ -219,10 +219,12 @@ type Phase = "road" | "winding" | "compact" | "unwinding";
  */
 const ROW_MARGIN = 96;
 /**
- * Choosing scrolls down to the row as the card starts to rise (t 0.55 of the
- * winding), so the two read as one motion.
+ * Choosing scrolls down to the card as it starts to rise (t 0.55 of the
+ * winding), so the two read as one motion...
  */
 const REVEAL_AT = 0.55;
+/** ...far enough to leave this much under the card's end. */
+const REVEAL_ROOM = 32;
 /** The card's fade as the road unwinds. */
 const CARD_OUT_MS = 150;
 /** A card's rise in when another degree is chosen in the row. */
@@ -433,11 +435,13 @@ const ResearchThread = ({
     );
   }, [selected, phase, geometry, prefersReducedMotion]);
 
-  // The page is brought to the row (the stage's top under the menu bar):
-  // straight away when the reader has scrolled past it, and, when a degree
-  // is chosen from high up the page, as its card starts to rise, if the card
-  // would otherwise end below the screen. The card is only mounted once the
-  // winding starts, so that is measured when the scroll is due, not on the
+  // The page is brought to the row (the stage's top under the menu bar)
+  // straight away when the reader has scrolled past it. When a degree is
+  // chosen from higher up, the page scrolls as its card starts to rise, if
+  // the card would end below the screen: only as far as it takes to show the
+  // end, and never so far that the section's heading leaves the screen, so
+  // the reader still sees where they are. The card is only mounted once the
+  // winding starts, so it is measured when the scroll is due, not on the
   // click. Never smoothly under reduced motion. A later choice or the way
   // back cancels a scroll still waiting.
   const revealTimer = useRef(0);
@@ -457,9 +461,18 @@ const ResearchThread = ({
           const height = card.current?.offsetHeight;
           if (stageTop === undefined || height === undefined) return;
           // Laid out, not drawn: the card's rise is a transform, still under way.
-          if (stageTop + geometry.cardTop + height > window.innerHeight) {
-            window.scrollTo({ top: stageTop + window.scrollY - ROW_MARGIN, behavior });
-          }
+          const short = stageTop + geometry.cardTop + height + REVEAL_ROOM - window.innerHeight;
+          if (short <= 0) return;
+          // As far as the section's top under its scroll margin, where every
+          // anchor on the site brings a section; if the reader has already
+          // scrolled the heading away, as far as the row under the menu bar.
+          const section = stage.current?.closest("section");
+          const toHeading = section
+            ? section.getBoundingClientRect().top -
+              parseFloat(getComputedStyle(section).scrollMarginTop)
+            : 0;
+          const limit = toHeading > 0 ? toHeading : stageTop - ROW_MARGIN;
+          window.scrollTo({ top: window.scrollY + Math.min(short, limit), behavior });
         }, delay);
       }
     },
