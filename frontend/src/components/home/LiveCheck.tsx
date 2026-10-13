@@ -174,7 +174,7 @@ const LiveCheck = ({ url, state, onCheck, labels, className }: LiveCheckProps) =
             {shown?.answered ? (
               <>
                 <Bolt className="size-4" />
-                <span className="text-base font-semibold text-foreground">{shown.ms}</span>
+                <span className="text-base font-medium text-foreground">{shown.ms}</span>
                 <span className="text-meta text-muted-foreground">ms</span>
               </>
             ) : silent ? (

@@ -24,7 +24,7 @@ const CompanyMark = ({ company, className, style }: CompanyMarkProps) => {
       aria-hidden="true"
       style={{ ...(logo ? { backgroundColor: logo.background } : {}), ...style }}
       className={cn(
-        "relative flex items-center justify-center overflow-hidden rounded-full font-mono font-semibold",
+        "relative flex items-center justify-center overflow-hidden rounded-full font-mono font-medium",
         // A logo keeps its own colours, so a hairline edges it on the page.
         logo ? "ring-1 ring-border" : "bg-primary text-primary-foreground",
         className,
