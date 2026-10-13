@@ -123,7 +123,7 @@ const copy = {
     },
     skills: {
       title: "Skills",
-      subtitle: "Pick a technology to see where I used it. Or the other way round.",
+      hint: "Choose a technology to see where I used it. Or the other way round.",
       layers: {
         languages: "Languages and frameworks",
         dataArchitecture: "Databases and architecture",
@@ -236,8 +236,7 @@ const copy = {
       screenshotAlt: "{title}: screenshot",
       field: {
         field: "Projects",
-        hint: "Click to view",
-        hintTouch: "Tap to view",
+        hint: "Choose a project to learn more",
       },
       live: {
         check: "Check it live",
@@ -289,6 +288,7 @@ const copy = {
       title: "I like code that holds up in production",
       subtitle: "Less magic, more engineering. Though sometimes it's hard to tell.",
       rolesTitle: "Roles",
+      rolesHint: "Choose a role to learn more",
       timeline: {
         figure: "Career timeline, to scale",
         now: "now",
@@ -625,7 +625,7 @@ const copy = {
       /** Names the degrees' stops for screen readers: the list of tabs. */
       degreeSteps: "Degrees",
       /** Over the degrees' road: a stop can be chosen. */
-      degreeHint: "Choose a stop on the road to read more",
+      degreeHint: "Choose a stop to see the details",
       /** Read with the chosen degree's stop: pressing it again goes back to the road. */
       backToRoad: "Back to the whole road",
       /** Read after a link that opens elsewhere. */
@@ -780,7 +780,7 @@ const copy = {
     },
     skills: {
       title: "Umiejętności",
-      subtitle: "Wybierz technologię, a zobaczysz, gdzie jej używałem. Lub odwrotnie.",
+      hint: "Wybierz technologię, a zobaczysz, gdzie jej używałem. Lub odwrotnie.",
       layers: {
         languages: "Języki i frameworki",
         dataArchitecture: "Bazy danych i architektura",
@@ -884,8 +884,7 @@ const copy = {
       screenshotAlt: "{title}: zrzut ekranu",
       field: {
         field: "Projekty",
-        hint: "Kliknij, by zobaczyć",
-        hintTouch: "Dotknij, by zobaczyć",
+        hint: "Wybierz projekt, by dowiedzieć się więcej",
       },
       live: {
         check: "Sprawdź na żywo",
@@ -938,6 +937,7 @@ const copy = {
       title: "Lubię, kiedy kod działa na produkcji",
       subtitle: "Mniej magii, więcej inżynierii. Choć czasem trudno odróżnić.",
       rolesTitle: "Role",
+      rolesHint: "Wybierz rolę, by dowiedzieć się więcej",
       timeline: {
         figure: "Oś czasu kariery, w skali",
         now: "teraz",
@@ -1244,7 +1244,7 @@ const copy = {
         },
       } as Record<string, { label: string; text: string; href?: string }>,
       degreeSteps: "Stopnie",
-      degreeHint: "Wybierz etap drogi, by przeczytać więcej",
+      degreeHint: "Wybierz etap, by poznać szczegóły",
       backToRoad: "Wróć do całej drogi",
       newTab: "(otwiera się w nowej karcie)",
       domainNames: {
