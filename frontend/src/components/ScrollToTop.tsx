@@ -19,7 +19,7 @@ const READER_INPUT = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
 /**
  * Keeps navigation predictable: a route change lands at the top, and a hash
  * (e.g. /#projects, also when arriving from another page) scrolls to that
- * section once it exists in the DOM.
+ * section once it exists in the DOM. Back and Forward are left to the browser.
  */
 const ScrollToTop = () => {
   const location = useLocation();
@@ -30,16 +30,16 @@ const ScrollToTop = () => {
   const traversal = useNavigationType() === "POP" && location !== landing.current;
 
   useEffect(() => {
+    // Back and Forward return to a place the reader has already been, so the
+    // browser's own scroll restoration should win; scrolling to the top or to
+    // the section would drag them away from where they left the page.
+    if (traversal) return;
+
     if (!hash) {
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
       return;
     }
     const id = hash.slice(1);
-
-    // Back and Forward return to a place the reader has already been, so the
-    // browser's own scroll restoration should win; scrolling to the section
-    // would drag them away from where they left the page.
-    if (traversal) return;
 
     // A page fills in from its data after it commits, so a section drawn
     // from data appears late, and sections above it grow, leaving an early

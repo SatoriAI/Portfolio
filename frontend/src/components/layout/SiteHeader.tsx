@@ -67,10 +67,15 @@ const SiteHeader = () => {
     <header className="fixed top-0 z-40 w-full border-b border-border">
       <HeatField live placement="bar">
         <Container className="flex h-16 items-center justify-between md:h-20">
+          {/* The link hugs the logo rather than taking the line's height, so
+            its focus outline has room in the bar. Below md the bar is 64px
+            and the full logo 58px, 3px a side: too little for the kit's 3px
+            offset, which the bar's overflow and the top of the window would
+            cut off, so there the outline sits 1px out and stays whole. */}
           <Link
             to="/"
             aria-label="Dawid Hanrahan"
-            className="rounded-md text-foreground transition-opacity duration-200 hover:opacity-80"
+            className="flex rounded-md text-foreground transition-opacity duration-200 hover:opacity-80 max-md:focus-visible:outline-offset-1"
           >
             {/* Sizes are the symbol's artwork box. The kit's minimums are 32px
               for the standalone symbol and 180px for the full logo; the master
