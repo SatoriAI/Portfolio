@@ -11,6 +11,7 @@ import SkillLanes, { type SkillLane } from "@/components/experience/SkillLanes";
 import TimelineDialog from "@/components/experience/TimelineDialog";
 import { queryStatus } from "@/components/feedback/queryStatus";
 import StatusMessage from "@/components/feedback/StatusMessage";
+import ChoiceHint from "@/components/layout/ChoiceHint";
 import PageClosing from "@/components/layout/PageClosing";
 import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
@@ -290,7 +291,7 @@ const Experience = () => {
       </Section>
 
       <Section id="roles" tone="surface">
-        <SectionHeading eyebrow={eyebrow(1)} title={t.experience.rolesTitle} />
+        <SectionHeading eyebrow={eyebrow(1)} title={t.experience.rolesTitle} className="md:mb-6" />
         {queryStatus([experiencesQuery], {
           loading: t.common.loading,
           error: t.experience.error,
@@ -300,6 +301,7 @@ const Experience = () => {
             <StatusMessage variant="empty" message={t.experience.noData} />
           ) : (
             <>
+              <ChoiceHint hidden={open}>{t.experience.rolesHint}</ChoiceHint>
               <div ref={timelineArea}>
                 <Reveal>
                   <CareerTimeline<number>
@@ -351,11 +353,10 @@ const Experience = () => {
           its roles, choosing a role lights up its skills. */}
       {skills.length > 0 && (
         <Section id="skills" className="py-12 md:py-16">
-          <SectionHeading
-            eyebrow={eyebrow(2)}
-            title={t.skills.title}
-            leadLine={t.skills.subtitle}
-          />
+          <SectionHeading eyebrow={eyebrow(2)} title={t.skills.title} className="md:mb-6" />
+          <ChoiceHint hidden={chosenSkill !== null || sidebarRole !== null}>
+            {t.skills.hint}
+          </ChoiceHint>
           {/* The roles as a sidebar, where the timeline's circles land, and
               the skills beside them. From md the first circle starts on the
               axis line, its name beside the years. Stuck, the circles sit

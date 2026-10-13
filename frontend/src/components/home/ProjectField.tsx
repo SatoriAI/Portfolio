@@ -13,9 +13,10 @@ import {
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 
 import { MARKED } from "@/components/experience/circleStyles";
+import ChoiceHint from "@/components/layout/ChoiceHint";
 import { projectIcons } from "@/config/projectIcons";
 import { useOnceInView } from "@/hooks/use-in-view";
-import { useMediaQuery, usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import {
   expired,
   fitCanvas,
@@ -79,12 +80,10 @@ export type ProjectFieldLabels = {
   /** Accessible name of the field's list of projects. */
   field: string;
   /**
-   * The line under the field, saying how to choose, where there is a mouse.
-   * Dragging is left for the reader to find.
+   * The line over the field, saying how to choose. Dragging is left for the
+   * reader to find.
    */
   hint: string;
-  /** The same, on touch. */
-  hintTouch: string;
 };
 
 type ProjectFieldProps = {
@@ -223,7 +222,6 @@ const ARROWS: Record<string, Direction> = {
 
 const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps) => {
   const reducedMotion = usePrefersReducedMotion();
-  const canHover = useMediaQuery("(hover: hover) and (pointer: fine)");
   const fieldRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const puckRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -453,9 +451,11 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
 
   // Opening a project floods warmth from its puck.
   const previous = useRef(selected);
+  const [chosen, setChosen] = useState(false);
   useEffect(() => {
     if (previous.current === selected) return;
     previous.current = selected;
+    setChosen(true);
     const s = sim.current;
     const index = projects.findIndex((project) => project.title === selected);
     if (!s || index < 0 || !s.arrived) return;
@@ -627,6 +627,15 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
     // The field has no edge of its own, so its top pad is all the gap the
     // heading above needs: drawn up into the section's usual gap.
     <div ref={roomRef} className="-mt-6 flex flex-col gap-3">
+      {/* A project is always open, so the hint stays only until the
+          reader's first choice of the visit. */}
+      <ChoiceHint
+        hidden={chosen}
+        style={{ maxWidth: layout.width || undefined }}
+        className="mb-0 w-full self-center"
+      >
+        {labels.hint}
+      </ChoiceHint>
       <div
         ref={fieldRef}
         style={{ height: layout.height, width: layout.width || undefined }}
@@ -684,16 +693,6 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
             ))}
         </TabsPrimitive.List>
       </div>
-
-      {/* How to choose: the pucks say the rest, the panel below the open one. */}
-      <p
-        style={{ maxWidth: layout.width || undefined }}
-        // Drawn up 20px toward the pucks it is about, so it does not read
-        // as a caption of the panel below.
-        className="-mt-5 w-full self-center px-1 font-mono text-meta text-muted-foreground"
-      >
-        {canHover ? labels.hint : labels.hintTouch}
-      </p>
     </div>
   );
 };
