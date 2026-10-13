@@ -626,8 +626,8 @@ const copy = {
       degreeSteps: "Degrees",
       /** Over the degrees' road: a stop can be chosen. */
       degreeHint: "Choose a stop on the road to read more",
-      /** Winds the chosen degree's row back out into the road. */
-      wholeRoad: "Show whole road",
+      /** Read with the chosen degree's stop: pressing it again goes back to the road. */
+      backToRoad: "Back to the whole road",
       /** Read after a link that opens elsewhere. */
       newTab: "(opens in a new tab)",
       // What each degree's drawing shows, named under its stop.
@@ -1245,7 +1245,7 @@ const copy = {
       } as Record<string, { label: string; text: string; href?: string }>,
       degreeSteps: "Stopnie",
       degreeHint: "Wybierz etap drogi, by przeczytać więcej",
-      wholeRoad: "Pokaż całą drogę",
+      backToRoad: "Wróć do całej drogi",
       newTab: "(otwiera się w nowej karcie)",
       domainNames: {
         "torus-interval": "Torus i odcinek",
