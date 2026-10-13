@@ -8,7 +8,8 @@ from vex.utils.session import is_valid_session_key
 
 class MessageHistory(BaseChatMessageHistory):
     def __init__(self, session_key: str) -> None:
-        # Only a key this server could have issued may open (and so create) a conversation.
+        # Only a key in the format this server issues may open (and so create) a conversation. The check is on the
+        # format alone: any client can mint such a key, so the per-IP limits are what actually hold creation back.
         if not is_valid_session_key(session_key):
             raise ValueError("Invalid session key")
         self.conversation, _ = Conversation.objects.get_or_create(session=session_key)

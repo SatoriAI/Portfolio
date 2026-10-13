@@ -43,6 +43,8 @@ CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 # Vex's history is asked for with the session key in a header, so the key stays out of URLs and access logs.
 CORS_ALLOW_HEADERS = (*default_headers, "x-vex-session")
+# A throttled Vex request says how long to wait; the browser hides that header from the site unless it is exposed.
+CORS_EXPOSE_HEADERS = ["Retry-After"]
 
 if DEBUG:  # For development: Allow local file and HTTP server access
     CORS_ALLOW_ALL_ORIGINS = True
@@ -236,7 +238,8 @@ REST_FRAMEWORK = {
 }
 
 # The request header that names the visitor's IP for those limits. Railway's edge sets X-Real-IP; X-Forwarded-For
-# can carry whatever the client sent, and REMOTE_ADDR is the proxy. Empty (the local default) means REMOTE_ADDR.
+# can carry whatever the client sent, and REMOTE_ADDR is the proxy. Empty (the local default) means REMOTE_ADDR. A
+# request that lacks the configured header gets no per-IP limit at all (see vex.api.limits), never REMOTE_ADDR's.
 TRUSTED_CLIENT_IP_HEADER = env("TRUSTED_CLIENT_IP_HEADER", default="" if DEBUG else "X-Real-IP")
 
 # Own Variables

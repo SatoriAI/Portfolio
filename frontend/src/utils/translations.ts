@@ -51,15 +51,20 @@ const copy = {
         "Tell me about his PhD research",
         "Is he available for contract work?",
       ],
-      errorFallback:
-        "Vex didn't answer. Email me at dawidhanrahan@gmail.com and I'll reply within a few hours.",
-      // Shown in the toast, by the code the backend sends; never the provider's own words.
+      // Follows the reason in the chat's error notice; {email} becomes a mailto link.
+      errorFallback: "Email me at {email} and I'll reply within a few hours.",
+      // The reason a question went unanswered, by the code the backend sends;
+      // never the provider's own words.
       errors: {
         rate_limited: "That's a lot of questions at once. Give Vex a minute and try again.",
+        daily_limit: "Vex has talked a lot today. Try again tomorrow.",
         question_too_long: "That question is too long for Vex. Try a shorter one.",
+        invalid_session:
+          "Vex couldn't pick this conversation back up. Clear the chat and ask again.",
         timeout: "Vex took too long to answer.",
         unavailable: "Vex is unavailable right now.",
       },
+      pasteCut: "Cut to 1,000 characters",
       typing: "Vex is typing",
       clear: "Clear",
       send: "Send",
@@ -709,14 +714,16 @@ const copy = {
         "Opowiedz o jego badaniach doktorskich",
         "Czy jest dostępny do pracy kontraktowej?",
       ],
-      errorFallback:
-        "Vex nie odpowiedział. Napisz na dawidhanrahan@gmail.com — odpowiem w ciągu kilku godzin.",
+      errorFallback: "Napisz na {email} — odpowiem w ciągu kilku godzin.",
       errors: {
         rate_limited: "To sporo pytań naraz. Daj Vexowi minutę i spróbuj ponownie.",
-        question_too_long: "To pytanie jest za długie dla Vexa. Spróbuj krócej.",
+        daily_limit: "Vex dużo dziś rozmawiał. Spróbuj jutro.",
+        question_too_long: "To pytanie jest za długie dla Vexa. Zadaj krótsze pytanie.",
+        invalid_session: "Vex nie mógł wrócić do tej rozmowy. Wyczyść czat i zapytaj ponownie.",
         timeout: "Vex za długo nie odpowiadał.",
         unavailable: "Vex jest teraz niedostępny.",
       },
+      pasteCut: "Przycięto do 1000 znaków",
       typing: "Vex pisze",
       clear: "Wyczyść",
       send: "Wyślij",

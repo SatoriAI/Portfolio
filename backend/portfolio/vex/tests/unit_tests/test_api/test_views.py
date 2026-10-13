@@ -5,7 +5,7 @@ from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from vex.api.limits import QUESTION_MAX_LENGTH, VexThrottle
+from vex.api.limits import QUESTION_MAX_LENGTH, VexThrottle, warn_missing_ip_header
 from vex.models import Conversation
 from vex.tests.factories import ConversationFactory, MessageFactory
 
@@ -53,6 +53,29 @@ class ChatViewTestCase(TestCase):
         resp = self.client.post(url, data={"question": "x" * (QUESTION_MAX_LENGTH + 1)})
         self.assertEqual(resp.status_code, 400)
         self.assertEqual(resp.json(), {"code": "question_too_long"})
+
+    def test_post_rejects_a_question_that_is_not_text(self) -> None:
+        url = reverse("vex:chat")
+        for question in (5, ["x"], {"text": "x"}):
+            with self.subTest(question=question):
+                resp = self.client.post(url, data={"question": question}, content_type="application/json")
+                self.assertEqual(resp.status_code, 400)
+                self.assertEqual(resp.json(), {"code": "invalid_question"})
+
+    def test_post_rejects_a_session_key_that_is_not_text(self) -> None:
+        url = reverse("vex:chat")
+        for key in (123, 0, ["a" * 32], {"k": "v"}):
+            with self.subTest(session_key=key):
+                resp = self.client.post(
+                    url, data={"question": "Hi", "session_key": key}, content_type="application/json"
+                )
+                self.assertEqual(resp.status_code, 400)
+                self.assertEqual(resp.json(), {"code": "invalid_session"})
+        self.assertEqual(Conversation.objects.count(), 0)
+
+    def test_post_with_a_body_that_is_not_an_object(self) -> None:
+        resp = self.client.post(reverse("vex:chat"), data=["Hi"], content_type="application/json")
+        self.assertEqual(resp.status_code, 400)
 
     def test_post_is_rate_limited_per_ip(self) -> None:
         url = reverse("vex:chat")
@@ -138,3 +161,47 @@ class MessageListViewTestCase(TestCase):
             # ...while a different address from the edge does.
             other = self.client.get(self.url, headers={"X-Vex-Session": session_key(), "X-Real-IP": "2.2.2.2"})
         self.assertEqual([first.status_code, spoofed.status_code, other.status_code], [200, 429, 200])
+
+
+class ClientIpTestCase(TestCase):
+    """Which address the per-IP limits count, with and without a proxy in front."""
+
+    url = reverse("vex:chat")
+
+    def setUp(self) -> None:
+        cache.clear()
+        warn_missing_ip_header.cache_clear()
+
+    def post(self, **extra):
+        return self.client.post(self.url, data={"question": "Hi"}, **extra)
+
+    @override_settings(TRUSTED_CLIENT_IP_HEADER="")
+    def test_without_a_proxy_header_the_socket_address_is_the_visitor(self) -> None:
+        with patch.dict(VexThrottle.THROTTLE_RATES, {"vex_chat": "1/min", "vex_chat_session": "10/min"}):
+            first = self.post(REMOTE_ADDR="10.0.0.1")
+            again = self.post(REMOTE_ADDR="10.0.0.1")
+            other = self.post(REMOTE_ADDR="10.0.0.2")
+        self.assertEqual([first.status_code, again.status_code, other.status_code], [200, 429, 200])
+
+    @override_settings(TRUSTED_CLIENT_IP_HEADER="X-Real-IP")
+    def test_a_missing_proxy_header_skips_the_ip_limit_and_warns_once(self) -> None:
+        # REMOTE_ADDR is the proxy here: counting it would put every visitor in one bucket.
+        with (
+            patch.dict(VexThrottle.THROTTLE_RATES, {"vex_chat": "1/min", "vex_chat_daily": "1/day"}),
+            self.assertLogs("vex.api.limits", level="WARNING") as logs,
+        ):
+            statuses = [self.post(REMOTE_ADDR="10.0.0.1").status_code for _ in range(3)]
+        self.assertEqual(statuses, [200, 200, 200])
+        self.assertEqual(len(logs.records), 1)
+        self.assertIn("X-Real-IP", logs.output[0])
+
+    @override_settings(TRUSTED_CLIENT_IP_HEADER="X-Real-IP")
+    def test_a_missing_proxy_header_keeps_the_session_limit(self) -> None:
+        data = {"question": "Hi", "session_key": session_key()}
+        with (
+            patch.dict(VexThrottle.THROTTLE_RATES, {"vex_chat_session": "1/min"}),
+            self.assertLogs("vex.api.limits", level="WARNING"),
+        ):
+            first = self.client.post(self.url, data=data)
+            again = self.client.post(self.url, data=data)
+        self.assertEqual([first.status_code, again.status_code], [200, 429])

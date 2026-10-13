@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useRef, useState } from "react";
+import React, { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
 import { AlertCircle, Bot, MessageSquare, Send, Trash2, User } from "lucide-react";
 
 import { BrandSymbol } from "@/components/brand/BrandLogo";
@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { toast as notify } from "@/components/ui/sonner";
 import { Textarea } from "@/components/ui/textarea";
+import { EMAIL } from "@/config/contact";
 import { buildUrl, endpoints } from "@/config/endpoints";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useLatest } from "@/hooks/use-latest";
@@ -29,14 +30,33 @@ const MarkdownMessage = lazy(() => import("@/components/chat/MarkdownMessage"));
 // treated as a failure and shown as one.
 const STREAM_TIMEOUT_MS = 30_000;
 
+// The length counter appears this close to the limit, not before.
+const LENGTH_COUNTER_FROM = VEX_QUESTION_MAX_LENGTH - 100;
+
+const SESSION_STORAGE_KEY = "vex_chat_session_key";
+
 interface Message {
   id: string;
   text: string;
   isUser: boolean;
   timestamp: Date;
-  /** Set on the inline notice appended when a request fails or stalls. */
-  status?: "error";
+  /** Set on the inline notice appended when a request fails or stalls: why it did. */
+  error?: VexErrorCode;
 }
+
+/** The fallback sentence, with the address in it as a mailto link. */
+const ContactFallback = ({ sentence }: { sentence: string }) => {
+  const [before, after = ""] = sentence.split("{email}");
+  return (
+    <>
+      {before}
+      <a href={`mailto:${EMAIL}`} className="text-iris underline decoration-1 underline-offset-2">
+        {EMAIL}
+      </a>
+      {after}
+    </>
+  );
+};
 
 interface ChatWidgetProps {
   isOpen: boolean;
@@ -92,6 +112,8 @@ const ChatWidget = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isMultilineInput, setIsMultilineInput] = useState(false);
+  // A paste the length limit cut short, said once beside the counter.
+  const [pasteCut, setPasteCut] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const sessionKeyRef = useRef<string | null>(null);
   const csrfTokenRef = useRef<string | null>(null);
@@ -123,12 +145,21 @@ const ChatWidget = ({
     }
   };
 
+  // A key the backend turned away (left over from an older format, or edited)
+  // is dropped, so the next question starts a new conversation instead of
+  // failing on the old one for good.
+  const forgetSession = () => {
+    sessionKeyRef.current = null;
+    csrfTokenRef.current = null;
+    localStorage.removeItem(SESSION_STORAGE_KEY);
+  };
+
   // Each load is numbered, so a slow one from an earlier open never lands
   // over the latest.
   const hydration = useRef(0);
   const hydrateMessagesIfNeeded = async () => {
     const run = ++hydration.current;
-    const storedKey = localStorage.getItem("vex_chat_session_key");
+    const storedKey = localStorage.getItem(SESSION_STORAGE_KEY);
     sessionKeyRef.current = storedKey;
     if (!storedKey) {
       setHydrated(true);
@@ -159,7 +190,10 @@ const ChatWidget = ({
         if (run === hydration.current) setMessages(mapped);
       }
     } catch (err) {
-      console.error("Failed to hydrate chat history", err);
+      // A rejected key has no history to load: with it gone, the chat starts
+      // empty and the first question opens a new conversation.
+      if (vexRequestErrorCode(err) === "invalid_session") forgetSession();
+      else console.error("Failed to hydrate chat history", err);
     } finally {
       if (run === hydration.current) setHydrated(true);
     }
@@ -210,8 +244,9 @@ const ChatWidget = ({
   }, [isOpen, messages, isLoading, isStreaming, prefersReducedMotion]);
 
   // Every failure — request error, server error, or silence — ends in the same
-  // visible state: an inline notice with a way to reach me instead. The toast
-  // is only a secondary signal, in the site's words, never the provider's.
+  // visible state: an inline notice that says why, with a way to reach me
+  // instead. The toast is only a secondary signal, in the site's words, never
+  // the provider's.
   const failConversation = (code: VexErrorCode) => {
     closeExistingStream();
     setIsLoading(false);
@@ -221,10 +256,10 @@ const ChatWidget = ({
       ...prev,
       {
         id: `error-${Date.now()}`,
-        text: t.chat.errorFallback,
+        text: "",
         isUser: false,
         timestamp: new Date(),
-        status: "error",
+        error: code,
       },
     ]);
     notify.error(t.chat.errors[code]);
@@ -249,6 +284,7 @@ const ChatWidget = ({
 
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
+    setPasteCut(false);
     setIsMultilineInput(false);
     // Reset textarea height back to a single line
     requestAnimationFrame(() => {
@@ -263,40 +299,51 @@ const ChatWidget = ({
       setIsStreaming(true);
       hasReceivedFirstChunkRef.current = false;
       // Step 1-3: POST to obtain/confirm session_key (multipart/form-data)
-      const form = new FormData();
-      form.append("question", question);
-      const existingKey = localStorage.getItem("vex_chat_session_key");
-      if (existingKey) form.append("session_key", existingKey);
+      const postQuestion = async (key: string | null) => {
+        const form = new FormData();
+        form.append("question", question);
+        if (key) form.append("session_key", key);
+        const postController = new AbortController();
+        const postTimeout = window.setTimeout(() => postController.abort(), STREAM_TIMEOUT_MS);
+        try {
+          return await apiFetch<{ session_key: string; csrftoken: string }>(
+            endpoints.vex.chat.post,
+            {
+              method: "POST",
+              // Include CSRF token if we have one from previous round
+              headers: csrfTokenRef.current ? { "X-CSRFToken": csrfTokenRef.current } : undefined,
+              body: form as unknown as any,
+              signal: postController.signal,
+            },
+          );
+        } finally {
+          window.clearTimeout(postTimeout);
+        }
+      };
 
-      const postController = new AbortController();
-      const postTimeout = window.setTimeout(() => postController.abort(), STREAM_TIMEOUT_MS);
+      const existingKey = localStorage.getItem(SESSION_STORAGE_KEY);
       let postResp: { session_key: string; csrftoken: string };
       try {
-        postResp = await apiFetch<{ session_key: string; csrftoken: string }>(
-          endpoints.vex.chat.post,
-          {
-            method: "POST",
-            // Include CSRF token if we have one from previous round
-            headers: csrfTokenRef.current ? { "X-CSRFToken": csrfTokenRef.current } : undefined,
-            body: form as unknown as any,
-            signal: postController.signal,
-          },
-        );
-      } finally {
-        window.clearTimeout(postTimeout);
+        postResp = await postQuestion(existingKey);
+      } catch (err) {
+        // A stored key the backend refuses is replaced, once: the question
+        // goes again without it and opens a new conversation.
+        if (!existingKey || vexRequestErrorCode(err) !== "invalid_session") throw err;
+        forgetSession();
+        postResp = await postQuestion(null);
       }
 
       const newSessionKey = postResp?.session_key;
       const newCsrf = postResp?.csrftoken;
       if (newSessionKey) {
         sessionKeyRef.current = newSessionKey;
-        localStorage.setItem("vex_chat_session_key", newSessionKey);
+        localStorage.setItem(SESSION_STORAGE_KEY, newSessionKey);
       }
       if (newCsrf) {
         csrfTokenRef.current = newCsrf;
       }
 
-      const sessionKey = sessionKeyRef.current || existingKey;
+      const sessionKey = sessionKeyRef.current;
       if (!sessionKey) {
         throw new Error("No session key provided by server");
       }
@@ -398,9 +445,7 @@ const ChatWidget = ({
     } catch {
       /* noop */
     }
-    sessionKeyRef.current = null;
-    csrfTokenRef.current = null;
-    localStorage.removeItem("vex_chat_session_key");
+    forgetSession();
     setMessages([]);
     setIsLoading(false);
     setIsStreaming(false);
@@ -441,6 +486,9 @@ const ChatWidget = ({
       </ul>
     </div>
   ) : null;
+
+  const lengthId = useId();
+  const showLength = pasteCut || inputValue.length >= LENGTH_COUNTER_FROM;
 
   const sendButton = (
     <Button
@@ -505,7 +553,7 @@ const ChatWidget = ({
                       className={`prose prose-sm max-w-[85%] rounded-xl px-4 prose-headings:font-semibold prose-headings:leading-tight prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-p:my-2 prose-a:text-iris prose-a:underline prose-a:decoration-1 prose-a:underline-offset-2 prose-code:before:content-[''] prose-code:after:content-[''] prose-pre:rounded-lg prose-pre:bg-primary prose-pre:p-3 prose-pre:text-primary-foreground prose-ol:my-2 prose-ol:ml-5 prose-ol:list-decimal prose-ul:my-2 prose-ul:ml-5 prose-ul:list-disc prose-li:my-1 prose-hr:my-3 ${
                         message.isUser
                           ? "prose-invert bg-primary py-2 text-primary-foreground"
-                          : message.status === "error"
+                          : message.error
                             ? "border border-destructive/40 bg-blush py-2 text-foreground"
                             : "border border-border bg-lavender/40 py-2 text-foreground"
                       }`}
@@ -514,7 +562,7 @@ const ChatWidget = ({
                         <p className="not-prose m-0 whitespace-pre-wrap break-words text-sm leading-6">
                           {message.text}
                         </p>
-                      ) : message.status === "error" ? (
+                      ) : message.error ? (
                         <p
                           role="alert"
                           className="not-prose m-0 flex items-start gap-2 text-sm leading-relaxed"
@@ -523,7 +571,10 @@ const ChatWidget = ({
                             className="mt-0.5 h-4 w-4 shrink-0 text-destructive"
                             aria-hidden="true"
                           />
-                          <span>{message.text}</span>
+                          <span>
+                            <span className="font-medium">{t.chat.errors[message.error]}</span>{" "}
+                            <ContactFallback sentence={t.chat.errorFallback} />
+                          </span>
                         </p>
                       ) : (
                         <MarkdownBoundary
@@ -585,8 +636,19 @@ const ChatWidget = ({
               <Textarea
                 ref={textareaRef}
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={(e) => {
+                  setInputValue(e.target.value);
+                  if (e.target.value.length < VEX_QUESTION_MAX_LENGTH) setPasteCut(false);
+                }}
+                onPaste={(e) => {
+                  // maxLength cuts a long paste without a word; this says so.
+                  const el = e.currentTarget;
+                  const kept = el.value.length - (el.selectionEnd - el.selectionStart);
+                  const pasted = e.clipboardData.getData("text").length;
+                  if (kept + pasted > VEX_QUESTION_MAX_LENGTH) setPasteCut(true);
+                }}
                 onKeyDown={handleKeyPress}
+                aria-describedby={showLength ? lengthId : undefined}
                 placeholder={t.chat.inputPlaceholder}
                 aria-label={t.chat.inputPlaceholder}
                 maxLength={VEX_QUESTION_MAX_LENGTH}
@@ -653,7 +715,19 @@ const ChatWidget = ({
                 }}
               />
               {isMultilineInput ? (
-                <div className="flex items-center justify-end">{sendButton}</div>
+                // The counter shares the send button's row, which a question
+                // this long has already opened, so nothing moves when it shows.
+                <div className="flex items-center justify-between gap-3">
+                  <p id={lengthId} className="font-mono text-meta text-muted-foreground">
+                    {showLength && (
+                      <>
+                        {pasteCut && `${t.chat.pasteCut} · `}
+                        {inputValue.length}/{VEX_QUESTION_MAX_LENGTH}
+                      </>
+                    )}
+                  </p>
+                  {sendButton}
+                </div>
               ) : (
                 <div className="absolute right-2 top-1/2 -translate-y-1/2">{sendButton}</div>
               )}

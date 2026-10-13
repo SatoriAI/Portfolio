@@ -16,6 +16,7 @@ from vex.api.limits import (
     VexDailyThrottle,
     VexSessionThrottle,
     VexThrottle,
+    body_field,
 )
 from vex.api.serializers import MessageSerializer
 from vex.models import Message
@@ -28,17 +29,21 @@ class ChatView(RateLimitedMixin, APIView):
     throttle_classes = [VexThrottle, VexDailyThrottle, VexSessionThrottle]
 
     @staticmethod
-    def get_session_key(request: Request) -> str | None:
-        return request.data.get("session_key")
+    def get_session_key(request: Request) -> object:
+        # Not necessarily a string: a JSON body can send a number or a list here.
+        return body_field(request, "session_key")
 
     def post(self, request: Request) -> Response:
-        if not (question := request.data.get("question")):
+        question = body_field(request, "question")
+        if question is not None and not isinstance(question, str):
+            return Response({"code": "invalid_question"}, status=status.HTTP_400_BAD_REQUEST)
+        if not question:
             return Response({"error": "Empty question"}, status=status.HTTP_400_BAD_REQUEST)
         if len(question) > QUESTION_MAX_LENGTH:
             return Response({"code": "question_too_long"}, status=status.HTTP_400_BAD_REQUEST)
 
         session_key = self.get_session_key(request)
-        if session_key and not is_valid_session_key(session_key):
+        if session_key not in (None, "") and not is_valid_session_key(session_key):
             return Response({"code": "invalid_session"}, status=status.HTTP_400_BAD_REQUEST)
 
         if not (session_key := session_key or request.session.session_key):

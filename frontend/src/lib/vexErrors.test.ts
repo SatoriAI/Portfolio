@@ -8,6 +8,25 @@ describe("vexRequestErrorCode", () => {
     expect(vexRequestErrorCode(new ApiError(429, "Too Many Requests", ""))).toBe("rate_limited");
   });
 
+  it("tells a short wait from the daily cap by Retry-After", () => {
+    const throttled = (retryAfter: string) =>
+      new ApiError(429, "Too Many Requests", "", new Headers({ "Retry-After": retryAfter }));
+    expect(vexRequestErrorCode(throttled("42"))).toBe("rate_limited");
+    expect(vexRequestErrorCode(throttled("3600"))).toBe("rate_limited");
+    expect(vexRequestErrorCode(throttled("50000"))).toBe("daily_limit");
+  });
+
+  it("names a rejected session key, so it is never shown as an outage", () => {
+    const err = new ApiError(400, "Bad Request", '{"code":"invalid_session"}');
+    expect(vexRequestErrorCode(err)).toBe("invalid_session");
+  });
+
+  it("reads an aborted request as a timeout", () => {
+    expect(vexRequestErrorCode(new DOMException("The operation was aborted.", "AbortError"))).toBe(
+      "timeout",
+    );
+  });
+
   it("takes the backend's code from the body", () => {
     const err = new ApiError(400, "Bad Request", '{"code":"question_too_long"}');
     expect(vexRequestErrorCode(err)).toBe("question_too_long");

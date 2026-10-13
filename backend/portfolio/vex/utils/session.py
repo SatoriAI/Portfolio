@@ -5,5 +5,6 @@ import re
 SESSION_KEY_PATTERN = re.compile(r"[a-z0-9]{32}")
 
 
-def is_valid_session_key(key: str | None) -> bool:
-    return bool(key) and SESSION_KEY_PATTERN.fullmatch(key) is not None
+def is_valid_session_key(key: object) -> bool:
+    # The key can come from a JSON body, so it may not be a string at all.
+    return isinstance(key, str) and SESSION_KEY_PATTERN.fullmatch(key) is not None

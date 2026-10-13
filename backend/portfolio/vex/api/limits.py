@@ -1,4 +1,8 @@
+import functools
+import logging
 import math
+from collections.abc import Mapping
+from typing import Any
 
 from django.conf import settings
 from rest_framework.exceptions import Throttled
@@ -6,8 +10,21 @@ from rest_framework.throttling import SimpleRateThrottle
 
 from vex.utils.session import is_valid_session_key
 
+logger = logging.getLogger(__name__)
+
 SESSION_HEADER = "X-Vex-Session"
 QUESTION_MAX_LENGTH = 1000
+
+
+def body_field(request, name: str) -> Any:
+    """One field of a request body, or None when the body is not an object at all (a JSON list, a bare string)."""
+    return request.data.get(name) if isinstance(request.data, Mapping) else None
+
+
+@functools.cache
+def warn_missing_ip_header(header: str) -> None:
+    """Said once per process: logged on every request, it would flood the log."""
+    logger.warning("%s is missing from requests; Vex's per-IP limits are skipped for them", header)
 
 
 class VexThrottle(SimpleRateThrottle):
@@ -26,16 +43,24 @@ class VexThrottle(SimpleRateThrottle):
         self.num_requests, self.duration = self.parse_rate(self.rate)
         return super().allow_request(request, view)
 
-    def get_ident(self, request) -> str:
+    def get_ident(self, request) -> str | None:
         # Behind Railway's edge REMOTE_ADDR is the proxy, and X-Forwarded-For can carry whatever the client sent.
-        # Only the header the edge itself sets (X-Real-IP) names the visitor; locally there is no proxy at all.
-        if header := settings.TRUSTED_CLIENT_IP_HEADER:
-            if ip := request.headers.get(header, "").strip():
-                return ip
-        return request.META.get("REMOTE_ADDR", "")
+        # Only the header the edge itself sets (X-Real-IP) names the visitor. Locally (no header configured) there
+        # is no proxy at all, so REMOTE_ADDR is the visitor.
+        if not (header := settings.TRUSTED_CLIENT_IP_HEADER):
+            return request.META.get("REMOTE_ADDR", "")
+        if ip := request.headers.get(header, "").strip():
+            return ip
+        # With the header configured but absent, REMOTE_ADDR would be the proxy: every visitor would share one
+        # count, and one of them could lock everyone out. No identity means no per-IP limit for this request; the
+        # per-session limits still apply.
+        warn_missing_ip_header(header)
+        return None
 
-    def get_cache_key(self, request, view) -> str:
-        return self.cache_format % {"scope": self.scope, "ident": self.get_ident(request)}
+    def get_cache_key(self, request, view) -> str | None:
+        if (ident := self.get_ident(request)) is None:
+            return None  # SimpleRateThrottle lets a request without a cache key through
+        return self.cache_format % {"scope": self.scope, "ident": ident}
 
 
 class VexDailyThrottle(VexThrottle):

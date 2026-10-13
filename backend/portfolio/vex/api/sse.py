@@ -36,7 +36,10 @@ class EventStreamRenderer(BaseRenderer):
 
 
 class ChatStreamView(RateLimitedMixin, APIView):
-    # The key still rides in the query string here, because EventSource cannot send headers.
+    # The key still rides in the query string here, because EventSource cannot send headers; that lasts only until
+    # streaming moves to a POST. EventSource also cannot read a refusal's body or status, so a 400 or 429 here
+    # reaches the visitor as "unavailable". In practice they are not reached: the question POST that precedes every
+    # stream is validated and throttled first, and turns the visitor away with the right code.
     renderer_classes = [JSONRenderer, EventStreamRenderer]
     throttle_scope = "vex_stream"
     throttle_classes = [VexThrottle, VexDailyThrottle, VexSessionThrottle]
