@@ -50,6 +50,17 @@ export type RoadGeometry = {
 const HIGH = 68;
 const LOW = 116;
 
+/**
+ * The compact row runs the column's whole width: each disc in the middle of
+ * its share of it (at 1/6, 1/2 and 5/6 for three), as the grid's columns
+ * would place them, so the years under each have room.
+ */
+const rowAcross = (width: number, stops: number, y: number): Point[] =>
+  Array.from({ length: stops }, (_, i) => ({
+    x: Math.round((width * (2 * i + 1)) / (2 * stops)),
+    y,
+  }));
+
 /** A stop's disc, unscaled, in px. */
 export const DISC = 120;
 
@@ -144,12 +155,13 @@ export const roadGeometry = (width: number, phone: boolean, count = 3): RoadGeom
       x: Math.round(first + i * step),
       y: i % 2 ? LOW : HIGH,
     }));
-    // The first disc in the row leaves room for its years, centred under it.
-    compact = Array.from({ length: stops }, (_, i) => ({ x: 36 + i * 112, y: 42 }));
+    compact = rowAcross(width, stops, 42);
     restScale = 1;
     compactScale = 56 / DISC;
     height = LOW + DISC / 2 + 20 + 96;
-    cardTop = 116;
+    // Under the row's years (from 80 to 96), a gap, then the chosen degree's
+    // name and the card.
+    cardTop = 120;
     const pull = step * 0.5;
     pieces = rest.slice(1).map((to, i): Cubic => {
       const from = rest[i];
@@ -164,12 +176,12 @@ export const roadGeometry = (width: number, phone: boolean, count = 3): RoadGeom
     ]);
   } else {
     rest = Array.from({ length: stops }, (_, i) => ({ x: 30, y: 36 + i * 104 }));
-    compact = Array.from({ length: stops }, (_, i) => ({ x: 34 + i * 84, y: 28 }));
+    compact = rowAcross(width, stops, 28);
     restScale = 60 / DISC;
     compactScale = 48 / DISC;
     height = rest[stops - 1].y + 70;
-    // Room for the chosen degree's name on a line of its own under the row.
-    cardTop = 128;
+    // Under the row's years (from 58 to 74), a gap, then the name and card.
+    cardTop = 92;
     pieces = rest.slice(1).map((to, i) => line(rest[i], to));
     const end = rest[stops - 1];
     pieces.push(line(end, { x: end.x, y: end.y + 56 }));
@@ -249,6 +261,13 @@ export const spiralPath = (turns = 3, points = 150) =>
     return `${i ? "L" : "M"}${(radius * Math.cos(angle)).toFixed(2)} ${(radius * Math.sin(angle)).toFixed(2)}`;
   }).join("");
 
+/** The row's line laid `laid` of the way out from `x` to both ends of the column. */
+const laidFrom = ({ width, compact }: RoadGeometry, x: number, laid: number) => ({
+  y: compact[0].y,
+  left: x * (1 - laid),
+  right: (width - x) * (1 - laid),
+});
+
 export type RoadFrame = {
   /** Each stop's centre and its disc's scale. */
   stops: { x: number; y: number; scale: number }[];
@@ -259,8 +278,11 @@ export type RoadFrame = {
   roadCut: number;
   /** The coil: its centre, turn (degrees), scale, how much of it is wound, and whether it shows. */
   spool: { x: number; y: number; rotate: number; scale: number; wound: number; opacity: number };
-  /** The dotted line through the row: where it starts, and how much of it is laid. */
-  rowLine: { x: number; y: number; laid: number };
+  /**
+   * The dotted line through the row, the column's whole width, laid outwards
+   * from the coil: how much of it is still hidden at its left and right ends.
+   */
+  rowLine: { y: number; left: number; right: number };
   /** Fades: the names on the road, the years in the row, the card. */
   names: number;
   years: number;
@@ -289,7 +311,7 @@ export const roadFrame = (geometry: RoadGeometry, t: number): RoadFrame => {
       roadOpacity: 1 - within(t, 0, 0.5),
       roadCut: geometry.width,
       spool: { x: rest[0].x, y: rest[0].y, rotate: 0, scale: 1, wound: 0, opacity: 0 },
-      rowLine: { x: compact[0].x, y: compact[0].y, laid: within(t, 0.3, 1) },
+      rowLine: laidFrom(geometry, compact[0].x, within(t, 0.3, 1)),
       names: 1 - within(t, 0, 0.4),
       years: within(t, 0.5, 1),
       card: within(t, 0.6, 1),
@@ -332,7 +354,7 @@ export const roadFrame = (geometry: RoadGeometry, t: number): RoadFrame => {
       // Faded as it starts to unroll, so no tick of it is left over the row.
       opacity: wind > 0 ? 1 - within(t, 0.62, 0.74) : 0,
     },
-    rowLine: { x: coil.x, y: compact[0].y, laid: unroll },
+    rowLine: laidFrom(geometry, coil.x, unroll),
     names: 1 - within(t, 0, 0.16),
     years: within(t, 0.86, 1),
     // The card rises in while the row is still forming, so there is
