@@ -66,8 +66,8 @@ Jedno repozytorium, dwie części. Każda ma własne narzędzia, Dockerfile i ko
 **Jak przebiega pytanie do Vexa:**
 
 1. Widżet wysyła POST na `/api/vex/chat/` i dostaje klucz sesji oraz token CSRF.
-2. Otwiera `EventSource` na `/api/vex/chat/stream/` z pytaniem, kluczem sesji i językiem.
-3. Backend wysyła zdarzenie `received`, potem strumieniuje odpowiedź fragmentami i kończy zdarzeniem `finished`. Każdy wyjątek zamienia się w zdarzenie `error`.
+2. Wysyła POST z pytaniem i językiem na `/api/vex/chat/stream/`, z kluczem sesji w nagłówku `X-Vex-Session`, i czyta odpowiedź jako strumień przez `fetch`.
+3. Backend strumieniuje odpowiedź zdarzeniami `delta`, z których każde niesie `{"t": tekst}` w JSON-ie, i kończy zdarzeniem `done`. Każdy wyjątek zamienia się w zdarzenie `error` z samym kodem. Wymiana zapisuje się dopiero po pełnej odpowiedzi; przerwana, bo odwiedzający wyszedł albo dostawca zawiódł, nie zapisuje się wcale, a wyjście odwiedzającego zatrzymuje generowanie.
 4. Łańcuch LangChain jest budowany raz na proces. Łączy kontekst, prompt, model czatu OpenAI i historię rozmowy, zapisywaną w Postgresie osobno dla każdej sesji.
 5. Kontekst pochodzi z dwóch źródeł: wyszukiwania podobieństwa w pgvector (domyślnie 6 fragmentów, filtrowanych według języka) oraz bezpośredniego odczytu tabel. Pytanie jest dzielone na słowa i porównywane ze słownikiem słów kluczowych dla PL i EN. Przy trafieniu odczytywanych jest do 10 wierszy z odpowiedniej tabeli (umiejętności, projekty, doświadczenie, uczelnie, publikacje, opinie).
 6. Konfigurację edytuje się w panelu: treść promptu osobno dla każdego języka, a model i temperaturę wspólnie dla wszystkich języków. Bez takiego rekordu obowiązuje `gpt-4o-mini` z temperaturą 0,5.
@@ -77,7 +77,7 @@ Jedno repozytorium, dwie części. Każda ma własne narzędzia, Dockerfile i ko
 **Frontend** (React 18, TypeScript, Vite, Tailwind, shadcn/ui, Vitest):
 
 - Trasy w nowej odsłonie: `/`, `/experience`, `/research` (stary adres `/academic` przekierowuje), `/education`, `/workshop`, `/workshop/:slug`. Wszystkie poza stroną główną ładują się leniwie.
-- Większość kodu widżetu czatu zabezpiecza strumień: naprawia Markdown pocięty między fragmentami przy każdym renderowaniu, a 30 sekund ciszy traktuje jako awarię.
+- Widżet czatu przy każdym renderowaniu domyka blok kodu, którego strumień jeszcze nie zamknął, 30 sekund ciszy traktuje jako awarię, a po zamknięciu czatu przerywa żądanie.
 - Teksty z warsztatu to pliki Markdown wczytywane przy budowaniu. Szkice (`*.draft.md`) czyta tylko serwer deweloperski.
 - Ilustracje do badań mają czystą matematykę wydzieloną do modułów z testami. Motyw HeatField to suma jąder ciepła liczona na canvasie. Reaguje na kursor i zatrzymuje się przy `prefers-reduced-motion`.
 - Wygląd wyznacza system identyfikacji „Binary Axis” w wersji 5.1, wersjonowany w repozytorium: jedna jasna paleta, fonty Manrope i IBM Plex Mono, kolumna 1160 px i zasady pisania.
@@ -88,7 +88,7 @@ Jedno repozytorium, dwie części. Każda ma własne narzędzia, Dockerfile i ko
 - **Wyszukiwanie hybrydowe.** Wyszukiwanie wektorowe uzupełniają wiersze czytane prosto z tabel, więc pytania o umiejętności czy projekty dostają aktualną treść z bazy, a nie tylko z przesłanych dokumentów. Rozważanym podejściem była sama baza wektorowa. Na przyszłość warto przyjrzeć się też graph-RAG.
 - **Stanza zastąpiona tokenizacją wyrażeniem regularnym**, ze względu na wydajność. Według tytułu commita poprawiło to znacząco wydajność RAG. Pomiarów nie zapisano.
 - **Prompt i model w bazie danych**, edytowane w panelu zamiast zapisane w kodzie. Prompt jest osobny dla każdego języka, a model i temperatura są wspólne.
-- **SSE przez GET (EventSource)** z dwuetapowym otwarciem: najpierw POST po klucz sesji, potem strumień.
+- **SSE przez POST czytany przez `fetch`**, z dwuetapowym otwarciem: najpierw POST po klucz sesji, potem strumień. Zastąpił GET przez `EventSource`, który umieszczał klucz sesji i pytanie w adresie URL (a więc w logach dostępu), nie potrafił odczytać statusu odmowy i wpisywał surowy tekst w linie `data:`, przez co znak nowej linii w odpowiedzi kończył zdarzenie przedwcześnie albo ginął.
 - **Pliki przeniesione z wolumenu Railway do prywatnego bucketu zgodnego z S3 (Tigris).** Wolumen nie przetrwa przenosin między projektami i nie da się go współdzielić między usługami. Pliki są udostępniane przez podpisane adresy URL. Nagłówki ACL są wyłączone, bo Tigris je odrzuca. CI jawnie ustawia `USE_S3`, zamiast podawać fikcyjne dane bucketu, więc produkcja bez konfiguracji bucketu zgłosi błąd od razu. Przy tej okazji wyszło na jaw, że od Django 5.1 ustawienie `STATICFILES_STORAGE` było ignorowane, a skompresowane pliki statyczne Whitenoise nie działały na produkcji. Ustawienie przeniesiono do `STORAGES`.
 - **Historia frontendu zachowana przy łączeniu repozytoriów.** Zamiast kopiować kod jednym commitem, historię przepisano do podkatalogu (`git filter-repo`) i scalono. Dzięki temu zostało 71 commitów historii. Koszt: dwa commity początkowe i scalenie przez merge, nie squash.
 - **Testy CI na obrazie pgvector/pgvector:pg17 zamiast postgres:17-alpine.** Na zwykłym obrazie każdy test pgvector mógł padać tylko w CI, więc żadnego nie dało się napisać. Dodany test zapytania o odległość nie przechodzi na starym obrazie, a przechodzi na nowym.

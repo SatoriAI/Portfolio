@@ -1,46 +1,24 @@
 import { describe, expect, it } from "vitest";
 
-import { decodeStreamData, finalizeMarkdown, normalizeMarkdown } from "./streamMarkdown";
+import { holdBackUnderline, normalizeMarkdown } from "./streamMarkdown";
 
-describe("decodeStreamData", () => {
-  it("passes plain text through untouched", () => {
-    expect(decodeStreamData("Hello")).toBe("Hello");
+describe("holdBackUnderline", () => {
+  it("holds back a trailing line of dashes or equals signs", () => {
+    expect(holdBackUnderline("A paragraph\n-")).toBe("A paragraph\n");
+    expect(holdBackUnderline("A paragraph\n---")).toBe("A paragraph\n");
+    expect(holdBackUnderline("A paragraph\n  ==")).toBe("A paragraph\n");
+    expect(normalizeMarkdown(holdBackUnderline("A paragraph\n--"))).toBe("A paragraph\n");
   });
 
-  it("returns an empty string for an empty payload", () => {
-    expect(decodeStreamData("")).toBe("");
+  it("shows the line once more of it arrives", () => {
+    expect(holdBackUnderline("Intro\n- item")).toBe("Intro\n- item");
+    expect(holdBackUnderline("Intro\n---\n")).toBe("Intro\n---\n");
+    expect(holdBackUnderline("Intro\n-- not a rule")).toBe("Intro\n-- not a rule");
   });
 
-  it("unwraps a JSON-encoded string", () => {
-    expect(decodeStreamData('"Hello"')).toBe("Hello");
-  });
-
-  // The backend sends bare text, but the widget is written to survive a proxy or
-  // a future backend that wraps tokens in an object.
-  it.each([
-    ["token", '{"token":"abc"}'],
-    ["delta", '{"delta":"abc"}'],
-    ["content", '{"content":"abc"}'],
-    ["text", '{"text":"abc"}'],
-    ["message", '{"message":"abc"}'],
-  ])("extracts the %s field from an object payload", (_field, payload) => {
-    expect(decodeStreamData(payload)).toBe("abc");
-  });
-
-  it("prefers token over the other candidate fields", () => {
-    expect(decodeStreamData('{"token":"first","delta":"second"}')).toBe("first");
-  });
-
-  it("strips single quotes that are not valid JSON", () => {
-    expect(decodeStreamData("'Hello'")).toBe("Hello");
-  });
-
-  it("turns escaped newlines into real ones", () => {
-    expect(decodeStreamData("line one\\nline two")).toBe("line one\nline two");
-  });
-
-  it.each(["[DONE]", "DONE", "<|eot_id|>"])("swallows the %s terminator", (marker) => {
-    expect(decodeStreamData(marker)).toBe("");
+  it("leaves dashes inside a line alone", () => {
+    expect(holdBackUnderline("one - two")).toBe("one - two");
+    expect(holdBackUnderline("---")).toBe("---");
   });
 });
 
@@ -81,7 +59,6 @@ describe("normalizeMarkdown", () => {
   it("preserves blank lines inside a code block", () => {
     const code = "```\nfirst\n\n\n\nlast\n```\n";
     expect(normalizeMarkdown(code)).toBe(code);
-    expect(finalizeMarkdown(code)).toBe(code);
   });
 
   // Inline constructs are not fences. ~~ in particular used to be counted by a
@@ -98,14 +75,8 @@ describe("normalizeMarkdown", () => {
     expect(normalizeMarkdown("~~~\ncode")).toBe("~~~\ncode\n~~~\n");
   });
 
-  it("still repairs prose that follows a code block", () => {
-    expect(normalizeMarkdown("```\ncode\n```\ntext ## Heading")).toBe(
-      "```\ncode\n```\ntext\n\n## Heading\n",
-    );
-  });
-
   // It runs on every render, so applying it to its own output must be a no-op.
-  it.each(["plain text", "```\ncode\n```\n", "```js\nunterminated", "text ## Heading", "• bullet"])(
+  it.each(["plain text", "```\ncode\n```\n", "```js\nunterminated", "• bullet"])(
     "is idempotent for %j",
     (input) => {
       const once = normalizeMarkdown(input);
@@ -118,41 +89,24 @@ describe("normalizeMarkdown", () => {
     expect(normalizeMarkdown("— first")).toBe("- first\n");
   });
 
-  // Chunk boundaries land mid-sentence, so a heading can arrive with no newline
-  // in front of it at all.
-  it("puts a heading on its own line when it arrives mid-sentence", () => {
-    expect(normalizeMarkdown("some text ## Heading")).toBe("some text\n\n## Heading\n");
+  it("rewrites a bullet character at any indent and keeps the blank line before it", () => {
+    expect(normalizeMarkdown("intro\n\n  • nested")).toBe("intro\n\n  - nested\n");
   });
 
-  it("gives a heading a blank line when it only had one newline", () => {
-    expect(normalizeMarkdown("some text\n## Heading")).toBe("some text\n\n## Heading\n");
-  });
-
-  it("breaks a numbered list item onto its own line", () => {
-    expect(normalizeMarkdown("intro 1. first")).toBe("intro\n1. first\n");
+  // The stream once lost newlines, and rules that put them back by guessing
+  // broke prose and loosened lists. With the text arriving intact, prose is
+  // left as the model wrote it.
+  it.each([
+    ["a dash in a sentence", "2020 - 2024 at the lab"],
+    ["a hash in a sentence", "issue # 5 was fixed"],
+    ["a number in a sentence", "version 2. Then"],
+    ["a tight list", "- one\n- two"],
+    ["a heading after a line of text", "text\n## Heading"],
+  ])("leaves %s alone", (_case, text) => {
+    expect(normalizeMarkdown(text)).toBe(`${text}\n`);
   });
 
   it("normalises CRLF", () => {
     expect(normalizeMarkdown("a\r\nb")).toBe("a\nb\n");
-  });
-});
-
-describe("finalizeMarkdown", () => {
-  it("collapses runs of blank lines to at most one", () => {
-    expect(finalizeMarkdown("a\n\n\n\nb")).toBe("a\n\nb\n");
-  });
-
-  it("guarantees a trailing newline", () => {
-    expect(finalizeMarkdown("a")).toBe("a\n");
-  });
-
-  it("still separates a heading glued to preceding text", () => {
-    expect(finalizeMarkdown("text ## Heading")).toBe("text\n\n## Heading\n");
-  });
-
-  // Unlike normalizeMarkdown, this runs once the stream is complete, so it must
-  // not invent a closing fence for something the model genuinely left open.
-  it("does not add a closing code fence", () => {
-    expect(finalizeMarkdown("```js\nconsole.log(1)")).not.toContain("```\n```");
   });
 });

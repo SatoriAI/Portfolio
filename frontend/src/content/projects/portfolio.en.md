@@ -66,8 +66,8 @@ One repository with two halves, each with its own toolchain, Dockerfile and Rail
 **How a Vex question travels:**
 
 1. The widget POSTs to `/api/vex/chat/` and gets a session key and a CSRF token.
-2. It opens an `EventSource` on `/api/vex/chat/stream/` with the question, session key and language.
-3. The backend sends a `received` event, streams the answer in chunks and ends with `finished`. Any exception becomes an `error` event.
+2. It POSTs the question and language to `/api/vex/chat/stream/`, with the session key in the `X-Vex-Session` header, and reads the response as a stream with `fetch`.
+3. The backend streams the answer as `delta` events, each carrying `{"t": text}` as JSON, and ends with `done`. Any exception becomes an `error` event carrying only a code. The exchange is saved once the answer is complete; one cut short, because the visitor left or the provider failed, saves nothing, and a visitor who leaves stops the generation.
 4. A LangChain chain, built once per process, combines context, prompt, an OpenAI chat model and conversation history stored in Postgres per session.
 5. Context comes from two sources: similarity search in pgvector (6 chunks by default, filtered by language) and direct table reads. The question is split into words and matched against a PL and EN keyword list. On a match, up to 10 rows are read from the relevant table (skills, projects, experience, schools, publications, testimonials).
 6. A configuration record edited in the admin holds the prompt wording, per language, and the model and temperature, shared by all languages. Without one, the code uses `gpt-4o-mini` at temperature 0.5.
@@ -77,7 +77,7 @@ One repository with two halves, each with its own toolchain, Dockerfile and Rail
 **Frontend** (React 18, TypeScript, Vite, Tailwind, shadcn/ui, Vitest):
 
 - Routes in the redesign: `/`, `/experience`, `/research` (the old `/academic` redirects there), `/education`, `/workshop`, `/workshop/:slug`. All except home are lazy-loaded.
-- Much of the chat widget protects the stream: it repairs Markdown split across chunks on every render and treats 30 seconds of silence as a failure.
+- The chat widget closes a code fence the stream has not closed yet on every render, treats 30 seconds of silence as a failure, and aborts the request when the chat closes.
 - Workshop articles are Markdown files read at build time. Drafts (`*.draft.md`) are read only by the dev server.
 - The research figures keep their maths in separate, tested modules. The HeatField motif is a sum of heat kernels drawn on a canvas. It responds to the pointer and stays still under `prefers-reduced-motion`.
 - The look follows the "Binary Axis" visual identity kit, v5.1, versioned in the repository: one light palette, Manrope and IBM Plex Mono, a 1160 px column, and writing rules.
@@ -88,7 +88,7 @@ One repository with two halves, each with its own toolchain, Dockerfile and Rail
 - **Hybrid retrieval.** Vector search is combined with rows read straight from the tables, so questions about skills or projects get live database content, not only uploaded documents. The approach considered was a vector database alone. Graph-RAG is worth considering in future.
 - **Stanza replaced by a regex tokenizer**, for performance. The commit title says it improved RAG performance significantly. No measurements were recorded.
 - **Prompt and model kept in the database**, editable in the admin rather than hard-coded. The prompt is per language; the model and temperature are shared.
-- **SSE over a GET EventSource**, opened in two steps: a POST for the session key, then the stream.
+- **SSE over a POST read with `fetch`**, opened in two steps: a POST for the session key, then the stream. It replaced a GET `EventSource`, which put the session key and the question in the URL (and so in access logs), could not read a refusal's status, and wrote raw text into `data:` lines, where a newline in the answer ended the event early or was dropped.
 - **Media moved from a Railway volume to a private S3-compatible bucket (Tigris).** A volume does not survive a move between projects and cannot be shared between services. Files are served through presigned URLs. ACL headers are off because Tigris rejects them. CI sets `USE_S3` explicitly instead of supplying dummy bucket values, so production fails loudly if its bucket config is missing. The change also found that `STATICFILES_STORAGE` had been ignored since Django 5.1, so Whitenoise's compressed static files had not been active in production. The setting moved into `STORAGES`.
 - **Frontend history kept through the merge.** Instead of copying the code in one commit, the history was rewritten into a subdirectory (`git filter-repo`) and merged, keeping 71 commits of history. The cost: two root commits, and the branch had to land as a merge, not a squash.
 - **CI tests run on pgvector/pgvector:pg17, not postgres:17-alpine.** On the plain image any pgvector test could fail only in CI, so none could be written. A distance-query test was added that fails on the old image and passes on the new one.

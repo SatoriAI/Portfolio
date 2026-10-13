@@ -5,8 +5,10 @@ from collections.abc import Mapping
 from typing import Any
 
 from django.conf import settings
+from rest_framework import status
 from rest_framework.exceptions import Throttled
 from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.throttling import SimpleRateThrottle
 
 from vex.utils.session import is_valid_session_key
@@ -20,6 +22,17 @@ QUESTION_MAX_LENGTH = 1000
 def body_field(request: Request, name: str) -> Any:
     """One field of a request body, or None when the body is not an object at all (a JSON list, a bare string)."""
     return request.data.get(name) if isinstance(request.data, Mapping) else None
+
+
+def question_refusal(question: object) -> Response | None:
+    """Why a question cannot be put to the model, as the 400 that says so, or None when it can."""
+    if question is not None and not isinstance(question, str):
+        return Response({"code": "invalid_question"}, status=status.HTTP_400_BAD_REQUEST)
+    if not question or not question.strip():
+        return Response({"code": "invalid_question"}, status=status.HTTP_400_BAD_REQUEST)
+    if len(question) > QUESTION_MAX_LENGTH:
+        return Response({"code": "question_too_long"}, status=status.HTTP_400_BAD_REQUEST)
+    return None
 
 
 @functools.cache
