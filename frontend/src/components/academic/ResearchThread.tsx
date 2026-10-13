@@ -218,11 +218,10 @@ type Phase = "road" | "winding" | "compact" | "unwinding";
  * the sticky menu bar, as the site's other scroll targets are.
  */
 const ROW_MARGIN = 96;
-/** The chosen degree's name over the card, and the gap under it. */
-const NAME_ROOM = 56;
-/** Choosing scrolls down to the row only when the card would start below this share of the screen... */
-const REVEAL_BELOW = 0.7;
-/** ...and starts as the card starts to rise (t 0.55 of the winding), so the two read as one motion. */
+/**
+ * Choosing scrolls down to the row as the card starts to rise (t 0.55 of the
+ * winding), so the two read as one motion.
+ */
 const REVEAL_AT = 0.55;
 /** The card's fade as the road unwinds. */
 const CARD_OUT_MS = 150;
@@ -437,9 +436,10 @@ const ResearchThread = ({
   // The page is brought to the row (the stage's top under the menu bar):
   // straight away when the reader has scrolled past it, and, when a degree
   // is chosen from high up the page, as its card starts to rise, if the card
-  // would otherwise start low on the screen or under it. Never smoothly
-  // under reduced motion. A later choice or the way back cancels a scroll
-  // still waiting.
+  // would otherwise end below the screen. The card is only mounted once the
+  // winding starts, so that is measured when the scroll is due, not on the
+  // click. Never smoothly under reduced motion. A later choice or the way
+  // back cancels a scroll still waiting.
   const revealTimer = useRef(0);
   const scrollToRow = useCallback(
     (reveal: boolean) => {
@@ -450,12 +450,17 @@ const ResearchThread = ({
       const behavior = prefersReducedMotion ? "auto" : "smooth";
       if (window.scrollY > top) {
         window.scrollTo({ top, behavior });
-      } else if (
-        reveal &&
-        box.top + geometry.cardTop + NAME_ROOM > REVEAL_BELOW * window.innerHeight
-      ) {
+      } else if (reveal) {
         const delay = prefersReducedMotion ? 0 : windMs(geometry.phone) * REVEAL_AT;
-        revealTimer.current = window.setTimeout(() => window.scrollTo({ top, behavior }), delay);
+        revealTimer.current = window.setTimeout(() => {
+          const stageTop = stage.current?.getBoundingClientRect().top;
+          const height = card.current?.offsetHeight;
+          if (stageTop === undefined || height === undefined) return;
+          // Laid out, not drawn: the card's rise is a transform, still under way.
+          if (stageTop + geometry.cardTop + height > window.innerHeight) {
+            window.scrollTo({ top: stageTop + window.scrollY - ROW_MARGIN, behavior });
+          }
+        }, delay);
       }
     },
     [geometry, prefersReducedMotion],
