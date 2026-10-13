@@ -79,7 +79,7 @@ const HeroTheorem = ({ labels }: { labels: HeroTheoremLabels }) => {
                   <span className="flex items-center justify-between gap-4">
                     <Link
                       to={line.to}
-                      className="tap-target relative -mb-2 inline-block rounded-sm pb-2 font-mono text-meta text-iris underline decoration-1 underline-offset-4 transition-colors duration-200 hover:text-foreground"
+                      className="-mb-3 inline-block rounded-sm pb-3 font-mono text-meta text-iris underline decoration-1 underline-offset-4 transition-colors duration-200 hover:text-foreground"
                     >
                       {line.label} →
                     </Link>

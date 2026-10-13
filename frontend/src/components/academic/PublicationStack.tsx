@@ -346,7 +346,7 @@ const PublicationStack = ({
             style={{ zIndex: count + 1 }}
             className={cn(
               hiddenUntilFiled,
-              "relative col-start-1 row-start-1 rounded-b-card border border-t-0 border-border bg-card p-6 data-[state=inactive]:pointer-events-none data-[state=inactive]:invisible data-[state=active]:duration-400 data-[state=active]:ease-brand data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-2 motion-reduce:data-[state=active]:animate-none md:p-8",
+              "relative col-start-1 row-start-1 rounded-b-card border border-t-0 border-border bg-card p-6 transition-none data-[state=inactive]:pointer-events-none data-[state=inactive]:invisible data-[state=active]:duration-400 data-[state=active]:ease-brand data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-2 motion-reduce:data-[state=active]:animate-none md:p-8",
             )}
           >
             <Sheet

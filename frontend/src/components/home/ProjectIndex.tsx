@@ -325,7 +325,7 @@ const ProjectIndex = ({
             key={project.title}
             value={project.title}
             forceMount
-            className="rounded-card [grid-area:1/1] data-[state=inactive]:invisible data-[state=active]:duration-400 data-[state=active]:ease-brand data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-2 motion-reduce:data-[state=active]:animate-none"
+            className="rounded-card transition-none [grid-area:1/1] data-[state=inactive]:invisible data-[state=active]:duration-400 data-[state=active]:ease-brand data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-2 motion-reduce:data-[state=active]:animate-none"
           >
             <ProjectFrame
               project={project}

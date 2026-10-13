@@ -3,10 +3,8 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 
-import { useSettings } from "@/contexts/SettingsContext";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { cn } from "@/lib/utils";
-import { translations } from "@/utils/translations";
 
 const Sheet = SheetPrimitive.Root;
 
@@ -55,6 +53,8 @@ interface SheetContentProps
     VariantProps<typeof sheetVariants> {
   /** A non-modal sheet (Root `modal={false}`) leaves the page scrollable. */
   lockScroll?: boolean;
+  /** Accessible name of the close button, in the page's language. */
+  closeLabel?: string;
 }
 
 // Mounted only while the sheet is open, so the lock follows its lifetime.
@@ -66,9 +66,11 @@ const SheetScrollLock = () => {
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", lockScroll = true, className, children, ...props }, ref) => {
-  const { language } = useSettings();
-  return (
+>(
+  (
+    { side = "right", lockScroll = true, closeLabel = "Close", className, children, ...props },
+    ref,
+  ) => (
     <SheetPortal>
       <SheetOverlay />
       {lockScroll && <SheetScrollLock />}
@@ -80,12 +82,12 @@ const SheetContent = React.forwardRef<
         {children}
         <SheetPrimitive.Close className="tap-target absolute right-4 top-4 rounded-lg p-1 text-muted-foreground transition-colors hover:bg-lavender hover:text-foreground disabled:pointer-events-none">
           <X className="h-5 w-5" />
-          <span className="sr-only">{translations[language].common.close}</span>
+          <span className="sr-only">{closeLabel}</span>
         </SheetPrimitive.Close>
       </SheetPrimitive.Content>
     </SheetPortal>
-  );
-});
+  ),
+);
 SheetContent.displayName = SheetPrimitive.Content.displayName;
 
 const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
