@@ -34,6 +34,21 @@ type FetchOptions<TBody> = {
 
 type JsonValue = unknown;
 
+/** A response outside 2xx, keeping the status, body and headers for callers that tell failures apart. */
+export class ApiError extends Error {
+  readonly status: number;
+  readonly body: string;
+  readonly headers: Headers;
+
+  constructor(status: number, statusText: string, body: string, headers: Headers = new Headers()) {
+    super(`HTTP ${status} ${statusText}: ${body}`);
+    this.name = "ApiError";
+    this.status = status;
+    this.body = body;
+    this.headers = headers;
+  }
+}
+
 export async function apiFetch<TResponse extends JsonValue, TBody extends JsonValue = undefined>(
   path: string,
   options: FetchOptions<TBody> = {},
@@ -63,7 +78,7 @@ export async function apiFetch<TResponse extends JsonValue, TBody extends JsonVa
   const response = await fetch(url, init);
   if (!response.ok) {
     const text = await response.text().catch(() => "");
-    throw new Error(`HTTP ${response.status} ${response.statusText}: ${text}`);
+    throw new ApiError(response.status, response.statusText, text, response.headers);
   }
   // Try to parse JSON; fallback to empty as unknown
   const contentType = response.headers.get("content-type") || "";
