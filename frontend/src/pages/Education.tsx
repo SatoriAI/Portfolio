@@ -47,7 +47,8 @@ const Education = () => {
     advisor: t.academic.advisor,
     researchAreas: t.academic.researchAreas,
     steps: t.academic.degreeSteps,
-    heatHint: t.academic.heatHint,
+    hint: t.academic.degreeHint,
+    wholeRoad: t.academic.wholeRoad,
     newTab: t.academic.newTab,
   };
 
@@ -73,11 +74,13 @@ const Education = () => {
         />
       </Section>
 
-      {/* The degrees: one line of research, one degree at a time (the
-          bachelor's first), the drawing beside it redrawn as each degree's
-          space. */}
+      {/* The degrees: one line of research, three stops on a road, each
+          under the drawing of its degree's space; choosing one winds the
+          road into a row over that degree's card. */}
       <Section id="education" tone="surface">
-        <SectionHeading eyebrow={eyebrow(1)} title={t.academic.education} />
+        {/* Closer over the hint from md, so the whole road fits the first
+            screen at 1024x768. */}
+        <SectionHeading eyebrow={eyebrow(1)} title={t.academic.education} className="md:mb-6" />
         {queryStatus([schoolsQuery], statusLabels) ??
           (schools.length === 0 ? (
             <StatusMessage variant="empty" message={t.academic.noData} />
