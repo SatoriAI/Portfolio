@@ -27,7 +27,7 @@ const SiteFooter = ({ className }: SiteFooterProps) => {
           </span>
           <a
             href={`mailto:${EMAIL}`}
-            className="rounded-sm font-mono text-meta text-muted-foreground underline decoration-1 underline-offset-4 outline-none transition-colors duration-200 hover:text-iris focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="tap-target relative rounded-sm font-mono text-meta text-muted-foreground underline decoration-1 underline-offset-4 transition-colors duration-200 hover:text-iris"
           >
             {EMAIL}
           </a>

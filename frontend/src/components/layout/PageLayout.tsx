@@ -47,7 +47,7 @@ const PageLayout = () => {
       {/* The first stop for the keyboard: straight past the header's links. */}
       <a
         href="#content"
-        className="sr-only z-50 rounded-lg bg-primary px-4 py-3 text-sm text-primary-foreground focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        className="sr-only z-50 rounded-lg bg-primary px-4 py-3 text-sm text-primary-foreground focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
       >
         {t.nav.skipToContent}
       </a>

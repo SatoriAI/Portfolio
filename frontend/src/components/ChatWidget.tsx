@@ -462,6 +462,7 @@ const ChatWidget = ({
       <SheetContent
         side="right"
         lockScroll={false}
+        closeLabel={t.common.close}
         aria-describedby={undefined}
         // A side panel: the page behind stays readable and clickable, and a
         // click outside must not dismiss a conversation in progress.

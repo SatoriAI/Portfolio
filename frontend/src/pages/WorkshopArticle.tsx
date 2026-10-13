@@ -99,7 +99,7 @@ const WorkshopArticle = () => {
             <Col spanLg={3}>
               <Link
                 to="/workshop"
-                className="inline-flex w-fit items-center gap-1.5 rounded-sm font-mono text-meta text-iris underline decoration-1 underline-offset-4 outline-none transition-colors duration-200 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:mt-1"
+                className="inline-flex w-fit items-center gap-1.5 rounded-sm font-mono text-meta text-iris underline decoration-1 underline-offset-4 transition-colors duration-200 hover:text-foreground lg:mt-1"
               >
                 <ArrowLeft aria-hidden="true" className="size-3.5" />
                 {w.all}

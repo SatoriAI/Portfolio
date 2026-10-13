@@ -57,7 +57,7 @@ const WorkshopIndex = ({ articles, locale, labels }: WorkshopIndexProps) => (
             <h2 className="mt-2 text-balance text-card-title-sm font-semibold md:text-card-title">
               <Link
                 to={`/workshop/${article.slug}`}
-                className="rounded-sm text-foreground underline-offset-4 outline-none transition-colors duration-200 hover:text-iris hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background group-focus-within/piece:text-iris group-hover/piece:text-iris"
+                className="tap-target relative rounded-sm text-foreground underline-offset-4 transition-colors duration-200 hover:text-iris hover:underline group-focus-within/piece:text-iris group-hover/piece:text-iris"
               >
                 <KeepWithLastWord text={article.title}>
                   <TitleArrow className="size-5 group-hover/piece:translate-x-0.5 md:size-[22px]" />
