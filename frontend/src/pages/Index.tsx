@@ -160,9 +160,11 @@ const Index = () => {
 
         {/* From the workshop: the heading and its lead beside the newest pieces,
             the newest set larger, and the way to all of them, so one piece
-            fills the row as well as several do. Left out while there are none. */}
+            fills the row as well as several do. Left out while there are none.
+            Between two white bands its edges show, so it takes a content
+            band's padding rather than the default half-gap. */}
         {pieces.length > 0 && (
-          <Section id="workshop">
+          <Section id="workshop" className="py-12 md:py-16">
             <WorkshopFeature
               articles={pieces}
               locale={language}

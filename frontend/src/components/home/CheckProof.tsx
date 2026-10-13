@@ -67,9 +67,7 @@ const CheckProof = ({ checks, labels, locale, onSeen, className }: CheckProofPro
   if (checks.length === 0) return null;
 
   // The numbers in the sentence, set in mono iris.
-  const figure = (text: string) => (
-    <span className="font-mono font-semibold text-iris">{text}</span>
-  );
+  const figure = (text: string) => <span className="font-mono font-medium text-iris">{text}</span>;
   const sentence = (template: string, n: number) =>
     template
       .split(/(\{n\}|\{ms\})/)

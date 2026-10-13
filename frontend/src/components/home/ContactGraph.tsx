@@ -118,7 +118,7 @@ const GITHUB_MARK =
 const COPIED_MS = 2000;
 
 const NODE =
-  "group block rounded-card border bg-card px-5 py-4 text-left transition-[border-color,box-shadow] duration-200";
+  "group block rounded-card border bg-card p-4 text-left transition-[border-color,box-shadow] duration-200";
 const NODE_ON = "border-iris shadow-lift";
 const KEY = "font-mono text-meta uppercase tracking-widest text-iris";
 const MAIN = "mt-1 block text-lg text-foreground";

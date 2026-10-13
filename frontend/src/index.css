@@ -4,8 +4,10 @@
 
 /* Fonts ship with the Visual Identity Kit (../visual-kit/fonts) and are
    self-hosted from public/fonts (licences alongside). Manrope is a single
-   variable file; Plex Mono is the 400 cut only, so mono text must stay at
-   font-weight 400. */
+   variable file; Plex Mono ships the two cuts the kit allows, 400 and 500.
+   Only Manrope is preloaded: the Medium is needed only where a group label,
+   stage heading or stamp is on the page, so it downloads there and nowhere
+   else. Any other mono weight would be synthesised, so there is none. */
 @font-face {
   font-family: "Manrope";
   src: url("/fonts/Manrope.ttf") format("truetype");
@@ -18,6 +20,14 @@
   font-family: "IBM Plex Mono";
   src: url("/fonts/IBMPlexMono-Regular.ttf") format("truetype");
   font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/IBMPlexMono-Medium.woff2") format("woff2");
+  font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
@@ -39,12 +49,15 @@
     --iris: 257 32% 46%; /* #65509A */
     --border: 224 22% 90%; /* #E0E3EB */
     --control-border: 223 10% 56%; /* #848A9A */
-    /* Publication status on the paper cards. Not in the kit, which leaves
-       semantic colours open until a need appears; both keep 5:1 or more on
-       white, and the stamp always carries a word, so colour is never the only
+    /* Publication status on the paper cards, from the palette: the kit leaves
+       semantic colours open, and a green and a blue of their own sat outside
+       it. Ink marks the paper that is in print, text-secondary the preprint
+       still on its way; iris is the kit's colour for links, focus and active
+       states, and a stamp is none of those. Both keep 6:1 or more on white,
+       and the stamp always carries a word, so colour is never the only
        signal. */
-    --published: 145 45% 34%; /* #2F7D4F */
-    --preprint: 216 56% 42%; /* #2F5FA8 */
+    --published: var(--ink);
+    --preprint: var(--text-secondary);
     --primary-hover: 220 38% 26%; /* #293A5C */
     /* Illustration-only tints for the diffusion motif; never text or controls. */
     --lavender-deep: 261 52% 81%; /* #C6B4E7 */

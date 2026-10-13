@@ -167,7 +167,7 @@ const HeatRodFigure = ({ labels }: Props) => {
             style={{ left: percent(REGION_A[0]), width: percent(REGION_A[1] - REGION_A[0]) }}
           >
             <span aria-hidden="true" className="mb-1 h-2 w-full border-x border-b border-primary" />
-            <span className="font-mono text-sm font-semibold text-foreground">{labels.region}</span>
+            <span className="font-mono text-sm font-medium text-foreground">{labels.region}</span>
           </span>
         </div>
         {/* All three sentences share one grid cell and only the current one

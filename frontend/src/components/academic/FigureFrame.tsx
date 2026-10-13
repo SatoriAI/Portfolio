@@ -39,7 +39,7 @@ const labelClassName: Record<FigureFrameProps["kind"], string> = {
 const FigureFrame = ({ kind, label, children }: FigureFrameProps) => (
   <fieldset
     className={cn(
-      "min-w-0 rounded-card border px-5 pb-5 pt-2 max-sm:pt-4 sm:px-6 sm:pb-6 md:px-8 md:pb-8",
+      "min-w-0 rounded-card border px-4 pb-4 pt-2 max-sm:pt-4 sm:px-6 sm:pb-6 md:px-8 md:pb-8",
       frameClassName[kind],
     )}
   >
