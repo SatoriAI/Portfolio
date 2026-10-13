@@ -92,6 +92,7 @@ As a general composition guide, use approximately 75% light neutrals, 20% pastel
 - Fallback stacks: `system-ui, sans-serif` and `ui-monospace, monospace`.
 - Keep body copy to approximately 55–70 characters per line.
 - Tracking: −0.035em on hero and section headings, −0.02em on card headings, 0 on body copy, and +0.1em on mono labels set in capitals.
+- A label that names a group inside a section (a skill group, a story's stage, what students noticed) is one style everywhere: IBM Plex Mono at metadata size, in capitals, +0.1em, weight 400, in `text-secondary`. Iris stays for links, focus and active states.
 
 Suggested responsive scale, desktop → mobile: hero 64/70 → 36/41 px (a masthead hero that shares the first screen with content, as on the home page, 48/52 → 36/41 px), section heading 40/48 → 28/34 px, card heading 24/31 → 22/29 px, body 18/29 → 16/26 px, and metadata 13/20 px.
 
@@ -190,6 +191,7 @@ Nothing about the mark, the typography, the spacing scale, the layout grid, the 
 ## Changes since 5.1
 
 - Motion: from xl up the contact graph runs on the page's circuit, shown while it is closed and switched off while it is open (see Motion, Home).
+- Typography: the group label inside a section is written down (see Typography); the site had three versions of it.
 
 ## Scope and limitations
 

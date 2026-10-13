@@ -87,9 +87,9 @@ const stampClassName: Record<PublicationStatus, string> = {
 };
 
 /**
- * A rubber stamp in the sheet's top-right corner: green for a paper published
- * in a journal, blue for a preprint. Tilted down to the right, as a stamp lands; the
- * word on it says the same as the colour.
+ * A rubber stamp in the sheet's top-right corner: iris for a paper published
+ * in a journal, the secondary text grey for a preprint. Tilted down to the
+ * right, as a stamp lands; the word on it says the same as the colour.
  */
 const Stamp = ({ status, label }: { status: PublicationStatus; label: string }) => (
   <p

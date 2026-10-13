@@ -24,7 +24,9 @@ const NotFound = () => {
     <Section className="w-full">
       <Reveal className="max-w-2xl">
         <p className="mb-4 font-mono text-meta uppercase tracking-widest text-iris">404</p>
-        <h1 className="text-display-sm md:text-display">{t.notFound.title}</h1>
+        {/* Set as every subpage's h1 is (SectionHeading at level 1): a missing
+            page is not a hero. */}
+        <h1 className="text-h2-sm md:text-h2">{t.notFound.title}</h1>
         <p className="mt-6 max-w-[55ch] text-base text-muted-foreground md:text-body-lg">
           {t.notFound.body}
         </p>
