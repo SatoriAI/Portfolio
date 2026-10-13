@@ -30,6 +30,24 @@ import { cn } from "@/lib/utils";
 /** The drawing's height in its own units; strokes are sized against it. */
 const VIEW_HEIGHT = 88;
 
+/**
+ * The custom property a parent sets to the scale it draws the glyph at.
+ * Registered as a number, so it can be animated along with the transform.
+ */
+export const GLYPH_SCALE = "--glyph-scale";
+if (typeof CSS !== "undefined" && typeof CSS.registerProperty === "function") {
+  try {
+    CSS.registerProperty({
+      name: GLYPH_SCALE,
+      syntax: "<number>",
+      inherits: true,
+      initialValue: "1",
+    });
+  } catch {
+    // Already registered: a hot reload ran this module again.
+  }
+}
+
 export type DomainKind = "cone" | "double-cone" | "torus-interval" | "revolution";
 
 /** `point`: a dot drawn last, where the papers' estimates are sharpest. */
@@ -163,6 +181,10 @@ const DomainGlyph = ({
   // set that dash in screen pixels instead, leaving each stroke only partly
   // drawn once the glyph is scaled up. So the stroke scales with the glyph,
   // and its width is set from the glyph's rendered height to come out at 1px.
+  // A parent that scales the glyph with a transform names the factor in
+  // --glyph-scale (see GLYPH_SCALE): the width is then set for the unscaled
+  // glyph and divided by the factor as it changes, so the line stays a
+  // hairline at every step of the scaling, measured at whatever step it is.
   const svg = useRef<SVGSVGElement>(null);
   const [strokeWidth, setStrokeWidth] = useState(1);
   useLayoutEffect(() => {
@@ -170,7 +192,8 @@ const DomainGlyph = ({
     if (!element) return;
     const measure = () => {
       const height = element.getBoundingClientRect().height;
-      if (height > 0) setStrokeWidth(VIEW_HEIGHT / height);
+      const scale = parseFloat(getComputedStyle(element).getPropertyValue(GLYPH_SCALE)) || 1;
+      if (height > 0) setStrokeWidth((VIEW_HEIGHT / height) * scale);
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -272,7 +295,7 @@ const DomainGlyph = ({
             </g>
           </>
         )}
-        <g fill="none" strokeWidth={strokeWidth}>
+        <g fill="none" style={{ strokeWidth: `calc(${strokeWidth}px / var(${GLYPH_SCALE}, 1))` }}>
           {back.map((d, index) => (
             <path
               key={`back-${index}`}

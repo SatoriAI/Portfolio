@@ -626,8 +626,10 @@ const copy = {
       // bachelor's is its thesis title).
       // What the drawing beside the degrees shows, named under it.
       degreeSteps: "Degrees",
-      /** Under the degree's drawing: it can be pressed to set heat on it. */
-      heatHint: "Press the shape to heat it",
+      /** Over the degrees' road: a stop can be chosen. */
+      degreeHint: "Choose a stop on the road to read more",
+      /** Winds the chosen degree's row back out into the road. */
+      wholeRoad: "Whole road",
       /** Read after a link that opens elsewhere. */
       newTab: "(opens in a new tab)",
       domainNames: {
@@ -1241,7 +1243,8 @@ const copy = {
         },
       } as Record<string, { label: string; text: string; href?: string }>,
       degreeSteps: "Stopnie",
-      heatHint: "Kliknij figurę, by ją ogrzać",
+      degreeHint: "Wybierz etap drogi, by przeczytać więcej",
+      wholeRoad: "Cała droga",
       newTab: "(otwiera się w nowej karcie)",
       domainNames: {
         "torus-interval": "Torus i odcinek",
