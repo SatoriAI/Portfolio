@@ -87,7 +87,7 @@ const stampClassName: Record<PublicationStatus, string> = {
 };
 
 /**
- * A rubber stamp in the sheet's top-right corner: iris for a paper published
+ * A rubber stamp in the sheet's top-right corner: ink for a paper published
  * in a journal, the secondary text grey for a preprint. Tilted down to the
  * right, as a stamp lands; the word on it says the same as the colour.
  */
@@ -95,7 +95,7 @@ const Stamp = ({ status, label }: { status: PublicationStatus; label: string }) 
   <p
     data-stamp
     className={cn(
-      "pointer-events-none absolute right-5 top-3 rotate-6 select-none rounded-md border-2 px-2.5 py-1 font-mono text-meta font-semibold uppercase tracking-widest md:right-8 md:top-4",
+      "pointer-events-none absolute right-5 top-3 rotate-6 select-none rounded-md border-2 px-2.5 py-1 font-mono text-meta font-medium uppercase tracking-widest md:right-8 md:top-4",
       stampClassName[status],
     )}
   >

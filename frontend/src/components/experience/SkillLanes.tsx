@@ -259,7 +259,7 @@ const SkillLanes = ({
           <section key={group.key} aria-label={group.label || undefined} className="relative pt-3">
             {group.label ? (
               <h3
-                className="font-mono text-meta font-normal uppercase tracking-widest text-muted-foreground"
+                className="font-mono text-meta font-medium uppercase tracking-widest text-muted-foreground"
                 style={{
                   opacity: shown ? 1 : 0.35,
                   transition: transition("opacity", 200, layer),

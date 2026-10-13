@@ -163,7 +163,7 @@ const QuoteWall = ({ testimonials, themes, evidence, labels, className }: QuoteW
     <div className={className}>
       {offered.length > 0 && (
         <div className="mb-10">
-          <p className="mb-3 font-mono text-meta uppercase tracking-widest text-muted-foreground">
+          <p className="mb-3 font-mono text-meta font-medium uppercase tracking-widest text-muted-foreground">
             {labels.themes}
           </p>
           <div ref={group} role="group" aria-label={labels.themes} className="flex flex-wrap gap-2">
