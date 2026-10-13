@@ -3,8 +3,10 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 
+import { useSettings } from "@/contexts/SettingsContext";
 import { useBodyScrollLock } from "@/hooks/use-body-scroll-lock";
 import { cn } from "@/lib/utils";
+import { translations } from "@/utils/translations";
 
 const Sheet = SheetPrimitive.Root;
 
@@ -64,19 +66,26 @@ const SheetScrollLock = () => {
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", lockScroll = true, className, children, ...props }, ref) => (
-  <SheetPortal>
-    <SheetOverlay />
-    {lockScroll && <SheetScrollLock />}
-    <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
-      {children}
-      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground transition-colors hover:bg-lavender hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-[3px] focus:ring-offset-background disabled:pointer-events-none">
-        <X className="h-5 w-5" />
-        <span className="sr-only">Close</span>
-      </SheetPrimitive.Close>
-    </SheetPrimitive.Content>
-  </SheetPortal>
-));
+>(({ side = "right", lockScroll = true, className, children, ...props }, ref) => {
+  const { language } = useSettings();
+  return (
+    <SheetPortal>
+      <SheetOverlay />
+      {lockScroll && <SheetScrollLock />}
+      <SheetPrimitive.Content
+        ref={ref}
+        className={cn(sheetVariants({ side }), className)}
+        {...props}
+      >
+        {children}
+        <SheetPrimitive.Close className="tap-target absolute right-4 top-4 rounded-lg p-1 text-muted-foreground transition-colors hover:bg-lavender hover:text-foreground disabled:pointer-events-none">
+          <X className="h-5 w-5" />
+          <span className="sr-only">{translations[language].common.close}</span>
+        </SheetPrimitive.Close>
+      </SheetPrimitive.Content>
+    </SheetPortal>
+  );
+});
 SheetContent.displayName = SheetPrimitive.Content.displayName;
 
 const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

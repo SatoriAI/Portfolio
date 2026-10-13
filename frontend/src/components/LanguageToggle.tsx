@@ -36,7 +36,10 @@ const LanguageToggle = ({ className }: LanguageToggleProps) => {
             aria-label={name}
             onClick={() => setLanguage(code)}
             className={cn(
-              "h-full rounded-lg px-2.5 transition-colors duration-200",
+              // A finger's 44 px: the hit area reaches past the pill above and
+              // below, and outward at the ends, where nothing else is pressed.
+              "relative h-full rounded-lg px-2.5 transition-colors duration-200",
+              "after:absolute after:-inset-y-[7px] after:left-0 after:right-0 first:after:-left-2.5 last:after:-right-2.5",
               active
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-lavender hover:text-foreground",

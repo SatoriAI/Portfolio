@@ -129,7 +129,7 @@ const DegreeText = ({ school, labels, highlight, headline }: DegreeTextProps) =>
     // The degree as one card: its award as a ribbon across the top, the
     // story under it, who and what it was about beside it from lg (eight
     // columns to four) and in a footer below that.
-    <article className="min-w-0 overflow-hidden rounded-card border border-border bg-card group-focus-visible/panel:ring-2 group-focus-visible/panel:ring-ring group-focus-visible/panel:ring-offset-2 group-focus-visible/panel:ring-offset-background">
+    <article className="min-w-0 overflow-hidden rounded-card border border-border bg-card group-focus-visible/panel:ring-2 group-focus-visible/panel:ring-ring group-focus-visible/panel:ring-offset-[3px] group-focus-visible/panel:ring-offset-background">
       {/* With a page of its own, the award's words are a link stretched over
           the ribbon, so the whole ribbon opens it; focus rings the words. */}
       {highlight && (
@@ -145,7 +145,7 @@ const DegreeText = ({ school, labels, highlight, headline }: DegreeTextProps) =>
                 href={highlight.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-sm underline-offset-4 outline-none after:absolute after:inset-0 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-lavender"
+                className="rounded-sm underline-offset-4 after:absolute after:inset-0 hover:underline"
               >
                 {highlight.text}
                 <ArrowUpRight

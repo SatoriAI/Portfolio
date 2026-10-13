@@ -107,7 +107,7 @@ const CodeDoor = ({ github, labels }: { github: string; labels: ProjectIndexLabe
       target="_blank"
       rel="noopener noreferrer"
       aria-label={labels.codeOnGithub}
-      className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-control-border bg-card font-mono text-meta text-foreground outline-none transition-colors duration-200 hover:border-iris focus-visible:ring-2 focus-visible:ring-ring sm:max-lg:px-4 xl:px-4"
+      className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-control-border bg-card font-mono text-meta text-foreground transition-colors duration-200 hover:border-iris sm:max-lg:px-4 xl:px-4"
     >
       <CodeXml aria-hidden="true" className="size-4 text-iris" />
       <span aria-hidden="true" className="contents max-sm:hidden lg:max-xl:hidden">
@@ -325,7 +325,7 @@ const ProjectIndex = ({
             key={project.title}
             value={project.title}
             forceMount
-            className="rounded-card outline-none [grid-area:1/1] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-[3px] focus-visible:ring-offset-background data-[state=inactive]:invisible data-[state=active]:duration-400 data-[state=active]:ease-brand data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-2 motion-reduce:data-[state=active]:animate-none"
+            className="rounded-card [grid-area:1/1] data-[state=inactive]:invisible data-[state=active]:duration-400 data-[state=active]:ease-brand data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-2 motion-reduce:data-[state=active]:animate-none"
           >
             <ProjectFrame
               project={project}

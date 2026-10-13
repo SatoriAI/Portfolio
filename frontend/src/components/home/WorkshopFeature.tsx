@@ -62,7 +62,7 @@ const WorkshopFeature = ({ articles, locale, labels }: WorkshopFeatureProps) => 
             allows only for wholly actionable cards. */}
         <Link
           to={`/workshop/${newest.slug}`}
-          className="group block rounded-card border border-border bg-card p-6 outline-none transition-shadow duration-200 hover:shadow-lift focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:p-8 lg:h-full"
+          className="group block rounded-card border border-border bg-card p-6 transition-shadow duration-200 hover:shadow-lift md:p-8 lg:h-full"
         >
           {figure && <div className="mb-6">{figure(labels.figure)}</div>}
           <MetaLine date={newest.date} locale={locale} />
@@ -90,7 +90,7 @@ const WorkshopFeature = ({ articles, locale, labels }: WorkshopFeatureProps) => 
                 <h3 className="mt-2 text-lg font-semibold">
                   <Link
                     to={`/workshop/${article.slug}`}
-                    className="group rounded-sm text-foreground underline-offset-4 outline-none transition-colors duration-200 hover:text-iris hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    className="group rounded-sm text-foreground underline-offset-4 transition-colors duration-200 hover:text-iris hover:underline"
                   >
                     <KeepWithLastWord text={article.title}>
                       <TitleArrow className="size-4 group-hover:translate-x-0.5" />

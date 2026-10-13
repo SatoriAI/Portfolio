@@ -343,7 +343,7 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
           // snaps to the nearest of the seven measured steps, which the
           // crosshair line, the grown marks and the inked step label show.
           className={cn(
-            "relative mt-1 rounded-motif focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "relative mt-1 rounded-motif",
             // A drag across the plot moves the marker and selects nothing.
             guessing ? "cursor-ew-resize select-none" : "cursor-crosshair",
           )}
