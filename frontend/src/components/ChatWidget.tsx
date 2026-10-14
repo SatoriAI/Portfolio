@@ -129,7 +129,6 @@ const ChatWidget = ({
   // Waiting for its first word: the typing indicator shows.
   const isLoading = isWaiting(chat);
   const [inputValue, setInputValue] = useState("");
-  const [isMultilineInput, setIsMultilineInput] = useState(false);
   // A paste the length limit cut short, said once beside the counter.
   const [pasteCut, setPasteCut] = useState(false);
   const csrfTokenRef = useRef<string | null>(null);
@@ -295,7 +294,6 @@ const ChatWidget = ({
     dispatch({ type: "ask", question });
     setInputValue("");
     setPasteCut(false);
-    setIsMultilineInput(false);
     // Focus stays in the composer, also when the question came from a starter
     // button, which the conversation replaces.
     textareaRef.current?.focus();
@@ -461,7 +459,7 @@ const ChatWidget = ({
 
   // While a reply streams the send button is Stop, in the same place.
   const sendButton = isStreaming ? (
-    <Button onClick={handleStop} size="icon" aria-label={t.chat.stop}>
+    <Button onClick={handleStop} size="icon" aria-label={t.chat.stop} className="shrink-0">
       <Square className="fill-current" aria-hidden="true" />
     </Button>
   ) : (
@@ -470,6 +468,8 @@ const ChatWidget = ({
       disabled={!inputValue.trim()}
       size="icon"
       aria-label={t.chat.send}
+      // Empty, it is a quiet icon in the field; with a question, navy.
+      className="shrink-0 disabled:bg-transparent disabled:text-muted-foreground disabled:opacity-100"
     >
       <Send />
     </Button>
@@ -658,9 +658,10 @@ const ChatWidget = ({
           </div>
 
           <div className="border-t border-border p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-            <div
-              className={`relative min-h-[44px] overflow-hidden rounded-xl border border-control-border bg-card px-3 py-2 transition-colors duration-200 focus-within:border-foreground focus-within:outline focus-within:outline-2 focus-within:outline-offset-[3px] focus-within:outline-iris ${isMultilineInput ? "flex flex-col gap-2" : ""}`}
-            >
+            {/* One layout at any length: the text grows upward and the
+                button keeps its corner, so nothing jumps at the second line.
+                Focus is the field's own 2px iris edge; the caret marks it. */}
+            <div className="flex flex-wrap items-end gap-1 rounded-card border border-control-border bg-card p-[5px] transition-colors duration-200 focus-within:border-iris focus-within:ring-1 focus-within:ring-inset focus-within:ring-iris">
               <Textarea
                 ref={textareaRef}
                 value={inputValue}
@@ -681,7 +682,8 @@ const ChatWidget = ({
                 aria-label={t.chat.inputLabel}
                 maxLength={VEX_QUESTION_MAX_LENGTH}
                 rows={1}
-                className={`max-h-40 w-full resize-none break-all border-0 bg-transparent p-0 leading-6 text-foreground shadow-none outline-none ring-0 ring-offset-0 placeholder:text-muted-foreground focus:shadow-none focus:outline-none focus:placeholder:text-transparent focus-visible:ring-0 focus-visible:ring-offset-0 ${!isMultilineInput ? "pr-12" : ""}`}
+                // Square corners: a rounded field clips the caret at its left edge.
+                className="max-h-40 min-w-0 flex-1 resize-none break-words rounded-none border-0 bg-transparent py-2.5 pl-[11px] pr-1 leading-6 text-foreground shadow-none outline-none ring-0 ring-offset-0 [overflow-wrap:anywhere] placeholder:text-muted-foreground focus:shadow-none focus:outline-none focus:placeholder:text-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                 // Read-only rather than disabled while a reply streams: a
                 // disabled field drops the focus to the page.
                 readOnly={isStreaming}
@@ -690,77 +692,18 @@ const ChatWidget = ({
                 onInput={(e) => {
                   const el = e.currentTarget;
                   el.style.height = "auto";
-                  const nextHeight = Math.min(el.scrollHeight, 160);
-                  el.style.height = `${nextHeight}px`;
-                  try {
-                    const cs = window.getComputedStyle(el);
-                    const lineHeight = parseFloat(cs.lineHeight || "24");
-                    const valueNow = el.value;
-                    const lines = Math.max(1, Math.round(nextHeight / lineHeight));
-                    const shouldBecomeMulti = lines >= 2;
-                    const shouldBecomeSingle = valueNow.trim().length === 0;
-
-                    if (shouldBecomeMulti && !isMultilineInput) {
-                      setIsMultilineInput(true);
-                      requestAnimationFrame(() => {
-                        const rEl = textareaRef.current;
-                        if (!rEl) return;
-                        rEl.style.height = "auto";
-                        const updated = Math.min(rEl.scrollHeight, 160);
-                        rEl.style.height = `${updated}px`;
-                      });
-                    } else if (shouldBecomeSingle && isMultilineInput) {
-                      setIsMultilineInput(false);
-                      requestAnimationFrame(() => {
-                        const rEl = textareaRef.current;
-                        if (!rEl) return;
-                        rEl.style.height = "auto";
-                        const updated = Math.min(rEl.scrollHeight, 160);
-                        rEl.style.height = `${updated}px`;
-                      });
-                    }
-                  } catch {
-                    const valueNow = el.value;
-                    const shouldBecomeMulti = nextHeight > 36; // approx >= 2 lines
-                    const shouldBecomeSingle = valueNow.trim().length === 0;
-                    if (shouldBecomeMulti && !isMultilineInput) {
-                      setIsMultilineInput(true);
-                      requestAnimationFrame(() => {
-                        const rEl = textareaRef.current;
-                        if (!rEl) return;
-                        rEl.style.height = "auto";
-                        const updated = Math.min(rEl.scrollHeight, 160);
-                        rEl.style.height = `${updated}px`;
-                      });
-                    } else if (shouldBecomeSingle && isMultilineInput) {
-                      setIsMultilineInput(false);
-                      requestAnimationFrame(() => {
-                        const rEl = textareaRef.current;
-                        if (!rEl) return;
-                        rEl.style.height = "auto";
-                        const updated = Math.min(rEl.scrollHeight, 160);
-                        rEl.style.height = `${updated}px`;
-                      });
-                    }
-                  }
+                  el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
                 }}
               />
-              {isMultilineInput ? (
-                // The counter shares the send button's row, which a question
-                // this long has already opened, so nothing moves when it shows.
-                <div className="flex items-center justify-between gap-3">
-                  <p id={lengthId} className="font-mono text-meta text-muted-foreground">
-                    {showLength && (
-                      <>
-                        {pasteCut && `${t.chat.pasteCut} · `}
-                        {inputValue.length}/{VEX_QUESTION_MAX_LENGTH}
-                      </>
-                    )}
-                  </p>
-                  {sendButton}
-                </div>
-              ) : (
-                <div className="absolute right-2 top-1/2 -translate-y-1/2">{sendButton}</div>
+              {sendButton}
+              {showLength && (
+                <p
+                  id={lengthId}
+                  className="order-last basis-full px-[11px] pb-1 font-mono text-meta text-muted-foreground"
+                >
+                  {pasteCut && `${t.chat.pasteCut} · `}
+                  {inputValue.length}/{VEX_QUESTION_MAX_LENGTH}
+                </p>
               )}
             </div>
           </div>
