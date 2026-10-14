@@ -23,6 +23,9 @@ class Message(TimestampedModel):
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
     role = models.CharField(_("Role"), choices=Roles, max_length=16)
     content = models.TextField(_("Content"))
+    # On a question asked from a role or a project: where, as the model read it beside the question (see
+    # vex.ai.context), so it reads the same in the history of later turns. Empty on every other message.
+    asked_from = models.TextField(_("Asked from"), blank=True, db_default="")
 
     # What an answer cost and what produced it, so two answers can be compared. Empty on a question, and on answers
     # given before these were kept. A day's spend is added up from Usage, which also holds the calls with no answer.

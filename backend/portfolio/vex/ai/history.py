@@ -19,6 +19,8 @@ HISTORY_TOKEN_BUDGET = 3000
 class Turn:
     role: Literal["user", "assistant"]
     content: str
+    # On a question asked from a role or a project: where (see vex.ai.context).
+    asked_from: str = ""
 
 
 class MessageHistory:
@@ -38,15 +40,20 @@ class MessageHistory:
         turns: list[Turn] = []
         spent = 0
         for message in latest:
-            spent += estimate_tokens(message.content)
+            spent += estimate_tokens(message.content) + estimate_tokens(message.asked_from)
             if turns and spent > budget:
                 break
-            turns.append(Turn("user" if message.role == Roles.USER else "assistant", message.content))
+            turns.append(
+                Turn("user" if message.role == Roles.USER else "assistant", message.content, message.asked_from)
+            )
         return turns[::-1]
 
-    def add_exchange(self, question: str, answer: str, *, usage: Usage, prompt_version: str) -> Message:
-        """Saves a question and its answer, and returns the answer, which the visitor may go on to rate."""
-        Message.objects.create(conversation=self.conversation, role=Roles.USER, content=question)
+    def add_exchange(self, question: Turn, answer: str, *, usage: Usage, prompt_version: str) -> Message:
+        """Saves a question (with where it was asked, if anywhere in particular) and its answer, and returns the
+        answer, which the visitor may go on to rate."""
+        Message.objects.create(
+            conversation=self.conversation, role=Roles.USER, content=question.content, asked_from=question.asked_from
+        )
         return Message.objects.create(
             conversation=self.conversation,
             role=Roles.ASSISTANT,

@@ -7,12 +7,17 @@ import {
   useState,
 } from "react";
 
+import type { VexAsk, VexAskContext } from "@/lib/vexChat";
+
 type VexContextValue = {
   isOpen: boolean;
-  /** A question the chat should send as soon as it is open and hydrated. */
-  pendingQuestion: string | null;
-  /** Open the chat, optionally with a question to send straight away. */
-  askVex: (question?: string) => void;
+  /** A question the chat should send as soon as it is open and hydrated, with where it was asked. */
+  pendingQuestion: VexAsk | null;
+  /**
+   * Open the chat, optionally with a question to send straight away, and
+   * where on the site it was asked when it is about something in particular.
+   */
+  askVex: (question?: string, context?: VexAskContext) => void;
   closeVex: () => void;
   /** Called by the chat once it has taken the pending question. */
   consumeQuestion: () => void;
@@ -29,10 +34,11 @@ const VexContext = createContext<VexContextValue | null>(null);
  */
 export const VexProvider = ({ children }: PropsWithChildren) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
+  const [pendingQuestion, setPendingQuestion] = useState<VexAsk | null>(null);
 
-  const askVex = useCallback((question?: string) => {
-    setPendingQuestion(question?.trim() ? question.trim() : null);
+  const askVex = useCallback((question?: string, context?: VexAskContext) => {
+    const text = question?.trim();
+    setPendingQuestion(text ? { question: text, ...(context ? { context } : {}) } : null);
     setIsOpen(true);
   }, []);
   const closeVex = useCallback(() => setIsOpen(false), []);

@@ -506,3 +506,7 @@ msgstr "Pomocna"
 #: vex/choices.py:24
 msgid "Not helpful"
 msgstr "Niepomocna"
+
+#: vex/models.py:26
+msgid "Asked from"
+msgstr "Miejsce pytania"

@@ -1,5 +1,6 @@
 import json
 from collections.abc import Iterator
+from datetime import date
 from decimal import Decimal
 from typing import Any
 from unittest.mock import patch
@@ -10,6 +11,7 @@ from django.core.signals import request_finished
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from vex.ai.context import resolve_context
 from vex.ai.knowledge import estimate_tokens
 from vex.ai.provider import ChatMessage
 from vex.ai.provider import Usage as ProviderUsage
@@ -18,6 +20,7 @@ from vex.choices import Outcomes, Roles
 from vex.models import Conversation, Message, Usage
 from vex.tests.factories import MessageFactory
 from vex.utils.cache import cache
+from work.tests.factories import ExperienceFactory
 
 fake = faker.Faker()
 
@@ -74,7 +77,7 @@ STREAM = "vex.ai.provider.stream_completion"
 KNOWLEDGE = "vex.ai.prompt.system_prompt"
 
 
-class ChatStreamViewTestCase(TestCase):
+class StreamViewTestCase(TestCase):
     url = reverse("vex:stream")
 
     def setUp(self) -> None:
@@ -99,6 +102,8 @@ class ChatStreamViewTestCase(TestCase):
             body = b"".join(resp.streaming_content).decode("utf-8")
         return parse_events(body), model
 
+
+class ChatStreamViewTestCase(StreamViewTestCase):
     def test_every_chunk_arrives_intact(self) -> None:
         session = session_key()
         events, _ = self.stream([*AWKWARD_CHUNKS, ""], session)
@@ -300,3 +305,61 @@ class ChatStreamViewTestCase(TestCase):
             resp = self.post({"question": "Q"}, session, REMOTE_ADDR="10.0.0.2")
         self.assertEqual(resp.status_code, 429)
         self.assertEqual(resp.json(), {"code": "rate_limited"})
+
+
+class AskedFromStreamTestCase(StreamViewTestCase):
+    """A question asked from a role or a project, with a context naming it."""
+
+    def ask(self, session: str, question: str, context: object = None) -> FakeModel:
+        model = FakeModel(["Answer"])
+        data = {"question": question} | ({"context": context} if context is not None else {})
+        with patch(STREAM, model):
+            resp = self.post(data, session)
+            self.assertEqual(resp.status_code, 200)
+            self.assertEqual(parse_events(b"".join(resp.streaming_content).decode())[-1][0], "done")
+        return model
+
+    def test_a_question_asked_from_a_role_carries_the_role_and_keeps_it_for_later_turns(self) -> None:
+        role = ExperienceFactory(role="Python Web Developer", company="Nokia", start=date(2020, 1, 1), end=None)
+        line = resolve_context({"kind": "experience", "id": role.pk})
+        session = session_key()
+
+        model = self.ask(session, "Tell me more about his contribution.", {"kind": "experience", "id": role.pk})
+        self.assertEqual(
+            model.messages[-1],
+            {"role": "user", "content": f"<asked_from>{line}</asked_from>\n\nTell me more about his contribution."},
+        )
+        self.assertEqual(sum(m["content"].count("<asked_from>") for m in model.messages), 1)
+        question = Message.objects.get(conversation__session=session, role=Roles.USER)
+        self.assertEqual((question.content, question.asked_from), ("Tell me more about his contribution.", line))
+
+        # The follow-up names nothing, and reads the role back from the history.
+        follow_up = self.ask(session, "And what came of it?")
+        self.assertEqual(
+            follow_up.messages[1:],
+            [
+                {"role": "user", "content": f"<asked_from>{line}</asked_from>\n\nTell me more about his contribution."},
+                {"role": "assistant", "content": "Answer"},
+                {"role": "user", "content": "And what came of it?"},
+            ],
+        )
+        latest = Message.objects.filter(conversation__session=session, role=Roles.USER).latest("created_at", "pk")
+        self.assertEqual(latest.asked_from, "")
+
+    def test_a_context_naming_nothing_vex_may_read_is_dropped_not_refused(self) -> None:
+        hidden = ExperienceFactory(visible=False)
+        for context in ({"kind": "experience", "id": hidden.pk}, {"kind": "page", "path": "/education"}, {}):
+            with self.subTest(context=context):
+                session = session_key()
+                model = self.ask(session, "Q", context)
+                self.assertEqual(model.messages[-1], {"role": "user", "content": "Q"})
+                self.assertEqual(Message.objects.get(conversation__session=session, role=Roles.USER).asked_from, "")
+
+    def test_rejects_a_context_that_is_not_an_object_or_too_long(self) -> None:
+        with patch(STREAM) as model:
+            for context in ("experience 7", 7, ["experience", 7], {"kind": "experience", "id": 7, "x": "y" * 200}):
+                with self.subTest(context=context):
+                    resp = self.post({"question": "Q", "context": context}, session_key())
+                    self.assertEqual(resp.status_code, 400)
+                    self.assertEqual(resp.json(), {"code": "invalid_context"})
+        model.assert_not_called()

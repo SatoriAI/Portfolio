@@ -7,10 +7,37 @@ import type { VexErrorCode } from "@/lib/vexErrors";
 /** A visitor's rating of one answer (vex.choices.Feedback). */
 export type Feedback = "up" | "down";
 
+/**
+ * Where on the site a question was asked, sent with it so Vex knows what
+ * "this" or "his contribution" means: a reference the server looks up itself
+ * (vex.ai.context), never text of the client's.
+ */
+export type VexAskContext = { kind: "experience"; id: number } | { kind: "project"; id: number };
+
+/** The context of a question asked from a role on the Experience page. */
+export const askedFromRole = (role: { id: number }): VexAskContext => ({
+  kind: "experience",
+  id: role.id,
+});
+
+/** The context of a question asked from a project on the home page. */
+export const askedFromProject = (project: { id: number }): VexAskContext => ({
+  kind: "project",
+  id: project.id,
+});
+
+/** A question to send, and where it was asked, when it came from somewhere in particular. */
+export interface VexAsk {
+  question: string;
+  context?: VexAskContext;
+}
+
 export interface ChatMessage {
   id: string;
   text: string;
   isUser: boolean;
+  /** On a question asked from a role or a project: where, so asking it again sends that too. */
+  context?: VexAskContext;
   /** Set on the inline notice appended when a request fails or stalls: why it did. */
   error?: VexErrorCode;
   /** On a rate-limit notice: when asking again may succeed (ms since the epoch). */
@@ -50,11 +77,11 @@ export interface ChatState {
    */
   hydrated: boolean;
   /** The question being answered, numbered so each one is a new request. */
-  active: { turn: number; question: string } | null;
+  active: ({ turn: number } & VexAsk) | null;
   /** The reply to the active question, once its first text has arrived. */
   replyId: string | null;
   /** Questions handed over while a reply was in flight or history loading, sent in order. */
-  queue: string[];
+  queue: VexAsk[];
   /** The message that finished the last turn (the reply, or the notice that there was none), to announce. */
   finishedId: string | null;
   /** Source of message ids and turn numbers. */
@@ -76,7 +103,7 @@ type TurnAction =
 export type ChatAction =
   /** The history loaded: the stored messages, or null when there was none to load or it could not be read. */
   | { type: "hydrated"; stored: StoredMessage[] | null }
-  | { type: "ask"; question: string }
+  | ({ type: "ask" } & VexAsk)
   | TurnAction
   /** The visitor stopped the reply: what had arrived stays, marked as stopped. */
   | { type: "stop" }
@@ -133,26 +160,29 @@ export function retryableQuestion(state: ChatState): string | null {
 }
 
 /** Opens a turn for the question; `shown` when its bubble is already on screen (asked again). */
-const start = (state: ChatState, question: string, shown = false): ChatState => {
+const start = (state: ChatState, { question, context }: VexAsk, shown = false): ChatState => {
   const seq = state.seq + 1;
   return {
     ...state,
     seq,
-    active: { turn: seq, question },
+    active: { turn: seq, question, ...(context ? { context } : {}) },
     replyId: null,
     finishedId: null,
     messages: shown
       ? state.messages
-      : [...state.messages, { id: `local-${seq}`, text: question, isUser: true }],
+      : [
+          ...state.messages,
+          { id: `local-${seq}`, text: question, isUser: true, ...(context ? { context } : {}) },
+        ],
   };
 };
 
 /** Sends the next queued question, once the history has loaded and nothing is in flight. */
 const next = (state: ChatState): ChatState => {
-  const [question, ...rest] = state.queue;
-  return question === undefined || state.active || !state.hydrated
+  const [ask, ...rest] = state.queue;
+  return ask === undefined || state.active || !state.hydrated
     ? state
-    : start({ ...state, queue: rest }, question);
+    : start({ ...state, queue: rest }, ask);
 };
 
 const fromStoredMessage = (m: StoredMessage): ChatMessage =>
@@ -181,8 +211,13 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         messages:
           action.stored === null || state.active ? state.messages : fromStored(action.stored),
       });
-    case "ask":
-      return next({ ...state, queue: [...state.queue, action.question] });
+    case "ask": {
+      const { question, context } = action;
+      return next({
+        ...state,
+        queue: [...state.queue, { question, ...(context ? { context } : {}) }],
+      });
+    }
     case "stop": {
       if (!state.active) return state;
       // The text that arrived stays, marked; with none yet, the mark stands
@@ -241,15 +276,17 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
     }
     case "retry": {
       const question = retryableQuestion(state);
+      if (question === null) return state;
       // The failed reply (and any part of it that arrived before the failure)
-      // makes way for the new one, under the same question.
-      return question === null
-        ? state
-        : start(
-            { ...state, messages: state.messages.slice(0, lastQuestionAt(state.messages) + 1) },
-            question,
-            true,
-          );
+      // makes way for the new one, under the same question, asked from the
+      // same place.
+      const at = lastQuestionAt(state.messages);
+      const { context } = state.messages[at];
+      return start(
+        { ...state, messages: state.messages.slice(0, at + 1) },
+        { question, ...(context ? { context } : {}) },
+        true,
+      );
     }
     case "rate":
       return {
