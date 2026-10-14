@@ -50,7 +50,7 @@ class MessageHistoryTestCase(TestCase):
     def test_add_exchange_saves_the_question_and_the_answer_with_its_cost(self) -> None:
         history = MessageHistory(session_key())
         usage = Usage(input_tokens=40000, cached_tokens=39000, output_tokens=120, reasoning_tokens=20)
-        saved = history.add_exchange("Hi", "Hello", usage=usage, prompt_version="v1")
+        saved = history.add_exchange(Turn("user", "Hi"), "Hello", usage=usage, prompt_version="v1")
         question, answer = history.conversation.messages.order_by("created_at", "pk")
         self.assertEqual(saved, answer)
         self.assertEqual((question.role, question.content, question.model), (Roles.USER, "Hi", ""))
@@ -60,3 +60,17 @@ class MessageHistoryTestCase(TestCase):
             (Roles.ASSISTANT, "Hello", "gpt-6.1-sol", "v1"),
         )
         self.assertEqual((answer.input_tokens, answer.cached_tokens, answer.output_tokens), (40000, 39000, 120))
+
+    def test_where_a_question_was_asked_is_saved_with_it_and_read_back(self) -> None:
+        history = MessageHistory(session_key())
+        history.add_exchange(Turn("user", "Q1", "From the role X."), "A1", usage=Usage(), prompt_version="v1")
+        history.add_exchange(Turn("user", "Q2"), "A2", usage=Usage(), prompt_version="v1")
+        self.assertEqual(
+            history.recent(),
+            [
+                Turn("user", "Q1", "From the role X."),
+                Turn("assistant", "A1"),
+                Turn("user", "Q2"),
+                Turn("assistant", "A2"),
+            ],
+        )

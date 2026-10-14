@@ -6,6 +6,7 @@ import { useFitsScrollport } from "@/hooks/use-fits-scrollport";
 import type { UiExperience } from "@/lib/experiencesService";
 import { fillTemplate, paragraphsOf } from "@/lib/text";
 import { cn } from "@/lib/utils";
+import { askedFromRole, type VexAskContext } from "@/lib/vexChat";
 
 /**
  * One role, read as an entry rather than a card, in two columns from md. The
@@ -46,7 +47,8 @@ type RoleEntryProps = {
   /** The role's place among the roles, from the earliest; picks its general question. */
   order: number;
   labels: RoleEntryLabels;
-  onAsk: (question: string) => void;
+  /** Asks Vex the question, saying it was asked from this role. */
+  onAsk: (question: string, context: VexAskContext) => void;
   /** The company's heading; a dialog passes its own, which names it. */
   Heading?: ElementType<{ className?: string; children: ReactNode }>;
 };
@@ -195,7 +197,7 @@ const RoleEntry = ({ experience, order, labels, onAsk, Heading = "h2" }: RoleEnt
         <AskVexPrompt
           question={question}
           hint={fillTemplate(labels.askVex, { company: experience.company })}
-          onAsk={onAsk}
+          onAsk={(asked) => onAsk(asked, askedFromRole(experience))}
         />
       </header>
 

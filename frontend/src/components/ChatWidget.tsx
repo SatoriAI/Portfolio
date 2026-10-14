@@ -25,6 +25,7 @@ import {
   isWaiting,
   retryableQuestion,
   type StoredMessage,
+  type VexAsk,
 } from "@/lib/vexChat";
 import {
   VEX_QUESTION_MAX_LENGTH,
@@ -82,8 +83,11 @@ const ContactFallback = ({ sentence }: { sentence: string }) => {
 interface ChatWidgetProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Sent as the visitor's message once the chat is open and hydrated, after any reply in flight. */
-  initialQuestion?: string | null;
+  /**
+   * Sent as the visitor's message once the chat is open and hydrated, after
+   * any reply in flight, with where it was asked.
+   */
+  initialQuestion?: VexAsk | null;
   /** Called once the initial question has been taken, so it is not sent twice. */
   onInitialQuestionSent?: () => void;
 }
@@ -237,7 +241,7 @@ const ChatWidget = ({
   // reply, or the watchdog gave up) reports nothing more. Every action names
   // its turn, so a request that outlives its turn cannot write into the next
   // one.
-  const answer = async (question: string, turn: number, signal: AbortSignal) => {
+  const answer = async ({ question, context }: VexAsk, turn: number, signal: AbortSignal) => {
     const fail = (code: VexErrorCode, retryAt?: number) =>
       dispatch({ type: "fail", turn, code, retryAt });
     let watchdog = 0;
@@ -251,6 +255,7 @@ const ChatWidget = ({
       arm();
       const end = await streamVexAnswer({
         question,
+        context,
         locale: language,
         sessionKey,
         csrfToken: csrfTokenRef.current,
@@ -281,12 +286,18 @@ const ChatWidget = ({
   const answerRef = useLatest(answer);
   const turn = chat.active?.turn;
   const activeQuestion = chat.active?.question;
+  // The same object for the whole turn (the reducer keeps it as it is).
+  const activeContext = chat.active?.context;
   useEffect(() => {
     if (turn === undefined || activeQuestion === undefined) return;
     const controller = new AbortController();
-    void answerRef.current(activeQuestion, turn, controller.signal);
+    void answerRef.current(
+      { question: activeQuestion, context: activeContext },
+      turn,
+      controller.signal,
+    );
     return () => controller.abort();
-  }, [turn, activeQuestion, answerRef]);
+  }, [turn, activeQuestion, activeContext, answerRef]);
 
   const handleSendMessage = (text?: string) => {
     const question = (text ?? inputValue).trim();
@@ -313,7 +324,7 @@ const ChatWidget = ({
   useEffect(() => {
     if (!isOpen || !initialQuestion) return;
     onInitialQuestionSent?.();
-    dispatch({ type: "ask", question: initialQuestion });
+    dispatch({ type: "ask", ...initialQuestion });
   }, [isOpen, initialQuestion, onInitialQuestionSent]);
 
   const handleClearChat = () => {

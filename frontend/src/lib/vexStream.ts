@@ -9,6 +9,7 @@
 
 import { buildUrl, endpoints } from "@/config/endpoints";
 import { ApiError } from "@/lib/apiClient";
+import type { VexAskContext } from "@/lib/vexChat";
 import { type VexErrorCode, vexStreamErrorCode } from "@/lib/vexErrors";
 
 export interface SseEvent {
@@ -80,6 +81,8 @@ function savedMessageId(data: string): number | undefined {
 
 interface StreamOptions {
   question: string;
+  /** Where on the site the question was asked, when it was about something in particular. */
+  context?: VexAskContext;
   locale: string;
   sessionKey: string;
   csrfToken?: string | null;
@@ -95,6 +98,7 @@ interface StreamOptions {
  */
 export async function streamVexAnswer({
   question,
+  context,
   locale,
   sessionKey,
   csrfToken,
@@ -109,7 +113,7 @@ export async function streamVexAnswer({
       "X-Vex-Session": sessionKey,
       ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
     },
-    body: JSON.stringify({ question, locale }),
+    body: JSON.stringify({ question, locale, ...(context ? { context } : {}) }),
     signal,
   });
   if (!response.ok || !response.body) {

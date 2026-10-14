@@ -1,4 +1,5 @@
 import functools
+import json
 import logging
 import math
 from collections.abc import Mapping
@@ -19,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 SESSION_HEADER = "X-Vex-Session"
 QUESTION_MAX_LENGTH = 1000
+# The longest a question's context (a reference to a role or a project, see vex.ai.context) may be, as JSON.
+CONTEXT_MAX_LENGTH = 200
 
 
 def body_field(request: Request, name: str) -> Any:
@@ -34,6 +37,16 @@ def question_refusal(question: object) -> Response | None:
         return Response({"code": "invalid_question"}, status=status.HTTP_400_BAD_REQUEST)
     if len(question) > QUESTION_MAX_LENGTH:
         return Response({"code": "question_too_long"}, status=status.HTTP_400_BAD_REQUEST)
+    return None
+
+
+def context_refusal(context: object) -> Response | None:
+    """Why a question's context cannot be read at all, as the 400 that says so, or None when it can. Only its form
+    is checked here: one that names nothing Vex may read is dropped later (see vex.ai.context), not refused."""
+    if context is None:
+        return None
+    if not isinstance(context, Mapping) or len(json.dumps(context)) > CONTEXT_MAX_LENGTH:
+        return Response({"code": "invalid_context"}, status=status.HTTP_400_BAD_REQUEST)
     return None
 
 
