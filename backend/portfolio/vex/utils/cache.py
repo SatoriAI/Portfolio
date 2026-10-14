@@ -83,8 +83,8 @@ class GuardedCache:
     failed, or the error of one that just did. Anything else a method raises (incr's ValueError for a missing key)
     means Redis answered."""
 
-    def __init__(self, cache: Any) -> None:
-        self._cache = cache
+    def __init__(self, backend: Any) -> None:
+        self._cache = backend
 
     def __getattr__(self, name: str) -> Any:
         method = getattr(self._cache, name)
