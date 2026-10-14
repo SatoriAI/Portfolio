@@ -20,6 +20,7 @@ import { markdownToPlainText } from "@/lib/text";
 import {
   type ChatMessage,
   chatReducer,
+  continuableReply,
   type Feedback,
   initialChatState,
   isWaiting,
@@ -116,6 +117,10 @@ class MarkdownBoundary extends React.Component<MarkdownBoundaryProps, { hasError
     return this.state.hasError ? this.props.fallback : this.props.children;
   }
 }
+
+// A reply cut off at the limit usually ends mid-sentence; an ellipsis first
+// marks the break and keeps the notice its own sentence when read aloud.
+const cutShortNotice = (notice: string) => `… ${notice}.`;
 
 const ChatWidget = ({
   isOpen,
@@ -266,7 +271,8 @@ const ChatWidget = ({
         },
       });
       if (signal.aborted) return;
-      if (end.kind === "done") dispatch({ type: "done", turn, messageId: end.messageId });
+      if (end.kind === "done")
+        dispatch({ type: "done", turn, messageId: end.messageId, truncated: end.truncated });
       else fail(end.code);
     } catch (err) {
       if (signal.aborted) return;
@@ -385,6 +391,14 @@ const ChatWidget = ({
     focusComposer(textareaRef.current);
   };
 
+  // Asks Vex to go on with a reply cut off at the length cap: "Continue" as a
+  // question of its own, asked from where the cut-off one was.
+  const handleContinue = () => {
+    dispatch({ type: "continue", question: t.chat.continue });
+    focusComposer(textareaRef.current);
+  };
+  const continuable = continuableReply(chat);
+
   const handleCopy = async (text: string) => {
     const done = await copyText(text);
     if (done) announce(t.chat.copied);
@@ -463,7 +477,7 @@ const ChatWidget = ({
       ? t.chat.noAnswer
       : finished.stopped
         ? t.chat.stopped
-        : `${t.chat.replied} ${markdownToPlainText(finished.text)}`;
+        : `${t.chat.replied} ${markdownToPlainText(finished.text)}${finished.truncated ? cutShortNotice(t.chat.truncated) : ""}`;
 
   const lengthId = useId();
   const showLength = pasteCut || inputValue.length >= LENGTH_COUNTER_FROM;
@@ -590,9 +604,9 @@ const ChatWidget = ({
                             />
                           </Suspense>
                         </MarkdownBoundary>
-                        {message.stopped && (
+                        {(message.stopped || message.truncated) && (
                           <p className="not-prose mb-0 mt-2 font-mono text-meta text-muted-foreground">
-                            {t.chat.stopped}
+                            {message.stopped ? t.chat.stopped : t.chat.truncated}
                           </p>
                         )}
                       </>
@@ -633,6 +647,8 @@ const ChatWidget = ({
                           retryQuestion !== null && message === messages[messages.length - 1]
                         }
                         onRetry={handleRetry}
+                        canContinue={message === continuable}
+                        onContinue={handleContinue}
                         onCopy={handleCopy}
                         onRate={(value) => handleRate(message, value)}
                         labels={t.chat}

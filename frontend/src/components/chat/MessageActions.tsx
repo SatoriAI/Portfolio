@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Check, Copy, RotateCcw, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Check, Copy, CornerDownRight, RotateCcw, ThumbsDown, ThumbsUp } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { ChatMessage, Feedback } from "@/lib/vexChat";
@@ -14,6 +14,9 @@ interface MessageActionsProps {
   /** This reply failed, was stopped or said nothing, and is the last: it can be asked again. */
   canRetry: boolean;
   onRetry: () => void;
+  /** This reply was cut off at the length cap and is the last: Vex can be asked to go on. */
+  canContinue: boolean;
+  onContinue: () => void;
   /** Copies the reply's text and resolves with whether it did. */
   onCopy: (text: string) => Promise<boolean>;
   /** Rates the reply and resolves with whether the rating was saved. */
@@ -21,6 +24,7 @@ interface MessageActionsProps {
   labels: {
     replyActions: string;
     retry: string;
+    continue: string;
     copy: string;
     copied: string;
     rateUp: string;
@@ -44,7 +48,8 @@ const ARROWS: Record<string, (at: number, last: number) => number> = {
 
 /**
  * The controls under one of Vex's messages: "try again" on the last one when
- * it failed, copy and the thumbs on a finished reply. Always in view, muted,
+ * it failed, "continue" on the last one when it was cut off at the length
+ * cap, copy and the thumbs on a finished reply. Always in view, muted,
  * so a reply's rhythm is the same at rest, rated or not; a message with
  * nothing to offer has no row at all. One tab stop: the arrows, Home and End
  * move along the row.
@@ -54,6 +59,8 @@ const MessageActions = ({
   finished,
   canRetry,
   onRetry,
+  canContinue,
+  onContinue,
   onCopy,
   onRate,
   labels,
@@ -69,6 +76,7 @@ const MessageActions = ({
   const rateable = finished && message.serverId !== undefined;
   let count = 0;
   const retryAt = canRetry ? count++ : -1;
+  const continueAt = canContinue ? count++ : -1;
   const copyAt = finished ? count++ : -1;
   const upAt = rateable ? count++ : -1;
   const downAt = rateable ? count++ : -1;
@@ -145,6 +153,20 @@ const MessageActions = ({
         >
           <RotateCcw aria-hidden="true" />
           {labels.retry}
+        </button>
+      )}
+      {canContinue && (
+        <button
+          type="button"
+          onClick={() => {
+            setNote(null);
+            onContinue();
+          }}
+          className={cn(control, "gap-1.5 px-2 text-sm")}
+          {...roving(continueAt)}
+        >
+          <CornerDownRight aria-hidden="true" />
+          {labels.continue}
         </button>
       )}
       {finished && (

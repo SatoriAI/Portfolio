@@ -63,4 +63,5 @@ class MessageHistory:
             input_tokens=usage.input_tokens,
             cached_tokens=usage.cached_tokens,
             output_tokens=usage.output_tokens,
+            truncated=usage.finish_reason == "length",
         )

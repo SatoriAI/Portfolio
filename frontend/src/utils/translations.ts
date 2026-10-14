@@ -79,6 +79,10 @@ const copy = {
       stop: "Stop",
       stopped: "Stopped",
       retry: "Try again",
+      // The mark left on a reply cut off at the length cap, and the control
+      // under it that asks Vex to go on: the label is also the question it sends.
+      truncated: "This answer was cut short",
+      continue: "Continue",
       // The row of controls under each reply, as a screen reader names it.
       replyActions: "Reply actions",
       copy: "Copy reply",
@@ -754,6 +758,8 @@ const copy = {
       stop: "Zatrzymaj",
       stopped: "Zatrzymano",
       retry: "Spróbuj ponownie",
+      truncated: "Odpowiedź została skrócona",
+      continue: "Kontynuuj",
       replyActions: "Akcje odpowiedzi",
       copy: "Kopiuj odpowiedź",
       copied: "Skopiowano",

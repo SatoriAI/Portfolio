@@ -510,3 +510,7 @@ msgstr "Niepomocna"
 #: vex/models.py:26
 msgid "Asked from"
 msgstr "Miejsce pytania"
+
+#: vex/models.py:39
+msgid "Truncated"
+msgstr "Ucięta"

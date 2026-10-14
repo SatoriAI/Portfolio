@@ -3,7 +3,8 @@
 // never the URL, and a refusal's status and body stay readable.
 //
 // The protocol (vex.api.sse): `delta` events carry `{"t": text}`, then one
-// `done` carrying the saved answer's `{"message_id": id}`, or an `error`
+// `done` carrying the saved answer's `{"message_id": id, "truncated": bool}`
+// (truncated when the model was cut off at the length cap), or an `error`
 // carrying `{"code": …}`. Every payload is JSON on a
 // single data line, so the text arrives exactly as the model wrote it.
 
@@ -65,17 +66,25 @@ export function createSseParser(onEvent: (event: SseEvent) => void) {
   };
 }
 
-/** How a stream ended; a finished one names the saved answer, when the server said which. */
+/**
+ * How a stream ended; a finished one names the saved answer, when the server
+ * said which, and whether the model was cut off in it.
+ */
 export type VexStreamEnd =
-  | { kind: "done"; messageId?: number }
+  | { kind: "done"; messageId?: number; truncated?: boolean }
   | { kind: "error"; code: VexErrorCode };
 
-function savedMessageId(data: string): number | undefined {
+function finished(data: string): VexStreamEnd {
   try {
-    const id = (JSON.parse(data) as { message_id?: unknown } | null)?.message_id;
-    return typeof id === "number" && Number.isInteger(id) ? id : undefined;
+    const payload = JSON.parse(data) as { message_id?: unknown; truncated?: unknown } | null;
+    const id = payload?.message_id;
+    return {
+      kind: "done",
+      messageId: typeof id === "number" && Number.isInteger(id) ? id : undefined,
+      ...(payload?.truncated === true ? { truncated: true } : {}),
+    };
   } catch {
-    return undefined;
+    return { kind: "done" };
   }
 }
 
@@ -129,7 +138,7 @@ export async function streamVexAnswer({
       const text = (JSON.parse(data) as { t?: unknown }).t;
       if (typeof text === "string" && text) onDelta(text);
     } else if (event === "done") {
-      end = { kind: "done", messageId: savedMessageId(data) };
+      end = finished(data);
     } else if (event === "error") {
       end = { kind: "error", code: vexStreamErrorCode(data) };
     }

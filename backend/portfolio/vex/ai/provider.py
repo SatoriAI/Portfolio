@@ -50,12 +50,15 @@ class Usage:
             self.reasoning_tokens = output.reasoning_tokens or 0
         self.reported = True
 
-    def cost(self, model: str) -> Decimal | None:
-        """The call's price in dollars at settings.VEX_PRICES (reasoning is part of the output), or None for a model
-        with no price there."""
-        if model not in settings.VEX_PRICES:
-            return None
-        fresh, cached, output = (Decimal(str(price)) for price in settings.VEX_PRICES[model])
+    def cost(self, model: str) -> Decimal:
+        """The call's price in dollars at settings.VEX_PRICES (reasoning is part of the output). Settings refuse to
+        start with a VEX_MODEL that has no price, so a model missing here is a mistake: its call is counted at the
+        highest price known for each kind of token rather than not at all, which could switch the budget off."""
+        prices = settings.VEX_PRICES.get(model)
+        if prices is None:
+            logger.error("Vex has no price for %s in VEX_PRICES: its call is counted at the highest prices", model)
+            prices = tuple(max(column) for column in zip(*settings.VEX_PRICES.values(), strict=True))
+        fresh, cached, output = (Decimal(str(price)) for price in prices)
         dollars = (
             (self.input_tokens - self.cached_tokens) * fresh + self.cached_tokens * cached + self.output_tokens * output
         )

@@ -12,7 +12,7 @@ from vex.ai.history import MessageHistory, Turn
 from vex.ai.knowledge import estimate_tokens
 from vex.ai.prompt import PROMPT_VERSION, build_messages
 from vex.choices import Outcomes
-from vex.models import Conversation
+from vex.models import Conversation, Message
 from vex.models import Usage as UsageRecord
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ class EmptyAnswer(Exception):
     """The model finished without a word of text, as when its reasoning spends the whole output budget."""
 
 
-def stream_answer(question: str, locale: str, session_key: str, asked_from: str = "") -> Generator[str, None, int]:
+def stream_answer(question: str, locale: str, session_key: str, asked_from: str = "") -> Generator[str, None, Message]:
     """The answer to one question in a conversation, as text chunks, and the only way the API reaches the model.
 
     The exchange is saved once the answer is complete, and only then. An answer cut short (the visitor left, the
@@ -34,8 +34,8 @@ def stream_answer(question: str, locale: str, session_key: str, asked_from: str 
     Every call is recorded in Usage however it ends, since every one of them is billed. Once today's calls have
     cost VEX_DAILY_BUDGET_USD, this raises spend.Resting before anything is read or written, and calls nothing.
 
-    Once the answer is saved, the generator returns the saved answer's id (as StopIteration.value), so the visitor
-    can rate it.
+    Once the answer is saved, the generator returns it (as StopIteration.value): its id lets the visitor rate it, and
+    it says whether the model was cut off at VEX_MAX_OUTPUT_TOKENS.
 
     `asked_from` says where on the site the question was asked (see vex.ai.context), or is empty. The model reads it
     beside the question, and it is saved with the question, so later turns read it back."""
@@ -81,7 +81,7 @@ def stream_answer(question: str, locale: str, session_key: str, asked_from: str 
         saved = history.add_exchange(
             Turn("user", question, asked_from), "".join(answer), usage=usage, prompt_version=PROMPT_VERSION
         )
-    return saved.pk
+    return saved
 
 
 def record_usage(

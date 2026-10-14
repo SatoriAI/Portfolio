@@ -127,6 +127,21 @@ describe("streamVexAnswer", () => {
     });
   });
 
+  it("says when the model was cut off, and only when the server said so", async () => {
+    vi.stubGlobal("fetch", async () =>
+      sseResponse(['event: done\ndata: {"message_id": 42, "truncated": true}\n\n']),
+    );
+    expect(await streamVexAnswer(options().opts)).toStrictEqual({
+      kind: "done",
+      messageId: 42,
+      truncated: true,
+    });
+    vi.stubGlobal("fetch", async () =>
+      sseResponse(['event: done\ndata: {"message_id": 42, "truncated": false}\n\n']),
+    );
+    expect(await streamVexAnswer(options().opts)).toStrictEqual({ kind: "done", messageId: 42 });
+  });
+
   it("ends cleanly on a done that comes before any text", async () => {
     vi.stubGlobal("fetch", async () => sseResponse(["event: done\ndata: {}\n\n"]));
     const { deltas, opts } = options();
