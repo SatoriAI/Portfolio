@@ -25,6 +25,7 @@ from vex.api.limits import (
     context_refusal,
     question_refusal,
 )
+from vex.models import Message
 from vex.utils.session import is_valid_session_key
 
 logger = logging.getLogger(__name__)
@@ -42,10 +43,17 @@ def sse_event(event: str, data: Mapping[str, object]) -> str:
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
 
+def done_event(saved: Message) -> str:
+    """The end of an answer once it is saved: its id lets the visitor rate it (see MessageFeedbackView), and an
+    answer the model was cut off in at VEX_MAX_OUTPUT_TOKENS says so, so the chat can offer to continue it."""
+    return sse_event("done", {"message_id": saved.pk, "truncated": saved.truncated})
+
+
 @extend_schema(summary="Stream an answer", tags=["Vex"])
 class ChatStreamView(RateLimitedMixin, APIView):
     """Answers one question as a text/event-stream: `delta` events carrying `{"t": text}`, then `done` carrying the
-    saved answer's `{"message_id": id}` (for rating it), or an `error` carrying only `{"code": …}` (`resting` once
+    saved answer's `{"message_id": id, "truncated": bool}` (its id for rating it; truncated when the model stopped at
+    VEX_MAX_OUTPUT_TOKENS mid-answer), or an `error` carrying only `{"code": …}` (`resting` once
     the day's budget is spent, with no call made). A POST, so the question rides in the body and the conversation in
     the X-Vex-Session header (as for the history), and neither lands in an access log. A refusal (400, 429)
     comes back as ordinary JSON with its status, which fetch can read.
@@ -97,8 +105,7 @@ class ChatStreamView(RateLimitedMixin, APIView):
                     try:
                         chunk = next(chunks)
                     except StopIteration as saved:
-                        # The answer is saved, and its id lets the visitor rate it (see MessageFeedbackView).
-                        yield sse_event("done", {"message_id": saved.value})
+                        yield done_event(saved.value)
                         return
                     yield sse_event("delta", {"t": chunk})
                     if time.monotonic() > deadline:

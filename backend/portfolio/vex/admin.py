@@ -25,6 +25,7 @@ class MessageInline(admin.TabularInline):
         "input_tokens",
         "cached_tokens",
         "output_tokens",
+        "truncated",
         "feedback",
     )
     readonly_fields = fields
@@ -74,7 +75,7 @@ class MessageAdmin(admin.ModelAdmin):
         "model",
         "prompt_version",
     )
-    list_filter = ("feedback", "role", "model", "prompt_version")
+    list_filter = ("feedback", "truncated", "role", "model", "prompt_version")
     search_fields = ("content", "conversation__session")
     date_hierarchy = "created_at"
 

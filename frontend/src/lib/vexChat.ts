@@ -54,6 +54,11 @@ export interface ChatMessage {
   stopped?: true;
   /** Set on the part of a reply that arrived before its request failed; the notice after it says why. */
   incomplete?: true;
+  /**
+   * Set on a finished reply the model was cut off in, at the server's cap on
+   * an answer's length: it ends mid-thought, and the last one offers to go on.
+   */
+  truncated?: true;
   /** The saved answer's id on the server, which a rating names. Only finished replies have one. */
   serverId?: number;
   /** The visitor's rating of a saved answer; null when not rated. */
@@ -67,6 +72,8 @@ export interface StoredMessage {
   content: string;
   created_at: string;
   feedback?: Feedback | null;
+  /** On an answer the model was cut off in. */
+  truncated?: boolean;
 }
 
 export interface ChatState {
@@ -95,8 +102,11 @@ export interface ChatState {
  */
 type TurnAction =
   | { type: "delta"; turn: number; text: string }
-  /** The reply is complete; messageId is the saved answer's id, when the server sent one. */
-  | { type: "done"; turn: number; messageId?: number }
+  /**
+   * The reply is complete; messageId is the saved answer's id, when the
+   * server sent one, and truncated says the model was cut off in it.
+   */
+  | { type: "done"; turn: number; messageId?: number; truncated?: boolean }
   /** The request failed; retryAt, for a rate limit, is when asking again may succeed. */
   | { type: "fail"; turn: number; code: VexErrorCode; retryAt?: number };
 
@@ -114,6 +124,11 @@ export type ChatAction =
   | { type: "synced"; stored: StoredMessage[] }
   /** Ask the last question again, in place of the reply that failed, was stopped or said nothing. */
   | { type: "retry" }
+  /**
+   * Ask Vex to go on with the reply she was cut off in, with `question` (the
+   * visitor's "Continue", in their language), asked from where its question was.
+   */
+  | { type: "continue"; question: string }
   /** Set a reply's rating. */
   | { type: "rate"; id: string; feedback: Feedback | null }
   /** The chat closed: the reply in flight and the queue are abandoned. */
@@ -159,6 +174,17 @@ export function retryableQuestion(state: ChatState): string | null {
   return failed ? state.messages[at].text : null;
 }
 
+/**
+ * The reply Vex can go on with: the last message, when it is a finished reply
+ * she was cut off in, nothing is in flight or waiting, and the history has
+ * loaded; otherwise null.
+ */
+export function continuableReply(state: ChatState): ChatMessage | null {
+  if (state.active || state.queue.length || !state.hydrated) return null;
+  const reply = state.messages[state.messages.length - 1];
+  return reply?.truncated && !reply.isUser ? reply : null;
+}
+
 /** Opens a turn for the question; `shown` when its bubble is already on screen (asked again). */
 const start = (state: ChatState, { question, context }: VexAsk, shown = false): ChatState => {
   const seq = state.seq + 1;
@@ -194,6 +220,7 @@ const fromStoredMessage = (m: StoredMessage): ChatMessage =>
         isUser: false,
         serverId: m.id,
         feedback: m.feedback ?? null,
+        ...(m.truncated ? { truncated: true as const } : {}),
       };
 
 const fromStored = (stored: StoredMessage[]): ChatMessage[] =>
@@ -288,6 +315,14 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         true,
       );
     }
+    case "continue": {
+      // A follow-up of its own, under the cut-off reply, which stays as it
+      // was: the model reads it back and picks up where it stopped. Asked
+      // from the same role or project as the question it answers.
+      if (!continuableReply(state)) return state;
+      const context = state.messages[lastQuestionAt(state.messages)]?.context;
+      return start(state, { question: action.question, ...(context ? { context } : {}) });
+    }
     case "rate":
       return {
         ...state,
@@ -329,18 +364,21 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
     case "done": {
       const { replyId } = state;
       if (replyId) {
-        const { messageId } = action;
+        const { messageId, truncated } = action;
         return next({
           ...state,
           active: null,
           replyId: null,
           finishedId: replyId,
-          messages:
-            messageId === undefined
-              ? state.messages
-              : state.messages.map((m) =>
-                  m.id === replyId ? { ...m, serverId: messageId, feedback: null } : m,
-                ),
+          messages: state.messages.map((m) =>
+            m.id === replyId
+              ? {
+                  ...m,
+                  ...(messageId === undefined ? {} : { serverId: messageId, feedback: null }),
+                  ...(truncated ? { truncated: true as const } : {}),
+                }
+              : m,
+          ),
         });
       }
       // A reply that ended before any text: say so, rather than leave the

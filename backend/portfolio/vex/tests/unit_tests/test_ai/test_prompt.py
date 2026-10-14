@@ -92,5 +92,11 @@ class PromptTestCase(TestCase):
         self.assertEqual(message.count("<asked_from>"), 1)
         self.assertEqual(message.count("</asked_from>"), 1)
 
+    def test_the_rules_keep_answers_under_the_cap_and_turn_everything_into_an_overview(self) -> None:
+        # An answer cut at VEX_MAX_OUTPUT_TOKENS stops mid-sentence; a broad question gets an overview instead.
+        rules = system_prompt("en")
+        self.assertIn("Keep every answer to about 250 words", rules)
+        self.assertIn("give a short overview of the main parts, then offer to go deeper", rules)
+
     def test_the_rules_say_what_asked_from_refers_to(self) -> None:
         self.assertIn('If the visitor\'s question came with <asked_from>, read it as what "this"', system_prompt("en"))

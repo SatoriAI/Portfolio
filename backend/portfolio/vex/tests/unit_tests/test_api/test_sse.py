@@ -60,8 +60,8 @@ class FakeModel:
     """Stands in for the provider's stream: records what it was sent, then yields the given chunks and reports the
     usage, as the model's stream would."""
 
-    def __init__(self, chunks: list[str]) -> None:
-        self.chunks = chunks
+    def __init__(self, chunks: list[str], finish_reason: str = "stop") -> None:
+        self.chunks, self.finish_reason = chunks, finish_reason
         self.messages: list[ChatMessage] = []
         self.cache_key = ""
 
@@ -69,7 +69,7 @@ class FakeModel:
         self.messages, self.cache_key = messages, cache_key
         yield from self.chunks
         usage.input_tokens, usage.cached_tokens, usage.output_tokens = 1000, 900, len(self.chunks)
-        usage.finish_reason, usage.reported = "stop", True
+        usage.finish_reason, usage.reported = self.finish_reason, True
 
 
 STREAM = "vex.ai.provider.stream_completion"
@@ -110,7 +110,10 @@ class ChatStreamViewTestCase(StreamViewTestCase):
         answer = Message.objects.get(conversation__session=session, role=Roles.ASSISTANT)
         self.assertEqual(
             events,
-            [*(("delta", {"t": chunk}) for chunk in AWKWARD_CHUNKS), ("done", {"message_id": answer.pk})],
+            [
+                *(("delta", {"t": chunk}) for chunk in AWKWARD_CHUNKS),
+                ("done", {"message_id": answer.pk, "truncated": False}),
+            ],
         )
 
     def test_done_names_the_saved_answer_so_it_can_be_rated(self) -> None:
@@ -119,8 +122,20 @@ class ChatStreamViewTestCase(StreamViewTestCase):
         events, _ = self.stream(["Hi"], session)
         name, payload = events[-1]
         latest = Message.objects.filter(conversation__session=session).latest("created_at", "pk")
-        self.assertEqual((name, payload), ("done", {"message_id": latest.pk}))
+        self.assertEqual((name, payload), ("done", {"message_id": latest.pk, "truncated": False}))
         self.assertEqual((latest.role, latest.content), (Roles.ASSISTANT, "Hi"))
+
+    def test_an_answer_cut_at_the_token_cap_says_so_and_is_kept_as_cut(self) -> None:
+        session = session_key()
+        with patch(STREAM, FakeModel(["The first part, and then", ""], finish_reason="length")):
+            resp = self.post({"question": "Tell me everything"}, session)
+            events = parse_events(b"".join(resp.streaming_content).decode("utf-8"))
+        answer = Message.objects.get(conversation__session=session, role=Roles.ASSISTANT)
+        self.assertEqual(events[-1], ("done", {"message_id": answer.pk, "truncated": True}))
+        self.assertTrue(answer.truncated)
+        # The history the chat loads again carries the flag, so a reloaded chat still offers to continue.
+        resp = self.client.get(reverse("vex:messages"), headers={"X-Vex-Session": session})
+        self.assertEqual([item["truncated"] for item in resp.json()], [False, True])
 
     @override_settings(VEX_MODEL="gpt-6-luna", VEX_PRICES={"gpt-6-luna": (0.10, 0.01, 0.50)})
     def test_a_complete_answer_is_saved_after_the_conversation_so_far(self) -> None:
