@@ -45,7 +45,7 @@ const copy = {
     },
     chat: {
       prompt: "Chat with Vex.",
-      inputPlaceholder: "Ask Vex about Dawid…",
+      inputPlaceholder: "Ask Vex about Dawid",
       // The text box's accessible name; the placeholder is only a hint.
       inputLabel: "Message to Vex",
       starters: [
@@ -727,7 +727,7 @@ const copy = {
     },
     chat: {
       prompt: "Porozmawiaj z Vex.",
-      inputPlaceholder: "Zapytaj Vex o Dawida…",
+      inputPlaceholder: "Zapytaj Vex o Dawida",
       inputLabel: "Wiadomość do Vex",
       starters: [
         "Jakie ma doświadczenie z Kubernetesem?",
