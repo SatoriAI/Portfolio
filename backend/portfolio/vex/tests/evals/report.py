@@ -121,9 +121,14 @@ class Report:
                 f"{'PASS' if result.passed else 'FAIL'} {result.case.name:<24} {result.passes}/{len(result.runs)} "
                 f"{seconds:5.1f}s" + (f"  {problems}" if problems else "")
             )
+        return [*lines, f"{self.headline()}; {self.tokens()}"]
+
+    def tokens(self) -> str:
+        """The input tokens of every call, and how many of them the provider served from its cache (billed at the
+        cached price; the rest at the full one)."""
+        total = sum(call.usage.input_tokens for call in self.calls)
         cached = sum(call.usage.cached_tokens for call in self.calls)
-        fresh = sum(call.usage.input_tokens for call in self.calls)
-        return [*lines, f"{self.headline()}; {fresh} input tokens ({cached} cached)"]
+        return f"{total} input tokens, {cached} of them cached and {total - cached} uncached"
 
     def to_json(self) -> dict[str, Any]:
         return {

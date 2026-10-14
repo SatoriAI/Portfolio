@@ -28,8 +28,6 @@ class LiveDatabase:
 
 
 def pytest_configure(config: Config) -> None:
-    if config.getoption("--eval-repeats") < 1:
-        raise pytest.UsageError("--eval-repeats must be at least 1")
     REPORT.repeats = config.getoption("--eval-repeats")
     REPORT.threshold = config.getoption("--eval-threshold")
     if config.getoption("--eval-live-db"):

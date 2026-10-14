@@ -11,11 +11,32 @@ name: Vex Evals
 
 on:
   pull_request:
+    # Whatever decides what Vex reads and how she answers, and what the run is
+    # built from. The rest of the frontend, its pages and styles, never
+    # reaches her.
     paths:
       - 'backend/portfolio/vex/ai/**'
       - 'backend/portfolio/vex/tests/evals/**'
       - 'backend/portfolio/vex/migrations/**'
       - 'backend/portfolio/portfolio/settings.py'
+      - 'backend/portfolio/conftest.py'
+      # The rows she reads, how each writes itself out for her, and the
+      # translations of its labels.
+      - 'backend/portfolio/work/models.py'
+      - 'backend/portfolio/work/choices.py'
+      - 'backend/portfolio/university/models.py'
+      - 'backend/portfolio/university/choices.py'
+      - 'backend/portfolio/locale/**'
+      # The site's Markdown, and the frontend's build of it for her (vex-kb).
+      - 'frontend/src/content/**'
+      - 'frontend/src/lib/vexKnowledge.ts'
+      - 'frontend/src/lib/workshop.ts'
+      - 'frontend/vite.config.ts'
+      # The run's environment and command.
+      - 'backend/pyproject.toml'
+      - 'backend/uv.lock'
+      - 'Makefile'
+      - '.github/actions/setup-python/**'
       - '.github/workflows/vex-evals.yml'
   # Scheduled runs use the default branch, main.
   schedule:
@@ -36,10 +57,12 @@ permissions:
   contents: read
 
 concurrency:
-  # A new push supersedes the run in flight for the same ref: an answer about a
-  # replaced commit is money spent on nothing.
-  group: vex-evals-${{ github.ref }}
-  cancel-in-progress: true
+  # A new push supersedes the pull request's run in flight: an answer about a
+  # replaced commit is money spent on nothing. A manual run and the weekly one
+  # are each in a group of their own, and wait for the one before rather than
+  # cancel it.
+  group: vex-evals-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # Secrets cannot be read in a job's `if`, so this says whether there is a
@@ -116,11 +139,13 @@ jobs:
           DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/vex_evals"
           OPENAI_API_KEY: ${{ secrets.VEX_EVALS_OPENAI_API_KEY }}
           USE_S3: "False"
-          # Empty on a pull request or a scheduled run, which take the defaults.
-          REPEATS: ${{ inputs.repeats || 3 }}
-          THRESHOLD: ${{ inputs.threshold || 0.9 }}
+          # As given to Run workflow, 0 included, so the harness can refuse a
+          # value out of range. Empty on a pull request or a scheduled run,
+          # which take the defaults below.
+          REPEATS: ${{ inputs.repeats }}
+          THRESHOLD: ${{ inputs.threshold }}
         run: >-
-          make eval-vex EVAL_ARGS="--eval-repeats ${REPEATS} --eval-threshold ${THRESHOLD}
+          make eval-vex EVAL_ARGS="--eval-repeats ${REPEATS:-3} --eval-threshold ${THRESHOLD:-0.9}
           --eval-json ${RUNNER_TEMP}/vex-evals.json --eval-markdown ${GITHUB_STEP_SUMMARY}"
 
       # Every answer, verdict and call, for a closer look at a failure.

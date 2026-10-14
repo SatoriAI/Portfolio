@@ -4,6 +4,8 @@ import pytest
 from _pytest.config.argparsing import Parser
 from django.test import override_settings
 
+from vex.tests.evals import options
+
 
 @pytest.fixture(autouse=True, scope="session")
 def in_memory_caches() -> Iterator[None]:
@@ -31,13 +33,13 @@ def pytest_addoption(parser: Parser) -> None:
     group = parser.getgroup("vex evals")
     group.addoption(
         "--eval-repeats",
-        type=int,
+        type=options.repeats,
         default=1,
         help="Answers per case; a case passes when at least two thirds of them pass.",
     )
     group.addoption(
         "--eval-threshold",
-        type=float,
+        type=options.share,
         default=0.9,
         help="The share of cases that must pass for the run to pass.",
     )

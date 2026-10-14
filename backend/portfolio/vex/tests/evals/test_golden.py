@@ -15,7 +15,7 @@ import re
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
-from typing import cast
+from typing import Literal, cast
 from unittest.mock import patch
 
 import pytest
@@ -61,12 +61,13 @@ The answer passes if: {rubric}
 Reply with JSON only: {{"pass": true or false, "reason": "one short sentence"}}"""
 
 
-def language_of(text: str) -> str | None:
-    """The language the text shows more signs of, or None when it shows neither more: a short answer may have no
-    diacritics and none of the common words ("Dawid uprawia hokej podwodny"), and that is no sign of English."""
+def language_of(text: str) -> Literal["pl", "en", "mixed"] | None:
+    """The language the text shows more signs of; "mixed" when it shows as many of each, and None when it shows none
+    of either: a short answer may have no diacritics and none of the common words ("Dawid uprawia hokej podwodny"),
+    and that is no sign of English."""
     polish, english = len(POLISH.findall(text)), len(ENGLISH.findall(text))
     if polish == english:
-        return None
+        return "mixed" if polish else None
     return "pl" if polish > english else "en"
 
 
@@ -116,7 +117,7 @@ def failures(case: Case, answer: str) -> list[str]:
     ]
     found += [f"contains {forbidden!r}" for forbidden in case.forbid if forbidden.lower() in lowered]
     if case.language and (language := language_of(answer)) not in (None, case.language):
-        found.append(f"answered in {language}, not {case.language}")
+        found.append(f"answered in {'a mix of languages' if language == 'mixed' else language}, not {case.language}")
     return found
 
 

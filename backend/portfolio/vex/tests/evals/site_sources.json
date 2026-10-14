@@ -1,0 +1,116 @@
+{
+  "pl": [
+    {
+      "path": "/#projects",
+      "title": "AdLume",
+      "sha256": "46c2c83da6fad4304d86bea3052081638b9bbf0dfcb1d83ed88111a0dd16518b"
+    },
+    {
+      "path": "/#projects",
+      "title": "Athlo",
+      "sha256": "5d7b82b8ee0f277328431e167e930ca6a498f749ad0d48bc6a730c5599558547"
+    },
+    {
+      "path": "/#projects",
+      "title": "Konfio",
+      "sha256": "f5c944b23b8eaec442aa836c134462759b31c9b1d9a4e6213744e3c2d67e5ef0"
+    },
+    {
+      "path": "/#projects",
+      "title": "OpenGrant",
+      "sha256": "14b6bc5986bf8d2ee67c70e2e4fd6e30d1ba9e4d0b26dabbcbec4e3b3b59982a"
+    },
+    {
+      "path": "/#projects",
+      "title": "Picko",
+      "sha256": "a3a3c5836f62b04213e6cf8d4ccc3e49fb9296b8363a8e15d87c7c6efadf4cf6"
+    },
+    {
+      "path": "/#projects",
+      "title": "Portfolio",
+      "sha256": "82d3bf80d8c5acdb9b0b2b0c5f8dee049e15a3327a58ed5e7568706be2ba4cf1"
+    },
+    {
+      "path": "/#projects",
+      "title": "Slip",
+      "sha256": "15a9a21be0da095dac8b1811e7b65108a76db92e86558821a4d5450991e85495"
+    },
+    {
+      "path": "/#projects",
+      "title": "tURL",
+      "sha256": "c4559d6502ec985148de762fb671b24de8e4ee4e968de9221b640b5992a14468"
+    },
+    {
+      "path": "/workshop/intelligence-from-heat",
+      "title": "Czy z ciepła można zbudować inteligencję?",
+      "sha256": "50e9f8979b7488e9fcacaa70fa3c894968757bce1819d219a9c8fcceea0fa513"
+    },
+    {
+      "path": "/workshop/paints-brushes-and-mark-ii",
+      "title": "Farby, pędzle i Mark II",
+      "sha256": "67aa1207a9cdad39b97d5b61a5f3e97d7e46e5a6736a37fcd5bd51fe6cefb13c"
+    },
+    {
+      "path": "/workshop/when-a-network-finds-the-clock",
+      "title": "Kiedy sieć odkrywa zegar",
+      "sha256": "bef8ee5ab7a2d13b0b53371df9346429a459a9b6242a80e1133a16c7333347a0"
+    }
+  ],
+  "en": [
+    {
+      "path": "/#projects",
+      "title": "AdLume",
+      "sha256": "2d8a79513dafc3748d56644588256817bb15be4c85cfdd5cfb65a6dd2efc4470"
+    },
+    {
+      "path": "/#projects",
+      "title": "Athlo",
+      "sha256": "4ccc84538ea836f3965bde29a0c0af141d3bf4187da94bf2810d5ef2b6337cec"
+    },
+    {
+      "path": "/#projects",
+      "title": "Konfio",
+      "sha256": "25e2d9cce38e82cf1eb7de2513cdbbff0afa858b39aac56a209c52af5e2a24ee"
+    },
+    {
+      "path": "/#projects",
+      "title": "OpenGrant",
+      "sha256": "32c4bdc281269c106efa5010bf997dd823cc4d95ca8341e03e42c0970e3385d0"
+    },
+    {
+      "path": "/#projects",
+      "title": "Picko",
+      "sha256": "38568a1de5f59103d1a8a35d3994d84ff07e5dd5adccef9d198b41d22205b4e1"
+    },
+    {
+      "path": "/#projects",
+      "title": "Portfolio",
+      "sha256": "23ce4be92bacfd04e283d28268ab6b2fb25ebc072220122b05ccc8ffbae210c8"
+    },
+    {
+      "path": "/#projects",
+      "title": "Slip",
+      "sha256": "75e98418af4d1ad8e1706fb2f5429ff3794ec5c6d07f276ab4b304c9988c4f87"
+    },
+    {
+      "path": "/#projects",
+      "title": "tURL",
+      "sha256": "f2a57f02bf73201cc956ac5bd577bfc8d6c1d92e892f47490aa9027f654a7b8e"
+    },
+    {
+      "path": "/workshop/intelligence-from-heat",
+      "title": "Can intelligence be built from heat?",
+      "sha256": "1806833aa5dac5c429175cc160ebac8e8e03713ea7b4c8c3f6fa020c888df9e0"
+    },
+    {
+      "path": "/workshop/paints-brushes-and-mark-ii",
+      "title": "Paints, brushes and Mark II",
+      "sha256": "811f4e133e4f57120520831963841b2bb7ef36e0b52ae653a0704ec7d4eedab3"
+    },
+    {
+      "path": "/workshop/when-a-network-finds-the-clock",
+      "title": "When a network finds the clock",
+      "sha256": "ebe50ff561bc7f04775c9bd311e5a00f3df9db774423a8089eff5ff3e3f0e45a"
+    }
+  ]
+}

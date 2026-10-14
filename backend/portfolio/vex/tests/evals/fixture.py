@@ -3,7 +3,9 @@
 - The site's database rows (roles, skills, projects, degrees, publications, testimonials) come from public.json:
   exactly the rows Vex reads and the public API serves, as dump_public() writes them from a database that holds the
   real content. Refresh it when the site's content changes in a way the golden set asks about.
-- The site's Markdown is read from frontend/src/content, as the frontend's build publishes it for Vex.
+- The site's Markdown is read from frontend/src/content, as the frontend's build publishes it for Vex. The reader
+  is a copy of the frontend's, and site_sources.json holds what both make of the files: a test on each side compares
+  its own with it, so neither can change alone.
 - Dawid's personal documents are never in the repository. In their place is SYNTHETIC_DOCUMENTS: personal facts
   made up for the evals, which the golden set's personal cases ask about.
 - The persona is the one the newest persona migration ships."""
@@ -12,17 +14,20 @@ import importlib
 import pkgutil
 import re
 from pathlib import Path
+from typing import TypedDict
 
 from django.core import serializers
 from django.core.management import call_command
 from django.db import models
 
 from vex import migrations
-from vex.ai.knowledge import DATABASE_SECTIONS, Source
+from vex.ai.knowledge import DATABASE_SECTIONS, Source, parse_site_bundle
 from vex.models import Configuration, Document
 
 PUBLIC_FIXTURE = Path(__file__).with_name("public.json")
 CONTENT = Path(__file__).resolve().parents[5] / "frontend" / "src" / "content"
+# Written by the frontend's test of vexBundle (frontend/src/lib/vexKnowledge.test.ts), compared in test_fixture.py.
+SITE_SNAPSHOT = Path(__file__).with_name("site_sources.json")
 
 # Made up, and plainly so to anyone reading this file: none of it is true of Dawid. Each language has the same facts,
 # with two favourite dishes so a case can check that a recipe is given for the first.
@@ -47,6 +52,16 @@ SYNTHETIC_DOCUMENTS: dict[str, tuple[str, str]] = {
 CONTENT_FILE = re.compile(r"^([a-z0-9-]+)\.(pl|en)\.md$")
 PAGES = {"projects": lambda slug: "/#projects", "workshop": lambda slug: f"/workshop/{slug}"}
 HEADER = re.compile(r"^---\r?\n(.*?)\r?\n---", re.DOTALL)
+LINE_BREAK = re.compile(r"\r?\n")
+QUOTED = re.compile(r'^"(.*)"$')
+
+
+class SiteSource(TypedDict):
+    """One source of the frontend's bundle for Vex, as /vex-kb/<locale>.json serves it."""
+
+    path: str
+    title: str
+    text: str
 
 
 def public_rows() -> list[models.Model]:
@@ -93,9 +108,15 @@ def load() -> None:
 
 
 def site_sources(locale: str) -> list[Source]:
-    """The site's Markdown as the frontend's build publishes it for Vex (frontend/src/lib/vexKnowledge.ts): every
-    project write-up and workshop piece, ordered by folder and slug, in `locale` where it exists and otherwise in the
-    other language, header included, titled by its header."""
+    """What Vex reads of the site in `locale`: the frontend's bundle, taken in as production takes it
+    (parse_site_bundle, which leaves out a source with no text)."""
+    return parse_site_bundle({"sources": site_bundle(locale)})
+
+
+def site_bundle(locale: str) -> list[SiteSource]:
+    """The site's Markdown as the frontend's build publishes it for Vex (vexBundle, frontend/src/lib/vexKnowledge.ts):
+    every project write-up and workshop piece, ordered by folder and slug, in `locale` where it exists and otherwise
+    in the other language, header included, titled by its header."""
     documents: dict[tuple[str, str], dict[str, Path]] = {}
     for folder in PAGES:
         for path in sorted((CONTENT / folder).iterdir()):
@@ -105,16 +126,17 @@ def site_sources(locale: str) -> list[Source]:
     sources = []
     for (folder, slug), by_language in sorted(documents.items()):
         raw = (by_language.get(locale) or next(iter(by_language.values()))).read_text(encoding="utf-8")
-        sources.append(Source("site", header_title(raw) or slug, raw.strip(), PAGES[folder](slug)))
+        sources.append(SiteSource(path=PAGES[folder](slug), title=header_title(raw) or slug, text=raw.strip()))
     return sources
 
 
 def header_title(raw: str) -> str:
-    """The `title:` line of a content file's header, as lib/workshop.ts's parseHeader reads it."""
+    """The `title:` of a content file's header as parseHeader (frontend/src/lib/workshop.ts) reads it: the last such
+    line where there are several, without its quotes."""
+    title = ""
     if header := HEADER.match(raw):
-        for line in header.group(1).splitlines():
+        for line in LINE_BREAK.split(header.group(1)):
             key, colon, value = line.partition(":")
             if colon and key.strip() == "title":
-                value = value.strip()
-                return value[1:-1] if len(value) > 1 and value[0] == value[-1] == '"' else value
-    return ""
+                title = QUOTED.sub(r"\1", value.strip())
+    return title
