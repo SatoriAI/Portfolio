@@ -101,6 +101,16 @@ describe("chatReducer", () => {
     expect(state.queue).toEqual([]);
   });
 
+  it("stays open to questions while Vex rests, answering each with the same notice", () => {
+    const first = run({ type: "ask", question: "First" });
+    const rested = chatReducer(first, { type: "fail", turn: turnOf(first), code: "resting" });
+    expect(isWaiting(rested)).toBe(false);
+    const again = chatReducer(rested, { type: "ask", question: "Second" });
+    const state = chatReducer(again, { type: "fail", turn: turnOf(again), code: "resting" });
+    expect(texts(state)).toEqual(["Q:First", "!resting", "Q:Second", "!resting"]);
+    expect(isWaiting(state)).toBe(false);
+  });
+
   it("abandons the reply and the queue when the chat closes, and ignores what arrives late", () => {
     const asked = run({ type: "ask", question: "First" });
     const turn = turnOf(asked);

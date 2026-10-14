@@ -79,6 +79,9 @@ The backend reads `backend/.env`; every key is listed with its default in [`back
 | `OPENAI_API_KEY` | Yes | Vex only; Django will not start without it, but nothing else uses it |
 | `USE_S3` | No | Media to object storage. Defaults to the inverse of `DEBUG` |
 | `VEX_MODEL`, `VEX_REASONING_EFFORT` | No | Vex's OpenAI model and its reasoning effort; `gpt-6-luna` and `low` by default |
+| `VEX_DAILY_BUDGET_USD` | No | What Vex may spend on the model per UTC day; `5.00` by default. Once reached, Vex rests until midnight UTC and offers Dawid's email instead |
+| `REDIS_URL` | No | Where Vex keeps its rate-limit counts and the day's spend, shared by every worker; without it they live in each process's memory |
+| `VEX_REDIS_DB` | No | The Redis database Vex uses when `REDIS_URL` names none; `5` by default |
 | `VEX_SITE_CONTENT_URL` | No | The site's origin, where Vex fetches `/vex-kb/<pl\|en>.json`; `http://localhost:8080` with `DEBUG`, otherwise empty |
 
 Compose overrides `DATABASE_URL`, `DEBUG` and `USE_S3` with local values, so a `.env` pointing at Railway cannot reach production by accident.

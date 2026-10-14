@@ -58,6 +58,7 @@ const copy = {
       errors: {
         rate_limited: "That's a lot of questions at once. Give Vex a minute and try again.",
         daily_limit: "Vex has talked a lot today. Try again tomorrow.",
+        resting: "Vex has done a lot of talking today and is resting until tomorrow.",
         question_too_long: "That question is too long for Vex. Try a shorter one.",
         invalid_session:
           "Vex couldn't pick this conversation back up. Clear the chat and ask again.",
@@ -722,6 +723,7 @@ const copy = {
       errors: {
         rate_limited: "To sporo pytań naraz. Daj Vexowi minutę i spróbuj ponownie.",
         daily_limit: "Vex dużo dziś rozmawiał. Spróbuj jutro.",
+        resting: "Vex dużo się dziś nagadał i odpoczywa do jutra.",
         question_too_long: "To pytanie jest za długie dla Vexa. Zadaj krótsze pytanie.",
         invalid_session: "Vex nie mógł wrócić do tej rozmowy. Wyczyść czat i zapytaj ponownie.",
         timeout: "Vex za długo nie odpowiadał.",

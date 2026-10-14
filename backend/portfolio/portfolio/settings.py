@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from decimal import Decimal
 from pathlib import Path
 
 import environ
@@ -120,6 +121,27 @@ DATABASES = {
 }
 DATABASE_URL = env("DATABASE_URL")
 
+# Two caches. "default" stays in each process's memory: django-parler keeps every translation there, and putting the
+# whole site's content behind Redis would make Redis a reason for the site to fail. "vex" holds Vex's shared state
+# (its rate-limit counts, the day's spend on the model, the persona): on Railway that is Redis (REDIS_URL), so every
+# worker and thread counts against one limit and the counts survive a deploy. That Redis may be shared with other
+# apps, so Vex keeps to a database of its own (VEX_REDIS_DB, used when REDIS_URL names none, as Railway's does not),
+# every key carries the "portfolio" prefix, and nothing here ever flushes it. The timeouts are short because Redis is
+# milliseconds away on Railway's private network, and Vex fails open when it does not answer (vex.utils.cache): a
+# request should not wait long to find out. Without REDIS_URL (local work, CI) "vex" is per-process memory too.
+CACHES: dict[str, dict[str, object]] = {
+    "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
+    "vex": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "vex"},
+}
+if REDIS_URL := env("REDIS_URL", default=""):
+    CACHES["vex"] = {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": REDIS_URL,
+        "KEY_PREFIX": "portfolio",
+        # A database named in the URL's path wins over "db" (redis-py's from_url).
+        "OPTIONS": {"db": env.int("VEX_REDIS_DB", default=5), "socket_connect_timeout": 0.3, "socket_timeout": 0.3},
+    }
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -219,7 +241,7 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.AllowAny",
     ],
     # Vex's limits (see vex.api.limits): every endpoint counts per IP and per session, and the two that reach the
-    # model also per day. Counts live in the default cache: per-process memory, as CACHES is not set.
+    # model also per day. Counts live in the "vex" cache (see CACHES): shared through Redis in production.
     "DEFAULT_THROTTLE_RATES": {
         "vex_chat": "10/min",
         "vex_chat_daily": "100/day",
@@ -257,6 +279,9 @@ VEX_MAX_OUTPUT_TOKENS = env.int("VEX_MAX_OUTPUT_TOKENS", default=1200)
 VEX_PRICES: dict[str, tuple[float, float, float]] = {
     "gpt-6-luna": (0.10, 0.01, 0.50),
 }
+# What Vex may spend on the model in one UTC day, in dollars, counted from every call in vex.models.Usage. Once it is
+# reached Vex rests until midnight UTC: it tells visitors so and offers Dawid's email, and calls nothing.
+VEX_DAILY_BUDGET_USD = Decimal(env("VEX_DAILY_BUDGET_USD", default="5.00"))
 # Where the site publishes its Markdown for Vex (/vex-kb/<locale>.json, emitted by the frontend's build). Empty means
 # Vex answers from the database alone. Locally the Vite dev server answers the same path.
 VEX_SITE_CONTENT_URL = env("VEX_SITE_CONTENT_URL", default="http://localhost:8080" if DEBUG else "")

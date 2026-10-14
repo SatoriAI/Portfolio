@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 import faker
 from django.conf import settings
-from django.core.cache import cache
 from django.core.signals import request_finished
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -18,6 +17,7 @@ from vex.api.limits import QUESTION_MAX_LENGTH, VexThrottle
 from vex.choices import Outcomes, Roles
 from vex.models import Conversation, Message, Usage
 from vex.tests.factories import MessageFactory
+from vex.utils.cache import cache
 
 fake = faker.Faker()
 
@@ -201,6 +201,28 @@ class ChatStreamViewTestCase(TestCase):
         self.assertFalse(Message.objects.filter(conversation__session=session).exists())
         record = Usage.objects.get(conversation__session=session)
         self.assertEqual((record.outcome, record.estimated, record.output_tokens), (Outcomes.FAILED, True, 2))
+
+    @override_settings(VEX_MODEL="gpt-6-luna", VEX_PRICES={"gpt-6-luna": (0.10, 0.01, 0.50)})
+    def test_once_the_days_budget_is_spent_vex_rests_and_calls_nothing(self) -> None:
+        session = session_key()
+        with override_settings(VEX_DAILY_BUDGET_USD=Decimal("0.00001")):
+            self.stream(["Hi"], session)  # $0.0000195: the budget is spent, and this answer still arrives
+            for _ in range(2):  # and asking again gets the same notice
+                with self.assertLogs("vex.api.sse", level="INFO") as logs:
+                    events, model = self.stream(["Never sent"], session)
+                self.assertEqual(events, [("error", {"code": "resting"})])
+                self.assertEqual(model.messages, [])  # the model was never called
+                self.assertIn("Vex is resting", "\n".join(logs.output))
+            # A new conversation rests too, and is not even created.
+            other = session_key()
+            with self.assertLogs("vex.api.sse", level="INFO"):
+                events, _ = self.stream(["x"], other)
+            self.assertEqual(events, [("error", {"code": "resting"})])
+            self.assertFalse(Conversation.objects.filter(session=other).exists())
+        # Nothing billable and nothing half-saved: the one answered call and its exchange, no more. The conversation
+        # is kept.
+        self.assertEqual(Usage.objects.count(), 1)
+        self.assertEqual(Message.objects.filter(conversation__session=session).count(), 2)
 
     def test_an_answer_that_runs_too_long_is_cut_with_a_timeout(self) -> None:
         with (
