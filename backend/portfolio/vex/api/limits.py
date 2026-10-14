@@ -11,7 +11,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import SimpleRateThrottle
 
-from vex.utils.cache import CACHE_ERRORS, cache_unavailable
+from vex.utils.cache import CacheUnavailable
 from vex.utils.cache import cache as vex_cache
 from vex.utils.session import is_valid_session_key
 
@@ -61,10 +61,9 @@ class VexThrottle(SimpleRateThrottle):
         self.num_requests, self.duration = self.parse_rate(self.rate)
         try:
             return super().allow_request(request, view)
-        except CACHE_ERRORS as error:
+        except CacheUnavailable:
             # Counts live in Redis. Without it Vex stays up unlimited rather than down; the daily budget, which falls
-            # back to the database, still bounds what that can cost.
-            cache_unavailable(error, f"the {self.scope} limit is skipped")
+            # back to the database, still bounds what that can cost. The breaker has logged it.
             return True
 
     def get_ident(self, request: Request) -> str | None:

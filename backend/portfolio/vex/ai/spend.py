@@ -3,13 +3,17 @@
 The source of truth is vex.models.Usage, one row per call however it ended (answered, empty, abandoned, failed;
 estimated or reported). Adding that table up before every question would be a query per request, so the day's total
 is also kept as a counter in the "vex" cache (Redis in production, shared by every worker), raised atomically right
-after each row is written. The counter is reseeded from the table whenever it is missing: the first call of the day,
-a Redis restart, and every few minutes, as it expires early on purpose, so a call it missed (Redis briefly down, a
-worker killed between the row and the increment) is counted again within minutes. While Redis is down the table is
-read instead, at most once a minute per process.
+after each row is written. Only the budget check creates the counter, from the table's total, and only where there is
+none (SET NX): a plain SET could overwrite increments made since the total was read, and an increment that created a
+missing counter would count its call again on top of a total that already holds it. So an increment that finds no
+counter does nothing; the next check seeds one from the table, which holds that call. The counter expires early on
+purpose and is seeded again, so a call it missed (Redis briefly down, a worker killed between the row and the
+increment) is counted within minutes. While Redis is down the table is read instead, at most once a minute per process.
 
 The check and the counter are not one transaction: questions asked at the same moment can all pass a check just
-under the budget, so a day can end a few calls over it. At a fraction of a cent a call, that is accepted."""
+under the budget, so a day can end a few calls over it. At a fraction of a cent a call, that is accepted. A call
+written while another process reads the total can still be counted twice, or once too few, until the counter expires;
+twice only ever errs towards resting early."""
 
 import time
 from dataclasses import dataclass
@@ -20,7 +24,7 @@ from django.conf import settings
 from django.db.models import Count, Sum
 
 from vex.models import Usage
-from vex.utils.cache import CACHE_ERRORS, cache, cache_unavailable
+from vex.utils.cache import CacheUnavailable, cache
 
 # Usage.cost's precision. The counter holds whole units of it, so it adds up to exactly what the table does, and Redis
 # raises it with INCRBY rather than a read and a write.
@@ -76,10 +80,10 @@ def counter_key(day: date) -> str:
     return f"vex:spend:{day.isoformat()}"
 
 
-def reseed(day: date) -> int:
-    """Sets the day's counter to the table's total, in units, and returns it."""
+def seed(day: date) -> int:
+    """Creates the day's counter from the table's total, in units, unless another thread just did, and returns it."""
     units = int(day_spend(day).dollars / UNIT)
-    cache.set(counter_key(day), units, COUNTER_TTL_SECONDS)
+    cache.add(counter_key(day), units, COUNTER_TTL_SECONDS)
     return units
 
 
@@ -97,10 +101,9 @@ def spent(day: date) -> Decimal:
     try:
         units = cache.get(counter_key(day))
         if units is None:
-            units = reseed(day)
-    except CACHE_ERRORS as error:
-        cache_unavailable(error, "the day's spend is read from the database")
-        units = fallback_units(day)
+            units = seed(day)
+    except CacheUnavailable:
+        units = fallback_units(day)  # the breaker has logged it
     return units * UNIT
 
 
@@ -115,14 +118,14 @@ def add(cost: Decimal | None, day: date) -> None:
     if not cost:
         return
     units = int(cost / UNIT)
+    key = counter_key(day)
     try:
-        try:
-            if cache.incr(counter_key(day), units) != units:
-                return
-            # The counter held nothing before this call, or was recreated without its expiry by an increment that
-            # raced its expiry: either way the table, which already holds this call, says better.
-        except ValueError:
-            pass  # no counter yet
-        reseed(day)
-    except CACHE_ERRORS as error:
-        cache_unavailable(error, "this call is counted when the counter is next reseeded from the database")
+        if cache.incr(key, units) == units:
+            # Django checks the key exists and then runs INCRBY. If it expired in between, INCRBY recreated it holding
+            # this call alone and with no expiry; dropping it lets the next check seed it from the table. (A counter
+            # seeded at zero is dropped too, which costs one more SUM.)
+            cache.delete(key)
+    except ValueError:
+        pass  # no counter: the next check seeds one from the table, which already holds this call
+    except CacheUnavailable:
+        pass  # the breaker has logged it; the counter is reseeded from the table once it expires

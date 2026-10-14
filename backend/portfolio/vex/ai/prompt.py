@@ -10,7 +10,7 @@ from vex.ai.history import Turn
 from vex.ai.knowledge import knowledge_base
 from vex.ai.provider import ChatMessage
 from vex.models import Configuration
-from vex.utils.cache import CACHE_ERRORS, cache, cache_unavailable
+from vex.utils.cache import CacheUnavailable, cache
 
 # Stored with every answer. Bump it whenever RULES changes, so answers can be told apart by the rules that made them.
 PROMPT_VERSION = "2026-10-13b"
@@ -83,9 +83,8 @@ def persona(locale: str) -> str:
 
     try:
         return str(cache.get_or_set(f"vex:persona:{locale}", load, PERSONA_TTL_SECONDS))
-    except CACHE_ERRORS as error:
-        cache_unavailable(error, "the persona is read from the database")
-        return load()
+    except CacheUnavailable:
+        return load()  # the breaker has logged it
 
 
 def system_prompt(locale: str) -> str:

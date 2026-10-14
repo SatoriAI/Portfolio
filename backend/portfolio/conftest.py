@@ -12,3 +12,13 @@ def in_memory_caches() -> Iterator[None]:
     local = "django.core.cache.backends.locmem.LocMemCache"
     with override_settings(CACHES={"default": {"BACKEND": local}, "vex": {"BACKEND": local, "LOCATION": "vex"}}):
         yield
+
+
+@pytest.fixture(autouse=True)
+def closed_breaker() -> Iterator[None]:
+    """A test that takes Redis down would otherwise leave the vex cache's breaker open for the tests after it."""
+    from vex.utils.cache import breaker  # pylint: disable=import-outside-toplevel
+
+    breaker.reset()
+    yield
+    breaker.reset()

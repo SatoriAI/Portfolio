@@ -125,9 +125,10 @@ DATABASE_URL = env("DATABASE_URL")
 # whole site's content behind Redis would make Redis a reason for the site to fail. "vex" holds Vex's shared state
 # (its rate-limit counts, the day's spend on the model, the persona): on Railway that is Redis (REDIS_URL), so every
 # worker and thread counts against one limit and the counts survive a deploy. That Redis may be shared with other
-# apps: every key carries the "portfolio" prefix, and nothing here ever flushes it. The timeouts are short because
-# Vex fails open when Redis is down (vex.utils.cache) and a request should not wait long to find out. Without
-# REDIS_URL (local work, CI) "vex" is per-process memory too.
+# apps, so Vex keeps to a database of its own (VEX_REDIS_DB, used when REDIS_URL names none, as Railway's does not),
+# every key carries the "portfolio" prefix, and nothing here ever flushes it. The timeouts are short because Redis is
+# milliseconds away on Railway's private network, and Vex fails open when it does not answer (vex.utils.cache): a
+# request should not wait long to find out. Without REDIS_URL (local work, CI) "vex" is per-process memory too.
 CACHES: dict[str, dict[str, object]] = {
     "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
     "vex": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "vex"},
@@ -137,7 +138,8 @@ if REDIS_URL := env("REDIS_URL", default=""):
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": REDIS_URL,
         "KEY_PREFIX": "portfolio",
-        "OPTIONS": {"socket_connect_timeout": 2, "socket_timeout": 2},
+        # A database named in the URL's path wins over "db" (redis-py's from_url).
+        "OPTIONS": {"db": env.int("VEX_REDIS_DB", default=5), "socket_connect_timeout": 0.3, "socket_timeout": 0.3},
     }
 
 # Password validation

@@ -1,11 +1,15 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from io import StringIO
+from types import SimpleNamespace
 from typing import Any
+from unittest.mock import patch
 
 import fakeredis
+import redis
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.cache import caches
 from django.core.management import call_command
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
@@ -15,10 +19,11 @@ from vex.ai import spend
 from vex.ai.engine import record_usage
 from vex.ai.prompt import persona
 from vex.ai.provider import Usage as ProviderUsage
-from vex.api.limits import VexThrottle
+from vex.api.limits import SESSION_HEADER, VexThrottle
 from vex.choices import Outcomes
 from vex.models import Usage
 from vex.tests.factories import ConfigurationFactory, ConversationFactory
+from vex.tests.unit_tests.test_api.test_sse import STREAM, FakeModel, parse_events, session_key
 from vex.utils.cache import cache
 
 PRICES = {"gpt-6-luna": (0.10, 0.01, 0.50)}
@@ -42,6 +47,8 @@ REDIS_DOWN = {
         "OPTIONS": {"socket_connect_timeout": 0.5},
     },
 }
+
+CONNECT = redis.connection.Connection.connect
 
 
 def usage_row(cost: str | None, *, created_at: datetime | None = None, **fields: Any) -> Usage:
@@ -87,20 +94,56 @@ class SpendTestCase(TestCase):
             self.assertEqual(spend.spent(spend.today()), Decimal("1.25000001"))
 
     def test_every_recorded_call_raises_the_counter(self) -> None:
-        spend.spent(spend.today())  # seeds the counter at zero
+        usage_row("0.10")
+        spend.spent(spend.today())  # seeds the counter
         record(ProviderUsage(input_tokens=1000, cached_tokens=900, output_tokens=3, reported=True))
-        self.assertEqual(self.counter(), 2050)  # $0.0000205
+        self.assertEqual(self.counter(), 10002050)  # $0.10 + $0.0000205
         # An abandoned answer the provider never reported is estimated, and counts all the same.
         record(ProviderUsage(), Outcomes.ABANDONED, answer="Half of it")
         abandoned = Usage.objects.get(outcome=Outcomes.ABANDONED)
         self.assertTrue(abandoned.estimated)
         self.assertGreater(abandoned.cost, 0)
-        self.assertEqual(spend.spent(spend.today()), Decimal("0.0000205") + abandoned.cost)
+        self.assertEqual(spend.spent(spend.today()), Decimal("0.1000205") + abandoned.cost)
         self.assertEqual(spend.spent(spend.today()), spend.day_spend(spend.today()).dollars)
 
-    def test_the_first_call_of_the_day_seeds_the_counter_with_itself(self) -> None:
+    def test_a_call_that_finds_no_counter_leaves_it_to_the_next_check(self) -> None:
         record(ProviderUsage(input_tokens=1000, cached_tokens=900, output_tokens=3, reported=True))
+        self.assertIsNone(self.counter())
+        self.assertEqual(spend.spent(spend.today()), Decimal("0.0000205"))
         self.assertEqual(self.counter(), 2050)
+
+    def test_a_counter_seeded_at_zero_is_dropped_by_the_first_call(self) -> None:
+        # Holding exactly the call just added is what a counter INCRBY recreated after it expired looks like (no
+        # expiry, no earlier calls), so it is dropped and seeded from the table instead.
+        spend.spent(spend.today())
+        record(ProviderUsage(input_tokens=1000, cached_tokens=900, output_tokens=3, reported=True))
+        self.assertIsNone(self.counter())
+        self.assertEqual(spend.spent(spend.today()), Decimal("0.0000205"))
+
+    def test_two_calls_written_before_any_counter_are_counted_once_each(self) -> None:
+        # Two calls finish while there is no counter. When the first is counted, the table already holds both rows,
+        # and the second's increment has not run yet. Seeding from the table there (as an increment once did) and
+        # then letting the second increment land counted the second call twice.
+        first, second = usage_row("0.25"), usage_row("0.50")
+        spend.add(first.cost, spend.today())
+        spend.add(second.cost, spend.today())
+        self.assertEqual(spend.spent(spend.today()), Decimal("0.75"))
+
+    def test_a_check_reading_an_old_total_never_overwrites_the_counter(self) -> None:
+        # A check reads the table's total; before it stores it, another worker seeds the counter and a call raises
+        # it. A plain SET would put the older total back over that call.
+        usage_row("1.00")
+        later = Decimal("0.50")
+
+        def total_then_another_worker(day: Any) -> spend.DaySpend:
+            totals = day_spend(day)
+            cache.set(spend.counter_key(day), int((totals.dollars + later) / spend.UNIT), 60)
+            return totals
+
+        day_spend = spend.day_spend
+        with patch.object(spend, "day_spend", total_then_another_worker):
+            spend.spent(spend.today())
+        self.assertEqual(spend.spent(spend.today()), Decimal("1.50"))
 
     def test_the_budget_is_checked_against_the_day_so_far(self) -> None:
         usage_row("4.99")
@@ -116,10 +159,10 @@ class SpendTestCase(TestCase):
         usage_row("0.50")
         self.assertEqual(spend.spent(spend.today()), Decimal("0.50"))
         record(ProviderUsage(input_tokens=1000, cached_tokens=900, output_tokens=3, reported=True))
-        redis = cache._cache.get_client(write=True)  # type: ignore[attr-defined]  # pylint: disable=protected-access
+        server = caches["vex"]._cache.get_client(write=True)  # type: ignore[attr-defined]  # pylint: disable=protected-access
         key = f"portfolio:1:vex:spend:{spend.today().isoformat()}"
-        self.assertEqual(redis.get(key), b"50002050")  # a plain integer, so INCRBY can raise it
-        self.assertTrue(0 < redis.ttl(key) <= spend.COUNTER_TTL_SECONDS)
+        self.assertEqual(server.get(key), b"50002050")  # a plain integer, so INCRBY can raise it
+        self.assertTrue(0 < server.ttl(key) <= spend.COUNTER_TTL_SECONDS)
         self.assertEqual(spend.spent(spend.today()), Decimal("0.5000205"))
 
     @override_settings(CACHES=REDIS_DOWN)
@@ -133,8 +176,10 @@ class SpendTestCase(TestCase):
             with self.assertRaises(spend.Resting):
                 spend.check_budget()
             record(ProviderUsage(input_tokens=10, output_tokens=1, reported=True))  # still recorded
+        # One error for the outage, not one per use.
+        self.assertEqual(len(logs.output), 1)
         self.assertIn("ConnectionError", logs.output[0])
-        self.assertIn("read from the database", logs.output[0])
+        self.assertIn("the spend and the persona are read from the database", logs.output[0])
         self.assertEqual(Usage.objects.count(), 3)
 
     @override_settings(CACHES=REDIS_DOWN, TRUSTED_CLIENT_IP_HEADER="")
@@ -144,13 +189,33 @@ class SpendTestCase(TestCase):
         request = view.initialize_request(RequestFactory().post("/"))
         with self.assertLogs("vex.utils.cache", level="ERROR") as logs:
             self.assertTrue(all(VexThrottle().allow_request(request, view) for _ in range(20)))
-        self.assertIn("the vex_stream limit is skipped", logs.output[0])
+        self.assertEqual(len(logs.output), 1)
+        self.assertIn("the limits are skipped", logs.output[0])
 
     @override_settings(CACHES=REDIS_DOWN)
     def test_with_redis_down_the_persona_is_read_afresh(self) -> None:
         ConfigurationFactory(i18n={"en": {"system_prompt": "Be breezy."}})
         with self.assertLogs("vex.utils.cache", level="ERROR"):
             self.assertEqual(persona("en"), "Be breezy.")
+
+    @override_settings(CACHES=REDIS_DOWN, TRUSTED_CLIENT_IP_HEADER="")
+    def test_with_redis_down_a_question_tries_redis_once(self) -> None:
+        # Three limits, the budget check, the persona and the increment would each wait out a timeout of their own
+        # on a Redis that hangs; the breaker makes the first failure stand for the rest.
+        url = reverse("vex:stream")
+        with (
+            patch.object(redis.connection.Connection, "connect", autospec=True, side_effect=CONNECT) as connect,
+            patch(STREAM, FakeModel(["Hi"])),
+            patch("vex.ai.prompt.knowledge_base", return_value=SimpleNamespace(text="kb")),
+            self.assertLogs("vex.utils.cache", level="ERROR") as logs,
+        ):
+            for _ in range(2):
+                resp = self.client.post(
+                    url, {"question": "Q"}, content_type="application/json", headers={SESSION_HEADER: session_key()}
+                )
+                self.assertEqual(parse_events(b"".join(resp.streaming_content).decode())[-1], ("done", {}))
+        self.assertEqual(connect.call_count, 1)
+        self.assertEqual(len(logs.output), 1)
 
 
 @override_settings(VEX_DAILY_BUDGET_USD=Decimal("5.00"))
