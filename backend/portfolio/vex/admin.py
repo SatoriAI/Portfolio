@@ -23,6 +23,7 @@ class MessageInline(admin.TabularInline):
         "input_tokens",
         "cached_tokens",
         "output_tokens",
+        "feedback",
     )
     readonly_fields = fields
     extra = 0
@@ -48,6 +49,33 @@ class ConversationAdmin(admin.ModelAdmin):
     @admin.display(description=_("Number of Messages"))
     def number_of_messages(self, obj: Conversation) -> int:
         return obj.messages.count()
+
+
+@admin.register(Message)
+class MessageAdmin(admin.ModelAdmin):
+    """Read-only, like the conversations it belongs to: the place to see how visitors rated Vex's answers."""
+
+    list_display = (
+        "created_at",
+        "role",
+        "short_content",
+        "feedback",
+        "model",
+        "prompt_version",
+    )
+    list_filter = ("feedback", "role", "model", "prompt_version")
+    search_fields = ("content", "conversation__session")
+    date_hierarchy = "created_at"
+
+    @admin.display(description=_("Content"))
+    def short_content(self, obj: Message) -> str:
+        return obj.content if len(obj.content) <= 80 else f"{obj.content[:79]}…"
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        return False
+
+    def has_change_permission(self, request: HttpRequest, obj: Message | None = None) -> bool:
+        return False
 
 
 class DocumentForm(forms.ModelForm):

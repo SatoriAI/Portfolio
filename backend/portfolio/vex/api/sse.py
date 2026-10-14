@@ -42,10 +42,11 @@ def sse_event(event: str, data: Mapping[str, object]) -> str:
 
 @extend_schema(summary="Stream an answer", tags=["Vex"])
 class ChatStreamView(RateLimitedMixin, APIView):
-    """Answers one question as a text/event-stream: `delta` events carrying `{"t": text}`, then `done`, or an
-    `error` carrying only `{"code": …}` (`resting` once the day's budget is spent, with no call made). A POST, so the
-    question rides in the body and the conversation in the X-Vex-Session header (as for the history), and neither
-    lands in an access log. A refusal (400, 429) comes back as ordinary JSON with its status, which fetch can read."""
+    """Answers one question as a text/event-stream: `delta` events carrying `{"t": text}`, then `done` carrying the
+    saved answer's `{"message_id": id}` (for rating it), or an `error` carrying only `{"code": …}` (`resting` once
+    the day's budget is spent, with no call made). A POST, so the question rides in the body and the conversation in
+    the X-Vex-Session header (as for the history), and neither lands in an access log. A refusal (400, 429)
+    comes back as ordinary JSON with its status, which fetch can read."""
 
     throttle_scope = "vex_stream"
     throttle_classes = [VexThrottle, VexDailyThrottle, VexSessionThrottle]
@@ -84,13 +85,18 @@ class ChatStreamView(RateLimitedMixin, APIView):
             # A visitor who leaves surfaces here as GeneratorExit, raised by the server at the next write: closing
             # the answer's stream on the way out stops the generation and saves nothing (see stream_answer).
             with closing(stream_answer(question=question, locale=locale, session_key=session_key)) as chunks:
-                for chunk in chunks:
+                while True:
+                    try:
+                        chunk = next(chunks)
+                    except StopIteration as saved:
+                        # The answer is saved, and its id lets the visitor rate it (see MessageFeedbackView).
+                        yield sse_event("done", {"message_id": saved.value})
+                        return
                     yield sse_event("delta", {"t": chunk})
                     if time.monotonic() > deadline:
                         logger.warning("Vex stream stopped after %ss", STREAM_MAX_SECONDS)
                         yield sse_event("error", {"code": "timeout"})
                         return
-            yield sse_event("done", {})
         except GeneratorExit:
             # A warning: an abandoned answer still cost a call (vex.ai.engine records it in Usage).
             logger.warning("Vex stream stopped: the client went away mid-answer")

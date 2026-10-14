@@ -251,6 +251,9 @@ REST_FRAMEWORK = {
         "vex_stream_session": "10/min",
         "vex_history": "60/min",
         "vex_history_session": "60/min",
+        # A thumb is cheap and may be changed and taken back; this only stops a script from hammering it.
+        "vex_feedback": "30/min",
+        "vex_feedback_session": "30/min",
     },
 }
 

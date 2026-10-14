@@ -44,9 +44,10 @@ class MessageHistory:
             turns.append(Turn("user" if message.role == Roles.USER else "assistant", message.content))
         return turns[::-1]
 
-    def add_exchange(self, question: str, answer: str, *, usage: Usage, prompt_version: str) -> None:
+    def add_exchange(self, question: str, answer: str, *, usage: Usage, prompt_version: str) -> Message:
+        """Saves a question and its answer, and returns the answer, which the visitor may go on to rate."""
         Message.objects.create(conversation=self.conversation, role=Roles.USER, content=question)
-        Message.objects.create(
+        return Message.objects.create(
             conversation=self.conversation,
             role=Roles.ASSISTANT,
             content=answer,
