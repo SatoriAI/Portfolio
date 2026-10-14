@@ -11,6 +11,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import SimpleRateThrottle
 
+from vex.utils.cache import CACHE_ERRORS, cache_unavailable
+from vex.utils.cache import cache as vex_cache
 from vex.utils.session import is_valid_session_key
 
 logger = logging.getLogger(__name__)
@@ -46,6 +48,8 @@ class VexThrottle(SimpleRateThrottle):
     picks which of its rates in DEFAULT_THROTTLE_RATES applies, so one endpoint can carry several windows."""
 
     suffix = ""
+    # Counted in Redis in production, so every worker and thread shares one count (see settings.CACHES).
+    cache = vex_cache
 
     def __init__(self) -> None:  # pylint: disable=super-init-not-called
         # The rate depends on the view, so it is resolved per request in allow_request.
@@ -55,7 +59,13 @@ class VexThrottle(SimpleRateThrottle):
         self.scope = f"{view.throttle_scope}{self.suffix}"
         self.rate = self.get_rate()
         self.num_requests, self.duration = self.parse_rate(self.rate)
-        return super().allow_request(request, view)
+        try:
+            return super().allow_request(request, view)
+        except CACHE_ERRORS as error:
+            # Counts live in Redis. Without it Vex stays up unlimited rather than down; the daily budget, which falls
+            # back to the database, still bounds what that can cost.
+            cache_unavailable(error, f"the {self.scope} limit is skipped")
+            return True
 
     def get_ident(self, request: Request) -> str | None:
         # Behind Railway's edge REMOTE_ADDR is the proxy, and X-Forwarded-For can carry whatever the client sent.

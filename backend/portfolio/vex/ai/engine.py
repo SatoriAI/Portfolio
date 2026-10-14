@@ -2,11 +2,12 @@ import logging
 import time
 from collections.abc import Generator, Sequence
 from contextlib import closing
+from datetime import UTC
 
 from django.conf import settings
 from django.db import transaction
 
-from vex.ai import provider
+from vex.ai import provider, spend
 from vex.ai.history import MessageHistory
 from vex.ai.knowledge import estimate_tokens
 from vex.ai.prompt import PROMPT_VERSION, build_messages
@@ -30,7 +31,9 @@ def stream_answer(question: str, locale: str, session_key: str) -> Generator[str
     model's stream with it (see provider.stream_completion), which closes the provider's response: a visitor who
     leaves stops the generation, not only the reading of it.
 
-    Every call is recorded in Usage however it ends, since every one of them is billed."""
+    Every call is recorded in Usage however it ends, since every one of them is billed. Once today's calls have
+    cost VEX_DAILY_BUDGET_USD, this raises spend.Resting before anything is read or written, and calls nothing."""
+    spend.check_budget()
     history = MessageHistory(session_key)
     messages = build_messages(question=question, locale=locale, history=history.recent())
     usage = provider.Usage()
@@ -84,7 +87,7 @@ def record_usage(
     if not usage.reported:
         usage.input_tokens = sum(estimate_tokens(message["content"]) for message in messages)
         usage.output_tokens = estimate_tokens(answer)
-    UsageRecord.objects.create(
+    record = UsageRecord.objects.create(
         conversation=conversation,
         model=settings.VEX_MODEL,
         prompt_version=PROMPT_VERSION,
@@ -97,3 +100,4 @@ def record_usage(
         estimated=not usage.reported,
         cost=usage.cost(settings.VEX_MODEL),
     )
+    spend.add(record.cost, record.created_at.astimezone(UTC).date())

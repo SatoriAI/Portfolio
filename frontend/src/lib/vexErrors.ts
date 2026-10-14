@@ -7,6 +7,8 @@ export const VEX_QUESTION_MAX_LENGTH = 1000;
 export const VEX_ERROR_CODES = [
   "rate_limited",
   "daily_limit",
+  // Vex's budget for the day is spent; asking again gets the same notice.
+  "resting",
   "question_too_long",
   "invalid_session",
   "timeout",
