@@ -90,6 +90,18 @@ describe("streamVexAnswer", () => {
     expect((init.headers as Record<string, string>)["X-Vex-Session"]).toBe("a".repeat(32));
   });
 
+  it("sends where the question was asked, when it was asked from somewhere in particular", async () => {
+    const fetchMock = vi.fn(async () => sseResponse(["event: done\ndata: {}\n\n"]));
+    vi.stubGlobal("fetch", fetchMock);
+    await streamVexAnswer({ ...options().opts, context: { kind: "experience", id: 7 } });
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(String(init.body))).toEqual({
+      question: "Q",
+      locale: "pl",
+      context: { kind: "experience", id: 7 },
+    });
+  });
+
   it("hands over each chunk exactly, newlines, quotes and JSON-looking text included", async () => {
     const texts = ["## Head\n\n", 'say "hi"', "a \\n literal", '{"text":"x"}', "data: y\n\nz"];
     const frames = texts.map((t) => `event: delta\ndata: ${JSON.stringify({ t })}\n\n`).join("");

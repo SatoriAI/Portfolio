@@ -339,7 +339,7 @@ const Experience = () => {
                         labels={entryLabels}
                         Heading={Heading}
                         // Shrink the entry away first, so the chat opens on the page.
-                        onAsk={(question) => closeDialog(() => askVex(question))}
+                        onAsk={(question, context) => closeDialog(() => askVex(question, context))}
                       />
                     )
                   );

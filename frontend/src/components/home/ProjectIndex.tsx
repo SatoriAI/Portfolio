@@ -16,6 +16,7 @@ import { isThisSite } from "@/lib/projectLinks";
 import type { UiProject } from "@/lib/projectsService";
 import { fillTemplate } from "@/lib/text";
 import { cn } from "@/lib/utils";
+import { askedFromProject, type VexAskContext } from "@/lib/vexChat";
 
 /**
  * The projects as pucks on a heat field (see ProjectField) over one panel per
@@ -131,7 +132,8 @@ type ProjectFrameProps = {
   facts?: ProjectFacts;
   screenshot?: string;
   labels: ProjectIndexLabels;
-  onAsk: (question: string) => void;
+  /** Asks Vex the question, saying it was asked from this project. */
+  onAsk: (question: string, context: VexAskContext) => void;
   checkState: CheckState;
   onCheck: () => void;
   /** Whether this is the open project; only its stack cycles. */
@@ -234,7 +236,7 @@ const ProjectFrame = ({
             project.vexQuestion || fillTemplate(labels.askVexQuestion, { title: project.title })
           }
           hint={fillTemplate(labels.askVex, { title: project.title })}
-          onAsk={onAsk}
+          onAsk={(asked) => onAsk(asked, askedFromProject(project))}
           className="mt-auto max-sm:w-[calc(100%-4rem)] sm:w-fit sm:self-center"
         />
       </div>
@@ -251,7 +253,8 @@ type ProjectIndexProps = {
   /** A real screenshot per title, for the page's language (see config/projectScreenshots). */
   screenshots?: Readonly<Record<string, string>>;
   labels: ProjectIndexLabels;
-  onAsk: (question: string) => void;
+  /** Asks Vex the question, saying it was asked from this project. */
+  onAsk: (question: string, context: VexAskContext) => void;
   /** The live checks of the projects' addresses, shared with the page. */
   checks: LiveChecks;
   /** Starts the checks; the page owns which addresses are checked. */

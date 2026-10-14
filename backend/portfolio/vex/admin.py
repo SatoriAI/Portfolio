@@ -19,6 +19,7 @@ class MessageInline(admin.TabularInline):
     fields = (
         "role",
         "content",
+        "asked_from",
         "created_at",
         "model",
         "input_tokens",

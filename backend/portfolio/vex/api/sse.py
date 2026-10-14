@@ -12,6 +12,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from vex.ai.context import resolve_context
 from vex.ai.engine import stream_answer
 from vex.ai.spend import Resting
 from vex.api.limits import (
@@ -21,6 +22,7 @@ from vex.api.limits import (
     VexSessionThrottle,
     VexThrottle,
     body_field,
+    context_refusal,
     question_refusal,
 )
 from vex.utils.session import is_valid_session_key
@@ -46,7 +48,10 @@ class ChatStreamView(RateLimitedMixin, APIView):
     saved answer's `{"message_id": id}` (for rating it), or an `error` carrying only `{"code": …}` (`resting` once
     the day's budget is spent, with no call made). A POST, so the question rides in the body and the conversation in
     the X-Vex-Session header (as for the history), and neither lands in an access log. A refusal (400, 429)
-    comes back as ordinary JSON with its status, which fetch can read."""
+    comes back as ordinary JSON with its status, which fetch can read.
+
+    A question asked from a role or a project carries a `context` naming it, `{"kind": "experience" | "project",
+    "id": …}`, which the server looks up itself (see vex.ai.context) and the model reads beside the question."""
 
     throttle_scope = "vex_stream"
     throttle_classes = [VexThrottle, VexDailyThrottle, VexSessionThrottle]
@@ -58,6 +63,9 @@ class ChatStreamView(RateLimitedMixin, APIView):
     def post(self, request: Request) -> StreamingHttpResponse | Response:
         question = body_field(request, "question")
         if refusal := question_refusal(question):
+            return refusal
+        context = body_field(request, "context")
+        if refusal := context_refusal(context):
             return refusal
 
         session_key = self.get_session_key(request)
@@ -71,7 +79,7 @@ class ChatStreamView(RateLimitedMixin, APIView):
             locale = settings.LANGUAGE_CODE
 
         response = StreamingHttpResponse(
-            self.events(question=question, locale=locale, session_key=session_key),
+            self.events(question=question, locale=locale, session_key=session_key, asked_from=resolve_context(context)),
             content_type="text/event-stream",
         )
         response["Cache-Control"] = "no-cache"
@@ -79,12 +87,12 @@ class ChatStreamView(RateLimitedMixin, APIView):
         return response
 
     @staticmethod
-    def events(question: str, locale: str, session_key: str) -> Iterator[str]:
+    def events(question: str, locale: str, session_key: str, asked_from: str = "") -> Iterator[str]:
         deadline = time.monotonic() + STREAM_MAX_SECONDS
         try:
             # A visitor who leaves surfaces here as GeneratorExit, raised by the server at the next write: closing
             # the answer's stream on the way out stops the generation and saves nothing (see stream_answer).
-            with closing(stream_answer(question=question, locale=locale, session_key=session_key)) as chunks:
+            with closing(stream_answer(question, locale, session_key, asked_from=asked_from)) as chunks:
                 while True:
                     try:
                         chunk = next(chunks)

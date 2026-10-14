@@ -17,6 +17,7 @@ export type ApiProject = {
 };
 
 export type UiProject = {
+  id: number;
   title: string;
   description: string;
   /** The question its Vex prompt offers, or empty for the general one. */
@@ -34,6 +35,7 @@ export function mapApiProjectToUi(project: ApiProject, language: string): UiProj
   const localized = project.translations?.[lang] || project.translations?.["en"] || {};
   const description = localized.description || "";
   return {
+    id: project.id,
     title: project.title,
     description,
     vexQuestion: localized.vex_question || "",

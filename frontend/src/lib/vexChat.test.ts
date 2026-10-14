@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { type ApiExperience, mapApiExperienceToUi } from "@/lib/experiencesService";
+import { type ApiProject, mapApiProjectToUi } from "@/lib/projectsService";
+
 import {
+  askedFromProject,
+  askedFromRole,
   type ChatAction,
   chatReducer,
   type ChatState,
@@ -40,6 +45,55 @@ const texts = (state: ChatState) =>
           ? `stopped:${m.text}`
           : `${m.isUser ? "Q" : "A"}:${m.text}`,
   );
+
+describe("where a question was asked", () => {
+  it("names a role and a project by the ids the API gave them", () => {
+    const role = mapApiExperienceToUi(
+      { id: 7, company: "Nokia", start: "2020-01-01", end: "", translations: {} } as ApiExperience,
+      "pl",
+    );
+    const project = mapApiProjectToUi(
+      { id: 3, title: "Portfolio", translations: {} } as ApiProject,
+      "pl",
+    );
+    expect(askedFromRole(role)).toEqual({ kind: "experience", id: 7 });
+    expect(askedFromProject(project)).toEqual({ kind: "project", id: 3 });
+  });
+
+  it("goes with the question into its turn and stays with its bubble", () => {
+    const context = askedFromRole({ id: 7 });
+    const state = run({ type: "ask", question: "His contribution?", context });
+    expect(state.active).toEqual({ turn: turnOf(state), question: "His contribution?", context });
+    expect(state.messages.at(-1)).toMatchObject({
+      text: "His contribution?",
+      isUser: true,
+      context,
+    });
+  });
+
+  it("waits in the queue with its question, and a question with none carries none", () => {
+    const first = run({ type: "ask", question: "First" });
+    const context = askedFromProject({ id: 3 });
+    const queued = reduce(
+      first,
+      { type: "ask", question: "About it?", context },
+      { type: "ask", question: "Typed" },
+    );
+    expect(queued.queue).toEqual([{ question: "About it?", context }, { question: "Typed" }]);
+
+    const second = chatReducer(queued, { type: "done", turn: turnOf(first) });
+    expect(second.active?.context).toEqual(context);
+    const third = chatReducer(second, { type: "done", turn: turnOf(second) });
+    expect(third.active).toEqual({ turn: turnOf(third), question: "Typed" });
+  });
+
+  it("is sent again when its question is asked again", () => {
+    const context = askedFromRole({ id: 7 });
+    const asked = run({ type: "ask", question: "Results?", context });
+    const failed = chatReducer(asked, { type: "fail", turn: turnOf(asked), code: "timeout" });
+    expect(chatReducer(failed, { type: "retry" }).active?.context).toEqual(context);
+  });
+});
 
 describe("chatReducer", () => {
   it("shows the question at once and waits for the first word of the reply", () => {
@@ -83,13 +137,13 @@ describe("chatReducer", () => {
       { type: "ask", question: "Third" },
     );
     expect(texts(state)).toEqual(["Q:First", "A:one"]);
-    expect(state.queue).toEqual(["Second", "Third"]);
+    expect(state.queue).toEqual([{ question: "Second" }, { question: "Third" }]);
 
     state = chatReducer(state, { type: "done", turn: first });
     const second = turnOf(state);
     expect(state.active?.question).toBe("Second");
     expect(second).not.toBe(first);
-    expect(state.queue).toEqual(["Third"]);
+    expect(state.queue).toEqual([{ question: "Third" }]);
     expect(texts(state)).toEqual(["Q:First", "A:one", "Q:Second"]);
 
     state = reduce(
@@ -179,7 +233,7 @@ describe("chatReducer", () => {
       // Typing before the history lands, or a question handed over on open.
       const waiting = reduce(initialChatState, { type: "ask", question: "Now" });
       expect(waiting.active).toBeNull();
-      expect(waiting.queue).toEqual(["Now"]);
+      expect(waiting.queue).toEqual([{ question: "Now" }]);
 
       const state = chatReducer(waiting, { type: "hydrated", stored: history });
       expect(texts(state)).toEqual(["Q:Earlier", "A:Answer", "Q:Now"]);

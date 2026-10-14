@@ -4,6 +4,7 @@ import { isThisSite, projectPrimaryHref } from "@/lib/projectLinks";
 import type { UiProject } from "@/lib/projectsService";
 
 const project = (github: string, demo: string): UiProject => ({
+  id: 1,
   title: "Example",
   description: "",
   vexQuestion: "",
@@ -34,6 +35,7 @@ describe("projectPrimaryHref", () => {
 
 describe("isThisSite", () => {
   const project = (demo: string) => ({
+    id: 1,
     title: "Portfolio",
     description: "",
     vexQuestion: "",
