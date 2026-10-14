@@ -97,7 +97,7 @@ class Configuration(TranslatableModel, TimestampedModel):
         system_prompt=models.TextField(
             _("System Prompt"),
             help_text=_(
-                "Vex's persona: its tone and style. Read with the rules in code, which win where they disagree."
+                "Vex's persona: her tone and style. Read with the rules in code, which win where they disagree."
             ),
         ),
         user_prompt=models.TextField(

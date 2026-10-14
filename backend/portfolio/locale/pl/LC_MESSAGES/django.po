@@ -158,7 +158,7 @@ msgstr ""
 
 #: vex/admin.py:74 vex/admin.py:108
 msgid "Text for Vex"
-msgstr "Tekst dla Vexa"
+msgstr "Tekst dla Vex"
 
 #: vex/admin.py:78
 msgid "Has text"
@@ -283,10 +283,10 @@ msgstr "Prompt Systemowy"
 
 #: vex/models.py:98
 msgid ""
-"Vex's persona: its tone and style. Read with the rules in code, which win "
+"Vex's persona: her tone and style. Read with the rules in code, which win "
 "where they disagree."
 msgstr ""
-"Osobowość Vexa: ton i styl. Czytana razem z zasadami w kodzie, które "
+"Osobowość Vex: ton i styl. Czytana razem z zasadami w kodzie, które "
 "wygrywają tam, gdzie się różnią."
 
 #: vex/models.py:102
@@ -379,14 +379,14 @@ msgstr ""
 
 #: work/models.py:99 work/models.py:196
 msgid "Vex question"
-msgstr "Pytanie do Vexa"
+msgstr "Pytanie do Vex"
 
 #: work/models.py:103 work/models.py:200
 msgid ""
 "What the Ask Vex button offers to ask about this item. Leave empty for a "
 "general question."
 msgstr ""
-"Pytanie, które podpowiada przycisk Zapytaj Vexa. Zostaw puste, by użyć "
+"Pytanie, które podpowiada przycisk Zapytaj Vex. Zostaw puste, by użyć "
 "ogólnego."
 
 #: work/models.py:120
@@ -436,7 +436,7 @@ msgstr "Widoczne"
 msgid ""
 "Shown on the site and to Vex. Uncheck to keep the role without showing it."
 msgstr ""
-"Pokazywane na stronie i Vexowi. Odznacz, by zachować rolę bez pokazywania "
+"Pokazywane na stronie i Vex. Odznacz, by zachować rolę bez pokazywania "
 "jej."
 
 #: work/models.py:175

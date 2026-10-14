@@ -109,7 +109,7 @@ Workshop articles are set on a reading scale of their own, larger than the body 
 - Section spacing: 80–96 px on desktop and 48–64 px on mobile.
 - Avoid rigid full-screen sections. Let content determine height and keep the beginning of the project work visible or clearly suggested above the fold.
 - Primary buttons use navy, white text, a 12 px radius, and a minimum height of 44 px. Text links use iris and remain underlined in running text.
-- Keyboard focus uses a visible 2 px iris outline with a 3 px offset.
+- Keyboard focus uses a visible 2 px iris outline with a 3 px offset. Text fields show focus as a 2 px iris edge on the field itself, in place of the offset outline; the caret already marks them.
 - Radius scale: 2 px for motif modules, 12 px for buttons and controls, 20 px for cards and panels. There is no fourth value.
 - Project cards use a white surface, a 20 px radius, and a subtle outline. Motion or elevation should imply interactivity only when the whole card is actionable.
 - A project marked as a phone app (`mobile` in the admin) keeps the same browser frame as every project, so every panel has one footprint: its window is the lavender field, the phone standing in it (a white body with the subtle outline and the card radius, no shadow, round its real capture at phone size in a 12 px screen), cut off at the window's foot like a product shot.
