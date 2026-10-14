@@ -50,7 +50,7 @@ This describes the redesign, which is not deployed yet. The version on dawidhanr
 5. **Experience.** A to-scale timeline of roles at Nokia, PeakData, Xperi and CloudFerro, with achievements and technologies for each. Visitors can ask Vex about each company.
 6. **Research.** Interactive figures with sliders and a play control: heat spreading along a segment over time, a "map of influence" on a cone, a chart of a model's accuracy (the visitor first guesses the training step at which it starts handling new examples, then checks), a clock example, and a wave on a circle that can be shifted. The page also lists published papers.
 7. **Education.** Degrees, plus students' quotes about Dawid's teaching.
-8. **Vex.** A chat on every page. It answers from the site's content, and the reply appears as it is written. It offers starter questions, such as one about the PhD. After 30 seconds of silence it shows an error and suggests email instead.
+8. **Vex.** A chat on every page. She answers from the site's content, and the reply appears as it is written. She offers starter questions, such as one about the PhD. After 30 seconds of silence the chat shows an error and suggests email instead.
 9. **Language.** A PL/EN switch; the browser remembers the choice.
 
 ## Technical description
