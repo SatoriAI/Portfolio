@@ -16,16 +16,10 @@ dependencies = [
     "djangorestframework>=3.16.1",
     "drf-spectacular>=0.28.0",
     "gunicorn>=23.0.0",
-    "langchain>=0.3.27",
-    "langchain-community>=0.3.29",
-    "langchain-openai>=0.3.33",
-    "langchain-text-splitters>=0.3.11",
-    "pdfminer>=20191125",
-    "pdfminer-six>=20250506",
-    "pgvector>=0.4.1",
+    "httpx>=0.28.1",
+    "openai>=2.0.0",
     "psycopg2-binary>=2.9.10",
     "pymupdf>=1.26.4",
-    "pypdf>=6.0.0",
     "whitenoise>=6.9.0",
 ]
 
@@ -151,7 +145,11 @@ django_settings_module = "portfolio.settings"
 ########################################################################################################################
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "portfolio.settings"
-addopts = "portfolio --cov --cov-report term-missing --cov-fail-under=85"
+# The evals call the real model (see vex/tests/evals): only on request, with `-m eval --no-cov`.
+addopts = "portfolio -m 'not eval' --cov --cov-report term-missing --cov-fail-under=85"
+markers = [
+    "eval: Vex's golden set against the real model; costs money, never in CI",
+]
 python_files = "test_*.py"
 python_classes = "*TestCase"
 

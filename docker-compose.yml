@@ -1,11 +1,9 @@
 # Local development for both halves of the repository, plus the database they
 # need.
 #
-# The Postgres image is pgvector's rather than the stock one: Vex keeps its
-# document embeddings in a vector column, and `CREATE EXTENSION vector` fails on
-# a plain postgres image. That extension is the one part of this stack that is
-# genuinely tedious to install by hand, which is why the database lives here
-# instead of on the host.
+# The Postgres image is pgvector's rather than the stock one. Vex no longer
+# uses the extension, but a volume created before that still holds the old
+# embeddings table, whose vector column a plain postgres image cannot read.
 #
 # First run: cp backend/.env.example backend/.env, fill in OPENAI_API_KEY, then
 # `docker compose up`.
@@ -46,6 +44,8 @@ services:
       DEBUG: "True"
       DATABASE_URL: postgresql://portfolio:portfolio@db:5432/portfolio
       USE_S3: "False"
+      # Vex reads the site's Markdown from the frontend container's dev server.
+      VEX_SITE_CONTENT_URL: http://frontend:8080
     depends_on:
       db:
         condition: service_healthy

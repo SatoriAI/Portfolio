@@ -1,18 +1,22 @@
 import json
 from collections.abc import Iterator
+from decimal import Decimal
 from typing import Any
 from unittest.mock import patch
 
 import faker
+from django.conf import settings
 from django.core.cache import cache
 from django.core.signals import request_finished
 from django.test import TestCase, override_settings
 from django.urls import reverse
-from langchain_core.runnables import RunnableGenerator
 
+from vex.ai.knowledge import estimate_tokens
+from vex.ai.provider import ChatMessage
+from vex.ai.provider import Usage as ProviderUsage
 from vex.api.limits import QUESTION_MAX_LENGTH, VexThrottle
-from vex.choices import Roles
-from vex.models import Conversation, Message
+from vex.choices import Outcomes, Roles
+from vex.models import Conversation, Message, Usage
 from vex.tests.factories import MessageFactory
 
 fake = faker.Faker()
@@ -49,16 +53,25 @@ def parse_events(body: str) -> list[tuple[str, Any]]:
     return events
 
 
-class FakeChain:
-    """Stands in for the LangChain pipeline: yields the given chunks, as the model's stream would."""
+class FakeModel:
+    """Stands in for the provider's stream: records what it was sent, then yields the given chunks and reports the
+    usage, as the model's stream would."""
 
     def __init__(self, chunks: list[str]) -> None:
         self.chunks = chunks
-        self.inputs: dict[str, Any] = {}
+        self.messages: list[ChatMessage] = []
+        self.cache_key = ""
 
-    def stream(self, inputs: dict[str, Any]) -> Iterator[str]:
-        self.inputs = inputs
+    def __call__(self, messages: list[ChatMessage], *, cache_key: str, usage: ProviderUsage) -> Iterator[str]:
+        self.messages, self.cache_key = messages, cache_key
         yield from self.chunks
+        usage.input_tokens, usage.cached_tokens, usage.output_tokens = 1000, 900, len(self.chunks)
+        usage.finish_reason, usage.reported = "stop", True
+
+
+STREAM = "vex.ai.provider.stream_completion"
+# The knowledge base reads the database and fetches the site; neither is what these tests are about.
+KNOWLEDGE = "vex.ai.prompt.system_prompt"
 
 
 class ChatStreamViewTestCase(TestCase):
@@ -66,6 +79,9 @@ class ChatStreamViewTestCase(TestCase):
 
     def setUp(self) -> None:
         cache.clear()  # throttle counts live in the cache
+        patcher = patch(KNOWLEDGE, side_effect=lambda locale: f"system prompt in {locale}")
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def post(self, data: object, session: str | None = None, **extra: Any) -> Any:
         headers = {"X-Vex-Session": session} if session else {}
@@ -73,41 +89,71 @@ class ChatStreamViewTestCase(TestCase):
 
     def stream(
         self, chunks: list[str], session: str, locale: str | None = None, **extra: Any
-    ) -> tuple[list[tuple[str, Any]], FakeChain]:
-        chain = FakeChain(chunks)
+    ) -> tuple[list[tuple[str, Any]], FakeModel]:
+        model = FakeModel(chunks)
         data = {"question": "Q"} | ({"locale": locale} if locale else {})
-        with patch("vex.ai.rag.get_rag_chain", return_value=chain):
+        with patch(STREAM, model):
             resp = self.post(data, session, **extra)
             self.assertEqual(resp.status_code, 200)
             self.assertEqual(resp["Content-Type"], "text/event-stream")
             body = b"".join(resp.streaming_content).decode("utf-8")
-        return parse_events(body), chain
+        return parse_events(body), model
 
     def test_every_chunk_arrives_intact(self) -> None:
         events, _ = self.stream([*AWKWARD_CHUNKS, ""], session_key())
         self.assertEqual(events, [*(("delta", {"t": chunk}) for chunk in AWKWARD_CHUNKS), ("done", {})])
 
+    @override_settings(VEX_MODEL="gpt-6-luna", VEX_PRICES={"gpt-6-luna": (0.10, 0.01, 0.50)})
     def test_a_complete_answer_is_saved_after_the_conversation_so_far(self) -> None:
         session = session_key()
         earlier = MessageFactory(conversation__session=session, role=Roles.USER, content="Earlier")
-        _, chain = self.stream(["Hi ", "and\n\n", "there"], session, locale="pl")
-        self.assertEqual(chain.inputs["question"], "Q")
-        self.assertEqual(chain.inputs["locale"], "pl")
-        self.assertEqual([m.content for m in chain.inputs["history"]], ["Earlier"])
+        _, model = self.stream(["Hi ", "and\n\n", "there"], session, locale="pl")
+        self.assertEqual(
+            model.messages,
+            [
+                {"role": "system", "content": "system prompt in pl"},
+                {"role": "user", "content": "Earlier"},
+                {"role": "user", "content": "Q"},
+            ],
+        )
+        self.assertEqual(model.cache_key, "vex-pl")
         saved = Message.objects.filter(conversation__session=session).exclude(pk=earlier.pk).order_by("created_at")
         self.assertEqual(
             [(m.role, m.content) for m in saved], [(Roles.USER, "Q"), (Roles.ASSISTANT, "Hi and\n\nthere")]
         )
+        answer = saved.last()
+        self.assertIsNotNone(answer)
+        self.assertEqual(
+            (answer.model, answer.input_tokens, answer.cached_tokens, answer.output_tokens),
+            (settings.VEX_MODEL, 1000, 900, 3),
+        )
+        self.assertTrue(answer.prompt_version)
+        record = Usage.objects.get(conversation__session=session)
+        self.assertEqual(
+            (record.outcome, record.finish_reason, record.input_tokens, record.cached_tokens, record.estimated),
+            (Outcomes.ANSWERED, "stop", 1000, 900, False),
+        )
+        # 100 fresh input tokens at 0.10 a million, 900 cached at 0.01, 3 output at 0.50
+        self.assertEqual(record.cost, Decimal("0.0000205"))
 
     def test_an_unknown_locale_falls_back_to_the_default(self) -> None:
-        _, chain = self.stream(["x"], session_key(), locale="../../etc")
-        self.assertEqual(chain.inputs["locale"], "en")
+        _, model = self.stream(["x"], session_key(), locale="../../etc")
+        self.assertEqual(model.messages[0]["content"], "system prompt in en")
+
+    def test_an_answer_without_text_is_an_error_and_saves_nothing(self) -> None:
+        session = session_key()
+        with self.assertLogs("vex.api.sse", level="ERROR"):
+            events, _ = self.stream([], session)
+        self.assertEqual(events, [("error", {"code": "unavailable"})])
+        self.assertFalse(Message.objects.filter(conversation__session=session).exists())
+        # The call was billed all the same.
+        self.assertEqual(Usage.objects.get(conversation__session=session).outcome, Outcomes.EMPTY)
 
     def test_a_client_that_leaves_stops_the_generation_and_saves_nothing(self) -> None:
         produced: list[str] = []
         closed: list[bool] = []
 
-        def model(_inputs: Iterator[Any]) -> Iterator[str]:
+        def model(_messages: list[ChatMessage], **_kwargs: Any) -> Iterator[str]:
             try:
                 for token in ("one ", "two ", "three"):
                     produced.append(token)
@@ -117,7 +163,7 @@ class ChatStreamViewTestCase(TestCase):
 
         session = session_key()
         with (
-            patch("vex.ai.rag.get_rag_chain", return_value=RunnableGenerator(model)),
+            patch(STREAM, model),
             self.assertLogs("vex.api.sse", level="WARNING") as logs,
         ):
             resp = self.post({"question": "Q"}, session)
@@ -131,16 +177,20 @@ class ChatStreamViewTestCase(TestCase):
         self.assertEqual(closed, [True])
         self.assertFalse(Message.objects.filter(conversation__session=session).exists())
         self.assertIn("client went away", "\n".join(logs.output))
+        # The provider never reported its counts, so they are estimated: the prompt in, the text that came out.
+        record = Usage.objects.get(conversation__session=session)
+        self.assertEqual((record.outcome, record.estimated), (Outcomes.ABANDONED, True))
+        self.assertEqual(record.input_tokens, estimate_tokens("system prompt in en") + estimate_tokens("Q"))
+        self.assertEqual(record.output_tokens, estimate_tokens("one "))
 
     def test_an_error_sends_only_a_code_and_saves_nothing(self) -> None:
-        class BoomChain:
-            def stream(self, _inputs: dict[str, Any]) -> Iterator[str]:
-                yield "partial"
-                raise RuntimeError("You exceeded your current quota")
+        def boom(_messages: list[ChatMessage], **_kwargs: Any) -> Iterator[str]:
+            yield "partial"
+            raise RuntimeError("You exceeded your current quota")
 
         session = session_key()
         with (
-            patch("vex.ai.rag.get_rag_chain", return_value=BoomChain()),
+            patch(STREAM, boom),
             self.assertLogs("vex.api.sse", level="ERROR") as logs,
         ):
             resp = self.post({"question": "Q"}, session)
@@ -149,6 +199,8 @@ class ChatStreamViewTestCase(TestCase):
         self.assertNotIn("quota", text)
         self.assertIn("quota", "\n".join(logs.output))  # the provider's message goes to the log
         self.assertFalse(Message.objects.filter(conversation__session=session).exists())
+        record = Usage.objects.get(conversation__session=session)
+        self.assertEqual((record.outcome, record.estimated, record.output_tokens), (Outcomes.FAILED, True, 2))
 
     def test_an_answer_that_runs_too_long_is_cut_with_a_timeout(self) -> None:
         with (
@@ -163,47 +215,47 @@ class ChatStreamViewTestCase(TestCase):
         self.assertEqual(resp.status_code, 405)
 
     def test_requires_a_question(self) -> None:
-        with patch("vex.ai.rag.get_rag_chain") as chain:
+        with patch(STREAM) as model:
             for data in ({}, {"question": ""}, {"question": " \n\t "}, {"question": 5}):
                 with self.subTest(data=data):
                     resp = self.post(data, session_key())
                     self.assertEqual(resp.status_code, 400)
                     self.assertEqual(resp.json(), {"code": "invalid_question"})
-        chain.assert_not_called()
+        model.assert_not_called()
 
     def test_rejects_an_overlong_question(self) -> None:
-        with patch("vex.ai.rag.get_rag_chain") as chain:
+        with patch(STREAM) as model:
             resp = self.post({"question": "x" * (QUESTION_MAX_LENGTH + 1)}, session_key())
         self.assertEqual(resp.status_code, 400)
         self.assertEqual(resp.json(), {"code": "question_too_long"})
-        chain.assert_not_called()
+        model.assert_not_called()
 
     def test_requires_a_session_in_the_header(self) -> None:
-        with patch("vex.ai.rag.get_rag_chain") as chain:
+        with patch(STREAM) as model:
             missing = self.post({"question": "Q"})
             in_body = self.post({"question": "Q", "session_key": session_key()})
         self.assertEqual(missing.json(), {"code": "session_required"})
         self.assertEqual(in_body.json(), {"code": "session_required"})
-        chain.assert_not_called()
+        model.assert_not_called()
 
     def test_rejects_a_malformed_session_without_creating_it(self) -> None:
-        with patch("vex.ai.rag.get_rag_chain") as chain:
+        with patch(STREAM) as model:
             resp = self.post({"question": "Q"}, "made-up")
         self.assertEqual(resp.status_code, 400)
         self.assertEqual(resp.json(), {"code": "invalid_session"})
-        chain.assert_not_called()
+        model.assert_not_called()
         self.assertEqual(Conversation.objects.count(), 0)
 
     # REMOTE_ADDR is the visitor, as locally with no proxy; CI runs with DEBUG off, where the header is required.
     @override_settings(TRUSTED_CLIENT_IP_HEADER="")
     def test_is_rate_limited_per_ip_with_a_readable_wait(self) -> None:
         with patch.dict(VexThrottle.THROTTLE_RATES, {"vex_stream": "1/min"}):
-            _, chain = self.stream(["x"], session_key())
+            _, model = self.stream(["x"], session_key())
             resp = self.post({"question": "Q"}, session_key())
         self.assertEqual(resp.status_code, 429)
         self.assertEqual(resp.json(), {"code": "rate_limited"})
         self.assertTrue(0 < int(resp["Retry-After"]) <= 60)
-        self.assertTrue(chain.inputs)
+        self.assertTrue(model.messages)
 
     def test_is_rate_limited_per_session_across_ips(self) -> None:
         session = session_key()

@@ -47,7 +47,7 @@ class VexModelsTestCase(TestCase):
         self.assertIsNone(doc.description)
         self.assertIsNone(doc.url)
         self.assertFalse(bool(doc.file))
-        self.assertFalse(doc.injected)
+        self.assertEqual(doc.content, "")
         self.assertIn("Document:", str(doc))
 
     def test_document_optional_fields(self) -> None:
@@ -55,10 +55,3 @@ class VexModelsTestCase(TestCase):
         self.assertEqual(Document.objects.count(), 1)
         self.assertEqual(doc.description, "Math paper")
         self.assertEqual(doc.url, "https://example.com/p.pdf")
-
-    def test_document_mark_as_injected(self) -> None:
-        doc = Document.objects.create(title="Guide")
-        self.assertFalse(doc.injected)
-        doc.mark_as_injected()
-        doc.refresh_from_db()
-        self.assertTrue(doc.injected)

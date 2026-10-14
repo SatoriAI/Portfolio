@@ -32,7 +32,6 @@ class DocumentFactory(DjangoModelFactory):
     title = factory.Faker("sentence", nb_words=3)
     description = factory.Faker("paragraph")
     url = factory.Faker("url")
-    injected = False
 
 
 class ConfigurationFactory(DjangoModelFactory, i18nMixin):
@@ -40,10 +39,7 @@ class ConfigurationFactory(DjangoModelFactory, i18nMixin):
         model = Configuration
         skip_postgeneration_save = True
 
-    model = "gpt-4o-mini"
-    temperature = 0.5
-
     # Translated fields (current language)
     title = factory.Faker("sentence", nb_words=3)
     system_prompt = factory.Faker("sentence", nb_words=3)
-    user_prompt = factory.LazyFunction(lambda: "Question: {question}\nContext: {context}")
+    user_prompt = factory.Faker("sentence", nb_words=3)

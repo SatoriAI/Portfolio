@@ -19,14 +19,18 @@ Three domain apps plus shared helpers, all under `portfolio/`:
 | --- | --- |
 | `work/` | Skills, projects, professional experience |
 | `university/` | Schools, publications, testimonials |
-| `vex/` | The RAG assistant: conversations, documents, prompt configuration |
+| `vex/` | The assistant: conversations, documents, persona configuration |
 | `utils/` | Shared model mixins and DRF helpers |
 
 Every user-facing model is translatable (English and Polish) through `django-parler`, so localisation lives in the database rather than in the frontend.
 
 ### Vex
 
-Documents uploaded in the admin are chunked and embedded into a pgvector collection by the `inject_documents` admin action. At query time [`vex/ai/rag.py`](portfolio/vex/ai/rag.py) merges locale-filtered vector hits with structured context read straight from the portfolio tables, feeds both into a prompt whose model, temperature and wording are editable in the admin, and streams the answer over SSE from `/api/vex/chat/stream/`.
+Everything Vex knows fits in its prompt, so nothing is retrieved. [`vex/ai/knowledge.py`](portfolio/vex/ai/knowledge.py) assembles one text per language from the documents uploaded in the admin (their extracted text, editable there), the site's Markdown (project write-ups and workshop pieces, which the frontend's build publishes as `/vex-kb/<pl|en>.json` and the backend fetches from `VEX_SITE_CONTENT_URL`), and the portfolio tables. [`vex/ai/prompt.py`](portfolio/vex/ai/prompt.py) puts the rules (versioned in code), the persona edited in the admin and that text into one system message, identical from question to question so OpenAI's prompt cache serves it, and [`vex/ai/provider.py`](portfolio/vex/ai/provider.py) streams the answer from OpenAI, which `/api/vex/chat/stream/` relays over SSE.
+
+`python portfolio/manage.py vex_kb --locale pl` shows what Vex knows (sources and their size); `--dump` prints the whole system prompt. The model and its reasoning effort come from `VEX_MODEL` and `VEX_REASONING_EFFORT`.
+
+`vex/tests/evals/` holds a golden set of questions in both languages, run against the real model with `uv run pytest -m eval --no-cov portfolio/vex/tests/evals` (it needs the real content in `DATABASE_URL`, a reachable `VEX_SITE_CONTENT_URL` and a key with credit). It is never part of the default run or CI.
 
 `tools/chat-tester/` is a static page for poking that stream by hand; open it in a browser, no build step.
 
@@ -48,12 +52,11 @@ cd backend && uv run python portfolio/manage.py runserver
 
 ## Configuration
 
-Copy `.env.example` to `.env` and fill it in. `SECRET_KEY`, `DATABASE_URL`, `VECTOR_DB_COLLECTION` and `OPENAI_API_KEY` have no defaults and Django will not start without them — including `OPENAI_API_KEY`, which only Vex actually uses.
-
-The database must have the `vector` extension available — `docker compose up` from the repository root provides one; a stock Postgres will not do.
+Copy `.env.example` to `.env` and fill it in. `SECRET_KEY`, `DATABASE_URL` and `OPENAI_API_KEY` have no defaults and Django will not start without them — including `OPENAI_API_KEY`, which only Vex actually uses.
 
 ## Limitations
 
+- Without `VEX_SITE_CONTENT_URL` (or with the site unreachable) Vex still answers, from the database and the documents alone; `manage.py vex_kb` says which.
 - Vex needs a key with credit on it. Without one the stream opens and then returns an error event: `401` for a bad key, `429 insufficient_quota` for an empty balance. Nothing else on the site depends on it.
 - A fresh database is empty. There is no seed fixture, so content is added through the admin.
 - With `USE_S3` on, every `BUCKET_*` variable becomes required; media has no local fallback in that mode.

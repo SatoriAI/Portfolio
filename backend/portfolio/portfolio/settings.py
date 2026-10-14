@@ -14,6 +14,7 @@ from pathlib import Path
 
 import environ
 from corsheaders.defaults import default_headers
+from django.core.exceptions import ImproperlyConfigured
 
 # Environment
 env = environ.Env()
@@ -118,12 +119,6 @@ DATABASES = {
     "default": env.db(),
 }
 DATABASE_URL = env("DATABASE_URL")
-
-# Vector Database
-VECTOR_DB_COLLECTION = env("VECTOR_DB_COLLECTION")
-VECTOR_TEXT_EMBEDDING_MODEL = env("VECTOR_TEXT_EMBEDDING_MODEL", default="text-embedding-3-small")
-VECTOR_USE_JSONB = env.bool("USE_JSONB", default=True)
-VECTOR_RETRIEVE_K = env.int("RETRIEVE_K", default=6)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -245,6 +240,38 @@ TRUSTED_CLIENT_IP_HEADER = env("TRUSTED_CLIENT_IP_HEADER", default="" if DEBUG e
 # Own Variables
 OPENAI_API_KEY = env("OPENAI_API_KEY")
 
-# RAG Debugging
-RAG_DUMP_CONTEXTS = env.bool("RAG_DUMP_CONTEXTS", default=DEBUG)
-RAG_CONTEXT_DUMP_DIR = env("RAG_CONTEXT_DUMP_DIR", default=str(BASE_DIR / "media" / "rag_contexts"))
+# Vex. The model and its reasoning effort are read per request, so switching (say, to gpt-6.1-sol, which does not
+# take the effort "none") is an environment change on Railway, not a code change.
+VEX_MODEL = env("VEX_MODEL", default="gpt-6-luna")
+VEX_REASONING_EFFORT = env("VEX_REASONING_EFFORT", default="low")
+if VEX_REASONING_EFFORT not in ("none", "minimal", "low", "medium", "high", "xhigh", "max"):
+    raise ImproperlyConfigured(
+        f"VEX_REASONING_EFFORT={VEX_REASONING_EFFORT!r}: use none, minimal, low, medium, high, xhigh or max."
+    )
+# The cap on one answer, reasoning included: a long answer is cut here rather than billed. An answer that reaches it
+# is logged (finish_reason "length"), so a cap that cuts real answers shows.
+VEX_MAX_OUTPUT_TOKENS = env.int("VEX_MAX_OUTPUT_TOKENS", default=1200)
+# Each model's price in dollars per million tokens (input, cached input, output; reasoning is billed as output), for
+# the cost of every call Vex makes (vex.models.Usage). A model missing here is recorded without a cost: add its
+# price before switching VEX_MODEL to it.
+VEX_PRICES: dict[str, tuple[float, float, float]] = {
+    "gpt-6-luna": (0.10, 0.01, 0.50),
+}
+# Where the site publishes its Markdown for Vex (/vex-kb/<locale>.json, emitted by the frontend's build). Empty means
+# Vex answers from the database alone. Locally the Vite dev server answers the same path.
+VEX_SITE_CONTENT_URL = env("VEX_SITE_CONTENT_URL", default="http://localhost:8080" if DEBUG else "")
+# The address Vex offers when it does not know; the one the site's contact section shows.
+VEX_CONTACT_EMAIL = env("VEX_CONTACT_EMAIL", default="dawidhanrahan@gmail.com")
+
+# Logs to stdout, which is what Railway keeps: Vex's own INFO lines (one per answer, with its tokens and timings) and
+# Django's warnings and errors. Without this, Vex's INFO lines are dropped and Django's errors go only to email.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"plain": {"format": "%(levelname)s %(name)s: %(message)s"}},
+    "handlers": {"stdout": {"class": "logging.StreamHandler", "stream": "ext://sys.stdout", "formatter": "plain"}},
+    "loggers": {
+        "vex": {"handlers": ["stdout"], "level": "INFO", "propagate": False},
+        "django": {"handlers": ["stdout"], "level": "WARNING", "propagate": False},
+    },
+}
