@@ -5,7 +5,8 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from vex.api.limits import QUESTION_MAX_LENGTH, VexThrottle, warn_missing_ip_header
-from vex.models import Conversation
+from vex.choices import Feedback, Roles
+from vex.models import Conversation, Message
 from vex.tests.factories import ConversationFactory, MessageFactory
 from vex.utils.cache import cache
 
@@ -209,3 +210,89 @@ class ClientIpTestCase(TestCase):
             first = self.client.post(self.url, data=data)
             again = self.client.post(self.url, data=data)
         self.assertEqual([first.status_code, again.status_code], [200, 429])
+
+
+class MessageFeedbackViewTestCase(TestCase):
+    def setUp(self) -> None:
+        cache.clear()
+        self.answer = MessageFactory(role=Roles.ASSISTANT)
+        self.session = self.answer.conversation.session
+
+    def rate(self, message: Message, body: object, session: str | None = None, **extra):
+        url = reverse("vex:feedback", kwargs={"pk": message.pk})
+        session = self.session if session is None else session
+        headers = {"X-Vex-Session": session} if session else {}
+        return self.client.post(url, data=body, content_type="application/json", headers=headers, **extra)
+
+    def stored(self) -> str:
+        self.answer.refresh_from_db()
+        return self.answer.feedback
+
+    def test_rates_an_answer_changes_it_and_takes_it_back(self) -> None:
+        for value, stored in (("up", Feedback.UP), ("down", Feedback.DOWN), (None, "")):
+            with self.subTest(value=value):
+                resp = self.rate(self.answer, {"value": value})
+                self.assertEqual(resp.status_code, 200)
+                self.assertEqual(resp.json(), {"id": self.answer.pk, "feedback": value})
+                self.assertEqual(self.stored(), stored)
+
+    def test_the_history_carries_the_rating(self) -> None:
+        unrated = MessageFactory(conversation=self.answer.conversation, role=Roles.ASSISTANT)
+        self.rate(self.answer, {"value": "down"})
+        resp = self.client.get(reverse("vex:messages"), headers={"X-Vex-Session": self.session})
+        ratings = {item["id"]: item["feedback"] for item in resp.json()}
+        self.assertEqual(ratings, {self.answer.pk: "down", unrated.pk: None})
+
+    def test_another_conversation_cannot_rate_it(self) -> None:
+        other = ConversationFactory()
+        resp = self.rate(self.answer, {"value": "up"}, session=other.session)
+        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(self.stored(), "")
+
+    def test_only_answers_can_be_rated(self) -> None:
+        question = MessageFactory(conversation=self.answer.conversation, role=Roles.USER)
+        self.assertEqual(self.rate(question, {"value": "up"}).status_code, 404)
+        question.refresh_from_db()
+        self.assertEqual(question.feedback, "")
+
+    def test_an_unknown_message_is_not_found(self) -> None:
+        missing = Message(pk=self.answer.pk + 1000)
+        self.assertEqual(self.rate(missing, {"value": "up"}).status_code, 404)
+
+    def test_requires_a_well_formed_session(self) -> None:
+        for session, code in (("", "session_required"), ("not a session key", "invalid_session")):
+            with self.subTest(session=session):
+                resp = self.rate(self.answer, {"value": "up"}, session=session)
+                self.assertEqual(resp.status_code, 400)
+                self.assertEqual(resp.json(), {"code": code})
+        self.assertEqual(self.stored(), "")
+
+    def test_rejects_anything_but_up_down_or_null(self) -> None:
+        for body in ({"value": "sideways"}, {"value": 1}, {"value": ["up"]}, {}, ["up"], '"up"'):
+            with self.subTest(body=body):
+                resp = self.rate(self.answer, body)
+                self.assertEqual(resp.status_code, 400)
+                self.assertEqual(resp.json(), {"code": "invalid_feedback"})
+        self.assertEqual(self.stored(), "")
+
+    def test_only_post_is_allowed(self) -> None:
+        url = reverse("vex:feedback", kwargs={"pk": self.answer.pk})
+        self.assertEqual(self.client.get(url, headers={"X-Vex-Session": self.session}).status_code, 405)
+
+    # REMOTE_ADDR is the visitor, as locally with no proxy; CI runs with DEBUG off, where the header is required.
+    @override_settings(TRUSTED_CLIENT_IP_HEADER="")
+    def test_is_rate_limited_per_ip(self) -> None:
+        with patch.dict(VexThrottle.THROTTLE_RATES, {"vex_feedback": "2/min"}):
+            for _ in range(2):
+                self.assertEqual(self.rate(self.answer, {"value": "up"}).status_code, 200)
+            resp = self.rate(self.answer, {"value": "down"})
+        self.assertEqual(resp.status_code, 429)
+        self.assertEqual(resp.json(), {"code": "rate_limited"})
+        self.assertEqual(self.stored(), Feedback.UP)
+
+    def test_is_rate_limited_per_session_across_ips(self) -> None:
+        with patch.dict(VexThrottle.THROTTLE_RATES, {"vex_feedback_session": "2/min"}):
+            for ip in ("10.0.0.1", "10.0.0.2"):
+                self.assertEqual(self.rate(self.answer, {"value": "up"}, REMOTE_ADDR=ip).status_code, 200)
+            resp = self.rate(self.answer, {"value": "up"}, REMOTE_ADDR="10.0.0.3")
+        self.assertEqual(resp.status_code, 429)

@@ -44,6 +44,15 @@ export function vexRequestErrorCode(err: unknown): VexErrorCode {
   return codeIn(err.body) ?? "unavailable";
 }
 
+// A rate limit that does not say how long to wait lasts a minute at most.
+const RATE_LIMIT_DEFAULT_WAIT_SECONDS = 60;
+
+/** For a rate-limited request: how long the server asked to wait before asking again, in ms. */
+export function vexRetryAfterMs(err: unknown): number {
+  const wait = err instanceof ApiError ? Number(err.headers.get("Retry-After")) : NaN;
+  return (wait > 0 ? wait : RATE_LIMIT_DEFAULT_WAIT_SECONDS) * 1000;
+}
+
 /** The `error` event that ends a stream: the backend's code, never the provider's words. */
 export function vexStreamErrorCode(data: string): VexErrorCode {
   return codeIn(data) ?? "unavailable";

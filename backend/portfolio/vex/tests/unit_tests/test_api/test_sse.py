@@ -100,8 +100,22 @@ class ChatStreamViewTestCase(TestCase):
         return parse_events(body), model
 
     def test_every_chunk_arrives_intact(self) -> None:
-        events, _ = self.stream([*AWKWARD_CHUNKS, ""], session_key())
-        self.assertEqual(events, [*(("delta", {"t": chunk}) for chunk in AWKWARD_CHUNKS), ("done", {})])
+        session = session_key()
+        events, _ = self.stream([*AWKWARD_CHUNKS, ""], session)
+        answer = Message.objects.get(conversation__session=session, role=Roles.ASSISTANT)
+        self.assertEqual(
+            events,
+            [*(("delta", {"t": chunk}) for chunk in AWKWARD_CHUNKS), ("done", {"message_id": answer.pk})],
+        )
+
+    def test_done_names_the_saved_answer_so_it_can_be_rated(self) -> None:
+        session = session_key()
+        MessageFactory(conversation__session=session, role=Roles.ASSISTANT, content="Earlier")
+        events, _ = self.stream(["Hi"], session)
+        name, payload = events[-1]
+        latest = Message.objects.filter(conversation__session=session).latest("created_at", "pk")
+        self.assertEqual((name, payload), ("done", {"message_id": latest.pk}))
+        self.assertEqual((latest.role, latest.content), (Roles.ASSISTANT, "Hi"))
 
     @override_settings(VEX_MODEL="gpt-6-luna", VEX_PRICES={"gpt-6-luna": (0.10, 0.01, 0.50)})
     def test_a_complete_answer_is_saved_after_the_conversation_so_far(self) -> None:

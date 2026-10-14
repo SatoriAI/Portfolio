@@ -50,8 +50,9 @@ class MessageHistoryTestCase(TestCase):
     def test_add_exchange_saves_the_question_and_the_answer_with_its_cost(self) -> None:
         history = MessageHistory(session_key())
         usage = Usage(input_tokens=40000, cached_tokens=39000, output_tokens=120, reasoning_tokens=20)
-        history.add_exchange("Hi", "Hello", usage=usage, prompt_version="v1")
+        saved = history.add_exchange("Hi", "Hello", usage=usage, prompt_version="v1")
         question, answer = history.conversation.messages.order_by("created_at", "pk")
+        self.assertEqual(saved, answer)
         self.assertEqual((question.role, question.content, question.model), (Roles.USER, "Hi", ""))
         self.assertIsNone(question.input_tokens)
         self.assertEqual(

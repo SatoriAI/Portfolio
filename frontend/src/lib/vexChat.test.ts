@@ -6,6 +6,7 @@ import {
   type ChatState,
   initialChatState,
   isWaiting,
+  retryableQuestion,
   type StoredMessage,
 } from "./vexChat";
 
@@ -31,7 +32,13 @@ const turnOf = (state: ChatState): number => {
 
 const texts = (state: ChatState) =>
   state.messages.map((m) =>
-    m.error ? `!${m.error}` : m.noAnswer ? "!no_answer" : `${m.isUser ? "Q" : "A"}:${m.text}`,
+    m.error
+      ? `!${m.error}`
+      : m.noAnswer
+        ? "!no_answer"
+        : m.stopped
+          ? `stopped:${m.text}`
+          : `${m.isUser ? "Q" : "A"}:${m.text}`,
   );
 
 describe("chatReducer", () => {
@@ -118,7 +125,7 @@ describe("chatReducer", () => {
       asked,
       { type: "delta", turn, text: "par" },
       { type: "ask", question: "Second" },
-      { type: "stop" },
+      { type: "close" },
     );
     expect(stopped.active).toBeNull();
     expect(stopped.queue).toEqual([]);
@@ -132,7 +139,7 @@ describe("chatReducer", () => {
     const old = turnOf(first);
     const second = reduce(
       first,
-      { type: "stop" },
+      { type: "close" },
       { type: "hydrated", stored: null },
       {
         type: "ask",
@@ -188,7 +195,7 @@ describe("chatReducer", () => {
         first,
         { type: "delta", turn, text: "1" },
         { type: "done", turn },
-        { type: "stop" },
+        { type: "close" },
       );
       const reopened = chatReducer(closed, { type: "ask", question: "Two" });
       expect(reopened.active).toBeNull();
@@ -222,12 +229,246 @@ describe("chatReducer", () => {
         asked,
         { type: "fail", turn: turnOf(asked), code: "unavailable" },
         {
-          type: "stop",
+          type: "close",
         },
       );
       const state = chatReducer(failed, { type: "hydrated", stored: null });
       expect(texts(state)).toEqual(["Q:Hi", "!unavailable"]);
       expect(state.hydrated).toBe(true);
     });
+  });
+});
+
+describe("stopping a reply", () => {
+  it("keeps the text that arrived, marked, and ends the turn", () => {
+    const asked = run({ type: "ask", question: "Hi" });
+    const turn = turnOf(asked);
+    const state = reduce(asked, { type: "delta", turn, text: "Hel" }, { type: "stop" });
+    expect(texts(state)).toEqual(["Q:Hi", "stopped:Hel"]);
+    expect(state.active).toBeNull();
+    expect(state.replyId).toBeNull();
+    expect(state.finishedId).toBe(state.messages[1].id);
+    // The stream's late words and its end belong to a turn that is over.
+    expect(chatReducer(state, { type: "delta", turn, text: "lo" })).toBe(state);
+    expect(chatReducer(state, { type: "done", turn, messageId: 7 })).toBe(state);
+  });
+
+  it("leaves the mark alone when no text had arrived, and drops the queue", () => {
+    const asked = run({ type: "ask", question: "Hi" }, { type: "ask", question: "Next" });
+    const state = chatReducer(asked, { type: "stop" });
+    expect(texts(state)).toEqual(["Q:Hi", "stopped:"]);
+    expect(state.queue).toEqual([]);
+    expect(isWaiting(state)).toBe(false);
+  });
+
+  it("does nothing with no reply in flight", () => {
+    const idle = run();
+    expect(chatReducer(idle, { type: "stop" })).toBe(idle);
+  });
+});
+
+describe("asking again", () => {
+  const answered = (state: ChatState, text: string, messageId?: number) => {
+    const turn = turnOf(state);
+    return reduce(state, { type: "delta", turn, text }, { type: "done", turn, messageId });
+  };
+
+  it("replaces a stopped reply with a new answer to the same question, without a second question", () => {
+    const asked = run({ type: "ask", question: "Hi" });
+    const stopped = reduce(
+      asked,
+      { type: "delta", turn: turnOf(asked), text: "Hel" },
+      { type: "stop" },
+    );
+    expect(retryableQuestion(stopped)).toBe("Hi");
+    const retried = chatReducer(stopped, { type: "retry" });
+    expect(texts(retried)).toEqual(["Q:Hi"]);
+    expect(retried.active?.question).toBe("Hi");
+    expect(retried.active?.turn).not.toBe(asked.active?.turn);
+    expect(texts(answered(retried, "Hello"))).toEqual(["Q:Hi", "A:Hello"]);
+  });
+
+  it("asks again after a failure that asking again could mend, and after no answer", () => {
+    for (const code of ["timeout", "unavailable", "rate_limited"] as const) {
+      const asked = run({ type: "ask", question: "Hi" });
+      const failed = chatReducer(asked, { type: "fail", turn: turnOf(asked), code });
+      expect(texts(chatReducer(failed, { type: "retry" }))).toEqual(["Q:Hi"]);
+    }
+    const asked = run({ type: "ask", question: "Hi" });
+    const empty = chatReducer(asked, { type: "done", turn: turnOf(asked) });
+    expect(chatReducer(empty, { type: "retry" }).active?.question).toBe("Hi");
+  });
+
+  it("clears away the part of a reply that arrived before it failed", () => {
+    const asked = run({ type: "ask", question: "Hi" });
+    const turn = turnOf(asked);
+    const failed = reduce(
+      asked,
+      { type: "delta", turn, text: "Hal" },
+      { type: "fail", turn, code: "unavailable" },
+    );
+    expect(texts(failed)).toEqual(["Q:Hi", "A:Hal", "!unavailable"]);
+    expect(failed.messages[1].incomplete).toBe(true);
+    const retried = chatReducer(failed, { type: "retry" });
+    expect(texts(retried)).toEqual(["Q:Hi"]);
+    expect(texts(answered(retried, "Hello"))).toEqual(["Q:Hi", "A:Hello"]);
+  });
+
+  it("does not offer it where the same question would only fail again", () => {
+    for (const code of [
+      "question_too_long",
+      "daily_limit",
+      "resting",
+      "invalid_session",
+    ] as const) {
+      const asked = run({ type: "ask", question: "Hi" });
+      const failed = chatReducer(asked, { type: "fail", turn: turnOf(asked), code });
+      expect(retryableQuestion(failed)).toBeNull();
+      expect(chatReducer(failed, { type: "retry" })).toBe(failed);
+    }
+  });
+
+  it("does not offer it for a finished reply, during a turn, or before the history loads", () => {
+    const done = answered(run({ type: "ask", question: "Hi" }), "Hello");
+    expect(retryableQuestion(done)).toBeNull();
+
+    const stopped = chatReducer(run({ type: "ask", question: "Hi" }), { type: "stop" });
+    const busy = chatReducer(stopped, { type: "ask", question: "Other" });
+    expect(retryableQuestion(busy)).toBeNull();
+    expect(chatReducer(busy, { type: "retry" })).toBe(busy);
+
+    // Closed and reopened: the history is on its way and will replace the screen.
+    const reopened = chatReducer(stopped, { type: "close" });
+    expect(retryableQuestion(reopened)).toBeNull();
+    expect(chatReducer(reopened, { type: "retry" })).toBe(reopened);
+  });
+
+  it("keeps when a rate limit may pass on its notice", () => {
+    const asked = run({ type: "ask", question: "Hi" });
+    const failed = chatReducer(asked, {
+      type: "fail",
+      turn: turnOf(asked),
+      code: "rate_limited",
+      retryAt: 1_000,
+    });
+    expect(failed.messages[1].retryAt).toBe(1_000);
+    const other = chatReducer(asked, { type: "fail", turn: turnOf(asked), code: "timeout" });
+    expect("retryAt" in other.messages[1]).toBe(false);
+  });
+
+  it("offers it only on the last reply", () => {
+    const stopped = chatReducer(run({ type: "ask", question: "One" }), { type: "stop" });
+    const later = answered(chatReducer(stopped, { type: "ask", question: "Two" }), "2");
+    expect(retryableQuestion(later)).toBeNull();
+  });
+});
+
+describe("rating a reply", () => {
+  const saved = () => {
+    const asked = run({ type: "ask", question: "Hi" });
+    const turn = turnOf(asked);
+    return reduce(
+      asked,
+      { type: "delta", turn, text: "Hello" },
+      { type: "done", turn, messageId: 42 },
+    );
+  };
+
+  it("names the saved answer from done, unrated", () => {
+    const reply = saved().messages[1];
+    expect(reply.serverId).toBe(42);
+    expect(reply.feedback).toBeNull();
+  });
+
+  it("leaves a reply without an id when the server sent none", () => {
+    const asked = run({ type: "ask", question: "Hi" });
+    const turn = turnOf(asked);
+    const state = reduce(asked, { type: "delta", turn, text: "x" }, { type: "done", turn });
+    expect(state.messages[1].serverId).toBeUndefined();
+  });
+
+  it("sets, changes and takes back a rating", () => {
+    const state = saved();
+    const id = state.messages[1].id;
+    const up = chatReducer(state, { type: "rate", id, feedback: "up" });
+    expect(up.messages[1].feedback).toBe("up");
+    const down = chatReducer(up, { type: "rate", id, feedback: "down" });
+    expect(down.messages[1].feedback).toBe("down");
+    expect(chatReducer(down, { type: "rate", id, feedback: null }).messages[1].feedback).toBeNull();
+  });
+
+  it("loads the ratings and ids with the history", () => {
+    const state = run({
+      type: "hydrated",
+      stored: [
+        { id: 5, role: "user", content: "Q", created_at: "2026-01-01T00:00:00Z" },
+        {
+          id: 6,
+          role: "assistant",
+          content: "A",
+          created_at: "2026-01-01T00:00:01Z",
+          feedback: "down",
+        },
+        { id: 7, role: "assistant", content: "B", created_at: "2026-01-01T00:00:02Z" },
+      ],
+    });
+    expect(state.messages.map((m) => [m.serverId, m.feedback])).toEqual([
+      [undefined, undefined],
+      [6, "down"],
+      [7, null],
+    ]);
+  });
+});
+
+describe("re-reading the history after a stop", () => {
+  const history = (answer: string): StoredMessage[] => [
+    { id: 1, role: "user", content: "Earlier", created_at: "2026-01-01T00:00:00Z" },
+    { id: 2, role: "assistant", content: "Before", created_at: "2026-01-01T00:00:01Z" },
+    { id: 3, role: "user", content: "Hi", created_at: "2026-01-01T00:00:02Z" },
+    { id: 4, role: "assistant", content: answer, created_at: "2026-01-01T00:00:03Z" },
+  ];
+  const stoppedAfter = (...before: ChatAction[]) => {
+    const asked = run(...before, { type: "ask", question: "Hi" });
+    return reduce(
+      asked,
+      { type: "delta", turn: turnOf(asked), text: "Hello wor" },
+      { type: "stop" },
+    );
+  };
+
+  it("puts back an answer the server saved before the stop reached it", () => {
+    const stopped = stoppedAfter();
+    const synced = chatReducer(stopped, { type: "synced", stored: history("Hello world.") });
+    expect(texts(synced)).toEqual(["Q:Hi", "A:Hello world."]);
+    expect(synced.messages[1]).toMatchObject({ serverId: 4, feedback: null });
+    expect(synced.finishedId).toBe(synced.messages[1].id);
+    // Nothing left to ask again: the question was answered.
+    expect(retryableQuestion(synced)).toBeNull();
+  });
+
+  it("keeps the stopped reply when the server saved nothing of it", () => {
+    const stopped = stoppedAfter();
+    const unsaved = history("Before").slice(0, 2);
+    expect(chatReducer(stopped, { type: "synced", stored: unsaved })).toBe(stopped);
+    expect(chatReducer(stopped, { type: "synced", stored: [] })).toBe(stopped);
+  });
+
+  it("changes nothing once the conversation has moved on", () => {
+    const stopped = stoppedAfter();
+    const asking = chatReducer(stopped, { type: "ask", question: "Next" });
+    expect(chatReducer(asking, { type: "synced", stored: history("Hello world.") })).toBe(asking);
+    const retried = chatReducer(stopped, { type: "retry" });
+    expect(chatReducer(retried, { type: "synced", stored: history("Hello world.") })).toBe(retried);
+  });
+
+  it("leaves an answer already on screen alone", () => {
+    const asked = run({ type: "ask", question: "Hi" });
+    const turn = turnOf(asked);
+    const done = reduce(
+      asked,
+      { type: "delta", turn, text: "Hello world." },
+      { type: "done", turn, messageId: 4 },
+    );
+    expect(chatReducer(done, { type: "synced", stored: history("Hello world.") })).toBe(done);
   });
 });

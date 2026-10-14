@@ -213,7 +213,7 @@ class SpendTestCase(TestCase):
                 resp = self.client.post(
                     url, {"question": "Q"}, content_type="application/json", headers={SESSION_HEADER: session_key()}
                 )
-                self.assertEqual(parse_events(b"".join(resp.streaming_content).decode())[-1], ("done", {}))
+                self.assertEqual(parse_events(b"".join(resp.streaming_content).decode())[-1][0], "done")
         self.assertEqual(connect.call_count, 1)
         self.assertEqual(len(logs.output), 1)
 

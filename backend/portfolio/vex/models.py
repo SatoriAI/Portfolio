@@ -5,7 +5,7 @@ from parler.managers import TranslatableManager
 from parler.models import TranslatableModel, TranslatedFields
 
 from utils.models import TimestampedModel
-from vex.choices import Outcomes, Roles
+from vex.choices import Feedback, Outcomes, Roles
 
 
 class Conversation(TimestampedModel):
@@ -31,6 +31,8 @@ class Message(TimestampedModel):
     input_tokens = models.PositiveIntegerField(_("Input tokens"), null=True, blank=True)
     cached_tokens = models.PositiveIntegerField(_("Cached input tokens"), null=True, blank=True)
     output_tokens = models.PositiveIntegerField(_("Output tokens"), null=True, blank=True)
+    # The visitor's thumbs up or down on an answer, empty until rated (or once the rating is taken back).
+    feedback = models.CharField(_("Feedback"), choices=Feedback, max_length=4, blank=True, db_default="")
 
     class Meta:
         verbose_name = _("Message")
