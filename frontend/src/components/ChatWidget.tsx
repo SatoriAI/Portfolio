@@ -681,7 +681,7 @@ const ChatWidget = ({
                 aria-label={t.chat.inputLabel}
                 maxLength={VEX_QUESTION_MAX_LENGTH}
                 rows={1}
-                className={`max-h-40 w-full resize-none break-all border-0 bg-transparent p-0 leading-6 text-foreground shadow-none outline-none ring-0 ring-offset-0 placeholder:text-muted-foreground focus:shadow-none focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${!isMultilineInput ? "pr-12" : ""}`}
+                className={`max-h-40 w-full resize-none break-all border-0 bg-transparent p-0 leading-6 text-foreground shadow-none outline-none ring-0 ring-offset-0 placeholder:text-muted-foreground focus:shadow-none focus:outline-none focus:placeholder:text-transparent focus-visible:ring-0 focus-visible:ring-offset-0 ${!isMultilineInput ? "pr-12" : ""}`}
                 // Read-only rather than disabled while a reply streams: a
                 // disabled field drops the focus to the page.
                 readOnly={isStreaming}
