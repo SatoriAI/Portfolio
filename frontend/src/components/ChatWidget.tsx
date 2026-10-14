@@ -118,6 +118,10 @@ class MarkdownBoundary extends React.Component<MarkdownBoundaryProps, { hasError
   }
 }
 
+// A reply cut off at the limit usually ends mid-sentence; an ellipsis first
+// marks the break and keeps the notice its own sentence when read aloud.
+const cutShortNotice = (notice: string) => `… ${notice}.`;
+
 const ChatWidget = ({
   isOpen,
   onClose,
@@ -473,7 +477,7 @@ const ChatWidget = ({
       ? t.chat.noAnswer
       : finished.stopped
         ? t.chat.stopped
-        : `${t.chat.replied} ${markdownToPlainText(finished.text)}${finished.truncated ? ` ${t.chat.truncated}.` : ""}`;
+        : `${t.chat.replied} ${markdownToPlainText(finished.text)}${finished.truncated ? cutShortNotice(t.chat.truncated) : ""}`;
 
   const lengthId = useId();
   const showLength = pasteCut || inputValue.length >= LENGTH_COUNTER_FROM;
