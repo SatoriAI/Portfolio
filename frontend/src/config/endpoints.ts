@@ -32,6 +32,7 @@ export const endpoints = {
     },
     messages: {
       list: "/api/vex/messages/",
+      feedback: (id: number) => `/api/vex/messages/${id}/feedback/`,
     },
   },
 } as const;

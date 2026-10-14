@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import { ApiError } from "./apiClient";
-import { vexRequestErrorCode, vexStreamErrorCode } from "./vexErrors";
+import { vexRequestErrorCode, vexRetryAfterMs, vexStreamErrorCode } from "./vexErrors";
+
+describe("vexRetryAfterMs", () => {
+  it("reads the wait a rate limit asks for, a minute when it names none", () => {
+    const throttled = (headers?: HeadersInit) =>
+      new ApiError(429, "Too Many Requests", "", new Headers(headers));
+    expect(vexRetryAfterMs(throttled({ "Retry-After": "12" }))).toBe(12_000);
+    expect(vexRetryAfterMs(throttled())).toBe(60_000);
+    expect(vexRetryAfterMs(new Error("offline"))).toBe(60_000);
+  });
+});
 
 describe("vexRequestErrorCode", () => {
   it("reads a throttled request as rate limited, whatever the body", () => {

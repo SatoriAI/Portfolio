@@ -1,8 +1,10 @@
+from collections.abc import Mapping
+
 from django.db.models import QuerySet
 from django.middleware.csrf import get_token
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -19,6 +21,7 @@ from vex.api.limits import (
     question_refusal,
 )
 from vex.api.serializers import MessageSerializer
+from vex.choices import Feedback, Roles
 from vex.models import Message
 from vex.utils.session import is_valid_session_key
 
@@ -67,3 +70,38 @@ class MessageViewSet(RateLimitedMixin, ListAPIView):
         if not is_valid_session_key(session_key):
             raise ValidationError({"code": "invalid_session"})
         return Message.objects.filter(conversation__session=session_key).order_by("created_at")
+
+
+@extend_schema(summary="Rate one answer", tags=["Vex"])
+class MessageFeedbackView(RateLimitedMixin, APIView):
+    """A visitor's thumbs up or down on one of Vex's answers: `{"value": "up" | "down" | null}`, null taking the
+    rating back. Only the conversation named by the X-Vex-Session header may rate its own answers; any other message
+    (someone else's, a question, one that does not exist) is a 404, so the endpoint never says which ids exist."""
+
+    throttle_scope = "vex_feedback"
+    throttle_classes = [VexThrottle, VexSessionThrottle]
+
+    @staticmethod
+    def get_session_key(request: Request) -> str | None:
+        return request.headers.get(SESSION_HEADER)
+
+    def post(self, request: Request, pk: int) -> Response:
+        session_key = self.get_session_key(request)
+        if not session_key:
+            return Response({"code": "session_required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not is_valid_session_key(session_key):
+            return Response({"code": "invalid_session"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # The value must be sent, even as null: a body without it is a mistake, not a request to take a rating back.
+        if not isinstance(request.data, Mapping) or "value" not in request.data:
+            return Response({"code": "invalid_feedback"}, status=status.HTTP_400_BAD_REQUEST)
+        value = request.data["value"]
+        if value is not None and value not in Feedback.values:
+            return Response({"code": "invalid_feedback"}, status=status.HTTP_400_BAD_REQUEST)
+
+        message = Message.objects.filter(pk=pk, conversation__session=session_key, role=Roles.ASSISTANT).first()
+        if message is None:
+            raise NotFound({"code": "not_found"})
+        message.feedback = value or ""
+        message.save(update_fields=["feedback", "updated_at"])
+        return Response({"id": message.pk, "feedback": value})

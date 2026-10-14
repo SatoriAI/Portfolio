@@ -494,3 +494,15 @@ msgstr "Doświadczenia"
 
 #~ msgid "Temperature"
 #~ msgstr "Temperatura"
+
+#: vex/models.py:35
+msgid "Feedback"
+msgstr "Ocena"
+
+#: vex/choices.py:23
+msgid "Helpful"
+msgstr "Pomocna"
+
+#: vex/choices.py:24
+msgid "Not helpful"
+msgstr "Niepomocna"

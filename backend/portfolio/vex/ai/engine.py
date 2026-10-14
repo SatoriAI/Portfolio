@@ -22,7 +22,7 @@ class EmptyAnswer(Exception):
     """The model finished without a word of text, as when its reasoning spends the whole output budget."""
 
 
-def stream_answer(question: str, locale: str, session_key: str) -> Generator[str]:
+def stream_answer(question: str, locale: str, session_key: str) -> Generator[str, None, int]:
     """The answer to one question in a conversation, as text chunks, and the only way the API reaches the model.
 
     The exchange is saved once the answer is complete, and only then. An answer cut short (the visitor left, the
@@ -32,7 +32,10 @@ def stream_answer(question: str, locale: str, session_key: str) -> Generator[str
     leaves stops the generation, not only the reading of it.
 
     Every call is recorded in Usage however it ends, since every one of them is billed. Once today's calls have
-    cost VEX_DAILY_BUDGET_USD, this raises spend.Resting before anything is read or written, and calls nothing."""
+    cost VEX_DAILY_BUDGET_USD, this raises spend.Resting before anything is read or written, and calls nothing.
+
+    Once the answer is saved, the generator returns the saved answer's id (as StopIteration.value), so the visitor
+    can rate it."""
     spend.check_budget()
     history = MessageHistory(session_key)
     messages = build_messages(question=question, locale=locale, history=history.recent())
@@ -72,7 +75,8 @@ def stream_answer(question: str, locale: str, session_key: str) -> Generator[str
         usage.finish_reason,
     )
     with transaction.atomic():
-        history.add_exchange(question, "".join(answer), usage=usage, prompt_version=PROMPT_VERSION)
+        saved = history.add_exchange(question, "".join(answer), usage=usage, prompt_version=PROMPT_VERSION)
+    return saved.pk
 
 
 def record_usage(
