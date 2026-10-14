@@ -63,7 +63,7 @@ class Usage(models.Model):
     output_tokens = models.PositiveIntegerField(_("Output tokens"))
     reasoning_tokens = models.PositiveIntegerField(_("Reasoning tokens"))
     estimated = models.BooleanField(_("Estimated"))
-    # In dollars, at settings.VEX_PRICES; empty for a model with no price there.
+    # In dollars, at settings.VEX_PRICES. Empty only on calls recorded before every model had to have a price there.
     cost = models.DecimalField(_("Cost (USD)"), max_digits=12, decimal_places=8, null=True, blank=True)
 
     class Meta:

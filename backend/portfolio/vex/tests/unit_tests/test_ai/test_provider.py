@@ -1,5 +1,7 @@
 import json
 import os
+import subprocess  # nosec B404: one fixed command, the test's own interpreter
+import sys
 import threading
 import time
 from collections.abc import Iterator
@@ -10,6 +12,7 @@ from typing import Any
 from unittest.mock import patch
 
 import openai
+from django.conf import settings
 from django.test import SimpleTestCase, override_settings
 
 from vex.ai import provider
@@ -171,8 +174,34 @@ class UsageCostTestCase(SimpleTestCase):
         # 400k fresh at 0.10, 600k cached at 0.01, 200k output (reasoning included) at 0.50
         self.assertEqual(usage.cost("gpt-6-luna"), Decimal("0.146"))
 
-    def test_a_model_without_a_price_has_no_cost(self) -> None:
-        self.assertIsNone(Usage(input_tokens=10).cost("gpt-unknown"))
+    @override_settings(VEX_PRICES={"gpt-6-luna": (0.10, 0.01, 0.50), "gpt-6-sol": (2.00, 0.20, 10.00)})
+    def test_a_model_without_a_price_is_counted_at_the_highest_known_prices(self) -> None:
+        usage = Usage(input_tokens=1_000_000, cached_tokens=600_000, output_tokens=200_000)
+        with self.assertLogs("vex.ai.provider", "ERROR") as logs:
+            cost = usage.cost("gpt-unknown")
+        # 400k fresh at 2.00, 600k cached at 0.20, 200k output at 10.00: never None, which the budget would skip
+        self.assertEqual(cost, Decimal("2.92"))
+        self.assertIn("gpt-unknown", logs.output[0])
+
+
+class ModelPriceGuardTestCase(SimpleTestCase):
+    def test_the_suggested_models_have_prices(self) -> None:
+        for model in ("gpt-6-luna", "gpt-6-sol", "gpt-6.1-sol"):
+            self.assertIn(model, settings.VEX_PRICES)
+
+    def test_settings_refuse_a_model_without_a_price(self) -> None:
+        # Settings load in every process that serves the site (gunicorn's wsgi import, every manage.py command), so
+        # a refusal there stops the deploy rather than leaving a budget that never counts.
+        result = subprocess.run(  # nosec B603: a fixed argument list, no shell
+            [sys.executable, "-c", "import django; django.setup()"],
+            cwd=settings.BASE_DIR,
+            env={**os.environ, "DJANGO_SETTINGS_MODULE": "portfolio.settings", "VEX_MODEL": "gpt-unpriced"},
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("ImproperlyConfigured: VEX_MODEL='gpt-unpriced' has no price in VEX_PRICES", result.stderr)
 
 
 class ProviderClientTestCase(SimpleTestCase):

@@ -277,11 +277,19 @@ if VEX_REASONING_EFFORT not in ("none", "minimal", "low", "medium", "high", "xhi
 # is logged (finish_reason "length"), so a cap that cuts real answers shows.
 VEX_MAX_OUTPUT_TOKENS = env.int("VEX_MAX_OUTPUT_TOKENS", default=1200)
 # Each model's price in dollars per million tokens (input, cached input, output; reasoning is billed as output), for
-# the cost of every call Vex makes (vex.models.Usage). A model missing here is recorded without a cost: add its
-# price before switching VEX_MODEL to it.
+# the cost of every call Vex makes (vex.models.Usage), and so for the daily budget below: OpenAI's Standard tier, for
+# prompts under 272K tokens (writing to the prompt cache is not billed). A VEX_MODEL missing here refuses to start,
+# since its calls could not be counted and the budget would never be reached.
 VEX_PRICES: dict[str, tuple[float, float, float]] = {
     "gpt-6-luna": (0.10, 0.01, 0.50),
+    "gpt-6-sol": (2.00, 0.20, 10.00),
+    "gpt-6.1-sol": (2.00, 0.10, 10.00),
 }
+if VEX_MODEL not in VEX_PRICES:
+    raise ImproperlyConfigured(
+        f"VEX_MODEL={VEX_MODEL!r} has no price in VEX_PRICES (portfolio/settings.py): add its price there before "
+        "switching to it, or VEX_DAILY_BUDGET_USD could not count its calls."
+    )
 # What Vex may spend on the model in one UTC day, in dollars, counted from every call in vex.models.Usage. Once it is
 # reached Vex rests until midnight UTC: it tells visitors so and offers Dawid's email, and calls nothing.
 VEX_DAILY_BUDGET_USD = Decimal(env("VEX_DAILY_BUDGET_USD", default="5.00"))
