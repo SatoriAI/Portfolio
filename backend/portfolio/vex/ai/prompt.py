@@ -4,6 +4,8 @@ knowledge base, then the recent conversation and the question.
 The system message is the same for every question in a language until the persona or the knowledge changes, which is
 what lets OpenAI's prompt cache serve it: the rules come first because they change least."""
 
+import re
+
 from django.conf import settings
 
 from vex.ai.history import Turn
@@ -101,14 +103,22 @@ def system_prompt(locale: str) -> str:
     return "\n\n".join(parts)
 
 
+# Any <asked_from or </asked_from, in any case, so neither a title nor a visitor can open or close the tag.
+ASKED_FROM_TAG = re.compile(r"<(?=/?asked_from)", re.IGNORECASE)
+
+
+def defuse_asked_from(text: str) -> str:
+    return ASKED_FROM_TAG.sub("<\\\\", text)
+
+
 def with_asked_from(question: str, asked_from: str) -> str:
     """A visitor's message as the model reads it: where it was asked, when that is known, as data ahead of the
-    question. The line is the server's own (vex.ai.context), but it quotes titles from the database, so a closing
-    tag inside it is broken up, as in a knowledge source."""
+    question. Only the server writes the tag (vex.ai.context), so one typed into the question, or quoted from a
+    title in the database, is broken up and can't pass for the site's own line."""
+    question = defuse_asked_from(question)
     if not asked_from:
         return question
-    line = asked_from.replace("</asked_from", "<\\/asked_from")
-    return f"<asked_from>{line}</asked_from>\n\n{question}"
+    return f"<asked_from>{defuse_asked_from(asked_from)}</asked_from>\n\n{question}"
 
 
 def build_messages(question: str, locale: str, history: list[Turn], asked_from: str = "") -> list[ChatMessage]:
