@@ -1,7 +1,9 @@
 import type { ComponentPropsWithoutRef } from "react";
 import ReactMarkdown from "react-markdown";
+import { Link } from "react-router-dom";
 import remarkGfm from "remark-gfm";
 
+import { internalPath } from "@/lib/internalLink";
 import { holdBackUnderline, normalizeMarkdown } from "@/lib/streamMarkdown";
 
 type MarkdownMessageProps = {
@@ -12,10 +14,17 @@ type MarkdownMessageProps = {
 
 // Made once: react-markdown uses each override as an element type, so a new
 // function every render would remount every link on every streamed chunk.
+// A link to the site itself moves the page behind the chat, which stays open;
+// any other leaves in a new tab.
 const components = {
-  a: ({ node: _node, ...props }: ComponentPropsWithoutRef<"a"> & { node?: unknown }) => (
-    <a {...props} target="_blank" rel="noopener noreferrer" />
-  ),
+  a: ({ node: _node, href, ...props }: ComponentPropsWithoutRef<"a"> & { node?: unknown }) => {
+    const path = internalPath(href, window.location.origin);
+    return path ? (
+      <Link {...props} to={path} />
+    ) : (
+      <a {...props} href={href} target="_blank" rel="noopener noreferrer" />
+    );
+  },
 };
 
 /**
