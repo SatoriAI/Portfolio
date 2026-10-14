@@ -974,7 +974,7 @@ const copy = {
         copy: "Skopiuj adres e-mail",
         copied: "Skopiowano adres",
         vex: "Vex",
-        vexMain: "Zapytaj mojej asystentki",
+        vexMain: "Zapytaj moją asystentkę",
         vexLine: "Odpowie ci od razu, o każdej porze.",
         github: "GitHub",
         githubLine: "Zajrzyj do kodu moich projektów.",
