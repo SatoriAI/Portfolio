@@ -9,6 +9,7 @@ import {
   type ChatAction,
   chatReducer,
   type ChatState,
+  continuableReply,
   initialChatState,
   isWaiting,
   retryableQuestion,
@@ -471,6 +472,92 @@ describe("rating a reply", () => {
       [6, "down"],
       [7, null],
     ]);
+  });
+});
+
+describe("going on with a reply cut off at the length cap", () => {
+  const answered = (truncated: boolean, ...before: ChatAction[]) => {
+    const asked = run(...before);
+    const turn = turnOf(asked);
+    return reduce(
+      asked,
+      { type: "delta", turn, text: "First, and then" },
+      { type: "done", turn, messageId: 42, truncated },
+    );
+  };
+  const context = askedFromRole({ id: 7 });
+
+  it("marks the reply and offers to go on with it", () => {
+    const cut = answered(true, { type: "ask", question: "Everything?" });
+    expect(cut.messages[1]).toMatchObject({ truncated: true, serverId: 42, feedback: null });
+    expect(continuableReply(cut)).toBe(cut.messages[1]);
+  });
+
+  it("does not offer it for a reply that finished, failed or was stopped", () => {
+    expect(continuableReply(answered(false, { type: "ask", question: "Hi" }))).toBeNull();
+    const asked = run({ type: "ask", question: "Hi" });
+    const turn = turnOf(asked);
+    const streaming = chatReducer(asked, { type: "delta", turn, text: "Hel" });
+    expect(continuableReply(streaming)).toBeNull();
+    expect(continuableReply(chatReducer(streaming, { type: "stop" }))).toBeNull();
+    expect(
+      continuableReply(chatReducer(streaming, { type: "fail", turn, code: "unavailable" })),
+    ).toBeNull();
+  });
+
+  it("offers it only on the last reply, and not while another question waits", () => {
+    const cut = answered(true, { type: "ask", question: "Everything?" });
+    const waiting = chatReducer(cut, { type: "ask", question: "Next" });
+    expect(continuableReply(waiting)).toBeNull();
+    const going = chatReducer(cut, { type: "continue", question: "Continue" });
+    const turn = turnOf(going);
+    const rest = reduce(
+      going,
+      { type: "delta", turn, text: "the rest." },
+      { type: "done", turn, messageId: 44, truncated: false },
+    );
+    expect(rest.messages[1].truncated).toBe(true);
+    expect(continuableReply(rest)).toBeNull();
+    // Nor is a reply that was not cut off ever asked to go on.
+    expect(chatReducer(rest, { type: "continue", question: "Continue" })).toBe(rest);
+  });
+
+  it("asks Continue as a question of its own, from where the cut-off one was asked", () => {
+    const cut = answered(true, { type: "ask", question: "His contribution?", context });
+    const going = chatReducer(cut, { type: "continue", question: "Continue" });
+    expect(texts(going)).toEqual(["Q:His contribution?", "A:First, and then", "Q:Continue"]);
+    expect(going.active).toEqual({ turn: turnOf(going), question: "Continue", context });
+    // The cut-off reply keeps its mark, but no longer offers to go on.
+    expect(going.messages[1].truncated).toBe(true);
+    expect(continuableReply(going)).toBeNull();
+    // A second press while the follow-up is under way changes nothing.
+    expect(chatReducer(going, { type: "continue", question: "Continue" })).toBe(going);
+  });
+
+  it("asks it without a context when the cut-off question had none", () => {
+    const cut = answered(true, { type: "ask", question: "Everything?" });
+    expect(chatReducer(cut, { type: "continue", question: "Kontynuuj" }).active).toEqual({
+      turn: cut.seq + 1,
+      question: "Kontynuuj",
+    });
+  });
+
+  it("still offers it once the conversation is loaded again", () => {
+    const state = run({
+      type: "hydrated",
+      stored: [
+        { id: 5, role: "user", content: "Q", created_at: "2026-01-01T00:00:00Z" },
+        {
+          id: 6,
+          role: "assistant",
+          content: "First,",
+          created_at: "2026-01-01T00:00:01Z",
+          truncated: true,
+        },
+      ],
+    });
+    expect(state.messages[1].truncated).toBe(true);
+    expect(continuableReply(state)).toBe(state.messages[1]);
   });
 });
 

@@ -60,6 +60,15 @@ class MessageHistoryTestCase(TestCase):
             (Roles.ASSISTANT, "Hello", "gpt-6.1-sol", "v1"),
         )
         self.assertEqual((answer.input_tokens, answer.cached_tokens, answer.output_tokens), (40000, 39000, 120))
+        self.assertFalse(answer.truncated)
+
+    def test_an_answer_cut_at_the_token_cap_is_saved_as_truncated(self) -> None:
+        history = MessageHistory(session_key())
+        saved = history.add_exchange(
+            Turn("user", "Tell me everything"), "First,", usage=Usage(finish_reason="length"), prompt_version="v1"
+        )
+        saved.refresh_from_db()
+        self.assertTrue(saved.truncated)
 
     def test_where_a_question_was_asked_is_saved_with_it_and_read_back(self) -> None:
         history = MessageHistory(session_key())

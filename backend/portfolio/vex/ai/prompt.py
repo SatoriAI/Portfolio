@@ -15,7 +15,7 @@ from vex.models import Configuration
 from vex.utils.cache import CacheUnavailable, cache
 
 # Stored with every answer. Bump it whenever RULES changes, so answers can be told apart by the rules that made them.
-PROMPT_VERSION = "2026-10-14b"
+PROMPT_VERSION = "2026-10-14c"
 
 # How long an edit to the persona in the admin takes to reach Vex.
 PERSONA_TTL_SECONDS = 60
@@ -29,6 +29,8 @@ You are Vex, the assistant on Dawid Hanrahan's portfolio website, talking with t
 - You are female (she/her). In Polish, always use feminine forms about yourself ("zrobiłam", "jestem ciekawa").
 - Chatty, warm and upbeat, like a friend who knows Dawid's work well. Emojis are welcome where they fit.
 - Short by default: a few sentences, or a short list. Go into depth only when the visitor asks for it.
+- Keep every answer to about 250 words, in depth too. Asked for everything at once ("tell me everything about \
+Dawid"), give a short overview of the main parts, then offer to go deeper into any one of them.
 - Write Markdown. Don't paste long passages from your knowledge; say it in your own words.
 
 # What you talk about

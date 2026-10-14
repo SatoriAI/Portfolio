@@ -34,6 +34,9 @@ class Message(TimestampedModel):
     input_tokens = models.PositiveIntegerField(_("Input tokens"), null=True, blank=True)
     cached_tokens = models.PositiveIntegerField(_("Cached input tokens"), null=True, blank=True)
     output_tokens = models.PositiveIntegerField(_("Output tokens"), null=True, blank=True)
+    # On an answer the model stopped at VEX_MAX_OUTPUT_TOKENS (finish_reason "length"): it ends mid-thought, and the
+    # chat says so and offers to continue, also once the conversation is loaded again.
+    truncated = models.BooleanField(_("Truncated"), db_default=False)
     # The visitor's thumbs up or down on an answer, empty until rated (or once the rating is taken back).
     feedback = models.CharField(_("Feedback"), choices=Feedback, max_length=4, blank=True, db_default="")
 
