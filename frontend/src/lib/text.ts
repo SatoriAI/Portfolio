@@ -23,6 +23,24 @@ export const splitLastWord = (text: string): [head: string, last: string] => {
   return [text.slice(0, at), text.slice(at)];
 };
 
+/**
+ * Markdown as it reads aloud: the words kept, the marks around them dropped
+ * (emphasis, code ticks and fences, headings, quotes, list markers, rules,
+ * link targets). For a screen reader's announcement, not for display.
+ */
+export const markdownToPlainText = (markdown: string) =>
+  markdown
+    .replace(/^[ \t]*```[^\n]*$/gm, "")
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^[ \t]{0,3}(?:[-*_][ \t]*){3,}$/gm, "")
+    .replace(/^[ \t]{0,3}(?:#{1,6}[ \t]+|>[ \t]?|[-*+][ \t]+|\d+[.)][ \t]+)/gm, "")
+    .replace(/(\*\*|__)(.+?)\1/g, "$2")
+    .replace(/(^|[^\w*])[*_](?!\s)(.+?)[*_](?![\w*])/g, "$1$2")
+    .replace(/~~(.+?)~~/g, "$1")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
 /** Text split into its paragraphs at blank lines, as it was written. */
 export const paragraphsOf = (text: string) =>
   text

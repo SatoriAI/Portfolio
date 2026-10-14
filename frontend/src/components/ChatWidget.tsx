@@ -15,6 +15,8 @@ import { useLatest } from "@/hooks/use-latest";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { apiFetch } from "@/lib/apiClient";
 import { copyText } from "@/lib/clipboard";
+import { matchesMedia, MEDIA } from "@/lib/media";
+import { markdownToPlainText } from "@/lib/text";
 import {
   type ChatMessage,
   chatReducer,
@@ -24,8 +26,13 @@ import {
   retryableQuestion,
   type StoredMessage,
 } from "@/lib/vexChat";
-import { VEX_QUESTION_MAX_LENGTH, type VexErrorCode, vexRequestErrorCode } from "@/lib/vexErrors";
-import { rateReply, saveVexFeedback } from "@/lib/vexFeedback";
+import {
+  VEX_QUESTION_MAX_LENGTH,
+  type VexErrorCode,
+  vexRequestErrorCode,
+  vexRetryAfterMs,
+} from "@/lib/vexErrors";
+import { createReplyRater, saveVexFeedback } from "@/lib/vexFeedback";
 import { streamVexAnswer } from "@/lib/vexStream";
 import { translations } from "@/utils/translations";
 
@@ -41,6 +48,22 @@ const STREAM_TIMEOUT_MS = 30_000;
 const LENGTH_COUNTER_FROM = VEX_QUESTION_MAX_LENGTH - 100;
 
 const SESSION_STORAGE_KEY = "vex_chat_session_key";
+
+// After a Stop, the history is read again this much later: long enough for a
+// server that had already finished the answer to have saved it.
+const RESYNC_AFTER_STOP_MS = 1000;
+
+// The key goes in a header, not the URL, so it never lands in access logs.
+const fetchHistory = (sessionKey: string) =>
+  apiFetch<StoredMessage[]>(endpoints.vex.messages.list, {
+    headers: { "X-Vex-Session": sessionKey },
+  });
+
+// Focus goes back to the composer only where that brings up no on-screen
+// keyboard to cover the reply.
+const focusComposer = (textarea: HTMLTextAreaElement | null) => {
+  if (matchesMedia(MEDIA.finePointer)) textarea?.focus();
+};
 
 /** The fallback sentence, with the address in it as a mailto link. */
 const ContactFallback = ({ sentence }: { sentence: string }) => {
@@ -134,10 +157,7 @@ const ChatWidget = ({
     let stored: StoredMessage[] | null = null;
     if (storedKey) {
       try {
-        // The key goes in a header, not the URL, so it never lands in access logs.
-        stored = await apiFetch<StoredMessage[]>(endpoints.vex.messages.list, {
-          headers: { "X-Vex-Session": storedKey },
-        });
+        stored = await fetchHistory(storedKey);
       } catch (err) {
         // A rejected key has no history to load: with it gone, the chat starts
         // empty and the first question opens a new conversation.
@@ -219,7 +239,8 @@ const ChatWidget = ({
   // its turn, so a request that outlives its turn cannot write into the next
   // one.
   const answer = async (question: string, turn: number, signal: AbortSignal) => {
-    const fail = (code: VexErrorCode) => dispatch({ type: "fail", turn, code });
+    const fail = (code: VexErrorCode, retryAt?: number) =>
+      dispatch({ type: "fail", turn, code, retryAt });
     let watchdog = 0;
     const arm = () => {
       window.clearTimeout(watchdog);
@@ -246,7 +267,9 @@ const ChatWidget = ({
     } catch (err) {
       if (signal.aborted) return;
       console.error("Chat send failed", err);
-      fail(vexRequestErrorCode(err));
+      const code = vexRequestErrorCode(err);
+      // A rate limit is asked again only once it has passed.
+      fail(code, code === "rate_limited" ? Date.now() + vexRetryAfterMs(err) : undefined);
     } finally {
       window.clearTimeout(watchdog);
     }
@@ -315,19 +338,42 @@ const ChatWidget = ({
     noticeTimer.current = window.setTimeout(() => setNotice(""), 3000);
   };
 
+  // Reads the history once more after a Stop: if the server had saved the
+  // answer before the Stop reached it, the answer replaces the stopped reply
+  // (see the reducer's `synced`). A load from an earlier open or a cleared
+  // conversation is dropped, like hydration's.
+  const resyncTimer = useRef(0);
+  useEffect(() => () => window.clearTimeout(resyncTimer.current), []);
+  const resyncAfterStop = () => {
+    const run = hydration.current;
+    window.clearTimeout(resyncTimer.current);
+    resyncTimer.current = window.setTimeout(async () => {
+      const storedKey = localStorage.getItem(SESSION_STORAGE_KEY);
+      if (!storedKey) return;
+      try {
+        const stored = await fetchHistory(storedKey);
+        if (run === hydration.current) dispatch({ type: "synced", stored });
+      } catch (err) {
+        // The stopped reply stays as it is.
+        console.error("Failed to re-read chat history", err);
+      }
+    }, RESYNC_AFTER_STOP_MS);
+  };
+
   // Stopping ends the turn, and with it the request (see the answer effect).
   // The server saves nothing of an answer cut short, so the stopped exchange
   // is not in the history the next open loads. The button that was Stop is
   // Send again, disabled with nothing typed, so focus goes to the composer.
   const handleStop = () => {
     dispatch({ type: "stop" });
-    textareaRef.current?.focus();
+    focusComposer(textareaRef.current);
+    resyncAfterStop();
   };
 
   // Asks the last question again; its "Try again" goes with the failed reply.
   const handleRetry = () => {
     dispatch({ type: "retry" });
-    textareaRef.current?.focus();
+    focusComposer(textareaRef.current);
   };
 
   const handleCopy = async (text: string) => {
@@ -336,21 +382,32 @@ const ChatWidget = ({
     return done;
   };
 
+  // One rater for the chat's life: it keeps each answer's saves in order. It
+  // reads the session key and token as each save goes.
+  const [rateReply] = useState(() =>
+    createReplyRater(dispatch, async (messageId, value) => {
+      const sessionKey = localStorage.getItem(SESSION_STORAGE_KEY);
+      if (!sessionKey) throw new Error("No conversation to rate in");
+      await saveVexFeedback({ messageId, value, sessionKey, csrfToken: csrfTokenRef.current });
+    }),
+  );
   const handleRate = async (message: ChatMessage, value: Feedback | null) => {
-    const sessionKey = localStorage.getItem(SESSION_STORAGE_KEY);
-    if (!sessionKey) return;
-    const saved = await rateReply(message, value, dispatch, (messageId, rating) =>
-      saveVexFeedback({
-        messageId,
-        value: rating,
-        sessionKey,
-        csrfToken: csrfTokenRef.current,
-      }),
-    );
+    const saved = await rateReply(message, value);
     if (!saved) announce(t.chat.rateFailed);
+    return saved;
   };
 
-  const retryQuestion = retryableQuestion(chat);
+  // A rate-limit notice offers "Try again" once the wait the server asked
+  // for has passed; until then its words say to give Vex a minute.
+  const waitUntil = messages[messages.length - 1]?.retryAt;
+  const [waited, setWaited] = useState<number | undefined>();
+  useEffect(() => {
+    if (waitUntil === undefined) return;
+    const id = window.setTimeout(() => setWaited(waitUntil), waitUntil - Date.now());
+    return () => window.clearTimeout(id);
+  }, [waitUntil]);
+  const retryQuestion =
+    waitUntil === undefined || waited === waitUntil ? retryableQuestion(chat) : null;
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -397,7 +454,7 @@ const ChatWidget = ({
       ? t.chat.noAnswer
       : finished.stopped
         ? t.chat.stopped
-        : `${t.chat.replied} ${finished.text}`;
+        : `${t.chat.replied} ${markdownToPlainText(finished.text)}`;
 
   const lengthId = useId();
   const showLength = pasteCut || inputValue.length >= LENGTH_COUNTER_FROM;
@@ -550,7 +607,7 @@ const ChatWidget = ({
                     >
                       <Bot className="h-4 w-4" />
                     </div>
-                    <div className="flex min-w-0 max-w-[85%] flex-col items-start gap-1">
+                    <div className="flex min-w-0 max-w-[85%] flex-col items-start gap-0.5">
                       {bubble}
                       <MessageActions
                         message={message}
@@ -566,7 +623,7 @@ const ChatWidget = ({
                         }
                         onRetry={handleRetry}
                         onCopy={handleCopy}
-                        onRate={(value) => void handleRate(message, value)}
+                        onRate={(value) => handleRate(message, value)}
                         labels={t.chat}
                       />
                     </div>

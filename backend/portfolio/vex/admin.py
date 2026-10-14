@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Any
 
 from django import forms
@@ -50,6 +51,15 @@ class ConversationAdmin(admin.ModelAdmin):
     def number_of_messages(self, obj: Conversation) -> int:
         return obj.messages.count()
 
+    def get_deleted_objects(
+        self, objs: Sequence[Conversation] | QuerySet[Conversation], request: HttpRequest
+    ) -> tuple[list[str], dict[str, int], set[str], list[str]]:
+        """A conversation takes its messages with it. The message admin, read-only, would otherwise ask for a delete
+        permission on them that nobody has, and no conversation could be deleted."""
+        deleted, counts, perms_needed, protected = super().get_deleted_objects(objs, request)
+        perms_needed.discard(str(Message._meta.verbose_name))
+        return deleted, counts, perms_needed, protected
+
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
@@ -75,6 +85,9 @@ class MessageAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request: HttpRequest, obj: Message | None = None) -> bool:
+        return False
+
+    def has_delete_permission(self, request: HttpRequest, obj: Message | None = None) -> bool:
         return False
 
 

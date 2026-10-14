@@ -1,6 +1,7 @@
 /**
  * The site's media queries in one place: Tailwind's breakpoints (the same
- * widths as tailwind.config's screens) and the reduced-motion preference.
+ * widths as tailwind.config's screens), the reduced-motion preference and the
+ * kind of pointer.
  */
 export const BREAKPOINTS = { md: 768, lg: 1024, xl: 1280 } as const;
 
@@ -9,6 +10,8 @@ export const MEDIA = {
   lg: `(min-width: ${BREAKPOINTS.lg}px)`,
   xl: `(min-width: ${BREAKPOINTS.xl}px)`,
   reducedMotion: "(prefers-reduced-motion: reduce)",
+  // A mouse or trackpad: focusing a field brings up no on-screen keyboard.
+  finePointer: "(pointer: fine)",
 } as const;
 
 // One list per query, made once: a hook reads it on every render.

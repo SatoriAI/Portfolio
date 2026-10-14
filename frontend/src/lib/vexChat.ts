@@ -13,12 +13,16 @@ export interface ChatMessage {
   isUser: boolean;
   /** Set on the inline notice appended when a request fails or stalls: why it did. */
   error?: VexErrorCode;
+  /** On a rate-limit notice: when asking again may succeed (ms since the epoch). */
+  retryAt?: number;
   /** Set on the inline notice appended when a reply ends without any text. */
   noAnswer?: true;
   /**
    * Set on a reply the visitor stopped: the text that had arrived (possibly
    * none). The server saves only finished answers, so a stopped exchange is
-   * not in the history the next open loads, and the model never reads it back.
+   * not in the history the next open loads, and the model never reads it back
+   * (unless the answer had finished in the instant before the stop; see
+   * `synced`).
    */
   stopped?: true;
   /** Set on the part of a reply that arrived before its request failed; the notice after it says why. */
@@ -66,7 +70,8 @@ type TurnAction =
   | { type: "delta"; turn: number; text: string }
   /** The reply is complete; messageId is the saved answer's id, when the server sent one. */
   | { type: "done"; turn: number; messageId?: number }
-  | { type: "fail"; turn: number; code: VexErrorCode };
+  /** The request failed; retryAt, for a rate limit, is when asking again may succeed. */
+  | { type: "fail"; turn: number; code: VexErrorCode; retryAt?: number };
 
 export type ChatAction =
   /** The history loaded: the stored messages, or null when there was none to load or it could not be read. */
@@ -75,13 +80,15 @@ export type ChatAction =
   | TurnAction
   /** The visitor stopped the reply: what had arrived stays, marked as stopped. */
   | { type: "stop" }
+  /**
+   * The history read again after a stop. If the server had already saved the
+   * answer the visitor stopped, it takes the stopped reply's place.
+   */
+  | { type: "synced"; stored: StoredMessage[] }
   /** Ask the last question again, in place of the reply that failed, was stopped or said nothing. */
   | { type: "retry" }
-  /**
-   * Set a reply's rating. With `ifCurrent`, only while the rating is still
-   * that value: the undo of a failed save, which a newer choice overrules.
-   */
-  | { type: "rate"; id: string; feedback: Feedback | null; ifCurrent?: Feedback | null }
+  /** Set a reply's rating. */
+  | { type: "rate"; id: string; feedback: Feedback | null }
   /** The chat closed: the reply in flight and the queue are abandoned. */
   | { type: "close" }
   | { type: "clear" };
@@ -148,20 +155,19 @@ const next = (state: ChatState): ChatState => {
     : start({ ...state, queue: rest }, question);
 };
 
+const fromStoredMessage = (m: StoredMessage): ChatMessage =>
+  m.role === "user"
+    ? { id: `stored-${m.id}`, text: m.content, isUser: true }
+    : {
+        id: `stored-${m.id}`,
+        text: m.content,
+        isUser: false,
+        serverId: m.id,
+        feedback: m.feedback ?? null,
+      };
+
 const fromStored = (stored: StoredMessage[]): ChatMessage[] =>
-  stored
-    .filter((m) => m.role !== "system")
-    .map((m) =>
-      m.role === "user"
-        ? { id: `stored-${m.id}`, text: m.content, isUser: true }
-        : {
-            id: `stored-${m.id}`,
-            text: m.content,
-            isUser: false,
-            serverId: m.id,
-            feedback: m.feedback ?? null,
-          },
-    );
+  stored.filter((m) => m.role !== "system").map(fromStoredMessage);
 
 export function chatReducer(state: ChatState, action: ChatAction): ChatState {
   switch (action.type) {
@@ -182,7 +188,11 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       // The text that arrived stays, marked; with none yet, the mark stands
       // alone. Anything queued behind it goes too: stopping is the visitor
       // taking the floor back. Ending the turn aborts its request, and the
-      // server, seeing the visitor leave, saves nothing of it.
+      // server, seeing the visitor leave, saves nothing of it. Except in a
+      // race: the server saves the exchange after the last word and before it
+      // sends `done`, so a Stop pressed in that instant marks as stopped an
+      // answer the server has kept. The widget reads the history again after
+      // a stop, and `synced` puts the saved answer back.
       const { replyId } = state;
       if (replyId) {
         return {
@@ -205,6 +215,30 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         messages: [...state.messages, { id, text: "", isUser: false, stopped: true }],
       };
     }
+    case "synced": {
+      // Only while the conversation still ends in the stopped reply, and only
+      // when the server holds an answer to that same question that is not on
+      // screen. Anything else on screen stays as it is.
+      const at = lastQuestionAt(state.messages);
+      const last = state.messages[state.messages.length - 1];
+      const answer = action.stored[action.stored.length - 1];
+      const question = action.stored[action.stored.length - 2];
+      const saved =
+        !state.active &&
+        at !== -1 &&
+        last.stopped &&
+        answer?.role === "assistant" &&
+        question?.role === "user" &&
+        question.content === state.messages[at].text &&
+        !state.messages.some((m) => m.serverId === answer.id);
+      if (!saved) return state;
+      const reply = fromStoredMessage(answer);
+      return {
+        ...state,
+        finishedId: reply.id,
+        messages: [...state.messages.slice(0, at + 1), reply],
+      };
+    }
     case "retry": {
       const question = retryableQuestion(state);
       // The failed reply (and any part of it that arrived before the failure)
@@ -221,10 +255,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       return {
         ...state,
         messages: state.messages.map((m) =>
-          m.id === action.id &&
-          (action.ifCurrent === undefined || (m.feedback ?? null) === action.ifCurrent)
-            ? { ...m, feedback: action.feedback }
-            : m,
+          m.id === action.id ? { ...m, feedback: action.feedback } : m,
         ),
       };
     case "close":
@@ -304,7 +335,13 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
           ...state.messages.map((m) =>
             m.id === replyId ? { ...m, incomplete: true as const } : m,
           ),
-          { id: `error-${seq}`, text: "", isUser: false, error: action.code },
+          {
+            id: `error-${seq}`,
+            text: "",
+            isUser: false,
+            error: action.code,
+            ...(action.retryAt === undefined ? {} : { retryAt: action.retryAt }),
+          },
         ],
       };
     }

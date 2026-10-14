@@ -77,11 +77,13 @@ const copy = {
       stop: "Stop",
       stopped: "Stopped",
       retry: "Try again",
+      // The row of controls under each reply, as a screen reader names it.
+      replyActions: "Reply actions",
       copy: "Copy reply",
       copied: "Copied",
       // The thumbs under a reply; pressing the chosen one again takes the rating back.
-      rateUp: "Good answer",
-      rateDown: "Bad answer",
+      rateUp: "Helpful",
+      rateDown: "Not helpful",
       rateFailed: "Your rating couldn't be saved.",
     },
     nav: {
@@ -749,10 +751,11 @@ const copy = {
       stop: "Zatrzymaj",
       stopped: "Zatrzymano",
       retry: "Spróbuj ponownie",
+      replyActions: "Akcje odpowiedzi",
       copy: "Kopiuj odpowiedź",
       copied: "Skopiowano",
-      rateUp: "Dobra odpowiedź",
-      rateDown: "Słaba odpowiedź",
+      rateUp: "Pomocna odpowiedź",
+      rateDown: "Niepomocna odpowiedź",
       rateFailed: "Nie udało się zapisać oceny.",
     },
     nav: {

@@ -343,6 +343,19 @@ describe("asking again", () => {
     expect(chatReducer(reopened, { type: "retry" })).toBe(reopened);
   });
 
+  it("keeps when a rate limit may pass on its notice", () => {
+    const asked = run({ type: "ask", question: "Hi" });
+    const failed = chatReducer(asked, {
+      type: "fail",
+      turn: turnOf(asked),
+      code: "rate_limited",
+      retryAt: 1_000,
+    });
+    expect(failed.messages[1].retryAt).toBe(1_000);
+    const other = chatReducer(asked, { type: "fail", turn: turnOf(asked), code: "timeout" });
+    expect("retryAt" in other.messages[1]).toBe(false);
+  });
+
   it("offers it only on the last reply", () => {
     const stopped = chatReducer(run({ type: "ask", question: "One" }), { type: "stop" });
     const later = answered(chatReducer(stopped, { type: "ask", question: "Two" }), "2");
@@ -384,18 +397,6 @@ describe("rating a reply", () => {
     expect(chatReducer(down, { type: "rate", id, feedback: null }).messages[1].feedback).toBeNull();
   });
 
-  it("undoes a failed save only while the rating is still the one that failed", () => {
-    const state = saved();
-    const id = state.messages[1].id;
-    const up = chatReducer(state, { type: "rate", id, feedback: "up" });
-    const undone = chatReducer(up, { type: "rate", id, feedback: null, ifCurrent: "up" });
-    expect(undone.messages[1].feedback).toBeNull();
-
-    const changed = chatReducer(up, { type: "rate", id, feedback: "down" });
-    const late = chatReducer(changed, { type: "rate", id, feedback: null, ifCurrent: "up" });
-    expect(late.messages[1].feedback).toBe("down");
-  });
-
   it("loads the ratings and ids with the history", () => {
     const state = run({
       type: "hydrated",
@@ -416,5 +417,58 @@ describe("rating a reply", () => {
       [6, "down"],
       [7, null],
     ]);
+  });
+});
+
+describe("re-reading the history after a stop", () => {
+  const history = (answer: string): StoredMessage[] => [
+    { id: 1, role: "user", content: "Earlier", created_at: "2026-01-01T00:00:00Z" },
+    { id: 2, role: "assistant", content: "Before", created_at: "2026-01-01T00:00:01Z" },
+    { id: 3, role: "user", content: "Hi", created_at: "2026-01-01T00:00:02Z" },
+    { id: 4, role: "assistant", content: answer, created_at: "2026-01-01T00:00:03Z" },
+  ];
+  const stoppedAfter = (...before: ChatAction[]) => {
+    const asked = run(...before, { type: "ask", question: "Hi" });
+    return reduce(
+      asked,
+      { type: "delta", turn: turnOf(asked), text: "Hello wor" },
+      { type: "stop" },
+    );
+  };
+
+  it("puts back an answer the server saved before the stop reached it", () => {
+    const stopped = stoppedAfter();
+    const synced = chatReducer(stopped, { type: "synced", stored: history("Hello world.") });
+    expect(texts(synced)).toEqual(["Q:Hi", "A:Hello world."]);
+    expect(synced.messages[1]).toMatchObject({ serverId: 4, feedback: null });
+    expect(synced.finishedId).toBe(synced.messages[1].id);
+    // Nothing left to ask again: the question was answered.
+    expect(retryableQuestion(synced)).toBeNull();
+  });
+
+  it("keeps the stopped reply when the server saved nothing of it", () => {
+    const stopped = stoppedAfter();
+    const unsaved = history("Before").slice(0, 2);
+    expect(chatReducer(stopped, { type: "synced", stored: unsaved })).toBe(stopped);
+    expect(chatReducer(stopped, { type: "synced", stored: [] })).toBe(stopped);
+  });
+
+  it("changes nothing once the conversation has moved on", () => {
+    const stopped = stoppedAfter();
+    const asking = chatReducer(stopped, { type: "ask", question: "Next" });
+    expect(chatReducer(asking, { type: "synced", stored: history("Hello world.") })).toBe(asking);
+    const retried = chatReducer(stopped, { type: "retry" });
+    expect(chatReducer(retried, { type: "synced", stored: history("Hello world.") })).toBe(retried);
+  });
+
+  it("leaves an answer already on screen alone", () => {
+    const asked = run({ type: "ask", question: "Hi" });
+    const turn = turnOf(asked);
+    const done = reduce(
+      asked,
+      { type: "delta", turn, text: "Hello world." },
+      { type: "done", turn, messageId: 4 },
+    );
+    expect(chatReducer(done, { type: "synced", stored: history("Hello world.") })).toBe(done);
   });
 });

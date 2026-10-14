@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { fillTemplate, formatCounter, pad2, paragraphsOf, splitLastWord } from "./text";
+import {
+  fillTemplate,
+  formatCounter,
+  markdownToPlainText,
+  pad2,
+  paragraphsOf,
+  splitLastWord,
+} from "./text";
 
 describe("text", () => {
   it("pads to two digits", () => {
@@ -29,5 +36,19 @@ describe("text", () => {
       "Second",
     ]);
     expect(paragraphsOf("")).toEqual([]);
+  });
+
+  it("reads markdown as plain text", () => {
+    expect(markdownToPlainText("He builds **Django** and *React* apps, `uv` and ~~pip~~.")).toBe(
+      "He builds Django and React apps, uv and pip.",
+    );
+    expect(
+      markdownToPlainText(
+        "## Stack\n\n- one\n* two\n1. three\n\n> quoted\n\n---\n\n```py\nprint(x)\n```\n\nSee [the site](https://example.com).",
+      ),
+    ).toBe("Stack\n\none\ntwo\nthree\n\nquoted\n\nprint(x)\n\nSee the site.");
+    expect(markdownToPlainText("snake_case_name and 2 * 3 * 4")).toBe(
+      "snake_case_name and 2 * 3 * 4",
+    );
   });
 });
