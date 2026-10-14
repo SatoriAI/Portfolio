@@ -1,13 +1,13 @@
 from unittest.mock import patch
 
 import faker
-from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from vex.api.limits import QUESTION_MAX_LENGTH, VexThrottle, warn_missing_ip_header
 from vex.models import Conversation
 from vex.tests.factories import ConversationFactory, MessageFactory
+from vex.utils.cache import cache
 
 fake = faker.Faker()
 

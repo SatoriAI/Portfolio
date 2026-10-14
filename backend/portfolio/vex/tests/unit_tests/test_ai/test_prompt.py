@@ -1,12 +1,12 @@
 from unittest.mock import patch
 
-from django.core.cache import cache
 from django.test import TestCase, override_settings
 
 from vex.ai import knowledge
 from vex.ai.history import Turn
 from vex.ai.prompt import build_messages, persona, system_prompt
 from vex.tests.factories import ConfigurationFactory, DocumentFactory
+from vex.utils.cache import cache
 
 
 @override_settings(VEX_SITE_CONTENT_URL="", VEX_CONTACT_EMAIL="dawid@example.com")

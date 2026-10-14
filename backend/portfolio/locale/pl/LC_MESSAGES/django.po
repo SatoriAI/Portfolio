@@ -232,6 +232,15 @@ msgstr "Szacowane"
 msgid "Cost (USD)"
 msgstr "Koszt (USD)"
 
+#: vex/admin.py:137
+#, python-format
+msgid ""
+"Today (UTC): $%(spent).4f of $%(budget)s, %(calls)d calls, %(cached).0f%% of "
+"input cached"
+msgstr ""
+"Dziś (UTC): $%(spent).4f z $%(budget)s, wywołania: %(calls)d, z cache: "
+"%(cached).0f%% wejścia"
+
 #: vex/models.py:65 vex/models.py:66
 msgid "Usage"
 msgstr "Zużycie"

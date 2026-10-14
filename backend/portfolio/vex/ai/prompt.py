@@ -5,12 +5,12 @@ The system message is the same for every question in a language until the person
 what lets OpenAI's prompt cache serve it: the rules come first because they change least."""
 
 from django.conf import settings
-from django.core.cache import cache
 
 from vex.ai.history import Turn
 from vex.ai.knowledge import knowledge_base
 from vex.ai.provider import ChatMessage
 from vex.models import Configuration
+from vex.utils.cache import CacheUnavailable, cache
 
 # Stored with every answer. Bump it whenever RULES changes, so answers can be told apart by the rules that made them.
 PROMPT_VERSION = "2026-10-13b"
@@ -81,7 +81,10 @@ def persona(locale: str) -> str:
         text = configuration.safe_translation_getter("system_prompt", language_code=locale, any_language=True)
         return (text or "").strip()
 
-    return str(cache.get_or_set(f"vex:persona:{locale}", load, PERSONA_TTL_SECONDS))
+    try:
+        return str(cache.get_or_set(f"vex:persona:{locale}", load, PERSONA_TTL_SECONDS))
+    except CacheUnavailable:
+        return load()  # the breaker has logged it
 
 
 def system_prompt(locale: str) -> str:

@@ -49,6 +49,10 @@ describe("vexStreamErrorCode", () => {
     expect(vexStreamErrorCode('{"code": "rate_limited"}')).toBe("rate_limited");
   });
 
+  it("reads the spent daily budget as resting, not as an outage", () => {
+    expect(vexStreamErrorCode('{"code": "resting"}')).toBe("resting");
+  });
+
   it("falls back to unavailable for anything that is not a known code", () => {
     expect(vexStreamErrorCode("{}")).toBe("unavailable");
     expect(vexStreamErrorCode("You exceeded your current quota")).toBe("unavailable");

@@ -1,12 +1,14 @@
 from typing import Any
 
 from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.db.models import QuerySet
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 
+from vex.ai import spend
 from vex.models import Configuration, Conversation, Document, Message, Usage
 from vex.utils.document_text import UnreadableDocument, extract_text
 
@@ -128,6 +130,17 @@ class UsageAdmin(admin.ModelAdmin):
     )
     list_filter = ("outcome", "model", "estimated")
     date_hierarchy = "created_at"
+
+    def changelist_view(self, request: HttpRequest, extra_context: dict[str, Any] | None = None) -> HttpResponse:
+        """Heads the list with today's spend against the budget, as the table adds it up."""
+        today = spend.day_spend(spend.today())
+        subtitle = _("Today (UTC): $%(spent).4f of $%(budget)s, %(calls)d calls, %(cached).0f%% of input cached") % {
+            "spent": today.dollars,
+            "budget": settings.VEX_DAILY_BUDGET_USD,
+            "calls": today.calls,
+            "cached": today.cached_share * 100,
+        }
+        return super().changelist_view(request, {**(extra_context or {}), "subtitle": subtitle})
 
     def has_add_permission(self, request: HttpRequest) -> bool:
         return False

@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from vex.ai.engine import stream_answer
+from vex.ai.spend import Resting
 from vex.api.limits import (
     SESSION_HEADER,
     RateLimitedMixin,
@@ -42,9 +43,9 @@ def sse_event(event: str, data: Mapping[str, object]) -> str:
 @extend_schema(summary="Stream an answer", tags=["Vex"])
 class ChatStreamView(RateLimitedMixin, APIView):
     """Answers one question as a text/event-stream: `delta` events carrying `{"t": text}`, then `done`, or an
-    `error` carrying only `{"code": …}`. A POST, so the question rides in the body and the conversation in the
-    X-Vex-Session header (as for the history), and neither lands in an access log. A refusal (400, 429) comes back
-    as ordinary JSON with its status, which fetch can read."""
+    `error` carrying only `{"code": …}` (`resting` once the day's budget is spent, with no call made). A POST, so the
+    question rides in the body and the conversation in the X-Vex-Session header (as for the history), and neither
+    lands in an access log. A refusal (400, 429) comes back as ordinary JSON with its status, which fetch can read."""
 
     throttle_scope = "vex_stream"
     throttle_classes = [VexThrottle, VexDailyThrottle, VexSessionThrottle]
@@ -94,6 +95,10 @@ class ChatStreamView(RateLimitedMixin, APIView):
             # A warning: an abandoned answer still cost a call (vex.ai.engine records it in Usage).
             logger.warning("Vex stream stopped: the client went away mid-answer")
             raise
+        except Resting as resting:
+            # Asked again, the visitor gets the same notice: nothing was called, nothing saved.
+            logger.info("Vex is resting: %s", resting)
+            yield sse_event("error", {"code": "resting"})
         except Exception:  # pylint: disable=broad-exception-caught
             # The provider's own message (billing, quota, keys) is for the log, never for the visitor.
             logger.exception("Vex stream failed")
