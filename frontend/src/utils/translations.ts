@@ -73,6 +73,16 @@ const copy = {
       conversation: "Conversation with Vex",
       clear: "Clear",
       send: "Send",
+      // The send button while a reply streams, and the mark left on a reply stopped by it.
+      stop: "Stop",
+      stopped: "Stopped",
+      retry: "Try again",
+      copy: "Copy reply",
+      copied: "Copied",
+      // The thumbs under a reply; pressing the chosen one again takes the rating back.
+      rateUp: "Good answer",
+      rateDown: "Bad answer",
+      rateFailed: "Your rating couldn't be saved.",
     },
     nav: {
       home: "Home",
@@ -736,6 +746,14 @@ const copy = {
       conversation: "Rozmowa z Vexem",
       clear: "Wyczyść",
       send: "Wyślij",
+      stop: "Zatrzymaj",
+      stopped: "Zatrzymano",
+      retry: "Spróbuj ponownie",
+      copy: "Kopiuj odpowiedź",
+      copied: "Skopiowano",
+      rateUp: "Dobra odpowiedź",
+      rateDown: "Słaba odpowiedź",
+      rateFailed: "Nie udało się zapisać oceny.",
     },
     nav: {
       home: "Strona główna",

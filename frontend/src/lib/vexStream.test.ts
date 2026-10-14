@@ -101,6 +101,20 @@ describe("streamVexAnswer", () => {
     expect(deltas).toEqual(texts);
   });
 
+  it("reads the saved answer's id from done, and does without one that is not a number", async () => {
+    vi.stubGlobal("fetch", async () =>
+      sseResponse(['event: delta\ndata: {"t":"x"}\n\nevent: done\ndata: {"message_id": 42}\n\n']),
+    );
+    expect(await streamVexAnswer(options().opts)).toEqual({ kind: "done", messageId: 42 });
+    vi.stubGlobal("fetch", async () =>
+      sseResponse(['event: done\ndata: {"message_id": "42"}\n\n']),
+    );
+    expect(await streamVexAnswer(options().opts)).toStrictEqual({
+      kind: "done",
+      messageId: undefined,
+    });
+  });
+
   it("ends cleanly on a done that comes before any text", async () => {
     vi.stubGlobal("fetch", async () => sseResponse(["event: done\ndata: {}\n\n"]));
     const { deltas, opts } = options();

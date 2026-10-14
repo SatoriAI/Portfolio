@@ -3,7 +3,8 @@
 // never the URL, and a refusal's status and body stay readable.
 //
 // The protocol (vex.api.sse): `delta` events carry `{"t": text}`, then one
-// `done`, or an `error` carrying `{"code": …}`. Every payload is JSON on a
+// `done` carrying the saved answer's `{"message_id": id}`, or an `error`
+// carrying `{"code": …}`. Every payload is JSON on a
 // single data line, so the text arrives exactly as the model wrote it.
 
 import { buildUrl, endpoints } from "@/config/endpoints";
@@ -63,7 +64,19 @@ export function createSseParser(onEvent: (event: SseEvent) => void) {
   };
 }
 
-export type VexStreamEnd = { kind: "done" } | { kind: "error"; code: VexErrorCode };
+/** How a stream ended; a finished one names the saved answer, when the server said which. */
+export type VexStreamEnd =
+  | { kind: "done"; messageId?: number }
+  | { kind: "error"; code: VexErrorCode };
+
+function savedMessageId(data: string): number | undefined {
+  try {
+    const id = (JSON.parse(data) as { message_id?: unknown } | null)?.message_id;
+    return typeof id === "number" && Number.isInteger(id) ? id : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 interface StreamOptions {
   question: string;
@@ -112,7 +125,7 @@ export async function streamVexAnswer({
       const text = (JSON.parse(data) as { t?: unknown }).t;
       if (typeof text === "string" && text) onDelta(text);
     } else if (event === "done") {
-      end = { kind: "done" };
+      end = { kind: "done", messageId: savedMessageId(data) };
     } else if (event === "error") {
       end = { kind: "error", code: vexStreamErrorCode(data) };
     }

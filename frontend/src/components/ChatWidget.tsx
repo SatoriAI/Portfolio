@@ -1,7 +1,8 @@
 import React, { lazy, Suspense, useEffect, useId, useReducer, useRef, useState } from "react";
-import { AlertCircle, Bot, MessageSquare, Send, Trash2, User } from "lucide-react";
+import { AlertCircle, Bot, MessageSquare, Send, Square, Trash2, User } from "lucide-react";
 
 import { BrandSymbol } from "@/components/brand/BrandLogo";
+import MessageActions from "@/components/chat/MessageActions";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -13,8 +14,18 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useLatest } from "@/hooks/use-latest";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { apiFetch } from "@/lib/apiClient";
-import { chatReducer, initialChatState, isWaiting, type StoredMessage } from "@/lib/vexChat";
+import { copyText } from "@/lib/clipboard";
+import {
+  type ChatMessage,
+  chatReducer,
+  type Feedback,
+  initialChatState,
+  isWaiting,
+  retryableQuestion,
+  type StoredMessage,
+} from "@/lib/vexChat";
 import { VEX_QUESTION_MAX_LENGTH, type VexErrorCode, vexRequestErrorCode } from "@/lib/vexErrors";
+import { rateReply, saveVexFeedback } from "@/lib/vexFeedback";
 import { streamVexAnswer } from "@/lib/vexStream";
 import { translations } from "@/utils/translations";
 
@@ -151,7 +162,7 @@ const ChatWidget = ({
     hydrateMessagesIfNeeded();
     // Closing abandons the reply in flight (the answer effect aborts its
     // request) and marks the history stale for the next open.
-    return () => dispatch({ type: "stop" });
+    return () => dispatch({ type: "close" });
   }, [isOpen]);
 
   // Scroll to bottom on open and on any message or loading change
@@ -203,9 +214,10 @@ const ChatWidget = ({
   // Answers one question. Every failure — a refusal, a server error, or
   // silence — ends in the same visible state: an inline notice that says why,
   // in the site's words, never the provider's, with a way to reach me instead.
-  // An aborted request (the chat closed or cleared, or the watchdog gave up)
-  // reports nothing more. Every action names its turn, so a request that
-  // outlives its turn cannot write into the next one.
+  // An aborted request (the chat closed or cleared, the visitor stopped the
+  // reply, or the watchdog gave up) reports nothing more. Every action names
+  // its turn, so a request that outlives its turn cannot write into the next
+  // one.
   const answer = async (question: string, turn: number, signal: AbortSignal) => {
     const fail = (code: VexErrorCode) => dispatch({ type: "fail", turn, code });
     let watchdog = 0;
@@ -229,7 +241,7 @@ const ChatWidget = ({
         },
       });
       if (signal.aborted) return;
-      if (end.kind === "done") dispatch({ type: "done", turn });
+      if (end.kind === "done") dispatch({ type: "done", turn, messageId: end.messageId });
       else fail(end.code);
     } catch (err) {
       if (signal.aborted) return;
@@ -292,6 +304,54 @@ const ChatWidget = ({
     notify.success(t.chat.clear, { position: "top-center" });
   };
 
+  // A short message for screen readers about a control's effect ("Copied"),
+  // said once in its own polite region and then cleared.
+  const [notice, setNotice] = useState("");
+  const noticeTimer = useRef(0);
+  useEffect(() => () => window.clearTimeout(noticeTimer.current), []);
+  const announce = (text: string) => {
+    setNotice(text);
+    window.clearTimeout(noticeTimer.current);
+    noticeTimer.current = window.setTimeout(() => setNotice(""), 3000);
+  };
+
+  // Stopping ends the turn, and with it the request (see the answer effect).
+  // The server saves nothing of an answer cut short, so the stopped exchange
+  // is not in the history the next open loads. The button that was Stop is
+  // Send again, disabled with nothing typed, so focus goes to the composer.
+  const handleStop = () => {
+    dispatch({ type: "stop" });
+    textareaRef.current?.focus();
+  };
+
+  // Asks the last question again; its "Try again" goes with the failed reply.
+  const handleRetry = () => {
+    dispatch({ type: "retry" });
+    textareaRef.current?.focus();
+  };
+
+  const handleCopy = async (text: string) => {
+    const done = await copyText(text);
+    if (done) announce(t.chat.copied);
+    return done;
+  };
+
+  const handleRate = async (message: ChatMessage, value: Feedback | null) => {
+    const sessionKey = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!sessionKey) return;
+    const saved = await rateReply(message, value, dispatch, (messageId, rating) =>
+      saveVexFeedback({
+        messageId,
+        value: rating,
+        sessionKey,
+        csrfToken: csrfTokenRef.current,
+      }),
+    );
+    if (!saved) announce(t.chat.rateFailed);
+  };
+
+  const retryQuestion = retryableQuestion(chat);
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -335,15 +395,22 @@ const ChatWidget = ({
     ? ""
     : finished.noAnswer
       ? t.chat.noAnswer
-      : `${t.chat.replied} ${finished.text}`;
+      : finished.stopped
+        ? t.chat.stopped
+        : `${t.chat.replied} ${finished.text}`;
 
   const lengthId = useId();
   const showLength = pasteCut || inputValue.length >= LENGTH_COUNTER_FROM;
 
-  const sendButton = (
+  // While a reply streams the send button is Stop, in the same place.
+  const sendButton = isStreaming ? (
+    <Button onClick={handleStop} size="icon" aria-label={t.chat.stop}>
+      <Square className="fill-current" aria-hidden="true" />
+    </Button>
+  ) : (
     <Button
       onClick={() => handleSendMessage()}
-      disabled={!inputValue.trim() || isLoading || isStreaming}
+      disabled={!inputValue.trim()}
       size="icon"
       aria-label={t.chat.send}
     >
@@ -367,6 +434,14 @@ const ChatWidget = ({
         // A side panel: the page behind stays readable and clickable, and a
         // click outside must not dismiss a conversation in progress.
         onInteractOutside={(event) => event.preventDefault()}
+        // While a reply streams, Escape stops it, keeping what has arrived; a
+        // second Escape closes the chat as always. Closing first would throw
+        // the reply away (the server keeps no unfinished answer).
+        onEscapeKeyDown={(event) => {
+          if (!isStreaming) return;
+          event.preventDefault();
+          handleStop();
+        }}
         className="flex w-full flex-col gap-0 border-l border-border p-0 sm:w-[440px] sm:max-w-none lg:w-[520px]"
       >
         <header className="flex items-center justify-between border-b border-border py-3 pl-5 pr-14">
@@ -387,23 +462,12 @@ const ChatWidget = ({
                 by word, it would be read out word by word. A finished reply is
                 read once by the status region below; a failure by its alert. */}
             <div role="log" aria-live="off" aria-label={t.chat.conversation} className="space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 ${message.isUser ? "justify-end" : "justify-start"}`}
-                >
-                  {!message.isUser && (
-                    <div
-                      aria-hidden="true"
-                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-iris text-primary-foreground"
-                    >
-                      <Bot className="h-4 w-4" />
-                    </div>
-                  )}
+              {messages.map((message) => {
+                const bubble = (
                   <div
-                    className={`prose prose-sm max-w-[85%] rounded-xl px-4 prose-headings:font-semibold prose-headings:leading-tight prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-p:my-2 prose-a:text-iris prose-a:underline prose-a:decoration-1 prose-a:underline-offset-2 prose-code:before:content-[''] prose-code:after:content-[''] prose-pre:rounded-lg prose-pre:bg-primary prose-pre:p-3 prose-pre:text-primary-foreground prose-ol:my-2 prose-ol:ml-5 prose-ol:list-decimal prose-ul:my-2 prose-ul:ml-5 prose-ul:list-disc prose-li:my-1 prose-hr:my-3 ${
+                    className={`prose prose-sm rounded-xl px-4 prose-headings:font-semibold prose-headings:leading-tight prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-p:my-2 prose-a:text-iris prose-a:underline prose-a:decoration-1 prose-a:underline-offset-2 prose-code:before:content-[''] prose-code:after:content-[''] prose-pre:rounded-lg prose-pre:bg-primary prose-pre:p-3 prose-pre:text-primary-foreground prose-ol:my-2 prose-ol:ml-5 prose-ol:list-decimal prose-ul:my-2 prose-ul:ml-5 prose-ul:list-disc prose-li:my-1 prose-hr:my-3 ${
                       message.isUser
-                        ? "prose-invert bg-primary py-2 text-primary-foreground"
+                        ? "prose-invert max-w-[85%] bg-primary py-2 text-primary-foreground"
                         : message.error
                           ? "border border-destructive/40 bg-blush py-2 text-foreground"
                           : "border border-border bg-lavender/40 py-2 text-foreground"
@@ -431,40 +495,84 @@ const ChatWidget = ({
                           <ContactFallback sentence={t.chat.errorFallback} />
                         </span>
                       </p>
+                    ) : message.stopped && !message.text ? (
+                      <p className="not-prose m-0 font-mono text-meta text-muted-foreground">
+                        {t.chat.stopped}
+                      </p>
                     ) : (
-                      <MarkdownBoundary
-                        fallback={
-                          <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
-                            {message.text}
-                          </p>
-                        }
-                        resetKey={`${message.id}:${message.text.length}`}
-                      >
-                        <Suspense
+                      <>
+                        <MarkdownBoundary
                           fallback={
                             <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
                               {message.text}
                             </p>
                           }
+                          resetKey={`${message.id}:${message.text.length}`}
                         >
-                          <MarkdownMessage
-                            text={message.text}
-                            streaming={message.id === chat.replyId}
-                          />
-                        </Suspense>
-                      </MarkdownBoundary>
+                          <Suspense
+                            fallback={
+                              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                                {message.text}
+                              </p>
+                            }
+                          >
+                            <MarkdownMessage
+                              text={message.text}
+                              streaming={message.id === chat.replyId}
+                            />
+                          </Suspense>
+                        </MarkdownBoundary>
+                        {message.stopped && (
+                          <p className="not-prose mb-0 mt-2 font-mono text-meta text-muted-foreground">
+                            {t.chat.stopped}
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
-                  {message.isUser && (
+                );
+
+                return message.isUser ? (
+                  <div key={message.id} className="flex justify-end gap-3">
+                    {bubble}
                     <div
                       aria-hidden="true"
                       className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
                     >
                       <User className="h-4 w-4" />
                     </div>
-                  )}
-                </div>
-              ))}
+                  </div>
+                ) : (
+                  <div key={message.id} className="group/message flex justify-start gap-3">
+                    <div
+                      aria-hidden="true"
+                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-iris text-primary-foreground"
+                    >
+                      <Bot className="h-4 w-4" />
+                    </div>
+                    <div className="flex min-w-0 max-w-[85%] flex-col items-start gap-1">
+                      {bubble}
+                      <MessageActions
+                        message={message}
+                        finished={
+                          message.id !== chat.replyId &&
+                          !message.error &&
+                          !message.noAnswer &&
+                          !message.stopped &&
+                          !message.incomplete
+                        }
+                        canRetry={
+                          retryQuestion !== null && message === messages[messages.length - 1]
+                        }
+                        onRetry={handleRetry}
+                        onCopy={handleCopy}
+                        onRate={(value) => void handleRate(message, value)}
+                        labels={t.chat}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             {isLoading && (
               <div className="mt-4 flex gap-3" role="status" aria-label={t.chat.typing}>
@@ -487,6 +595,9 @@ const ChatWidget = ({
           </ScrollArea>
           <div role="status" className="sr-only">
             {announcement}
+          </div>
+          <div role="status" className="sr-only">
+            {notice}
           </div>
 
           <div className="border-t border-border p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
