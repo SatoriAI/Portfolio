@@ -293,6 +293,9 @@ if VEX_MODEL not in VEX_PRICES:
 # What Vex may spend on the model in one UTC day, in dollars, counted from every call in vex.models.Usage. Once it is
 # reached Vex rests until midnight UTC: it tells visitors so and offers Dawid's email, and calls nothing.
 VEX_DAILY_BUDGET_USD = Decimal(env("VEX_DAILY_BUDGET_USD", default="5.00"))
+# How long a conversation is kept after its last message, in days: 24 months, as the chat tells visitors. Older ones
+# are deleted with their messages, at most once a day, by the request that next saves an answer (vex.retention).
+VEX_CONVERSATION_RETENTION_DAYS = env.int("VEX_CONVERSATION_RETENTION_DAYS", default=730)
 # Where the site publishes its Markdown for Vex (/vex-kb/<locale>.json, emitted by the frontend's build). Empty means
 # Vex answers from the database alone. Locally the Vite dev server answers the same path.
 VEX_SITE_CONTENT_URL = env("VEX_SITE_CONTENT_URL", default="http://localhost:8080" if DEBUG else "")

@@ -80,6 +80,7 @@ The backend reads `backend/.env`; every key is listed with its default in [`back
 | `USE_S3` | No | Media to object storage. Defaults to the inverse of `DEBUG` |
 | `VEX_MODEL`, `VEX_REASONING_EFFORT` | No | Vex's OpenAI model and its reasoning effort; `gpt-6-luna` and `low` by default |
 | `VEX_DAILY_BUDGET_USD` | No | What Vex may spend on the model per UTC day; `5.00` by default. Once reached, Vex rests until midnight UTC and offers Dawid's email instead |
+| `VEX_CONVERSATION_RETENTION_DAYS` | No | How long Vex keeps a conversation after its last message; `730` (24 months) by default, which the chat's notice promises |
 | `REDIS_URL` | No | Where Vex keeps its rate-limit counts and the day's spend, shared by every worker; without it they live in each process's memory |
 | `VEX_REDIS_DB` | No | The Redis database Vex uses when `REDIS_URL` names none; `5` by default |
 | `VEX_SITE_CONTENT_URL` | No | The site's origin, where Vex fetches `/vex-kb/<pl\|en>.json`; `http://localhost:8080` with `DEBUG`, otherwise empty |
