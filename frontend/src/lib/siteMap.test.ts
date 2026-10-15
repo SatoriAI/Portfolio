@@ -84,11 +84,27 @@ describe("the site's addresses", () => {
       ),
       ...redirects.map((r) => r.from),
     ]);
-    const declared = [...source("../App.tsx").matchAll(/<Route[^>]*\spath="([^"]+)"/g)]
-      .map((match) => match[1])
-      .filter((path) => path !== "*" && !path.includes(":"));
-    expect(declared.length).toBeGreaterThan(0);
-    for (const path of declared) expect(known).toContain(path);
+    // Every `path=` in the file, in any quoting and wherever it sits among
+    // the attributes: a string, a string in braces, or an expression.
+    const PATH = /\bpath=(?:"([^"]*)"|'([^']*)'|\{\s*(["'`])(.*?)\3\s*\}|\{([^}]*)\})/g;
+    const found = [...source("../App.tsx").matchAll(PATH)];
+    const literals = found
+      .map((match) => match[1] ?? match[2] ?? match[4])
+      .filter((path) => path !== undefined);
+    const expressions = found.map((match) => match[5]?.trim()).filter(Boolean);
+    expect(literals.length).toBeGreaterThan(0);
+
+    // The redirects' own routes, mapped from navigation.ts.
+    expect(expressions).toEqual(["from"]);
+    // A route with a parameter must be listed here, with how its addresses
+    // reach the server; /workshop/:slug from the published pieces.
+    const parameterRoutes = ["/workshop/:slug"];
+    for (const path of literals.filter((path) => path.includes(":"))) {
+      expect(parameterRoutes).toContain(path);
+    }
+    for (const path of literals.filter((path) => path !== "*" && !path.includes(":"))) {
+      expect(known).toContain(path);
+    }
   });
 });
 
