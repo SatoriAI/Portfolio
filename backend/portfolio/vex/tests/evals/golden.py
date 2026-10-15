@@ -135,7 +135,7 @@ CASES: tuple[Case, ...] = (
         "site-writing-en",
         "How smooth is Thermoscope on a phone?",
         "en",
-        expect=("60",),
+        expect=("60 frame|60 fps",),
         language="en",
         tags=("fact", "site"),
     ),
