@@ -15,19 +15,10 @@
 
     <!-- The theme is set before the first paint, so the page never shows the
          wrong one first: the reader's remembered choice, else the machine's.
-         SettingsContext keeps it in step afterwards. -->
-    <script>
-      (function () {
-        var theme;
-        try {
-          theme = localStorage.getItem("theme");
-        } catch (error) {}
-        if (theme !== "light" && theme !== "dark") {
-          theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        }
-        document.documentElement.dataset.theme = theme;
-      })();
-    </script>
+         A file of its own, not inline, because the site's CSP allows scripts
+         from the site only; classic and blocking on purpose, it is a few
+         lines. SettingsContext keeps the theme in step afterwards. -->
+    <script src="/theme.js"></script>
 
     <!-- The kit supplies a separate micro cut with a heavier stroke for 16-48px;
          these are its files, not the standard symbol scaled down. -->
