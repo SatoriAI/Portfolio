@@ -161,6 +161,46 @@ export default {
         scrim: cast(0.4),
         "scrim-faint": cast(0.15),
       },
+      // Vex's answers are set with @tailwindcss/typography, whose colours are
+      // its own greys: bold, headings, quotes and bullets drew near-black on
+      // the dark theme's navy. Every prose colour is a theme token instead,
+      // and the inverted set (the reader's own messages, on the primary fill)
+      // follows primary-foreground.
+      typography: {
+        DEFAULT: {
+          css: {
+            "--tw-prose-body": "hsl(var(--foreground))",
+            "--tw-prose-headings": "hsl(var(--foreground))",
+            "--tw-prose-lead": "hsl(var(--muted-foreground))",
+            "--tw-prose-links": "hsl(var(--iris))",
+            "--tw-prose-bold": "hsl(var(--foreground))",
+            "--tw-prose-counters": "hsl(var(--muted-foreground))",
+            "--tw-prose-bullets": "hsl(var(--control-border))",
+            "--tw-prose-hr": "hsl(var(--border))",
+            "--tw-prose-quotes": "hsl(var(--foreground))",
+            "--tw-prose-quote-borders": "hsl(var(--border))",
+            "--tw-prose-captions": "hsl(var(--muted-foreground))",
+            "--tw-prose-kbd": "hsl(var(--foreground))",
+            "--tw-prose-code": "hsl(var(--foreground))",
+            "--tw-prose-pre-code": "hsl(var(--primary-foreground))",
+            "--tw-prose-pre-bg": "hsl(var(--primary))",
+            "--tw-prose-th-borders": "hsl(var(--control-border))",
+            "--tw-prose-td-borders": "hsl(var(--border))",
+            "--tw-prose-invert-body": "hsl(var(--primary-foreground))",
+            "--tw-prose-invert-headings": "hsl(var(--primary-foreground))",
+            "--tw-prose-invert-lead": "hsl(var(--primary-foreground))",
+            "--tw-prose-invert-links": "hsl(var(--primary-foreground))",
+            "--tw-prose-invert-bold": "hsl(var(--primary-foreground))",
+            "--tw-prose-invert-counters": "hsl(var(--primary-foreground))",
+            "--tw-prose-invert-bullets": "hsl(var(--primary-foreground))",
+            "--tw-prose-invert-hr": "hsl(var(--primary-foreground))",
+            "--tw-prose-invert-quotes": "hsl(var(--primary-foreground))",
+            "--tw-prose-invert-quote-borders": "hsl(var(--primary-foreground))",
+            "--tw-prose-invert-captions": "hsl(var(--primary-foreground))",
+            "--tw-prose-invert-code": "hsl(var(--primary-foreground))",
+          },
+        },
+      },
       transitionTimingFunction: {
         brand: "cubic-bezier(0.22, 1, 0.36, 1)",
       },
