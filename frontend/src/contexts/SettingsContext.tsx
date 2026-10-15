@@ -1,19 +1,16 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 type Language = "en" | "pl";
-/** What the reader chose; "system" follows the machine and stores nothing. */
-export type ThemePreference = "system" | "light" | "dark";
 export type Theme = "light" | "dark";
 
 interface SettingsContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  themePreference: ThemePreference;
-  setThemePreference: (preference: ThemePreference) => void;
-  /** The theme on screen: the preference, or the machine's under "system". */
+  /** The theme on screen: the machine's, unless the reader flipped it. */
   theme: Theme;
-  /** The machine's own scheme, whatever the preference. */
-  systemTheme: Theme;
+  /** Switches to the other theme. Flipping back to the machine's own theme
+   *  forgets the choice, so the page follows the machine again. */
+  flipTheme: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -73,17 +70,30 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return "en";
   });
 
-  const [themePreference, setThemePreferenceState] = useState<ThemePreference>(() => {
+  // There are two stops, the machine's theme and the other one, so only the
+  // other one is ever stored: a choice equal to the machine's is no choice.
+  const [system, setSystem] = useState<Theme>(systemTheme);
+  const [override, setOverride] = useState<Theme | null>(() => {
     try {
       const saved = localStorage.getItem("theme");
-      if (saved === "light" || saved === "dark") return saved;
+      if ((saved === "light" || saved === "dark") && saved !== systemTheme()) return saved;
     } catch (_error) {
       console.error(_error);
     }
-    return "system";
+    return null;
   });
-  const [system, setSystem] = useState<Theme>(systemTheme);
-  const theme = themePreference === "system" ? system : themePreference;
+  const theme = override ?? system;
+
+  // Stored and in state stay in step: a saved choice the machine has since
+  // caught up with is forgotten, so the next flip always changes the page.
+  useEffect(() => {
+    try {
+      if (override) localStorage.setItem("theme", override);
+      else localStorage.removeItem("theme");
+    } catch (_error) {
+      console.error(_error);
+    }
+  }, [override]);
 
   useEffect(() => {
     localStorage.setItem("language", language);
@@ -95,27 +105,26 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     document.documentElement.lang = language;
   }, [language]);
 
-  // Under "system" the page follows the machine live, without a reload.
+  // Unflipped, the page follows the machine live, without a reload. When the
+  // machine turns to the theme the reader flipped to, the flip is spent.
   useEffect(() => {
     const query = window.matchMedia?.(DARK_QUERY);
     if (!query) return;
-    const onChange = () => setSystem(query.matches ? "dark" : "light");
+    const onChange = () => {
+      const next: Theme = query.matches ? "dark" : "light";
+      setSystem(next);
+      setOverride((current) => (current === next ? null : current));
+    };
     query.addEventListener("change", onChange);
     return () => query.removeEventListener("change", onChange);
   }, []);
 
   useEffect(() => applyTheme(theme), [theme]);
 
-  // A choice is remembered; choosing System again forgets it.
-  const setThemePreference = (preference: ThemePreference) => {
-    try {
-      if (preference === "system") localStorage.removeItem("theme");
-      else localStorage.setItem("theme", preference);
-    } catch (_error) {
-      console.error(_error);
-    }
-    applyTheme(preference === "system" ? systemTheme() : preference);
-    setThemePreferenceState(preference);
+  const flipTheme = () => {
+    const next: Theme = theme === "light" ? "dark" : "light";
+    applyTheme(next);
+    setOverride(next === system ? null : next);
   };
 
   return (
@@ -123,10 +132,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       value={{
         language,
         setLanguage,
-        themePreference,
-        setThemePreference,
         theme,
-        systemTheme: system,
+        flipTheme,
       }}
     >
       {children}

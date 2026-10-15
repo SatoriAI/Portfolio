@@ -6,7 +6,6 @@ import BrandLogo from "@/components/brand/BrandLogo";
 import HeatField from "@/components/brand/HeatField";
 import LanguageToggle from "@/components/LanguageToggle";
 import Container from "@/components/layout/Container";
-import ThemeMenu from "@/components/ThemeMenu";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -118,10 +117,9 @@ const SiteHeader = () => {
 
             <div className="flex items-center gap-2">
               <LanguageToggle />
-              {/* One button beside the language where the links have the
-                bar; three segments with words in the menu sheet, where they
-                fold into it. */}
-              <ThemeMenu className="hidden xl:inline-flex" />
+              {/* Beside the language where the links have the bar; in the
+                menu sheet, with its action in words, where they fold into it. */}
+              <ThemeToggle className="hidden xl:inline-flex" />
             </div>
 
             <div className="xl:hidden">
@@ -153,7 +151,7 @@ const SiteHeader = () => {
                     <p className="pb-1 font-mono text-meta uppercase tracking-widest text-muted-foreground">
                       {t.common.appearance}
                     </p>
-                    <ThemeToggle />
+                    <ThemeToggle labelled className="self-start" />
                   </div>
                 </SheetContent>
               </Sheet>
