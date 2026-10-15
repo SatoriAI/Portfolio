@@ -163,10 +163,12 @@
     --chosen-foreground: var(--ink);
     --chosen-edge: var(--iris);
     /* A disabled primary button is off, not a faded beacon: the card, muted
-       text and the control edge (3.6:1 on surface). */
+       text and the decorative edge. The control edge would make it the
+       outline button, which is enabled; disabled controls are exempt from
+       the 3:1 boundary rule. */
     --primary-disabled: var(--surface);
     --primary-disabled-foreground: var(--text-secondary);
-    --primary-disabled-edge: var(--control-border);
+    --primary-disabled-edge: var(--border);
     --primary-disabled-opacity: 1;
   }
 

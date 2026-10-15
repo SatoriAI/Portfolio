@@ -513,8 +513,9 @@ const ChatWidget = ({
       disabled={!inputValue.trim()}
       size="icon"
       aria-label={t.chat.send}
-      // Empty, it is a quiet icon in the field; with a question, navy.
-      className="shrink-0 disabled:bg-transparent disabled:text-muted-foreground disabled:opacity-100"
+      // Empty, it is a quiet icon in the field, with no disabled edge; with
+      // a question, navy.
+      className="shrink-0 disabled:bg-transparent disabled:text-muted-foreground disabled:opacity-100 disabled:shadow-none"
     >
       <Send />
     </Button>
