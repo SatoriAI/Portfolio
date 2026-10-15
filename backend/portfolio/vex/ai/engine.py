@@ -7,7 +7,6 @@ from datetime import UTC
 from django.conf import settings
 from django.db import transaction
 
-from vex import retention
 from vex.ai import provider, spend
 from vex.ai.history import MessageHistory, Turn
 from vex.ai.knowledge import estimate_tokens
@@ -82,8 +81,6 @@ def stream_answer(question: str, locale: str, session_key: str, asked_from: str 
         saved = history.add_exchange(
             Turn("user", question, asked_from), "".join(answer), usage=usage, prompt_version=PROMPT_VERSION
         )
-    # Once the answer is saved, so the first answer of the day, not the first token, waits for the purge.
-    retention.purge_daily()
     return saved
 
 
