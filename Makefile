@@ -12,7 +12,7 @@
 .DEFAULT_GOAL := help
 .PHONY: help install install-backend install-frontend \
         lint lint-backend lint-frontend format-frontend typecheck \
-        test test-backend test-frontend build translations check \
+        test test-backend test-frontend eval-vex build translations check \
         sync-work-check sync-work
 
 help:  ## Show this help
@@ -43,6 +43,11 @@ test-backend:  ## Run the backend suite with its coverage gate
 	# the workflow so that `make test-backend` and the CI step stay one thing;
 	# both files are gitignored.
 	cd backend && uv run pytest --cov-report xml --junitxml=report.xml
+
+eval-vex:  ## Run Vex's golden set against the real model (costs money; needs OPENAI_API_KEY)
+	# Options go in EVAL_ARGS, e.g. EVAL_ARGS="--eval-repeats 3"; see
+	# backend/portfolio/vex/tests/evals.
+	cd backend && uv run pytest -m eval --no-cov portfolio/vex/tests/evals $(EVAL_ARGS)
 
 # ── Frontend ─────────────────────────────────────────────────────────────
 lint-frontend:  ## ESLint the frontend

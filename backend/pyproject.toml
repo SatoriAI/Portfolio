@@ -150,7 +150,7 @@ DJANGO_SETTINGS_MODULE = "portfolio.settings"
 # The evals call the real model (see vex/tests/evals): only on request, with `-m eval --no-cov`.
 addopts = "portfolio -m 'not eval' --cov --cov-report term-missing --cov-fail-under=85"
 markers = [
-    "eval: Vex's golden set against the real model; costs money, never in CI",
+    "eval: Vex's golden set against the real model; costs money, so only on request (and in .github/workflows/vex-evals.yml)",
 ]
 python_files = "test_*.py"
 python_classes = "*TestCase"

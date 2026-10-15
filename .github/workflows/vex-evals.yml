@@ -1,0 +1,165 @@
+# Vex's golden set against the real model (backend/portfolio/vex/tests/evals),
+# so a change to her prompt, her knowledge or her model shows what it does to
+# her answers before it merges. Each case is asked three times and passes on
+# two answers in three; the run fails below 90% of cases passing.
+#
+# It costs money, so it runs only when her brain changes, once a week on main
+# (the model behind the API can change under an unchanged prompt), and on
+# request. Vex answers from the evals' own fixture, in an empty database: the
+# site's public content and made-up personal notes, never Dawid's documents.
+name: Vex Evals
+
+on:
+  pull_request:
+    # Whatever decides what Vex reads and how she answers, and what the run is
+    # built from. The rest of the frontend, its pages and styles, never
+    # reaches her.
+    paths:
+      - 'backend/portfolio/vex/ai/**'
+      - 'backend/portfolio/vex/models.py'
+      - 'backend/portfolio/vex/choices.py'
+      - 'backend/portfolio/vex/utils/**'
+      - 'backend/portfolio/utils/**'
+      - 'backend/portfolio/vex/tests/evals/**'
+      - 'backend/portfolio/vex/migrations/**'
+      - 'backend/portfolio/portfolio/settings.py'
+      - 'backend/portfolio/conftest.py'
+      # The rows she reads, how each writes itself out for her, and the
+      # translations of its labels.
+      - 'backend/portfolio/work/models.py'
+      - 'backend/portfolio/work/choices.py'
+      - 'backend/portfolio/university/models.py'
+      - 'backend/portfolio/university/choices.py'
+      - 'backend/portfolio/locale/**'
+      # The site's Markdown, and the frontend's build of it for her (vex-kb).
+      - 'frontend/src/content/**'
+      - 'frontend/src/lib/vexKnowledge.ts'
+      - 'frontend/src/lib/vexKnowledgeFiles.ts'
+      - 'frontend/src/lib/workshop.ts'
+      - 'frontend/vite.config.ts'
+      # The run's environment and command.
+      - 'backend/pyproject.toml'
+      - 'backend/uv.lock'
+      - 'Makefile'
+      - '.github/actions/setup-python/**'
+      - '.github/workflows/vex-evals.yml'
+  # Scheduled runs use the default branch, main.
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      repeats:
+        description: 'Answers per case; a case passes on two thirds of them'
+        type: number
+        default: 3
+      threshold:
+        description: 'The share of cases that must pass, from 0 to 1'
+        type: number
+        default: 0.9
+
+# The token reads the repository and nothing else; no job here writes anywhere.
+permissions:
+  contents: read
+
+concurrency:
+  # A new push supersedes the pull request's run in flight: an answer about a
+  # replaced commit is money spent on nothing. A manual run and the weekly one
+  # are each in a group of their own and never cancel the run in progress.
+  # GitHub keeps one pending run per group, though, so a newer one queued
+  # behind it replaces an older one still waiting.
+  group: vex-evals-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # Secrets cannot be read in a job's `if`, so this says whether there is a
+  # key. There is none on a fork's pull request, nor until the secret is added:
+  # the evals are then skipped with a notice, never failed.
+  key:
+    name: Check for the API Key
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      present: ${{ steps.check.outputs.present }}
+
+    steps:
+      - name: Look for VEX_EVALS_OPENAI_API_KEY
+        id: check
+        env:
+          OPENAI_API_KEY: ${{ secrets.VEX_EVALS_OPENAI_API_KEY }}
+        run: |
+          if [ -n "${OPENAI_API_KEY}" ]; then
+            echo "present=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "present=false" >> "${GITHUB_OUTPUT}"
+            message="VEX_EVALS_OPENAI_API_KEY is not set for this run (a fork, or the secret is not added yet), so Vex's evals were skipped."
+            echo "::notice title=Vex evals skipped::${message}"
+            echo "${message}" >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+  evals:
+    name: Golden Set
+    needs: key
+    if: needs.key.outputs.present == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        # As in backend-quality.yml. The evals build an empty test database on
+        # it and load their fixture there.
+        image: pgvector/pgvector:pg17
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Nothing here pushes, and left on disk the token is readable by every
+          # step that follows — including a dependency's install script.
+          persist-credentials: false
+
+      - name: Set Up Python Environment
+        uses: ./.github/actions/setup-python
+
+      # Vex reads some labels through Django's translations (a testimonial's
+      # season), so the Polish knowledge matches production's only with them.
+      - name: Install gettext for Django compilemessages
+        run: sudo apt-get update && sudo apt-get install -y gettext
+
+      - name: Compile Translations (.po -> .mo)
+        run: make translations
+
+      - name: Run the Golden Set
+        env:
+          SECRET_KEY: "0m(b5ytsmyyq9al$uulhdvb(hw^jge298(11pm49c!^6se&)ht"
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/vex_evals"
+          OPENAI_API_KEY: ${{ secrets.VEX_EVALS_OPENAI_API_KEY }}
+          USE_S3: "False"
+          # As given to Run workflow, 0 included, so the harness can refuse a
+          # value out of range. Empty on a pull request or a scheduled run,
+          # which take the defaults below.
+          REPEATS: ${{ inputs.repeats }}
+          THRESHOLD: ${{ inputs.threshold }}
+        run: >-
+          make eval-vex EVAL_ARGS="--eval-repeats ${REPEATS:-3} --eval-threshold ${THRESHOLD:-0.9}
+          --eval-json ${RUNNER_TEMP}/vex-evals.json --eval-markdown ${GITHUB_STEP_SUMMARY}"
+
+      # Every answer, verdict and call, for a closer look at a failure.
+      - name: Upload the Answers
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: vex-evals
+          path: ${{ runner.temp }}/vex-evals.json
+          if-no-files-found: ignore
+          retention-days: 30

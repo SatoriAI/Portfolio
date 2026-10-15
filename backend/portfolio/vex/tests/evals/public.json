@@ -1,0 +1,1349 @@
+[
+{
+  "model": "work.experience",
+  "pk": 1,
+  "fields": {
+    "created_at": "2025-11-16T13:31:16.887Z",
+    "updated_at": "2026-10-09T05:28:45.865Z",
+    "position": "Python Web Developer",
+    "start": "2020-11-01",
+    "end": "2024-08-31",
+    "company": "Nokia Solutions and Networks",
+    "technologies": "[\"Python\", \"Django\", \"REST API\", \"PostgreSQL\", \"Redis\", \"RabbitMQ\", \"Celery\", \"Angular\", \"React\", \"CI\"]",
+    "tools": null,
+    "topics": null,
+    "visible": true
+  }
+},
+{
+  "model": "work.experience",
+  "pk": 2,
+  "fields": {
+    "created_at": "2025-11-16T13:32:31.274Z",
+    "updated_at": "2026-10-09T05:28:45.869Z",
+    "position": "Python Engineer",
+    "start": "2022-02-01",
+    "end": "2023-02-28",
+    "company": "PeakData",
+    "technologies": "[\"Python\", \"Pandas\", \"scikit-learn\", \"AWS\", \"Argo Workflows\", \"Docker\", \"CI\"]",
+    "tools": null,
+    "topics": null,
+    "visible": true
+  }
+},
+{
+  "model": "work.experience",
+  "pk": 3,
+  "fields": {
+    "created_at": "2025-11-16T13:34:25.519Z",
+    "updated_at": "2026-10-09T05:28:45.871Z",
+    "position": "Software Developer",
+    "start": "2022-09-01",
+    "end": null,
+    "company": "Xperi",
+    "technologies": "[\"Python\", \"FastAPI\", \"REST API\", \"SQLAlchemy\", \"Go\", \"Kafka\", \"PostgreSQL\", \"Kubernetes\", \"Docker\", \"AWS\", \"React\", \"CI/CD\", \"Microservices\"]",
+    "tools": "[\"Copilot\"]",
+    "topics": null,
+    "visible": true
+  }
+},
+{
+  "model": "work.experience",
+  "pk": 4,
+  "fields": {
+    "created_at": "2025-11-16T13:35:40.994Z",
+    "updated_at": "2026-10-09T05:28:45.875Z",
+    "position": "Python Backend Engineer",
+    "start": "2024-04-01",
+    "end": "2025-07-31",
+    "company": "CloudFerro",
+    "technologies": "[\"Python\", \"FastAPI\", \"REST API\", \"SQLAlchemy\", \"Go\", \"RabbitMQ\", \"PostgreSQL\", \"Redis\", \"OpenStack\", \"Argo Workflows\", \"Docker\", \"CI\"]",
+    "tools": null,
+    "topics": null,
+    "visible": true
+  }
+},
+{
+  "model": "work.experience",
+  "pk": 7,
+  "fields": {
+    "created_at": "2026-10-08T06:51:40.258Z",
+    "updated_at": "2026-10-09T05:28:45.873Z",
+    "position": "Python and Data Science Trainer",
+    "start": "2023-06-01",
+    "end": "2024-09-30",
+    "company": "SDA / PFiG",
+    "technologies": "[\"Python\", \"TensorFlow\"]",
+    "tools": null,
+    "topics": "[\"Bazy danych\", \"testowanie oprogramowania i TDD\", \"statystyka\", \"algebra liniowa\", \"przetwarzanie danych\", \"uczenie maszynowe\", \"sieci neuronowe\"]",
+    "visible": true
+  }
+},
+{
+  "model": "work.experience",
+  "pk": 8,
+  "fields": {
+    "created_at": "2026-10-08T06:51:40.263Z",
+    "updated_at": "2026-10-09T05:28:45.877Z",
+    "position": "Python Backend Engineer",
+    "start": "2025-12-01",
+    "end": null,
+    "company": "PwC",
+    "technologies": "[\"Python\", \"FastAPI\", \"REST API\", \"SQLAlchemy\", \"PostgreSQL\", \"Redis\", \"Docker\", \"LangChain\", \"CI/CD\", \"GenAI\", \"Microservices\"]",
+    "tools": "[\"Claude Code\", \"Cursor\"]",
+    "topics": null,
+    "visible": true
+  }
+},
+{
+  "model": "work.experience",
+  "pk": 9,
+  "fields": {
+    "created_at": "2026-10-08T06:51:40.265Z",
+    "updated_at": "2026-10-09T05:28:45.878Z",
+    "position": "AI Engineer",
+    "start": "2026-02-01",
+    "end": null,
+    "company": "Addepto",
+    "technologies": "[\"Python\", \"FastAPI\", \"REST API\", \"SQLAlchemy\", \"PostgreSQL\", \"Redis\", \"Docker\", \"LangGraph\", \"Databricks\", \"CI\", \"GenAI\"]",
+    "tools": "[\"Claude Code\"]",
+    "topics": null,
+    "visible": true
+  }
+},
+{
+  "model": "work.experiencetranslation",
+  "pk": 1,
+  "fields": {
+    "language_code": "en",
+    "role": "Python Web Developer",
+    "location": "Online",
+    "product": "Reporting Portal was a web application that let testers and managers follow the testing progress of the base stations (BTS) developed by Nokia.\n\nThe system collected data from many sources, including Jira and the internal frameworks used by the test centres. The data was then processed and presented in reports and views tailored to each user's needs. Tens of thousands of people used the portal every week.",
+    "responsibilities": "I worked in the backend team, responsible for integrations with the source systems and for fetching, processing and storing their data. I built the clients that talked to those systems and the Celery tasks that kept the data up to date.\n\nWith the amount of data involved, a large part of my work was optimising existing mechanisms, code and database queries. I occasionally took on frontend work too.",
+    "contributions": "[\"Integration with the Chinese test centres: I built a complete module on my own, covering clients for the three tools the testers used, processing and storing the data, and a frontend view of the results.\", \"Optimising the test coverage calculator: I took part in the team's work on the performance of one of the system's key parts, the calculation of a device's test coverage.\"]",
+    "results": "[\"The module integrating data from the Chinese test centres ran reliably. Over its lifetime, two bugs were recorded, both caused by changes to naming conventions in the source data.\", \"Optimising the calculator as a team, we brought its memory use down from gigabytes to a few hundred megabytes, which made calculating test coverage much faster.\"]",
+    "description": "I was involved in creating an internal portal used throughout the organisation, which recorded tens of thousands of page views per week and was a key tool for collecting, processing and visualising data from Nokia's test and computing centres. I was responsible for backend development in Django and Celery, and also collaborated on front-end development in React, ensuring the consistency and performance of the entire system.",
+    "achievements": "[\"I optimised memory usage from gigabytes to megabytes in a key element of the system. This change has significantly stabilised its operation.\"]",
+    "vex_question": "Tell me more about Dawid's contribution.",
+    "master": 1
+  }
+},
+{
+  "model": "work.experiencetranslation",
+  "pk": 2,
+  "fields": {
+    "language_code": "pl",
+    "role": "Python Web Developer",
+    "location": "Online",
+    "product": "Reporting Portal był aplikacją webową umożliwiającą testerom i menedżerom monitorowanie postępów testowania stacji bazowych (BTS) rozwijanych przez Nokię.\n\nSystem zbierał dane z wielu źródeł, m.in. Jiry oraz wewnętrznych frameworków wykorzystywanych przez centra testowe. Dane były następnie przetwarzane i prezentowane w raportach oraz widokach dostosowanych do potrzeb użytkowników. Z portalu korzystało kilkadziesiąt tysięcy osób tygodniowo.",
+    "responsibilities": "Pracowałem w zespole backendowym, odpowiadając za integracje z systemami źródłowymi oraz pobieranie, przetwarzanie i zapisywanie danych. Tworzyłem klientów do komunikacji z tymi systemami oraz zadania Celery zapewniające regularną aktualizację danych.\n\nZe względu na dużą ilość przetwarzanych danych istotną częścią mojej pracy była optymalizacja istniejących mechanizmów, kodu i zapytań do bazy danych. Okazjonalnie realizowałem również zadania frontendowe.",
+    "contributions": "[\"Integracja z chińskimi centrami testowymi: samodzielnie opracowałem kompletny moduł obejmujący klientów do trzech narzędzi używanych przez testerów, przetwarzanie i zapis danych oraz widok frontendowy prezentujący wyniki.\", \"Optymalizacja kalkulatora pokrycia testowego: uczestniczyłem w pracach zespołu nad poprawą wydajności jednego z kluczowych elementów systemu, który obliczał pokrycie testowe danego urządzenia.\"]",
+    "results": "[\"Moduł integrujący dane z chińskich centrów testowych działał stabilnie. W okresie jego eksploatacji odnotowano dwa błędy związane ze zmianami konwencji nazewniczej w danych źródłowych.\", \"W ramach zespołowej optymalizacji kalkulatora zmniejszyliśmy zużycie pamięci z poziomu gigabajtów do kilkuset megabajtów. Usprawnienie umożliwiło znacznie szybsze obliczanie pokrycia testowego.\"]",
+    "description": "Byłem zaangażowany w tworzenie wewnętrznego portalu wykorzystywanego w całej organizacji, który tygodniowo notował dziesiątki tysięcy odsłon i stanowił kluczowe narzędzie do zbierania, przetwarzania i wizualizacji danych z centrów testowych i obliczeniowych Nokii. Odpowiadałem za rozwój backendu w Django i Celery, a także współpracowałem przy tworzeniu front-endu w React, dbając o spójność i wydajność całego systemu.",
+    "achievements": "[\"Przeprowadziłem optymalizację zużycia pamięci z gigabajtów do megabajtów w kluczowym elemencie systemu. Zmiana ta wyraźnie ustabilizowała jego działanie.\"]",
+    "vex_question": "Opowiedz mi więcej o wkładzie Dawida.",
+    "master": 1
+  }
+},
+{
+  "model": "work.experiencetranslation",
+  "pk": 3,
+  "fields": {
+    "language_code": "pl",
+    "role": "Python Engineer",
+    "location": "Online",
+    "product": "PeakData AG rozwijało produkt pomagający firmom farmaceutycznym identyfikować specjalistów potencjalnie zainteresowanych danym lekiem lub obszarem terapeutycznym.\n\nNa podstawie dostarczonej listy osób system zbierał informacje z wielu źródeł, m.in. mediów społecznościowych, publikacji w PubMed oraz danych o badaniach klinicznych. Algorytmy uczenia maszynowego analizowały te informacje i wyznaczały ocenę potencjalnego zainteresowania.\n\nDuża skala danych wymagała wydajnego przetwarzania oraz efektywnego zarządzania zadaniami w Argo Workflows, uruchamianymi w środowisku AWS.",
+    "responsibilities": "Odpowiadałem za rozwój i utrzymanie wybranych etapów przetwarzania danych — od przygotowania danych źródłowych po obliczenia wykorzystujące uczenie maszynowe. Pracowałem nad jakością danych oraz sprawnym działaniem tych procesów. W praktyce najczęściej sprowadzało się to do optymalizacji funkcji wykorzystywanych w Argo Workflows.",
+    "contributions": "[\"Automatyczne wykrywanie duplikatów: zautomatyzowałem wyszukiwanie duplikatów w danych pobieranych z PubMed.\", \"Optymalizacja przetwarzania: wprowadziłem usprawnienia wydajności algorytmów wykorzystujących uczenie maszynowe.\"]",
+    "results": "[\"Wprowadzone optymalizacje znacząco obniżyły koszty zasobów AWS wykorzystywanych przez procesy w Argo Workflows.\", \"Wspólnie z zespołem dostarczyliśmy kilkanaście projektów dla firm farmaceutycznych, a przygotowane dane zostały wykorzystane przez klientów w praktyce.\"]",
+    "description": "Opracowywałem i automatyzowałem workflowy analityczne, których celem było precyzyjne wskazywanie specjalistów najlepiej dopasowanych do potrzeb firm farmaceutycznych. Pracując z dużymi, heterogenicznymi zbiorami danych, wykorzystywałem elementy big data i wydajne metody obliczeniowe, aby łączyć, przetwarzać i analizować informacje na skalę niemożliwą do osiągnięcia tradycyjnymi narzędziami.",
+    "achievements": "[\"Opracowałem i zautomatyzowałem proces identyfikacji oraz usuwania duplikatów osób w danych pozyskiwanych z PubMed. Poprawiło to wyraźnie jakość i przydatność analizowanych zbiorów danych.\"]",
+    "vex_question": "Jak wyglądał pipeline w Argo?",
+    "master": 2
+  }
+},
+{
+  "model": "work.experiencetranslation",
+  "pk": 4,
+  "fields": {
+    "language_code": "en",
+    "role": "Python Engineer",
+    "location": "Online",
+    "product": "PeakData AG built a product that helps pharmaceutical companies identify specialists likely to be interested in a given drug or therapeutic area.\n\nFrom a list of people, the system gathered information from many sources, including social media, PubMed publications and clinical trial data. Machine learning algorithms analysed this information and scored each person's likely interest.\n\nThe scale of the data called for efficient processing and well-managed tasks in Argo Workflows, running on AWS.",
+    "responsibilities": "I was responsible for developing and maintaining selected stages of the data processing, from preparing the source data to the machine learning computations. I worked on data quality and on keeping these processes running smoothly, which in practice mostly meant optimising the functions used in Argo Workflows.",
+    "contributions": "[\"Automatic duplicate detection: I automated finding duplicates in the data fetched from PubMed.\", \"Processing optimisation: I improved the performance of the algorithms that used machine learning.\"]",
+    "results": "[\"The optimisations significantly cut the cost of the AWS resources used by the processes in Argo Workflows.\", \"Together with the team, we delivered more than a dozen projects for pharmaceutical companies, and clients put the data we prepared to use.\"]",
+    "description": "I developed and automated analytical workflows designed to accurately identify specialists best suited to the needs of pharmaceutical companies. Working with large, heterogeneous data sets, I used big data elements and efficient computational methods to combine, process and analyse information on a scale that would be impossible to achieve with traditional tools.",
+    "achievements": "[\"I developed and automated the process of identifying and removing duplicate individuals in data obtained from PubMed. This significantly improved the quality and usefulness of the analysed data sets.\"]",
+    "vex_question": "What did the Argo pipeline look like?",
+    "master": 2
+  }
+},
+{
+  "model": "work.experiencetranslation",
+  "pk": 5,
+  "fields": {
+    "language_code": "pl",
+    "role": "Software Developer",
+    "location": "Online",
+    "product": "Vewd, a następnie Xperi, rozwija oprogramowanie dla inteligentnych telewizorów. Mój zespół tworzy infrastrukturę backendową umożliwiającą dystrybucję aktualizacji oraz integrację urządzeń z usługami zewnętrznych dostawców, m.in. Netflix i Apple TV.\n\nSystem obejmuje również przechowywanie i zarządzanie kluczami wykorzystywanymi do uwierzytelniania i autoryzacji w tych integracjach.",
+    "responsibilities": "Pracuję nad backendem w architekturze mikroserwisowej. Zajmuję się przede wszystkim komunikacją między serwisami opartą na zdarzeniach — rozwijam mechanizmy publikowania i przetwarzania komunikatów z wykorzystaniem Kafki. Tworzę również nowe endpointy API.\n\nIstotną częścią mojej pracy jest zapewnienie wydajności systemu przy dużym i zmiennym obciążeniu, z uwzględnieniem kosztów infrastruktury działającej w Kubernetes i AWS.",
+    "contributions": "[\"Rozwijam i optymalizuję procesy przetwarzania zdarzeń, aby system sprawnie obsługiwał okresowe wzrosty ruchu.\", \"Pracuję nad rozwiązaniami równoważącymi skalowalność systemu z kosztami wykorzystywanych zasobów.\", \"Pomagałem opracować serwis w Go dla zadania obliczeniowego, którego implementacja w Pythonie nie spełniała wymagań czasowych.\"]",
+    "results": "[\"Rozwijana przez nas infrastruktura obsługuje miliony inteligentnych telewizorów, umożliwiając dystrybucję aktualizacji oprogramowania oraz korzystanie z usług zewnętrznych dostawców.\"]",
+    "description": "Tworzyłem oprogramowanie obsługujące procesy aktualizacji systemów w telewizorach inteligentnych, projektując rozwiązania oparte na architekturze mikroserwisowej. Duży nacisk kładłem na skalowalność i asynchroniczność, korzystając z Kubernetesa, aby zapewnić niezawodne, wydajne i automatyzowane zarządzanie aktualizacjami w środowisku produkcyjnym.",
+    "achievements": "[\"Zintegrowałem Alexę z systemem telewizorów inteligentnych. Umożliwiło to obsługę głosową i rozszerzyło możliwości interakcji użytkowników.\", \"Stworzyłem dedykowany system health-checków monitorujący kluczowe usługi aktualizacji. Poprawiło to znacząco stabilność i szybkość reagowania na problemy produkcyjne.\", \"Współprojektowałem i wdrażałem mikroserwis odpowiedzialny za bezpieczne szyfrowanie kluczy dla Apple TV.\"]",
+    "vex_question": "Poproszę więcej informacji o skalowaniu.",
+    "master": 3
+  }
+},
+{
+  "model": "work.experiencetranslation",
+  "pk": 6,
+  "fields": {
+    "language_code": "en",
+    "role": "Software Developer",
+    "location": "Online",
+    "product": "Vewd, and then Xperi, develops software for smart TVs. My team builds the backend infrastructure that distributes updates and integrates devices with third-party services such as Netflix and Apple TV.\n\nThe system also stores and manages the keys used to authenticate and authorise these integrations.",
+    "responsibilities": "I work on a backend built from microservices. I mostly work on event-driven communication between services, developing how messages are published and processed with Kafka. I also build new API endpoints.\n\nA large part of my work is keeping the system fast under heavy, changing load, with an eye on the cost of the infrastructure running on Kubernetes and AWS.",
+    "contributions": "[\"I develop and optimise the event processing so the system handles periodic spikes in traffic smoothly.\", \"I work on solutions that balance the system's scalability against the cost of the resources it uses.\", \"I helped build a Go service for a computation whose Python implementation could not meet its time requirements.\"]",
+    "results": "[\"The infrastructure we build serves millions of smart TVs, delivering software updates and access to third-party services.\"]",
+    "description": "I developed software supporting system update processes in smart TVs, designing solutions based on microservice architecture. I placed great emphasis on scalability and asynchrony, using Kubernetes to ensure reliable, efficient, and automated update management in a production environment.",
+    "achievements": "[\"I integrated Alexa with the smart TV system. This enabled voice control and expanded user interaction capabilities.\", \"I created a dedicated health check system to monitor key update services. This significantly improved stability and responsiveness to production issues.\", \"I co-designed and implemented a microservice responsible for secure key encryption for Apple TV.\"]",
+    "vex_question": "Tell me more about the scaling.",
+    "master": 3
+  }
+},
+{
+  "model": "work.experiencetranslation",
+  "pk": 7,
+  "fields": {
+    "language_code": "pl",
+    "role": "Python Backend Engineer",
+    "location": "Online",
+    "product": "CloudFerro rozwija infrastrukturę chmurową do przechowywania, udostępniania i przetwarzania danych z obserwacji Ziemi, w tym zdjęć satelitarnych. Łączy rozbudowane repozytoria danych z narzędziami umożliwiającymi ich wyszukiwanie i analizę bezpośrednio w chmurze. Dzięki temu firmy, naukowcy i instytucje publiczne mogą wykorzystywać dane satelitarne bez konieczności pobierania ogromnych zbiorów i utrzymywania własnej infrastruktury obliczeniowej.",
+    "responsibilities": "Pracowałem nad serwisem webowym obsługującym zamówienia na przetwarzanie danych satelitarnych. Na podstawie zamówień użytkowników system uruchamiał odpowiednie procesy obliczeniowe w Argo Workflows.\n\nIstotną częścią mojej pracy było tworzenie i rozwijanie workflowów, które rozszerzały dostępne możliwości przetwarzania zdjęć satelitarnych w chmurze.",
+    "contributions": "[\"Zaktualizowałem i zmodernizowałem wewnętrzną bibliotekę wykorzystywaną we wszystkich procesach Argo Workflows, co ułatwiło ich utrzymanie i dalszy rozwój.\", \"Stworzyłem workflow do przetwarzania danych z systemu CSRM Copernicus, rozszerzając możliwości platformy.\", \"Przygotowałem widok frontendowy umożliwiający deweloperom przeglądanie wszystkich zamówionych zdjęć satelitarnych, monitorowanie statusu ich przetwarzania oraz analizowanie błędów. Narzędzie ułatwiło kontrolę procesów i diagnozowanie problemów w Argo Workflows.\"]",
+    "results": "[]",
+    "description": "Realizowałem kompleksowe przetwarzanie obrazów satelitarnych, budując potoki danych oparte na Argo Workflows działające w środowisku OpenStack. Tworzyłem i utrzymywałem rozproszone procesy przetwarzania oraz integrowałem usługi chmurowe, aby zapewnić skalowalne, niezawodne i efektywne przetwarzanie danych satelitarnych.",
+    "achievements": "[\"Przeprowadziłem modernizację legacy code w dwóch serwisach webowych — od aktualizacji wersji Pydantic i SQLAlchemy po szereg optymalizacji poprawiających wydajność i strukturę kodu.\"]",
+    "vex_question": "Czego się nauczył w firmie CloudFerro?",
+    "master": 4
+  }
+},
+{
+  "model": "work.experiencetranslation",
+  "pk": 8,
+  "fields": {
+    "language_code": "en",
+    "role": "Python Backend Engineer",
+    "location": "Online",
+    "product": "CloudFerro builds cloud infrastructure for storing, sharing and processing Earth observation data, including satellite imagery. It combines large data repositories with tools for searching and analysing the data directly in the cloud. Companies, scientists and public institutions can use satellite data without downloading huge datasets or running their own computing infrastructure.",
+    "responsibilities": "I worked on the web service handling orders for satellite data processing. From users' orders, the system started the right computing processes in Argo Workflows.\n\nA large part of my work was building and developing workflows that extended what the cloud could do with satellite imagery.",
+    "contributions": "[\"I updated and modernised the internal library used by every Argo Workflows process, making them easier to maintain and develop.\", \"I built a workflow for processing data from the Copernicus CSRM system, extending what the platform can do.\", \"I built a frontend view that lets developers browse every ordered satellite image, follow its processing status and analyse errors. The tool made it easier to keep the processes in check and diagnose problems in Argo Workflows.\"]",
+    "results": "[]",
+    "description": "I performed comprehensive satellite image processing, building data pipelines based on Argo Workflows running in the OpenStack environment. I created and maintained distributed processing workflows and integrated cloud services to ensure scalable, reliable, and efficient satellite data processing.",
+    "achievements": "[\"I modernised legacy code in two web services — from updating Pydantic and SQLAlchemy to a series of optimisations improving code performance and structure.\"]",
+    "vex_question": "What did he learn at CloudFerro?",
+    "master": 4
+  }
+},
+{
+  "model": "work.experiencetranslation",
+  "pk": 12,
+  "fields": {
+    "language_code": "pl",
+    "role": "Trener Python i Data Science",
+    "location": "Online",
+    "product": "SDA i Pomorska Fundacja Inicjatyw Gospodarczych organizowały kursy programowania i analizy danych dla dorosłych uczestników przygotowujących się do zmiany ścieżki zawodowej. Zajęcia obejmowały podstawy teoretyczne oraz praktyczne ćwiczenia i projekty z Pythona i Data Science.",
+    "responsibilities": "Jako trener zewnętrzny odpowiadałem za prowadzenie wybranych modułów kursów Python i Data Science. Moja praca obejmowała przekazywanie wiedzy teoretycznej oraz prowadzenie zajęć praktycznych i projektowych dla uczestników o zróżnicowanym poziomie umiejętności. Zajęcia dla SDA odbywały się zdalnie.",
+    "contributions": "[\"Prowadziłem moduły z podstaw Pythona, pracy z bazami danych oraz testowania oprogramowania i TDD.\", \"Prowadziłem zajęcia z klasyfikacji w uczeniu nadzorowanym, sztucznych sieci neuronowych i biblioteki TensorFlow.\", \"Prowadziłem zajęcia poświęcone projektom praktycznym i końcowym w ramach kursów Data Science.\"]",
+    "results": "[\"Łącznie przeprowadziłem 170 godzin zajęć w ramach 10 zleceń: 121 godzin dla SDA i 49 godzin dla PFiG. Uczestnicy jednej z grup zgłosili chęć kontynuowania zajęć ze mną.\"]",
+    "description": null,
+    "achievements": null,
+    "vex_question": "Czy Dawid miał dobre opinie jako prowadzący?",
+    "master": 7
+  }
+},
+{
+  "model": "work.experiencetranslation",
+  "pk": 13,
+  "fields": {
+    "language_code": "en",
+    "role": "Python and Data Science Trainer",
+    "location": "Online",
+    "product": "SDA and the Pomeranian Foundation for Economic Initiatives (PFiG) ran programming and data analysis courses for adults preparing to change careers. The classes covered the theory as well as practical exercises and projects in Python and Data Science.",
+    "responsibilities": "As an external trainer, I taught selected modules of the Python and Data Science courses. My work covered teaching the theory and running practical and project classes for participants of very different skill levels. The SDA classes were held remotely.",
+    "contributions": "[\"I taught modules on Python basics, working with databases, and software testing and TDD.\", \"I taught classes on classification in supervised learning, artificial neural networks and the TensorFlow library.\", \"I ran classes devoted to the practical and final projects of the Data Science courses.\"]",
+    "results": "[\"In total I taught 170 hours of classes across 10 engagements: 121 hours for SDA and 49 for PFiG. Participants in one of the groups asked to continue their classes with me.\"]",
+    "description": null,
+    "achievements": null,
+    "vex_question": "Did Dawid get good feedback as a trainer?",
+    "master": 7
+  }
+},
+{
+  "model": "work.experiencetranslation",
+  "pk": 14,
+  "fields": {
+    "language_code": "pl",
+    "role": "Python Backend Engineer",
+    "location": "Online",
+    "product": "Dział innowacji PwC rozwija system wspierający audytorów poprzez automatyzację wybranych etapów audytu. Platforma przyjmuje dane dostarczane przez pracowników i przetwarza je w wieloetapowych procesach wykorzystujących AI.\n\nIstotnym elementem rozwiązania jest udział audytorów w weryfikacji wyników i podejmowaniu decyzji na wybranych etapach procesu.",
+    "responsibilities": "Zajmuję się projektowaniem, utrzymaniem i rozwojem backendu koordynującego przebieg procesów AI oraz wymianę danych między mikroserwisami. W dużej mierze samodzielnie projektuję i wdrażam rozwiązania backendowe dla nowych funkcji opartych na AI.",
+    "contributions": "[\"Rozwijam backend umożliwiający udostępnianie audytorom nowych funkcji opartych na AI.\"]",
+    "results": "[\"Z rozwijanego przez nas systemu korzysta ponad 6 tysięcy użytkowników tygodniowo. Platforma automatyzuje wybrane czynności związane z audytem, wspierając audytorów w ich codziennej pracy.\"]",
+    "description": null,
+    "achievements": null,
+    "vex_question": "Jaka jest odpowiedzialność Dawida?",
+    "master": 8
+  }
+},
+{
+  "model": "work.experiencetranslation",
+  "pk": 15,
+  "fields": {
+    "language_code": "en",
+    "role": "Python Backend Engineer",
+    "location": "Online",
+    "product": "PwC's innovation department builds a system that supports auditors by automating selected stages of an audit. The platform takes in the data employees provide and processes it in multi-step AI pipelines.\n\nA key part of the solution is that auditors review the results and make the decisions at selected stages of the process.",
+    "responsibilities": "I design, maintain and develop the backend that orchestrates the AI processes and the data exchange between microservices. To a large extent, I design and ship the backend for new AI features on my own.",
+    "contributions": "[\"I develop the backend that brings new AI features to auditors.\"]",
+    "results": "[\"More than 6,000 users a week use the system we build. The platform automates selected audit tasks, supporting auditors in their daily work.\"]",
+    "description": null,
+    "achievements": null,
+    "vex_question": "What is Dawid responsible for?",
+    "master": 8
+  }
+},
+{
+  "model": "work.experiencetranslation",
+  "pk": 16,
+  "fields": {
+    "language_code": "pl",
+    "role": "AI Engineer",
+    "location": "Online",
+    "product": "SmartOwl to rozwijany dla Western Governors University (WGU) tutor AI, którego celem jest wspieranie studentów w nauce w sposób dostosowany do ich indywidualnych potrzeb.\n\nCelem systemu jest dopasowywanie sposobu komunikacji oraz dobieranie form nauki do potrzeb i preferencji studenta, m.in. poprzez quizy i automatycznie generowane podcasty.",
+    "responsibilities": "Rozwijam logikę systemu agentowego obsługującego rozmowy ze studentami. Modyfikuję prompty oraz strukturę grafu w LangGraph, usprawniając zachowanie agentów i przebieg konwersacji.\n\nPracuję również nad wyszukiwaniem informacji w bazie wektorowej w Databricks. Dostrajając parametry pobierania fragmentów materiałów źródłowych, szukam rozwiązań zapewniających odpowiedni kontekst dla odpowiedzi tutora. Tworzę także pipeline’y ewaluacyjne służące do oceny działania całego systemu i weryfikacji wprowadzanych zmian.",
+    "contributions": "[\"Usprawniłem lokalne środowisko uruchamiania aplikacji, wykorzystując rozwiązania oparte na Dockerze.\", \"Przeprowadziłem serię eksperymentów dotyczących doboru parametrów wyszukiwania i pobierania fragmentów danych z bazy wektorowej.\", \"Stworzyłem mechanizm umożliwiający studentowi zmianę przedmiotu w trakcie jednej konwersacji, bez rozpoczynania nowej rozmowy.\"]",
+    "results": "[\"SmartOwl wspiera tysiące studentów w nauce, pomagając im rozpoznawać obszary wymagające dodatkowej pracy i ćwiczyć je poprzez dopasowane wyjaśnienia, pytania oraz quizy.\"]",
+    "description": null,
+    "achievements": null,
+    "vex_question": "Daj mi więcej informacji o efektach pracy.",
+    "master": 9
+  }
+},
+{
+  "model": "work.experiencetranslation",
+  "pk": 17,
+  "fields": {
+    "language_code": "en",
+    "role": "AI Engineer",
+    "location": "Online",
+    "product": "SmartOwl is an AI tutor built for Western Governors University (WGU) to support students in learning in a way suited to their individual needs.\n\nThe system adapts how it communicates and chooses forms of learning to fit each student's needs and preferences, for example through quizzes and automatically generated podcasts.",
+    "responsibilities": "I develop the logic of the agent system that handles conversations with students. I change the prompts and the structure of the graph in LangGraph, improving how the agents behave and how conversations flow.\n\nI also work on retrieval from the vector database in Databricks. Tuning how passages of the source material are retrieved, I look for ways to give the tutor the right context for its answers. I also build evaluation pipelines that assess the whole system and check the changes we make.",
+    "contributions": "[\"I improved the local development environment with Docker-based tooling.\", \"I ran a series of experiments on the parameters for searching and retrieving passages from the vector database.\", \"I built a way for a student to change subject within one conversation, without starting a new one.\"]",
+    "results": "[\"SmartOwl supports thousands of students, helping them find the areas that need more work and practise them through tailored explanations, questions and quizzes.\"]",
+    "description": null,
+    "achievements": null,
+    "vex_question": "Give me more on the results of his work.",
+    "master": 9
+  }
+},
+{
+  "model": "work.skill",
+  "pk": 1,
+  "fields": {
+    "created_at": "2025-11-16T13:19:19.411Z",
+    "updated_at": "2026-09-29T16:31:22.906Z",
+    "since": 2016,
+    "since_launch": false,
+    "icon": "Code"
+  }
+},
+{
+  "model": "work.skill",
+  "pk": 2,
+  "fields": {
+    "created_at": "2025-11-16T13:19:50.146Z",
+    "updated_at": "2026-09-29T16:31:22.908Z",
+    "since": null,
+    "since_launch": false,
+    "icon": "Database"
+  }
+},
+{
+  "model": "work.skill",
+  "pk": 3,
+  "fields": {
+    "created_at": "2025-11-16T13:20:19.933Z",
+    "updated_at": "2026-09-29T16:31:22.909Z",
+    "since": null,
+    "since_launch": false,
+    "icon": "Server"
+  }
+},
+{
+  "model": "work.skill",
+  "pk": 4,
+  "fields": {
+    "created_at": "2025-11-16T13:23:00.854Z",
+    "updated_at": "2026-09-29T16:31:22.910Z",
+    "since": null,
+    "since_launch": false,
+    "icon": "Brain"
+  }
+},
+{
+  "model": "work.skill",
+  "pk": 5,
+  "fields": {
+    "created_at": "2025-11-16T13:23:52.694Z",
+    "updated_at": "2026-10-08T11:37:55.658Z",
+    "since": 2022,
+    "since_launch": false,
+    "icon": "Brain"
+  }
+},
+{
+  "model": "work.skill",
+  "pk": 6,
+  "fields": {
+    "created_at": "2025-11-16T13:24:36.279Z",
+    "updated_at": "2026-09-29T16:31:22.913Z",
+    "since": null,
+    "since_launch": false,
+    "icon": "Server"
+  }
+},
+{
+  "model": "work.skill",
+  "pk": 7,
+  "fields": {
+    "created_at": "2025-11-16T13:25:24.994Z",
+    "updated_at": "2026-09-29T16:31:22.914Z",
+    "since": null,
+    "since_launch": false,
+    "icon": "Brain"
+  }
+},
+{
+  "model": "work.skill",
+  "pk": 8,
+  "fields": {
+    "created_at": "2025-11-16T13:25:57.261Z",
+    "updated_at": "2026-09-29T16:31:22.915Z",
+    "since": null,
+    "since_launch": false,
+    "icon": "Server"
+  }
+},
+{
+  "model": "work.skill",
+  "pk": 9,
+  "fields": {
+    "created_at": "2026-09-29T15:49:46.842Z",
+    "updated_at": "2026-09-29T16:31:22.916Z",
+    "since": null,
+    "since_launch": false,
+    "icon": "Code"
+  }
+},
+{
+  "model": "work.skill",
+  "pk": 10,
+  "fields": {
+    "created_at": "2026-09-29T16:02:39.793Z",
+    "updated_at": "2026-09-29T16:31:22.917Z",
+    "since": 2025,
+    "since_launch": true,
+    "icon": "Sparkles"
+  }
+},
+{
+  "model": "work.skill",
+  "pk": 11,
+  "fields": {
+    "created_at": "2026-10-08T11:40:14.544Z",
+    "updated_at": "2026-10-08T11:40:14.550Z",
+    "since": 2023,
+    "since_launch": true,
+    "icon": "Sparkles"
+  }
+},
+{
+  "model": "work.skill",
+  "pk": 12,
+  "fields": {
+    "created_at": "2026-10-08T11:49:23.251Z",
+    "updated_at": "2026-10-08T11:49:23.256Z",
+    "since": null,
+    "since_launch": false,
+    "icon": "Database"
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 1,
+  "fields": {
+    "language_code": "en",
+    "name": "Python",
+    "description": "Nokia: memory cut from gigabytes to megabytes.",
+    "master": 1
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 2,
+  "fields": {
+    "language_code": "pl",
+    "name": "Python",
+    "description": "Nokia: pamięć z gigabajtów do megabajtów.",
+    "master": 1
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 3,
+  "fields": {
+    "language_code": "en",
+    "name": "PostgreSQL",
+    "description": "tURL and Picko: schemas in public code.",
+    "master": 2
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 4,
+  "fields": {
+    "language_code": "pl",
+    "name": "PostgreSQL",
+    "description": "tURL i Picko: schematy w publicznym kodzie.",
+    "master": 2
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 5,
+  "fields": {
+    "language_code": "en",
+    "name": "Docker",
+    "description": "Xperi and CloudFerro: images for services and pipelines.",
+    "master": 3
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 6,
+  "fields": {
+    "language_code": "pl",
+    "name": "Docker",
+    "description": "Xperi i CloudFerro: obrazy usług i potoków.",
+    "master": 3
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 7,
+  "fields": {
+    "language_code": "pl",
+    "name": "Mikroserwisy",
+    "description": "Xperi: szyfrowanie kluczy dla Apple TV.",
+    "master": 4
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 8,
+  "fields": {
+    "language_code": "en",
+    "name": "Microservices",
+    "description": "Xperi: key encryption for Apple TV.",
+    "master": 4
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 9,
+  "fields": {
+    "language_code": "en",
+    "name": "Generative AI",
+    "description": "Vex: the assistant answering on this site.",
+    "master": 5
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 10,
+  "fields": {
+    "language_code": "pl",
+    "name": "Generatywna AI",
+    "description": "Vex: asystent, który odpowiada na tej stronie.",
+    "master": 5
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 11,
+  "fields": {
+    "language_code": "en",
+    "name": "Kubernetes",
+    "description": "Xperi: smart-TV software updates.",
+    "master": 6
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 12,
+  "fields": {
+    "language_code": "pl",
+    "name": "Kubernetes",
+    "description": "Xperi: aktualizacje oprogramowania telewizorów.",
+    "master": 6
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 13,
+  "fields": {
+    "language_code": "pl",
+    "name": "CI/CD",
+    "description": "GitLab i GitHub Actions: testy, linting, wdrożenia.",
+    "master": 7
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 14,
+  "fields": {
+    "language_code": "en",
+    "name": "CI/CD",
+    "description": "GitLab and GitHub Actions: tests, linting, deploys.",
+    "master": 7
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 15,
+  "fields": {
+    "language_code": "pl",
+    "name": "Chmura",
+    "description": "AWS, OpenStack i Google Cloud.",
+    "master": 8
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 16,
+  "fields": {
+    "language_code": "en",
+    "name": "Cloud",
+    "description": "AWS, OpenStack and Google Cloud.",
+    "master": 8
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 17,
+  "fields": {
+    "language_code": "pl",
+    "name": "React",
+    "description": "Nokia i ta strona, z TypeScriptem.",
+    "master": 9
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 18,
+  "fields": {
+    "language_code": "en",
+    "name": "React",
+    "description": "Nokia and this site, in TypeScript.",
+    "master": 9
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 19,
+  "fields": {
+    "language_code": "pl",
+    "name": "Claude Code",
+    "description": "Ta strona: napisana razem z Claude Code.",
+    "master": 10
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 20,
+  "fields": {
+    "language_code": "en",
+    "name": "Claude Code",
+    "description": "This site: built with Claude Code.",
+    "master": 10
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 21,
+  "fields": {
+    "language_code": "en",
+    "name": "Cursor",
+    "description": null,
+    "master": 11
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 22,
+  "fields": {
+    "language_code": "pl",
+    "name": "Cursor",
+    "description": null,
+    "master": 11
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 23,
+  "fields": {
+    "language_code": "en",
+    "name": "Redis",
+    "description": null,
+    "master": 12
+  }
+},
+{
+  "model": "work.skilltranslation",
+  "pk": 24,
+  "fields": {
+    "language_code": "pl",
+    "name": "Redis",
+    "description": null,
+    "master": 12
+  }
+},
+{
+  "model": "work.project",
+  "pk": 1,
+  "fields": {
+    "created_at": "2025-11-16T13:27:12.315Z",
+    "updated_at": "2026-10-01T14:51:00.313Z",
+    "title": "tURL",
+    "image": "https://i.ibb.co/21qXdGGZ/Icon-t-URL.png",
+    "tags": "[\"Python\", \"PostgreSQL\", \"FastAPI\", \"SQLAlchemy\", \"Railway\"]",
+    "demo": "https://turl.info",
+    "repository": "https://github.com/SatoriAI/tURL",
+    "mobile": false
+  }
+},
+{
+  "model": "work.project",
+  "pk": 2,
+  "fields": {
+    "created_at": "2025-11-16T13:27:49.124Z",
+    "updated_at": "2026-10-01T14:51:00.315Z",
+    "title": "OpenGrant",
+    "image": "https://i.ibb.co/C5GkbmN9/Icon-Open-Grant.png",
+    "tags": "[\"Python\", \"PostgreSQL\", \"Django\", \"GenAI\", \"Vue\", \"Google Cloud\"]",
+    "demo": "https://www.open-grant.com",
+    "repository": null,
+    "mobile": false
+  }
+},
+{
+  "model": "work.project",
+  "pk": 3,
+  "fields": {
+    "created_at": "2025-11-16T13:28:19.459Z",
+    "updated_at": "2026-10-01T14:51:00.315Z",
+    "title": "AdLume",
+    "image": "https://i.ibb.co/BVyZnctj/Icon-Ad-Lume.png",
+    "tags": "[\"Python\", \"PostgreSQL\", \"Django\", \"GenAI\", \"Railway\"]",
+    "demo": "https://adlume.co",
+    "repository": null,
+    "mobile": false
+  }
+},
+{
+  "model": "work.project",
+  "pk": 4,
+  "fields": {
+    "created_at": "2025-11-16T13:30:03.163Z",
+    "updated_at": "2026-10-01T14:51:00.316Z",
+    "title": "Portfolio",
+    "image": "https://i.ibb.co/gMzxC8RS/Icon-Portfolio.png",
+    "tags": "[\"Python\", \"PostgreSQL\", \"Django\", \"React\", \"TypeScript\", \"GenAI\", \"Railway\"]",
+    "demo": "https://dawidhanrahan.com",
+    "repository": "https://github.com/SatoriAI/Portfolio",
+    "mobile": false
+  }
+},
+{
+  "model": "work.project",
+  "pk": 5,
+  "fields": {
+    "created_at": "2025-12-17T06:44:45.385Z",
+    "updated_at": "2026-10-01T14:51:00.317Z",
+    "title": "Picko",
+    "image": "https://i.ibb.co/DP81dj69/Icon-Picko.jpg",
+    "tags": "[\"Python\", \"PostgreSQL\", \"FastAPI\", \"SQLAlchemy\", \"Svelte\", \"Railway\"]",
+    "demo": "https://picko.world",
+    "repository": "https://github.com/SatoriAI/Picko",
+    "mobile": false
+  }
+},
+{
+  "model": "work.project",
+  "pk": 6,
+  "fields": {
+    "created_at": "2026-10-01T14:05:48.660Z",
+    "updated_at": "2026-10-01T14:51:00.318Z",
+    "title": "Slip",
+    "image": "https://slip.today/icon-512.png",
+    "tags": "[\"Python\", \"Django\", \"PostgreSQL\", \"React\", \"TypeScript\", \"OpenAI\", \"Railway\"]",
+    "demo": "https://slip.today",
+    "repository": null,
+    "mobile": true
+  }
+},
+{
+  "model": "work.project",
+  "pk": 7,
+  "fields": {
+    "created_at": "2026-10-06T12:04:27.864Z",
+    "updated_at": "2026-10-06T12:04:27.871Z",
+    "title": "Konfio",
+    "image": "https://konfio.pl/favicon.svg",
+    "tags": "[\"Python\", \"Django\", \"PostgreSQL\", \"Celery\", \"React\", \"TypeScript\", \"Railway\"]",
+    "demo": "https://konfio.pl",
+    "repository": null,
+    "mobile": false
+  }
+},
+{
+  "model": "work.project",
+  "pk": 8,
+  "fields": {
+    "created_at": "2026-10-06T12:04:27.874Z",
+    "updated_at": "2026-10-06T12:04:27.875Z",
+    "title": "Athlo",
+    "image": "https://athlo-ui-production.up.railway.app/apple-touch-icon.png",
+    "tags": "[\"Python\", \"Django\", \"PostgreSQL\", \"React\", \"TypeScript\", \"OpenAI\", \"Railway\"]",
+    "demo": "https://athlo-ui-production.up.railway.app",
+    "repository": null,
+    "mobile": false
+  }
+},
+{
+  "model": "work.projecttranslation",
+  "pk": 1,
+  "fields": {
+    "language_code": "en",
+    "description": "Short links that expire. You can extend a link's lifetime and choose how long the short code is.",
+    "vex_question": "",
+    "master": 1
+  }
+},
+{
+  "model": "work.projecttranslation",
+  "pk": 2,
+  "fields": {
+    "language_code": "pl",
+    "description": "Krótkie linki, które wygasają. Ważność linku można przedłużyć, a długość skrótu wybrać samemu.",
+    "vex_question": "",
+    "master": 1
+  }
+},
+{
+  "model": "work.projecttranslation",
+  "pk": 3,
+  "fields": {
+    "language_code": "en",
+    "description": "A platform where generative AI drafts grant proposals for R&D projects and takes them through the application process.",
+    "vex_question": "",
+    "master": 2
+  }
+},
+{
+  "model": "work.projecttranslation",
+  "pk": 4,
+  "fields": {
+    "language_code": "pl",
+    "description": "Platforma, w której generatywne AI przygotowuje wnioski o granty na projekty B+R i prowadzi je przez cały proces składania.",
+    "vex_question": "",
+    "master": 2
+  }
+},
+{
+  "model": "work.projecttranslation",
+  "pk": 5,
+  "fields": {
+    "language_code": "en",
+    "description": "AI for Google Ads and Meta Ads campaigns: it checks them, proposes a fix in Slack and makes the change once you approve it. It has not launched yet and has a waitlist.",
+    "vex_question": "",
+    "master": 3
+  }
+},
+{
+  "model": "work.projecttranslation",
+  "pk": 6,
+  "fields": {
+    "language_code": "pl",
+    "description": "AI do kampanii w Google Ads i Meta Ads: sprawdza je, proponuje poprawkę na Slacku i wprowadza ją po akceptacji. Projekt jest przed startem, z listą oczekujących.",
+    "vex_question": "",
+    "master": 3
+  }
+},
+{
+  "model": "work.projecttranslation",
+  "pk": 7,
+  "fields": {
+    "language_code": "en",
+    "description": "This site: projects, experience, research, and Vex — an assistant that answers from its content.",
+    "vex_question": "",
+    "master": 4
+  }
+},
+{
+  "model": "work.projecttranslation",
+  "pk": 8,
+  "fields": {
+    "language_code": "pl",
+    "description": "Ta strona: projekty, doświadczenie, badania i Vex — asystent, który odpowiada na podstawie jej treści.",
+    "vex_question": "",
+    "master": 4
+  }
+},
+{
+  "model": "work.projecttranslation",
+  "pk": 9,
+  "fields": {
+    "language_code": "en",
+    "description": "A Secret Santa draw with no accounts. You create a draw and add people, and each gets their own link showing who they're buying for.",
+    "vex_question": "",
+    "master": 5
+  }
+},
+{
+  "model": "work.projecttranslation",
+  "pk": 10,
+  "fields": {
+    "language_code": "pl",
+    "description": "Losowanie mikołajkowe bez zakładania kont. Tworzysz losowanie, dodajesz uczestników, a każdy dostaje własny link, pod którym widzi, komu kupuje prezent.",
+    "vex_question": "",
+    "master": 5
+  }
+},
+{
+  "model": "work.projecttranslation",
+  "pk": 11,
+  "fields": {
+    "language_code": "pl",
+    "description": "Aplikacja do paragonów, pomyślana przede wszystkim na telefon. Model wizyjny odczytuje ze zdjęcia sprzedawcę, datę, sumę i pozycje. Aplikacja sprawdza, czy pozycje sumują się do kwoty, i prosi o weryfikację, gdy nie. Paragony trafiają do przestrzeni wspólnej z innymi.",
+    "vex_question": "",
+    "master": 6
+  }
+},
+{
+  "model": "work.projecttranslation",
+  "pk": 12,
+  "fields": {
+    "language_code": "en",
+    "description": "A receipt app built for the phone first. A vision model reads the merchant, date, total and line items from a photo. The app checks that the items add up to the total and asks for a review when they don't. Receipts go into a space shared with others.",
+    "vex_question": "",
+    "master": 6
+  }
+},
+{
+  "model": "work.projecttranslation",
+  "pk": 13,
+  "fields": {
+    "language_code": "pl",
+    "description": "Konfio łączy organizatorów wydarzeń z hotelami w Polsce. Organizator raz opisuje wydarzenie i wysyła jedno zapytanie. Hotele odpowiadają ofertami w jednym formacie, rozpisanymi na pozycje. Organizator zestawia je ze sobą z pomocą AI i może negocjować ceny pozycji. Platforma jest bezpłatna, a hotel płaci prowizję tylko od odbytych wydarzeń. Konfio jest w wersji beta.",
+    "vex_question": "",
+    "master": 7
+  }
+},
+{
+  "model": "work.projecttranslation",
+  "pk": 14,
+  "fields": {
+    "language_code": "en",
+    "description": "Konfio connects event organisers with hotels in Poland. Organisers describe an event once and send one request. Hotels reply with itemised offers in a shared format. Organisers compare them side by side, with AI suggestions, and can negotiate the price of single items. The platform is free; hotels pay a commission only on events that take place. Konfio is in beta.",
+    "vex_question": "",
+    "master": 7
+  }
+},
+{
+  "model": "work.projecttranslation",
+  "pk": 15,
+  "fields": {
+    "language_code": "pl",
+    "description": "Znajomy bokser opowiedział mi, jak trudno organizować zawody. Athlo łączy sportowców, kluby i organizatorów zawodów. Zaczyna od boksu w Polsce. Organizator publikuje wydarzenia, przegląda zgłoszenia, eksportuje je do CSV i ogłasza wyniki. Sportowiec szuka imprez według dyscypliny i daty, zapisuje się, a wyniki tworzą historię startów w jego profilu. Faza pre-alfa: projekt w budowie, jeszcze niedostępny dla użytkowników.",
+    "vex_question": "",
+    "master": 8
+  }
+},
+{
+  "model": "work.projecttranslation",
+  "pk": 16,
+  "fields": {
+    "language_code": "en",
+    "description": "A boxer friend told me how hard it is to organise contests. Athlo connects athletes, clubs and organizers around sporting competitions, starting with boxing in Poland. Organizers publish events, review entries, export them as CSV and publish results. Athletes find events by sport and date, enter them, and their results build a career history on their profile. Pre-alpha: still under development, not yet available to users.",
+    "vex_question": "",
+    "master": 8
+  }
+},
+{
+  "model": "university.school",
+  "pk": 1,
+  "fields": {
+    "created_at": "2025-11-16T13:04:28.805Z",
+    "updated_at": "2025-11-16T13:05:00.555Z",
+    "start": "2016-10-03",
+    "end": "2019-07-08",
+    "degree": "Bachelor's"
+  }
+},
+{
+  "model": "university.school",
+  "pk": 2,
+  "fields": {
+    "created_at": "2025-11-16T13:05:38.954Z",
+    "updated_at": "2025-11-16T13:06:08.257Z",
+    "start": "2019-10-03",
+    "end": "2021-07-09",
+    "degree": "Master's"
+  }
+},
+{
+  "model": "university.school",
+  "pk": 3,
+  "fields": {
+    "created_at": "2025-11-16T13:07:10.438Z",
+    "updated_at": "2025-11-16T13:07:38.305Z",
+    "start": "2022-10-03",
+    "end": null,
+    "degree": "Doctoral Studies"
+  }
+},
+{
+  "model": "university.schooltranslation",
+  "pk": 1,
+  "fields": {
+    "language_code": "en",
+    "study": "Theoretical Mathematics",
+    "university": "Wrocław University of Science and Technology",
+    "research": "During my bachelor's studies, I focused on the analysis of differential equations and harmonic analysis, with particular emphasis on sharp estimates of heat kernels. In my bachelor's thesis, “The heat equation on a torus and a segment and its classical generalisations”, I obtained sharp estimates for heat kernels on a torus and for Neumann, Dirichlet and Dirichlet–Neumann boundary conditions, using tools available at the first-cycle level.",
+    "advisor": "Jacek Małecki, PhD, Eng.",
+    "areas": "[\"harmonic analysis\", \"differential equations\"]",
+    "master": 1
+  }
+},
+{
+  "model": "university.schooltranslation",
+  "pk": 2,
+  "fields": {
+    "language_code": "pl",
+    "study": "Matematyka Teoretyczna",
+    "university": "Politechnika Wrocławska",
+    "research": "Podczas studiów licencjackich zajmowałem się analizą równań różniczkowych i analizą harmoniczną, ze szczególnym uwzględnieniem ostrych oszacowań jąder ciepła. W pracy licencjackiej „Równanie ciepła na torusie i odcinku oraz jego klasyczne uogólnienia”, uzyskałem ostre oszacowania dla jąder ciepła na torusie oraz dla warunków brzegowych Neumanna, Dirichleta i Dirichleta–Neumanna, wykorzystując narzędzia dostępne na poziomie studiów pierwszego stopnia.",
+    "advisor": "dr hab. inż. Jacek Małecki",
+    "areas": "[\"analiza harmoniczna\", \"równania różniczkowe\"]",
+    "master": 1
+  }
+},
+{
+  "model": "university.schooltranslation",
+  "pk": 3,
+  "fields": {
+    "language_code": "en",
+    "study": "Theoretical Mathematics",
+    "university": "Wrocław University of Science and Technology",
+    "research": "During my master's studies, I deepened my interest in harmonic analysis and heat kernel theory. I focused on studying the heat equation on a cone and on constructing systems of orthogonal polynomials describing this space. As a result of this work, I obtained a sharp estimate of the Jacobi heat kernel on a cone, a result that had not previously appeared in the literature. This research was awarded 2nd place in the Józef Marcinkiewicz Competition for the best mathematical student thesis in Poland, organized by the Polish Mathematical Society (PTM).",
+    "advisor": "Dariusz Kosz, PhD",
+    "areas": "[\"harmonic analysis\", \"partial differential equations\", \"orthogonal polynomials\"]",
+    "master": 2
+  }
+},
+{
+  "model": "university.schooltranslation",
+  "pk": 4,
+  "fields": {
+    "language_code": "pl",
+    "study": "Matematyka Teoretyczna",
+    "university": "Politechnika Wrocławska",
+    "research": "W trakcie studiów magisterskich rozwijałem swoje zainteresowania analizą harmoniczną i teorią jąder ciepła. Skupiłem się na badaniu równania ciepła na stożku oraz na konstrukcji układów wielomianów ortogonalnych opisujących tę przestrzeń. W efekcie mojej pracy udało się uzyskać ostre oszacowanie jądra ciepła Jacobiego na stożku; wynik, który nie był wcześniej opisany w literaturze. Badania te zostały nagrodzone II miejscem w Konkursie im. Józefa Marcinkiewicza na najlepszą pracę magisterską z matematyki w Polsce, organizowanym przez Polskie Towarzystwo Matematyczne (PTM).",
+    "advisor": "dr hab. Dariusz Kosz",
+    "areas": "[\"analiza harmoniczna\", \"równania różniczkowe cząstkowe\", \"wielomiany ortogonalne\"]",
+    "master": 2
+  }
+},
+{
+  "model": "university.schooltranslation",
+  "pk": 5,
+  "fields": {
+    "language_code": "en",
+    "study": "Theoretical Mathematics",
+    "university": "Doctoral School of WUST",
+    "research": "As part of my doctoral studies, I am developing the theory of sharp estimates of Jacobi heat kernels and spectral analysis of orthogonal polynomials on spaces with rotational symmetry. My research combines techniques from harmonic analysis, orthogonal polynomial theory, and partial differential equations. Recently, I have focused on so-called domains of revolution, where I have developed the construction of orthogonal bases and confirmed the consistency of the results with the classical cases of spheres and cones.",
+    "advisor": "Dariusz Kosz, PhD",
+    "areas": "[\"harmonic analysis\", \"partial differential equations\", \"orthogonal polynomials\", \"spectral analysis\"]",
+    "master": 3
+  }
+},
+{
+  "model": "university.schooltranslation",
+  "pk": 6,
+  "fields": {
+    "language_code": "pl",
+    "study": "Matematyka Teoretyczna",
+    "university": "Szkoła Doktorska Politechniki Wrocławskiej",
+    "research": "W ramach studiów doktoranckich rozwijam teorię ostrych oszacowań jąder ciepła Jacobiego oraz analizę spektralną wielomianów ortogonalnych na przestrzeniach o symetrii obrotowej. Moje badania łączą techniki analizy harmonicznej, teorii ortogonalnych wielomianów i równań różniczkowych cząstkowych. Ostatnio skupiłem się na tzw. domains of revolution, gdzie opracowałem konstrukcję ortogonalnych baz i potwierdziłem zgodność wyników z klasycznymi przypadkami kuli i stożka.",
+    "advisor": "dr hab. Dariusz Kosz",
+    "areas": "[\"analiza harmoniczna\", \"równania różniczkowe cząstkowe\", \"wielomiany ortogonalne\", \"analiza spektralna\"]",
+    "master": 3
+  }
+},
+{
+  "model": "university.publication",
+  "pk": 1,
+  "fields": {
+    "created_at": "2025-11-16T13:12:31.869Z",
+    "updated_at": "2026-09-30T16:54:42.753Z",
+    "journal": "Journal of Approximation Theory",
+    "link": "https://doi.org/10.1016/j.jat.2023.105921",
+    "year": 2023
+  }
+},
+{
+  "model": "university.publication",
+  "pk": 2,
+  "fields": {
+    "created_at": "2025-11-16T13:13:07.521Z",
+    "updated_at": "2026-09-30T14:13:22.056Z",
+    "journal": "arXiv",
+    "link": "https://arxiv.org/abs/2411.15793",
+    "year": 2024
+  }
+},
+{
+  "model": "university.publicationtranslation",
+  "pk": 1,
+  "fields": {
+    "language_code": "en",
+    "title": "Sharp estimates for Jacobi heat kernels in conic domains",
+    "summary": "We prove genuinely sharp estimates for the Jacobi heat kernels introduced in the context of the multidimensional cone and its surface. To do so, we combine the theory of Jacobi polynomials on the cone explored by Xu with the recent techniques by Nowak, Sjögren, and Szarek, developed to find genuinely sharp estimates for the spherical heat kernel.",
+    "master": 1
+  }
+},
+{
+  "model": "university.publicationtranslation",
+  "pk": 2,
+  "fields": {
+    "language_code": "pl",
+    "title": "Ostre oszacowania jąder ciepła Jacobiego w przestrzeniach stożkowych",
+    "summary": "Udowadniamy ostre oszacowania jąder ciepła Jacobiego na wielowymiarowym stożku i jego powierzchni. W tym celu łączymy teorię wielomianów Jacobiego na stożku zbadaną przez Xu z najnowszymi technikami opracowanymi przez Nowaka, Sjögrena i Szarka w celu znalezienia ostrych oszacowań dla sferycznego jądra ciepła.",
+    "master": 1
+  }
+},
+{
+  "model": "university.publicationtranslation",
+  "pk": 3,
+  "fields": {
+    "language_code": "en",
+    "title": "Sharp estimates for Jacobi heat kernels in double conic domains",
+    "summary": "We study the even and odd Jacobi heat kernels defined in the context of the multidimensional double cone and its surface, the multidimensional hyperboloid and its surface, and the multidimensional paraboloid and its surface. By integrating the framework of Jacobi polynomials on these domains, as analyzed by Xu, with contemporary methods developed by Nowak, Sjögren, and Szarek for obtaining sharp estimates of the spherical heat kernel, we establish genuinely sharp estimates for the even and odd Jacobi heat kernel in the double conic settings, and for the even Jacobi heat kernel on hyperbolic settings. We also discuss the limitations encountered in extending these results to the remaining settings.",
+    "master": 2
+  }
+},
+{
+  "model": "university.publicationtranslation",
+  "pk": 4,
+  "fields": {
+    "language_code": "pl",
+    "title": "Ostre oszacowania jąder ciepła Jacobiego w podwójnych przestrzeniach stożkowych",
+    "summary": "Badam parzyste i nieparzyste jądra ciepła Jacobiego zdefiniowane w kontekście wielowymiarowego podwójnego stożka oraz jego powierzchni, wielowymiarowej hiperboloidy i jej powierzchni, a także wielowymiarowej paraboloidy i jej powierzchni. Integrując teorię wielomianów Jacobiego na tych przestrzeniach, analizowaną wcześniej przez Xu, z nowoczesnymi metodami opracowanymi przez Nowaka, Sjögrena i Szarka w celu uzyskania ostrych oszacowań sferycznego jądra ciepła, uzyskuję rzeczywiście ostre oszacowania dla parzystego i nieparzystego jądra ciepła Jacobiego na podwójnych przestrzeniach stożkowych oraz dla parzystego jądra ciepła Jacobiego w przypadku hiperbolicznym. Omawiam również ograniczenia napotkane przy próbie rozszerzenia tych wyników na pozostałe przypadki.",
+    "master": 2
+  }
+},
+{
+  "model": "university.testimonial",
+  "pk": 1,
+  "fields": {
+    "created_at": "2025-11-16T13:08:14.904Z",
+    "updated_at": "2025-11-16T13:08:28.581Z",
+    "semester": "2022/23",
+    "season": "Winter"
+  }
+},
+{
+  "model": "university.testimonial",
+  "pk": 2,
+  "fields": {
+    "created_at": "2025-11-16T13:08:48.848Z",
+    "updated_at": "2025-11-16T13:08:59.596Z",
+    "semester": "2023/24",
+    "season": "Winter"
+  }
+},
+{
+  "model": "university.testimonial",
+  "pk": 3,
+  "fields": {
+    "created_at": "2025-11-16T13:09:23.447Z",
+    "updated_at": "2026-09-29T15:49:46.846Z",
+    "semester": "2024/25",
+    "season": "Winter"
+  }
+},
+{
+  "model": "university.testimonial",
+  "pk": 4,
+  "fields": {
+    "created_at": "2025-11-16T13:09:56.942Z",
+    "updated_at": "2025-11-16T13:10:10.546Z",
+    "semester": "2024/25",
+    "season": "Winter"
+  }
+},
+{
+  "model": "university.testimonial",
+  "pk": 5,
+  "fields": {
+    "created_at": "2025-11-16T13:10:45.404Z",
+    "updated_at": "2025-11-16T13:10:57.363Z",
+    "semester": "2024/25",
+    "season": "Winter"
+  }
+},
+{
+  "model": "university.testimonial",
+  "pk": 6,
+  "fields": {
+    "created_at": "2025-11-16T13:11:16.841Z",
+    "updated_at": "2025-11-16T13:11:28.152Z",
+    "semester": "2023/24",
+    "season": "Summer"
+  }
+},
+{
+  "model": "university.testimonialtranslation",
+  "pk": 1,
+  "fields": {
+    "language_code": "en",
+    "course": "Mathematical Analysis I",
+    "content": "A very good lecturer, I did not expect to come across someone like him. He explains issues clearly, is always prepared for classes and approaches them thoroughly. In addition, I have never met a mathematician with such legible handwriting.",
+    "master": 1
+  }
+},
+{
+  "model": "university.testimonialtranslation",
+  "pk": 2,
+  "fields": {
+    "language_code": "pl",
+    "course": "Analiza Matematyczna I",
+    "content": "Bardzo dobry prowadzący, nie spodziewałem się natrafić na kogoś takiego. Zrozumiale tłumaczy zagadnienia, jest zawsze przygotowany do zajęć i rzetelnie do nich podchodzi. Dodatkowo nigdy nie spotkałem matematyka, który miałby tak czytelne pismo.",
+    "master": 1
+  }
+},
+{
+  "model": "university.testimonialtranslation",
+  "pk": 3,
+  "fields": {
+    "language_code": "en",
+    "course": "Algebra",
+    "content": "The instructor was definitely a plus, and the classes were enjoyable. The instructor was very kind and nice. From time to time, he talked about how what we were doing related to computer science and where these issues were used.",
+    "master": 2
+  }
+},
+{
+  "model": "university.testimonialtranslation",
+  "pk": 4,
+  "fields": {
+    "language_code": "pl",
+    "course": "Algebra",
+    "content": "Prowadzący zdecydowanie na plus, przyjemne były te zajęcia. Prowadzący bardzo życzliwy i miły. Co jakiś czas opowiadał jak to co robimy przekłada się na informatykę i gdzie tych zagadnień się używa.",
+    "master": 2
+  }
+},
+{
+  "model": "university.testimonialtranslation",
+  "pk": 5,
+  "fields": {
+    "language_code": "en",
+    "course": "Mathematical Analysis I",
+    "content": "The instructor was very friendly, helpful and knowledgeable. The classes were held in a friendly atmosphere, and the instructor was able to explain the topics in an accessible way. Working with the instructor did not cause any problems.",
+    "master": 3
+  }
+},
+{
+  "model": "university.testimonialtranslation",
+  "pk": 6,
+  "fields": {
+    "language_code": "pl",
+    "course": "Analiza Matematyczna I",
+    "content": "Prowadzący bardzo miły, chętny do pomocy i kompetentny. Zajęcia odbywały się w przyjaznej atmosferze, a prowadzący potrafił tłumaczyć zagadnienia w przystępny sposób. Współpraca z prowadzącym nie przysparzała żadnych problemów.",
+    "master": 3
+  }
+},
+{
+  "model": "university.testimonialtranslation",
+  "pk": 7,
+  "fields": {
+    "language_code": "en",
+    "course": "Mathematical Analysis I",
+    "content": "An incredibly polite lecturer with extensive knowledge, enthusiasm and commitment to his classes, willing to communicate with students and diversify his classes with interesting additional tasks.",
+    "master": 4
+  }
+},
+{
+  "model": "university.testimonialtranslation",
+  "pk": 8,
+  "fields": {
+    "language_code": "pl",
+    "course": "Analiza Matematyczna I",
+    "content": "Niesamowicie uprzejmy prowadzący z dużą wiedzą, chęcią i zaangażowaniem w prowadzone zajęcia, skłonny do komunikacji ze studentami i urozmaicania zajęć o ciekawe zadania dodatkowe.",
+    "master": 4
+  }
+},
+{
+  "model": "university.testimonialtranslation",
+  "pk": 9,
+  "fields": {
+    "language_code": "en",
+    "course": "Mathematical Analysis I",
+    "content": "An excellent instructor who explains complex issues in a simple way, with a friendly atmosphere in class.",
+    "master": 5
+  }
+},
+{
+  "model": "university.testimonialtranslation",
+  "pk": 10,
+  "fields": {
+    "language_code": "pl",
+    "course": "Analiza Matematyczna I",
+    "content": "Świetny ćwiczeniowiec, w prosty sposób wyjaśnia skomplikowane zagadnienia, przyjazna atmosfera na zajęciach.",
+    "master": 5
+  }
+},
+{
+  "model": "university.testimonialtranslation",
+  "pk": 11,
+  "fields": {
+    "language_code": "en",
+    "course": "Mathematical Analysis II",
+    "content": "Thanks to the very friendly lecturer, this course was one of the most enjoyable ones for me this semester.",
+    "master": 6
+  }
+},
+{
+  "model": "university.testimonialtranslation",
+  "pk": 12,
+  "fields": {
+    "language_code": "pl",
+    "course": "Analiza Matematyczna II",
+    "content": "Przez bardzo sympatycznego prowadzącego ten kurs był dla mnie jednym z najprzyjemniejszych w tym semestrze.",
+    "master": 6
+  }
+}
+]
