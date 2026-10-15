@@ -9,7 +9,16 @@
       content="Mathematician by training. Engineer by trade. Python backend at Nokia, Xperi and PwC, AI at Addepto. PhD candidate in harmonic analysis."
     />
     <meta name="author" content="Dawid Hanrahan" />
-    <meta name="theme-color" content="#F8F9FC" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#F8F9FC" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0E1424" media="(prefers-color-scheme: dark)" />
+
+    <!-- The theme is set before the first paint, so the page never shows the
+         wrong one first: the reader's remembered choice, else the machine's.
+         A file of its own, not inline, because the site's CSP allows scripts
+         from the site only; classic and blocking on purpose, it is a few
+         lines. SettingsContext keeps the theme in step afterwards. -->
+    <script src="/theme.js"></script>
 
     <!-- The kit supplies a separate micro cut with a heavier stroke for 16-48px;
          these are its files, not the standard symbol scaled down. -->

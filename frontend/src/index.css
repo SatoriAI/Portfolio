@@ -33,12 +33,17 @@
 }
 
 /* Design tokens — the "Soft Precision" palette from the Visual Identity Kit
-   ("Binary Axis", v5; see ../visual-kit/palette.json). Values are HSL triplets
-   so Tailwind can apply alpha modifiers.
-   The kit defines a light theme only; a dark theme would be declared here as a
-   second block when the kit gains one. */
+   ("Binary Axis", v5.2; see ../visual-kit/palette.json). Values are HSL
+   triplets so Tailwind can apply alpha modifiers.
+   The dark theme, Night Ink, redefines the kit palette under
+   [data-theme="dark"], which index.html sets before the first paint; the
+   semantic roles below follow it without a block of their own. */
 @layer base {
   :root {
+    /* The chosen theme, not the machine, decides the browser's own UI
+       (scrollbars, unstyled fields, autofill); index.html's color-scheme
+       meta only covers the moment before this sheet applies. */
+    color-scheme: light;
     /* Kit palette */
     --background: 225 40% 98%; /* #F8F9FC cloud */
     --surface: 0 0% 100%; /* #FFFFFF */
@@ -59,6 +64,15 @@
     --published: var(--ink);
     --preprint: var(--text-secondary);
     --primary-hover: 220 38% 26%; /* #293A5C */
+    /* Lavender as a hover or an open state, on a control. In light it is the
+       lavender itself; in dark the panel tint would not show on surface. */
+    --lavender-hover: 257 71% 93%; /* #E8E1FA */
+    /* The circuit's bands of white light. */
+    --sheen: 0 0% 100%; /* #FFFFFF */
+    /* Every shadow is cast in this, at the kit's alphas times the strength:
+       ink in light. In dark, ink turns light and a shadow in it would glow. */
+    --shadow: var(--ink);
+    --shadow-strength: 1;
     /* Illustration-only tints for the diffusion motif; never text or controls. */
     --lavender-deep: 261 52% 81%; /* #C6B4E7 */
     --blush-deep: 331 54% 85%; /* #EDC2D7 */
@@ -97,6 +111,50 @@
     --sidebar-accent-foreground: var(--ink);
     --sidebar-border: var(--border);
     --sidebar-ring: var(--iris);
+  }
+
+  /* Night Ink: the kit's dark column. Ratios on background: ink 15.1:1,
+     text-secondary 7.6:1, iris 8.1:1, control-border 4.0:1 (3.6:1 on
+     surface). Depth comes from surface being a step lighter; shadows are
+     near-black at twice the alpha. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --background: 224 44% 10%; /* #0E1424 */
+    --surface: 221 40% 14%; /* #161F33 */
+    --ink: 225 32% 93%; /* #E6E9F2 */
+    --text-secondary: 224 18% 68%; /* #9EA6BC */
+    /* Two lavenders, as light lavender is two contrasts: a panel or band at
+       1.20:1 on background, as it is on cloud, and a hover at 1.27:1 on
+       surface, as it is on white. One value for both made the figures loud
+       or the hovers invisible. */
+    --lavender: 250 32% 19%; /* #262140 */
+    --lavender-hover: 250 36% 26%; /* #322A5A */
+    --blush: 311 24% 21%; /* #42293E */
+    --iris: 253 60% 77%; /* #B2A3E8 */
+    --border: 223 29% 21%; /* #262F45 */
+    --control-border: 225 15% 50%; /* #6C7591 */
+    --primary-hover: 224 24% 81%; /* #C4CADB */
+    --shadow: 224 65% 3%; /* #03060E */
+    --shadow-strength: 2;
+    /* The heat field glows rather than stains. */
+    --lavender-deep: 253 33% 36%; /* #4A3D7A */
+    --blush-deep: 320 28% 29%; /* #5E3550 */
+    /* Paper, dimmed until it no longer lights the room: 10.4:1 on the page,
+       and its navy writing keeps 8.9:1. */
+    --note: 53 45% 65%; /* #CEC57E */
+    /* Error copy needs 4.5:1 on navy too. */
+    --destructive: 355 77% 74%;
+    /* Near-white, faintly iris: a band of light on the lit wire, not a gap. */
+    --sheen: 248 100% 97%; /* #F2F0FF */
+  }
+
+  /* Paper stays paper: the teaching notes keep light-theme writing and the
+     light highlighter in both themes, since only the paper is on them. */
+  .paper {
+    --foreground: 221 45% 16%; /* #17233D */
+    /* Captions: 4.86:1 on the dark theme's dimmed paper, 7.51:1 on light. */
+    --muted-foreground: 223 19% 32%; /* #434C62 */
+    --lavender-deep: 261 52% 81%; /* #C6B4E7 */
   }
 }
 
@@ -166,6 +224,14 @@
       --tw-exit-rotate: 0 !important;
     }
   }
+}
+
+/* A change of theme: the new one is revealed by a growing circle (see
+   ThemeToggle), so the snapshots must not cross-fade underneath it. */
+html.theme-switch::view-transition-old(root),
+html.theme-switch::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 @layer utilities {

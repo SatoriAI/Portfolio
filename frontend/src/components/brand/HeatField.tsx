@@ -1,7 +1,15 @@
 import { type HTMLAttributes, type PointerEvent, useEffect, useRef } from "react";
 
+import { useTheme } from "@/contexts/SettingsContext";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
-import { fitCanvas, grainStyle, kernel, paintField } from "@/lib/heatKernel";
+import {
+  type FieldPalette,
+  fieldPalette,
+  fitCanvas,
+  grainStyle,
+  kernel,
+  paintField,
+} from "@/lib/heatKernel";
 import { easeOutCubic } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -138,6 +146,7 @@ const paint = (
   sources: readonly Source[],
   state: FieldState,
   model: PointerModel,
+  palette: FieldPalette,
 ) => {
   const { cols, rows, aspect } = geometry;
   const tau = Math.max(state.tau, INTRO_START);
@@ -147,36 +156,42 @@ const paint = (
     age: state.clock - p.bornAt + POINTER_SOFTENING,
   }));
 
-  paintField(ctx, cols, rows, (x, v, alpha) => {
-    // Positions in units of the width, so a kernel is round on screen.
-    const y = v * aspect;
-    for (const source of sources) {
-      const r2 = (x - source.x) ** 2 + (y - source.y * aspect) ** 2;
-      // A kernel whose resting peak (τ = 1) is `peak`; the cap keeps the
-      // text above the field on the contrast it was measured against while
-      // the source is still concentrated.
-      alpha[source.channel] += Math.min(
-        kernel(source.peak, 1, RESTING_SPREAD, tau, r2),
-        source.peak,
-      );
-    }
-    for (const p of pointers) {
-      // Scaled so a fresh source peaks at the placement's peak.
-      const near = (sourceY: number) =>
-        kernel(
-          model.peak,
-          POINTER_SOFTENING,
-          model.diffusivity,
-          p.age,
-          (x - p.x) ** 2 + (y - sourceY) ** 2,
+  paintField(
+    ctx,
+    cols,
+    rows,
+    (x, v, alpha) => {
+      // Positions in units of the width, so a kernel is round on screen.
+      const y = v * aspect;
+      for (const source of sources) {
+        const r2 = (x - source.x) ** 2 + (y - source.y * aspect) ** 2;
+        // A kernel whose resting peak (τ = 1) is `peak`; the cap keeps the
+        // text above the field on the contrast it was measured against while
+        // the source is still concentrated.
+        alpha[source.channel] += Math.min(
+          kernel(source.peak, 1, RESTING_SPREAD, tau, r2),
+          source.peak,
         );
-      alpha[0] += near(p.y * aspect);
-      if (model.insulated) {
-        // Mirror images across the top (y = 0) and bottom (y = aspect).
-        alpha[0] += near(-p.y * aspect) + near((2 - p.y) * aspect);
       }
-    }
-  });
+      for (const p of pointers) {
+        // Scaled so a fresh source peaks at the placement's peak.
+        const near = (sourceY: number) =>
+          kernel(
+            model.peak,
+            POINTER_SOFTENING,
+            model.diffusivity,
+            p.age,
+            (x - p.x) ** 2 + (y - sourceY) ** 2,
+          );
+        alpha[0] += near(p.y * aspect);
+        if (model.insulated) {
+          // Mirror images across the top (y = 0) and bottom (y = aspect).
+          alpha[0] += near(-p.y * aspect) + near((2 - p.y) * aspect);
+        }
+      }
+    },
+    palette,
+  );
 };
 
 type HeatFieldProps = HTMLAttributes<HTMLDivElement> & {
@@ -195,6 +210,9 @@ const HeatField = ({
 }: HeatFieldProps) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const animated = live && !prefersReducedMotion;
+  const palette = fieldPalette(useTheme());
+  const paletteRef = useRef(palette);
+  paletteRef.current = palette;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const geometryRef = useRef<FieldGeometry>(geometryFor(16, 9));
@@ -220,6 +238,7 @@ const HeatField = ({
       sources,
       stateRef.current,
       pointerModel(placement, geometryRef.current.aspect),
+      paletteRef.current,
     );
   };
 
@@ -285,6 +304,13 @@ const HeatField = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animated, placement]);
+
+  // A field at rest paints nothing on its own, so a change of theme repaints
+  // it here; a running one picks the palette up on its next frame.
+  useEffect(() => {
+    if (frameRef.current === null) draw();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [palette.ground]);
 
   // A mouse over the field is a moving heat source. Touch is excluded: on a
   // phone the same gesture is a scroll.

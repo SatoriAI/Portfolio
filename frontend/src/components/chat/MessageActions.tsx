@@ -37,7 +37,7 @@ interface MessageActionsProps {
 // hit areas meet without overlapping. Muted at rest; the lavender only where a
 // pointer can hover, so it does not stay behind after a tap.
 const control =
-  "tap-target relative inline-flex h-8 items-center justify-center rounded-xl text-muted-foreground transition-colors duration-200 ease-brand motion-reduce:transition-none [@media(hover:hover)]:hover:bg-lavender [@media(hover:hover)]:hover:text-foreground [&_svg]:size-4 [&_svg]:shrink-0";
+  "tap-target relative inline-flex h-8 items-center justify-center rounded-xl text-muted-foreground transition-colors duration-200 ease-brand motion-reduce:transition-none [@media(hover:hover)]:hover:bg-lavender-hover [@media(hover:hover)]:hover:text-foreground [&_svg]:size-4 [&_svg]:shrink-0";
 
 const ARROWS: Record<string, (at: number, last: number) => number> = {
   ArrowRight: (at, last) => (at === last ? 0 : at + 1),

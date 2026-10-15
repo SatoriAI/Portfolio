@@ -15,10 +15,12 @@ import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { MARKED } from "@/components/experience/circleStyles";
 import ChoiceHint from "@/components/layout/ChoiceHint";
 import { projectIcons } from "@/config/projectIcons";
+import { useTheme } from "@/contexts/SettingsContext";
 import { useOnceInView } from "@/hooks/use-in-view";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import {
   expired,
+  fieldPalette,
   fitCanvas,
   type HeatModel,
   type HeatSource,
@@ -93,9 +95,6 @@ type ProjectFieldProps = {
   onOpen: (title: string) => void;
   labels: ProjectFieldLabels;
 };
-
-/** The field at rest is the section's own white; heat tints it lavender. */
-const WHITE = [255, 255, 255] as const;
 
 /** The kinds of heat, each a kernel model in pixels and seconds, born `radius` wide. */
 const model = (peak: number, scale: number, radius: number, lifetime: number): HeatModel => ({
@@ -229,6 +228,10 @@ let choseThisVisit = false;
 
 const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps) => {
   const reducedMotion = usePrefersReducedMotion();
+  // The field at rest is the section's own surface; heat tints it lavender.
+  const palette = fieldPalette(useTheme(), "surface");
+  const paletteRef = useRef(palette);
+  paletteRef.current = palette;
   const fieldRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const puckRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -286,7 +289,7 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
       (u, v, alpha) => {
         alpha[0] += preparedHeatAt(kernels, u * w, v * h);
       },
-      WHITE,
+      paletteRef.current,
     );
   };
 
@@ -364,6 +367,11 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
     if (!s || s.layout.still || s.frame !== null || !s.visible || document.hidden) return;
     s.frame = requestAnimationFrame(frame);
   };
+
+  // At rest nothing paints, so a change of theme repaints the field here.
+  useEffect(() => {
+    if (sim.current?.frame === null) paint();
+  }, [palette.ground]);
 
   const heat = (kind: Kind, at: Point) => {
     const s = sim.current;

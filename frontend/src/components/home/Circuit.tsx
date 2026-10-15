@@ -311,7 +311,7 @@ const Circuit = ({ children }: PropsWithChildren) => {
             {/* Bands of light every SHEEN_EVERY px down the run: a white core
                 and a wider blush glow, moved along by shifting the gradient. */}
             {[
-              { id: `${gradientId}-core`, colour: "hsl(var(--surface))", peak: 0.95 },
+              { id: `${gradientId}-core`, colour: "hsl(var(--sheen))", peak: 0.95 },
               { id: `${gradientId}-glow`, colour: "hsl(var(--blush-deep))", peak: 0.7 },
             ].map(({ id, colour, peak }, index) => (
               <linearGradient

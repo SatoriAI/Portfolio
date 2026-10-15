@@ -19,12 +19,12 @@ const buttonVariants = cva(
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary-hover",
         outline:
-          "border border-control-border bg-card text-foreground hover:border-foreground hover:bg-lavender",
+          "border border-control-border bg-card text-foreground hover:border-foreground hover:bg-lavender-hover",
         // The kit's "secondary" button is the outlined one; pastels are
         // backgrounds, never button fills.
         secondary:
-          "border border-control-border bg-card text-foreground hover:border-foreground hover:bg-lavender",
-        ghost: "text-foreground hover:bg-lavender",
+          "border border-control-border bg-card text-foreground hover:border-foreground hover:bg-lavender-hover",
+        ghost: "text-foreground hover:bg-lavender-hover",
         link: "h-auto min-h-0 rounded-none px-0 text-iris underline underline-offset-4 hover:text-primary",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
       },

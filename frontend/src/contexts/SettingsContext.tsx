@@ -1,10 +1,18 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
+import { flipOverride, initialOverride, type Theme } from "@/lib/theme";
+
 type Language = "en" | "pl";
+export type { Theme };
 
 interface SettingsContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
+  /** The theme on screen: the machine's, unless the reader flipped it. */
+  theme: Theme;
+  /** Switches to the other theme. Flipping back to the machine's own theme
+   *  forgets the choice, so the page follows the machine again. */
+  flipTheme: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -17,8 +25,28 @@ export const useSettings = () => {
   return context;
 };
 
-// The Visual Identity Kit defines a light theme only, so the site has no theme
-// setting; language is the one preference that persists.
+/** The theme on screen, for painting outside CSS (the heat fields' canvases).
+ *  Light outside a provider, so a brand component renders on its own. */
+export const useTheme = (): Theme => useContext(SettingsContext)?.theme ?? "light";
+
+const DARK_QUERY = "(prefers-color-scheme: dark)";
+const systemTheme = (): Theme =>
+  typeof window !== "undefined" && window.matchMedia?.(DARK_QUERY).matches ? "dark" : "light";
+
+// The theme-color metas index.html declares, one per scheme; the chosen theme
+// overrides both, so the browser's chrome matches the page and not the machine.
+const THEME_COLOR: Record<Theme, string> = { light: "#F8F9FC", dark: "#0E1424" };
+
+/** Puts a theme on the page at once. index.html does the same before the first
+ *  paint; this keeps it in step afterwards, synchronously, so a view
+ *  transition captures the new theme in its callback. */
+const applyTheme = (theme: Theme) => {
+  document.documentElement.dataset.theme = theme;
+  document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
+    meta.setAttribute("content", THEME_COLOR[theme]);
+  });
+};
+
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>(() => {
     try {
@@ -44,6 +72,30 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return "en";
   });
 
+  // There are two stops, the machine's theme and the other one, so only the
+  // other one is ever stored: a choice equal to the machine's is no choice.
+  const [system, setSystem] = useState<Theme>(systemTheme);
+  const [override, setOverride] = useState<Theme | null>(() => {
+    try {
+      return initialOverride(localStorage.getItem("theme"), systemTheme());
+    } catch (_error) {
+      console.error(_error);
+    }
+    return null;
+  });
+  const theme = override ?? system;
+
+  // Stored and in state stay in step: a saved choice the machine has since
+  // caught up with is forgotten, so the next flip always changes the page.
+  useEffect(() => {
+    try {
+      if (override) localStorage.setItem("theme", override);
+      else localStorage.removeItem("theme");
+    } catch (_error) {
+      console.error(_error);
+    }
+  }, [override]);
+
   useEffect(() => {
     localStorage.setItem("language", language);
   }, [language]);
@@ -54,8 +106,41 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     document.documentElement.lang = language;
   }, [language]);
 
+  // Unflipped, the page follows the machine live, without a reload. When the
+  // machine turns to the theme the reader flipped to, the flip is spent.
+  useEffect(() => {
+    const query = window.matchMedia?.(DARK_QUERY);
+    if (!query) return;
+    const onChange = () => {
+      const next: Theme = query.matches ? "dark" : "light";
+      setSystem(next);
+      setOverride((current) => (current === next ? null : current));
+    };
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => applyTheme(theme), [theme]);
+
+  // From what is on the page and what the machine says now, not from this
+  // render's closure: two flips before a re-render must flip twice.
+  const flipTheme = () => {
+    const current: Theme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+    const machine = systemTheme();
+    const override = flipOverride(current, machine);
+    applyTheme(override ?? machine);
+    setOverride(override);
+  };
+
   return (
-    <SettingsContext.Provider value={{ language, setLanguage }}>
+    <SettingsContext.Provider
+      value={{
+        language,
+        setLanguage,
+        theme,
+        flipTheme,
+      }}
+    >
       {children}
     </SettingsContext.Provider>
   );
