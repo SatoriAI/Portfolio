@@ -114,8 +114,10 @@
     --surface: 221 40% 14%; /* #161F33 */
     --ink: 225 32% 93%; /* #E6E9F2 */
     --text-secondary: 224 18% 68%; /* #9EA6BC */
-    --lavender: 250 33% 17%; /* #221D3A */
-    --blush: 311 22% 14%; /* #2C1C29 */
+    /* As light lavender is on white, about 1.27:1 on surface: a hover or a
+       feature band has to show. */
+    --lavender: 250 36% 26%; /* #322A5A */
+    --blush: 311 24% 21%; /* #42293E */
     --iris: 253 60% 77%; /* #B2A3E8 */
     --border: 223 29% 21%; /* #262F45 */
     --control-border: 225 15% 50%; /* #6C7591 */

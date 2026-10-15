@@ -1,5 +1,10 @@
 import type { Config } from "tailwindcss";
 
+// A shadow's colour at the kit's light alpha `a`: ink in light, near-black at
+// twice the alpha in dark (--shadow-strength), never past 0.6, where a float
+// would turn solid.
+const cast = (a: number) => `hsl(var(--shadow) / min(calc(${a} * var(--shadow-strength)), 0.6))`;
+
 // The colour and type values here mirror the Visual Identity Kit ("Binary Axis",
 // v5.2), kept in the repository at ../visual-kit.
 // Every colour resolves through a CSS variable declared in src/index.css so that
@@ -107,9 +112,9 @@ export default {
         // The kit's smallest radius, for motif modules; the name says why.
         motif: "2px",
       },
-      // Elevation, per the kit: every shadow is cast in --shadow (ink in light,
-      // near-black in dark, at twice the alpha) rather than neutral black,
-      // because a grey shadow over this palette reads as dirt. `lift` and
+      // Elevation, per the kit: every shadow is cast in --shadow (see `cast`)
+      // rather than neutral black, because a grey shadow over this palette
+      // reads as dirt. `lift` and
       // `float` are the kit's two named elevations. `lift` is deliberately
       // not called `card`: a boxShadow key that collides with a colour key
       // makes Tailwind read `shadow-card` as a shadow-COLOUR utility, which
@@ -118,41 +123,43 @@ export default {
       // primitives in components/ui pick up the brand tint without being
       // edited. Elevation still means actionable: a static card gets none.
       boxShadow: {
-        sm: "0 1px 2px 0 hsl(var(--shadow) / calc(0.06 * var(--shadow-strength)))",
-        DEFAULT:
-          "0 1px 3px 0 hsl(var(--shadow) / calc(0.1 * var(--shadow-strength))), 0 1px 2px -1px hsl(var(--shadow) / calc(0.1 * var(--shadow-strength)))",
-        md: "0 4px 6px -1px hsl(var(--shadow) / calc(0.1 * var(--shadow-strength))), 0 2px 4px -2px hsl(var(--shadow) / calc(0.1 * var(--shadow-strength)))",
-        lg: "0 10px 15px -3px hsl(var(--shadow) / calc(0.12 * var(--shadow-strength))), 0 4px 6px -4px hsl(var(--shadow) / calc(0.12 * var(--shadow-strength)))",
-        xl: "0 20px 25px -5px hsl(var(--shadow) / calc(0.14 * var(--shadow-strength))), 0 8px 10px -6px hsl(var(--shadow) / calc(0.14 * var(--shadow-strength)))",
-        lift: "0 8px 24px -12px hsl(var(--shadow) / calc(0.25 * var(--shadow-strength)))",
-        float: "0 12px 32px -12px hsl(var(--shadow) / calc(0.5 * var(--shadow-strength)))",
+        sm: `0 1px 2px 0 ${cast(0.06)}`,
+        DEFAULT: `0 1px 3px 0 ${cast(0.1)}, 0 1px 2px -1px ${cast(0.1)}`,
+        md: `0 4px 6px -1px ${cast(0.1)}, 0 2px 4px -2px ${cast(0.1)}`,
+        lg: `0 10px 15px -3px ${cast(0.12)}, 0 4px 6px -4px ${cast(0.12)}`,
+        xl: `0 20px 25px -5px ${cast(0.14)}, 0 8px 10px -6px ${cast(0.14)}`,
+        lift: `0 8px 24px -12px ${cast(0.25)}`,
+        float: `0 12px 32px -12px ${cast(0.5)}`,
         // Pressed in: the chosen project in the list, and a live check while
         // its request is out. Only on controls, as every elevation here.
-        press: "inset 0 1px 3px 0 hsl(var(--shadow) / calc(0.14 * var(--shadow-strength)))",
+        press: `inset 0 1px 3px 0 ${cast(0.14)}`,
         // A pressable circle: a white gap, a solid 2px control-border rim
         // round it (the edge every control has), and the lift beneath, so a
         // logo reads as a button even when its own colours are white. Not a
         // colour key, see above.
-        rim: "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--control-border)), 0 8px 24px -12px hsl(var(--shadow) / calc(0.35 * var(--shadow-strength)))",
+        rim: `0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--control-border)), 0 8px 24px -12px ${cast(0.35)}`,
         // The same circle with keyboard focus: the kit's 2px iris ring, 3px
         // outside the rim. On the rim itself it would read as the circle
         // being chosen, which is drawn there.
-        "rim-focus":
-          "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--control-border)), 0 0 0 8px hsl(var(--surface)), 0 0 0 10px hsl(var(--iris)), 0 8px 24px -12px hsl(var(--shadow) / calc(0.35 * var(--shadow-strength)))",
+        "rim-focus": `0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--control-border)), 0 0 0 8px hsl(var(--surface)), 0 0 0 10px hsl(var(--iris)), 0 8px 24px -12px ${cast(0.35)}`,
         // The chosen circle on the timeline: the rim itself turns iris, where
         // a name sits just above it and its dialog opens over it at once.
-        "rim-chosen":
-          "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 8px 24px -12px hsl(var(--shadow) / calc(0.35 * var(--shadow-strength)))",
+        "rim-chosen": `0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 8px 24px -12px ${cast(0.35)}`,
         // Chosen and focused from the keyboard: the iris rim, and the focus
         // ring outside it.
-        "rim-chosen-focus":
-          "0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 8px hsl(var(--surface)), 0 0 0 10px hsl(var(--iris)), 0 8px 24px -12px hsl(var(--shadow) / calc(0.35 * var(--shadow-strength)))",
+        "rim-chosen-focus": `0 0 0 3px hsl(var(--surface)), 0 0 0 5px hsl(var(--iris)), 0 0 0 8px hsl(var(--surface)), 0 0 0 10px hsl(var(--iris)), 0 8px 24px -12px ${cast(0.35)}`,
         // A project's puck on the home page's heat field: the circle's white
         // gap with a hairline instead of the control rim, which on a pale
         // field and at phone size read as a disabled control.
-        puck: "0 0 0 3px hsl(var(--surface)), 0 0 0 4px hsl(var(--border)), 0 8px 24px -12px hsl(var(--shadow) / calc(0.35 * var(--shadow-strength)))",
-        "puck-focus":
-          "0 0 0 3px hsl(var(--surface)), 0 0 0 4px hsl(var(--border)), 0 0 0 7px hsl(var(--surface)), 0 0 0 9px hsl(var(--iris)), 0 8px 24px -12px hsl(var(--shadow) / calc(0.35 * var(--shadow-strength)))",
+        puck: `0 0 0 3px hsl(var(--surface)), 0 0 0 4px hsl(var(--border)), 0 8px 24px -12px ${cast(0.35)}`,
+        "puck-focus": `0 0 0 3px hsl(var(--surface)), 0 0 0 4px hsl(var(--border)), 0 0 0 7px hsl(var(--surface)), 0 0 0 9px hsl(var(--iris)), 0 8px 24px -12px ${cast(0.35)}`,
+      },
+      // The dimmed page behind a sheet or dialog, cast like a shadow: in the
+      // text colour it would lighten the dark theme instead of dimming it.
+      // Not a colour key, so it takes no alpha modifier: the alpha is here.
+      backgroundColor: {
+        scrim: cast(0.4),
+        "scrim-faint": cast(0.15),
       },
       transitionTimingFunction: {
         brand: "cubic-bezier(0.22, 1, 0.36, 1)",

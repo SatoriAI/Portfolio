@@ -189,7 +189,7 @@ const TimelineDialog = <Id extends TimelineId>({
       <DialogPortal>
         <DialogOverlay
           ref={overlay}
-          className="bg-foreground/15 backdrop-blur-none data-[state=closed]:animate-none data-[state=open]:animate-none"
+          className="bg-scrim-faint backdrop-blur-none data-[state=closed]:animate-none data-[state=open]:animate-none"
         />
         <DialogPrimitive.Content
           ref={mountPanel}

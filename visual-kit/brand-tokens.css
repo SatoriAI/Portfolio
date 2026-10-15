@@ -42,6 +42,7 @@
   --brand-elevation-md: 0 4px 6px -1px rgb(var(--brand-shadow) / 0.1), 0 2px 4px -2px rgb(var(--brand-shadow) / 0.1);
   --brand-elevation-lg: 0 10px 15px -3px rgb(var(--brand-shadow) / 0.12), 0 4px 6px -4px rgb(var(--brand-shadow) / 0.12);
   --brand-elevation-xl: 0 20px 25px -5px rgb(var(--brand-shadow) / 0.14), 0 8px 10px -6px rgb(var(--brand-shadow) / 0.14);
+  --brand-scrim: rgb(var(--brand-shadow) / 0.4);
 
   /* Layout */
   --brand-content-max: 1160px;
@@ -56,15 +57,16 @@
 }
 
 /* Night Ink. Ratios on background: ink 15.1, text-secondary 7.6, iris 8.1,
-   control-border 4.0 (3.6 on surface). Shadow alphas roughly double. */
+   control-border 4.0 (3.6 on surface); lavender 1.27 on surface, so a hover
+   shows. Shadow alphas double, capped at 0.6. */
 :root[data-theme="dark"] {
   color-scheme: dark;
   --brand-background: #0E1424;
   --brand-surface: #161F33;
   --brand-ink: #E6E9F2;
   --brand-text-secondary: #9EA6BC;
-  --brand-lavender: #221D3A;
-  --brand-blush: #2C1C29;
+  --brand-lavender: #322A5A;
+  --brand-blush: #42293E;
   --brand-iris: #B2A3E8;
   --brand-border: #262F45;
   --brand-control-border: #6C7591;
@@ -72,9 +74,11 @@
   --brand-shadow: 3 6 14;
 
   --brand-elevation-lift: 0 8px 24px -12px rgb(var(--brand-shadow) / 0.5);
-  --brand-elevation-float: 0 12px 32px -12px rgb(var(--brand-shadow) / 0.7);
+  --brand-elevation-float: 0 12px 32px -12px rgb(var(--brand-shadow) / 0.6);
   --brand-elevation-sm: 0 1px 2px 0 rgb(var(--brand-shadow) / 0.12);
   --brand-elevation-md: 0 4px 6px -1px rgb(var(--brand-shadow) / 0.2), 0 2px 4px -2px rgb(var(--brand-shadow) / 0.2);
   --brand-elevation-lg: 0 10px 15px -3px rgb(var(--brand-shadow) / 0.24), 0 4px 6px -4px rgb(var(--brand-shadow) / 0.24);
   --brand-elevation-xl: 0 20px 25px -5px rgb(var(--brand-shadow) / 0.28), 0 8px 10px -6px rgb(var(--brand-shadow) / 0.28);
+  /* Behind a sheet or dialog: dim, never lighten. */
+  --brand-scrim: rgb(var(--brand-shadow) / 0.6);
 }

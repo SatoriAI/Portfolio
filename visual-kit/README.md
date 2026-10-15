@@ -74,8 +74,8 @@ Avoid superlatives, *innovative*, *passionate*, *world-class*, exclamation marks
 | `surface` | `#FFFFFF` | `#161F33` | Cards, menus, and fields |
 | `ink` | `#17233D` | `#E6E9F2` | Headings, body text, and primary actions |
 | `text-secondary` | `#566078` | `#9EA6BC` | Supporting copy and metadata |
-| `lavender` | `#E8E1FA` | `#221D3A` | Visualisation and feature-section backgrounds |
-| `blush` | `#F6E2EB` | `#2C1C29` | Secondary accent and illustration |
+| `lavender` | `#E8E1FA` | `#322A5A` | Visualisation and feature-section backgrounds |
+| `blush` | `#F6E2EB` | `#42293E` | Secondary accent and illustration |
 | `iris` | `#65509A` | `#B2A3E8` | Links, focus, and active states |
 | `border` | `#E0E3EB` | `#262F45` | Decorative dividers and card outlines |
 | `control-border` | `#848A9A` | `#6C7591` | Form and secondary-control boundaries |
@@ -93,10 +93,12 @@ The dark column is described under Dark theme.
 The dark theme is called **Night Ink**. It is built from the same ink. In light, navy is the text and cloud is the page. In dark they swap, the pastels become deep tints of the same hues, and iris lightens until it reads as a link again. Token names and roles do not change, so an interface switches theme by switching values and nothing else.
 
 - **The reader's system decides first.** A first visit follows `prefers-color-scheme` and keeps following it while the page is open. A choice of Light or Dark is remembered; choosing System again forgets it. The page never paints in the wrong theme first: the theme is set before the first paint.
-- **The control** is a three-segment sibling of the language control: System, Light, Dark, as Lucide's `monitor`, `sun` and `moon`, each with an accessible name. Where the links have the menu bar (from 1280 px) it sits beside EN/PL; below that it sits in the menu sheet under an Appearance group label, full width, each word under its icon. The pressed segment is the chosen state, System included, so the reader can always see whether the page is following the machine.
+- **The control** offers System, Light and Dark, as Lucide's `monitor`, `sun` and `moon`. Where the links have the menu bar (from 1280 px) it is one 40 px button beside EN/PL, the language control's size and edge, showing the chosen icon, System included; it opens a menu under an Appearance label with the three as a radio group, the chosen one checked in iris. Three segments there would take the room between the logo and the links, which in Polish would shrink to about 20 px. In the menu sheet, where there is room, the three are a segmented control under an Appearance group label, full width, each word under its icon, the pressed segment the chosen state. Either way the reader can see whether the page is following the machine, and System's name says what the machine is set to now ("System, now dark"), never the theme on screen.
 - **The switch is the reader's heat source.** The new theme spreads out from the pressed segment as a circle, 400 ms on the brand ease, played once. Under `prefers-reduced-motion` it changes at once.
 - **Contrast is measured, not inherited.** On `background`: `ink` 15.1:1, `text-secondary` 7.6:1, `iris` 8.1:1, `control-border` 4.0:1 (3.6:1 on `surface`). `text-secondary` sits higher than its light counterpart because 13 px mono metadata loses more on dark than on light. `border` stays decorative at about 1.4:1.
-- **Depth comes from the surface, not the shadow.** `surface` is one step lighter than `background`, and shadows are cast in `shadow`, which is near-black in dark at roughly twice the light alpha.
+- **Pastels keep their job.** `lavender` and `blush` are hover and feature fills as well as illustration, so a dark tint has to show against what it sits on: about 1.27:1 on `surface`, as light lavender is on white. Darker, a hover disappears. Text on them keeps 10:1 (`ink`) and 5.3:1 (`text-secondary`).
+- **Depth comes from the surface, not the shadow.** `surface` is one step lighter than `background`, and shadows are cast in `shadow`, which is near-black in dark at twice the light alpha, never past 0.6: a `float` at 1.0 is a solid slab, not a shadow.
+- **Scrims dim.** The page behind a sheet or dialog is covered in `shadow` at the elevation alphas (0.4 for a sheet or dialog, 0.15 for a timeline card), never in the text colour, which in dark would lighten the page instead of dimming it.
 - **The mark goes white**, as the logo rules already allow on dark backgrounds. The favicon keeps its navy tile in both themes.
 - **Real captures are never dimmed or inverted.** A light screenshot in a dark frame is a window onto someone else's product.
 - **Paper stays paper.** The teaching quotes' sticky notes are objects in the scene, not interface: they keep a slightly dimmed yellow and their text stays light-theme navy.
@@ -137,7 +139,7 @@ Workshop articles are set on a reading scale of their own, larger than the body 
 
 ## Elevation
 
-Shadows are cast in `shadow` at low alpha, never in neutral black. A grey shadow over this palette reads as dirt rather than depth. In light `shadow` is `ink`; in dark it is `#03060E`, because a shadow cast in the dark theme's light ink would glow. The alphas below are the light theme's; dark uses roughly twice each.
+Shadows are cast in `shadow` at low alpha, never in neutral black. A grey shadow over this palette reads as dirt rather than depth. In light `shadow` is `ink`; in dark it is `#03060E`, because a shadow cast in the dark theme's light ink would glow. The alphas below are the light theme's; dark uses twice each, capped at 0.6.
 
 | Token | Value | Use |
 | --- | --- | --- |

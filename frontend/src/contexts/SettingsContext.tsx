@@ -12,6 +12,8 @@ interface SettingsContextType {
   setThemePreference: (preference: ThemePreference) => void;
   /** The theme on screen: the preference, or the machine's under "system". */
   theme: Theme;
+  /** The machine's own scheme, whatever the preference. */
+  systemTheme: Theme;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -118,7 +120,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   return (
     <SettingsContext.Provider
-      value={{ language, setLanguage, themePreference, setThemePreference, theme }}
+      value={{
+        language,
+        setLanguage,
+        themePreference,
+        setThemePreference,
+        theme,
+        systemTheme: system,
+      }}
     >
       {children}
     </SettingsContext.Provider>

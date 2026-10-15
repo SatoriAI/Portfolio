@@ -6,6 +6,7 @@ import BrandLogo from "@/components/brand/BrandLogo";
 import HeatField from "@/components/brand/HeatField";
 import LanguageToggle from "@/components/LanguageToggle";
 import Container from "@/components/layout/Container";
+import ThemeMenu from "@/components/ThemeMenu";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -88,10 +89,9 @@ const SiteHeader = () => {
           </Link>
 
           <div className="flex items-center gap-3 md:gap-6">
-            {/* Seven links, both toggles and the full-size logo fit in Polish
-              only from about 1180px, so the row appears at xl, 16px apart:
-              at 24 the Polish row met the logo. */}
-            <nav aria-label={t.common.menu} className="hidden items-center gap-4 xl:flex">
+            {/* Seven links, the toggles and the full-size logo fit in Polish
+              only from about 1180px, so the row appears at xl. */}
+            <nav aria-label={t.common.menu} className="hidden items-center gap-6 xl:flex">
               {homeSections.map((item) => (
                 <Link
                   key={item.to}
@@ -118,9 +118,10 @@ const SiteHeader = () => {
 
             <div className="flex items-center gap-2">
               <LanguageToggle />
-              {/* Beside the language where the links have the bar; in the
-                menu sheet, with words, where they fold into it. */}
-              <ThemeToggle className="hidden xl:inline-flex" />
+              {/* One button beside the language where the links have the
+                bar; three segments with words in the menu sheet, where they
+                fold into it. */}
+              <ThemeMenu className="hidden xl:inline-flex" />
             </div>
 
             <div className="xl:hidden">
@@ -152,7 +153,7 @@ const SiteHeader = () => {
                     <p className="pb-1 font-mono text-meta uppercase tracking-widest text-muted-foreground">
                       {t.common.appearance}
                     </p>
-                    <ThemeToggle labelled />
+                    <ThemeToggle />
                   </div>
                 </SheetContent>
               </Sheet>
