@@ -1,8 +1,9 @@
 import react from "@vitejs/plugin-react-swc";
 import { readFile } from "fs/promises";
 import path from "path";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 
+import { serveConfig } from "./src/lib/securityHeaders";
 import { VEX_LANGUAGES, vexBundle } from "./src/lib/vexKnowledge";
 import { readVexContent } from "./src/lib/vexKnowledgeFiles";
 import { parseArticle, parseHeader } from "./src/lib/workshop";
@@ -63,16 +64,41 @@ const vexKnowledge = (): Plugin => ({
   },
 });
 
+/**
+ * Emits `serve.json`, which `serve` reads from the directory it serves, so
+ * production sends the site's security headers (see src/lib/securityHeaders.ts).
+ * Built from the same VITE_API_BASE_URL as the bundle, so the policy always
+ * names the API the build calls.
+ */
+const securityHeaders = (apiBaseUrl: string | undefined): Plugin => ({
+  name: "security-headers",
+  apply: "build",
+  generateBundle() {
+    if (!apiBaseUrl)
+      this.error("VITE_API_BASE_URL is not set: the security headers name the API it points at.");
+    this.emitFile({
+      type: "asset",
+      fileName: "serve.json",
+      source: JSON.stringify(serveConfig(apiBaseUrl), null, 2),
+    });
+  },
+});
+
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
   },
-  plugins: [markdownQueries(), vexKnowledge(), react()],
+  plugins: [
+    markdownQueries(),
+    vexKnowledge(),
+    securityHeaders(loadEnv(mode, process.cwd()).VITE_API_BASE_URL?.trim()),
+    react(),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-});
+}));
