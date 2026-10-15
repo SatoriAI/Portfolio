@@ -1,17 +1,25 @@
-"""The admin's sign-in, throttled. The admin is public and a password is all that guards it, so after FAILURE_LIMIT
-failed attempts from one IP at one username, that pair is refused without its password being checked until
-LOCKOUT_SECONDS have passed since the last failure.
+"""The admin's sign-in, throttled. The admin is public and a password is all that guards it, so two limits stand in
+front of the password check:
 
-The pair, not either half alone: counted per username, anyone could lock Dawid out by failing at his; counted per IP,
-an office or a mobile network shares one count. The username is hashed into the key, so what someone typed into the
-form is never stored.
+- one IP at one username gets PAIR_LIMIT attempts, and is then refused until PAIR_WINDOW_SECONDS have passed since
+  the last attempt that was checked. The pair, not either half alone: per IP, an office or a mobile network would share
+  one count; per username alone, it would be the only limit, and anyone could lock Dawid out in a few tries.
+- one username gets USERNAME_LIMIT attempts in USERNAME_WINDOW_SECONDS from all IPs together, and is then refused for
+  the rest of that window. This is what stops a guesser spread over many IPs. Its price is that such a guesser can
+  keep Dawid out for up to the window; that was accepted.
 
-The counts live in the vex cache, which is Redis in production (see settings.CACHES), so both workers and all their
-threads share them and a deploy does not reset them. Like Vex's own limits it fails open: with Redis down the form
-checks passwords unthrottled rather than refusing every sign-in."""
+Every attempt is counted before its password is checked and uncounted only when it succeeds. Checking first and
+counting after would let any number of simultaneous attempts through the check, each seeing the count as it was
+before any of them failed. Counted first, at most PAIR_LIMIT attempts for a pair are ever checked, however many
+arrive at once.
+
+The username is hashed into the keys, so what someone typed into the form is never stored. The counts live in the vex
+cache, which is Redis in production (see settings.CACHES), so both workers and all their threads share them and a
+deploy does not reset them. Like Vex's own limits it fails open: with Redis down the form checks passwords
+unthrottled rather than refusing every sign-in."""
 
 import hashlib
-from typing import Any
+from typing import Any, NoReturn
 
 from django.contrib.admin.forms import AdminAuthenticationForm
 from django.core.exceptions import ValidationError
@@ -22,15 +30,36 @@ from utils.functions import client_ip
 from vex.utils.cache import CacheUnavailable
 from vex.utils.cache import cache as vex_cache
 
-FAILURE_LIMIT = 5
-LOCKOUT_SECONDS = 15 * 60
+PAIR_LIMIT = 5
+PAIR_WINDOW_SECONDS = 15 * 60
+USERNAME_LIMIT = 50
+USERNAME_WINDOW_SECONDS = 60 * 60
 
 
-def failure_key(request: HttpRequest | None, username: str) -> str:
+def _hashed(username: str) -> str:
+    return hashlib.sha256(username.casefold().encode()).hexdigest()
+
+
+def pair_key(request: HttpRequest | None, username: str) -> str:
     # Without the trusted header the request did not come through the edge. Such requests share one count rather than
     # going uncounted: unlike Vex, the admin loses nothing by failing closed.
     ip = (client_ip(request) if request is not None else None) or "unknown"
-    return f"admin-login-failures:{ip}:{hashlib.sha256(username.casefold().encode()).hexdigest()}"
+    return f"admin-login-attempts:{ip}:{_hashed(username)}"
+
+
+def username_key(username: str) -> str:
+    return f"admin-login-attempts:{_hashed(username)}"
+
+
+def _reserve(key: str, timeout: int) -> int:
+    """Counts one attempt and returns the count, this one included. A key that expires between add and incr would make
+    incr raise ValueError; it is then the first attempt of a new window."""
+    vex_cache.add(key, 0, timeout)
+    try:
+        return int(vex_cache.incr(key))
+    except ValueError:
+        vex_cache.set(key, 1, timeout)
+        return 1
 
 
 class ThrottledAdminAuthenticationForm(AdminAuthenticationForm):
@@ -43,31 +72,26 @@ class ThrottledAdminAuthenticationForm(AdminAuthenticationForm):
         username = self.cleaned_data.get("username")
         if not username or not self.cleaned_data.get("password"):
             return super().clean()  # a field is missing, so nothing is checked and nothing counts
-        key = failure_key(self.request, username)
+        pair, name = pair_key(self.request, username), username_key(username)
         try:
-            locked = (vex_cache.get(key) or 0) >= FAILURE_LIMIT
+            pair_count = _reserve(pair, PAIR_WINDOW_SECONDS)
+            name_count = _reserve(name, USERNAME_WINDOW_SECONDS)  # a fixed window: it is never refreshed
+            if pair_count <= PAIR_LIMIT:
+                # Sliding: the pair's lockout runs from its latest checked attempt. Refused ones do not extend it.
+                vex_cache.touch(pair, PAIR_WINDOW_SECONDS)
         except CacheUnavailable:
-            locked = False
-        if locked:
-            raise ValidationError(
-                self.error_messages["locked"], code="locked", params={"minutes": LOCKOUT_SECONDS // 60}
-            )
+            pair_count = name_count = 0
+        if name_count > USERNAME_LIMIT:
+            self._refuse(USERNAME_WINDOW_SECONDS)
+        if pair_count > PAIR_LIMIT:
+            self._refuse(PAIR_WINDOW_SECONDS)
+        cleaned_data = super().clean()  # a wrong password raises here, and its attempt stays counted
         try:
-            cleaned_data = super().clean()
-        except ValidationError:
-            self._count_failure(key)
-            raise
-        try:
-            vex_cache.delete(key)
-        except CacheUnavailable:
+            vex_cache.delete(pair)
+            vex_cache.decr(name)
+        except (CacheUnavailable, ValueError):  # ValueError: the username's window ended during the check
             pass
         return cleaned_data
 
-    @staticmethod
-    def _count_failure(key: str) -> None:
-        try:
-            vex_cache.add(key, 0, LOCKOUT_SECONDS)
-            vex_cache.incr(key)
-            vex_cache.touch(key, LOCKOUT_SECONDS)  # the lockout runs from the latest failure, not the first
-        except CacheUnavailable:
-            pass
+    def _refuse(self, window_seconds: int) -> NoReturn:
+        raise ValidationError(self.error_messages["locked"], code="locked", params={"minutes": window_seconds // 60})

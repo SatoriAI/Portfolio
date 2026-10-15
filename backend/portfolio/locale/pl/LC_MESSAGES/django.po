@@ -20,7 +20,7 @@ msgstr ""
 "(n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && "
 "n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
 
-#: portfolio/admin_login.py:39
+#: portfolio/admin_login.py:68
 #, python-format
 msgid "Too many failed sign-ins. Try again in %(minutes)s minutes."
 msgstr "Zbyt wiele nieudanych prób logowania. Spróbuj ponownie za %(minutes)s minut."
