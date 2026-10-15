@@ -27,7 +27,10 @@ const ChatLauncher = forwardRef<HTMLButtonElement, ChatLauncherProps>(
       onFocus={preloadMarkdown}
       aria-label={label}
       className={cn(
-        "fixed right-6 z-40 h-14 w-14 rounded-xl shadow-float transition-[transform,opacity,visibility] duration-200 ease-brand hover:-translate-y-0.5 motion-reduce:transform-none",
+        "fixed right-6 z-40 h-14 w-14 rounded-xl shadow-float-edged transition-[transform,opacity,visibility,background-color,color] duration-200 ease-brand hover:-translate-y-0.5 motion-reduce:transform-none",
+        // Navy in light; in dark quiet at rest and lit by the reader's
+        // pointer or focus (index.css).
+        "bg-launcher text-launcher-foreground hover:bg-launcher-lit hover:text-launcher-lit-foreground focus-visible:bg-launcher-lit focus-visible:text-launcher-lit-foreground",
         aside && "invisible translate-y-2 opacity-0",
       )}
       style={{ bottom: "calc(env(safe-area-inset-bottom) + 1.5rem)" }}

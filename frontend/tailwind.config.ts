@@ -26,6 +26,14 @@ export default {
           disabled: "hsl(var(--primary-disabled))",
           "disabled-foreground": "hsl(var(--primary-disabled-foreground))",
         },
+        // The chat launcher (index.css): navy in light; in dark quiet at rest
+        // and lit near-white by the reader.
+        launcher: {
+          DEFAULT: "hsl(var(--launcher))",
+          foreground: "hsl(var(--launcher-foreground))",
+          lit: "hsl(var(--launcher-lit))",
+          "lit-foreground": "hsl(var(--launcher-lit-foreground))",
+        },
         // A chosen state that is not an action (index.css): navy in light,
         // lavender with an iris edge in dark.
         chosen: {
@@ -142,6 +150,10 @@ export default {
         xl: `0 20px 25px -5px ${cast(0.14)}, 0 8px 10px -6px ${cast(0.14)}`,
         lift: `0 8px 24px -12px ${cast(0.25)}`,
         float: `0 12px 32px -12px ${cast(0.5)}`,
+        // The launcher's float with its edge, which in light is the fill's own
+        // navy and in dark the control edge. Not `launcher`: a boxShadow key
+        // that matches a colour key becomes a shadow-colour utility.
+        "float-edged": `inset 0 0 0 1px hsl(var(--launcher-edge)), 0 12px 32px -12px ${cast(0.5)}`,
         // Pressed in: the chosen project in the list, and a live check while
         // its request is out. Only on controls, as every elevation here.
         press: `inset 0 1px 3px 0 ${cast(0.14)}`,
