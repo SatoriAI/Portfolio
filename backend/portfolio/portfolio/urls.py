@@ -25,6 +25,10 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 # Used for building examples with translations in the documentation
 from utils.drf import ParlerTranslatedFieldsFieldExtension  # noqa: F401  # pylint: disable=unused-import
 
+from .admin_login import ThrottledAdminAuthenticationForm
+
+admin.site.login_form = ThrottledAdminAuthenticationForm
+
 urlpatterns = [
     # Admin panel under /admin/ and make the home page redirect to /admin/
     path("admin/", admin.site.urls),

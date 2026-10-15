@@ -32,7 +32,7 @@ FROM node:24-alpine AS production
 WORKDIR /app
 
 # Install serve package
-RUN npm install -g serve
+RUN npm install -g serve@14.2.6
 
 # Copy built application
 COPY --from=builder /app/dist ./dist

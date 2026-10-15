@@ -51,6 +51,20 @@ CORS_EXPOSE_HEADERS = ["Retry-After"]
 if DEBUG:  # For development: Allow local file and HTTP server access
     CORS_ALLOW_ALL_ORIGINS = True
     CORS_ALLOW_CREDENTIALS = True
+else:
+    # Railway's edge ends TLS and reaches gunicorn over plain HTTP, saying which scheme the visitor used in
+    # X-Forwarded-Proto. Trusting it is safe because the edge itself answers every http:// request with a 301 to
+    # https://, so no request reaches Django from a visitor's plain HTTP. Without it Django thinks every request is
+    # insecure, and SecurityMiddleware sends no HSTS at all.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    # Not SECURE_SSL_REDIRECT: the edge already redirects, and Railway's healthcheck arrives over the private network
+    # with no X-Forwarded-Proto, so Django would answer it with a redirect and fail every deploy.
+    SECURE_HSTS_SECONDS = 365 * 24 * 60 * 60
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # The admin's session and CSRF cookies go over HTTPS only. Nosniff, X-Frame-Options DENY and Referrer-Policy
+    # same-origin are Django's defaults already.
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 
 # Application definition
@@ -123,8 +137,9 @@ DATABASE_URL = env("DATABASE_URL")
 
 # Two caches. "default" stays in each process's memory: django-parler keeps every translation there, and putting the
 # whole site's content behind Redis would make Redis a reason for the site to fail. "vex" holds Vex's shared state
-# (its rate-limit counts, the day's spend on the model, the persona): on Railway that is Redis (REDIS_URL), so every
-# worker and thread counts against one limit and the counts survive a deploy. That Redis may be shared with other
+# (its rate-limit counts, the day's spend on the model, the persona) and the admin's failed sign-ins
+# (portfolio.admin_login): on Railway that is Redis (REDIS_URL), so every worker and thread counts against one limit
+# and the counts survive a deploy. That Redis may be shared with other
 # apps, so Vex keeps to a database of its own (VEX_REDIS_DB, used when REDIS_URL names none, as Railway's does not),
 # every key carries the "portfolio" prefix, and nothing here ever flushes it. The timeouts are short because Redis is
 # milliseconds away on Railway's private network, and Vex fails open when it does not answer (vex.utils.cache): a
