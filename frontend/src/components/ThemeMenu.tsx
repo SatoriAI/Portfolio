@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Check } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 
 import type { ThemePreference } from "@/contexts/SettingsContext";
 import { THEME_MODES, useThemeSwitch } from "@/hooks/use-theme-switch";
@@ -10,7 +10,9 @@ import { cn } from "@/lib/utils";
  * The theme control for the menu bar: one 40 px button beside the language
  * toggle, its icon the reader's choice (System included), opening System /
  * Light / Dark. Three segments there cost the bar the room between the logo
- * and the links; the menu sheet keeps them (ThemeToggle).
+ * and the links; the menu sheet keeps them (ThemeToggle). A small chevron
+ * says it opens a menu, since at rest it otherwise looks like a segment of
+ * the language toggle beside it, which switches at once.
  */
 const ThemeMenu = ({ className }: { className?: string }) => {
   const { preference, nameOf, switchTo, t } = useThemeSwitch();
@@ -25,11 +27,18 @@ const ThemeMenu = ({ className }: { className?: string }) => {
         aria-label={label}
         title={label}
         className={cn(
-          "inline-flex size-10 items-center justify-center rounded-xl border border-control-border bg-card text-foreground transition-colors duration-200 hover:bg-lavender data-[state=open]:bg-lavender",
+          "group inline-flex size-10 items-center justify-center gap-0.5 rounded-xl border border-control-border bg-card text-foreground transition-colors duration-200 hover:bg-lavender data-[state=open]:bg-lavender",
           className,
         )}
       >
         <Icon aria-hidden="true" className="size-4" />
+        {/* 12 px, under the kit's 16 px icon size, so drawn heavier to keep
+          the set's stroke weight; it turns while the menu is open. */}
+        <ChevronDown
+          aria-hidden="true"
+          strokeWidth={2.5}
+          className="size-3 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180 motion-reduce:transition-none"
+        />
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content
