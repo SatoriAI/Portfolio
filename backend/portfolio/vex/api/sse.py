@@ -12,6 +12,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from vex import retention
 from vex.ai.context import resolve_context
 from vex.ai.engine import stream_answer
 from vex.ai.spend import Resting
@@ -106,6 +107,8 @@ class ChatStreamView(RateLimitedMixin, APIView):
                         chunk = next(chunks)
                     except StopIteration as saved:
                         yield done_event(saved.value)
+                        # Once the visitor has the answer whole, so the day's first one never waits for the purge.
+                        retention.purge_daily()
                         return
                     yield sse_event("delta", {"t": chunk})
                     if time.monotonic() > deadline:

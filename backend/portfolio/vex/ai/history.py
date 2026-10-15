@@ -29,7 +29,11 @@ class MessageHistory:
         # format alone: any client can mint such a key, so the per-IP limits are what actually hold creation back.
         if not is_valid_session_key(session_key):
             raise ValueError("Invalid session key")
-        self.conversation, _ = Conversation.objects.get_or_create(session=session_key)
+        self.conversation, created = Conversation.objects.get_or_create(session=session_key)
+        if not created:
+            # Its last activity, which retention counts from (vex.retention): touched as the question arrives, so a
+            # purge running meanwhile cannot take a conversation that is being written to.
+            self.conversation.save(update_fields=["updated_at"])
 
     def recent(self, *, limit: int = HISTORY_MESSAGES, budget: int = HISTORY_TOKEN_BUDGET) -> list[Turn]:
         """The latest questions and answers, oldest first: at most `limit` of them, and no more than `budget` tokens

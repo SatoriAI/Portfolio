@@ -49,6 +49,10 @@ const copy = {
       // The text box's accessible name; the placeholder is only a hint.
       inputLabel: "Message to Vex",
       starters: ["What's his experience with Kubernetes?", "Tell me about his PhD research"],
+      // Under the starters while the chat is empty. The 24 months is the
+      // backend's VEX_CONVERSATION_RETENTION_DAYS; change the two together.
+      notice:
+        "Vex is an AI assistant. I keep conversations for 24\u00a0months, without IP addresses, to improve her answers.",
       // Follows the reason in the chat's error notice; {email} becomes a mailto link.
       errorFallback: "Email me at {email} and I'll reply within a few hours.",
       // The reason a question went unanswered, by the code the backend sends;
@@ -730,6 +734,8 @@ const copy = {
       inputPlaceholder: "Zapytaj Vex o Dawida",
       inputLabel: "Wiadomość do Vex",
       starters: ["Jakie ma doświadczenie z Kubernetesem?", "Opowiedz o jego badaniach doktorskich"],
+      notice:
+        "Vex to asystentka AI. Rozmowy przechowuję przez 24\u00a0miesiące, bez adresów IP, żeby poprawiać jej odpowiedzi.",
       errorFallback: "Napisz na {email} — odpowiem w ciągu kilku godzin.",
       errors: {
         rate_limited: "To sporo pytań naraz. Daj Vex minutę i spróbuj ponownie.",

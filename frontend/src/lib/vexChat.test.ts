@@ -11,6 +11,7 @@ import {
   type ChatState,
   continuableReply,
   initialChatState,
+  isEmptyChat,
   isWaiting,
   retryableQuestion,
   type StoredMessage,
@@ -297,6 +298,29 @@ describe("chatReducer", () => {
       expect(texts(state)).toEqual(["Q:Hi", "!unavailable"]);
       expect(state.hydrated).toBe(true);
     });
+  });
+});
+
+describe("the empty chat, with its starters and AI notice", () => {
+  it("shows once an empty history has loaded, not before", () => {
+    expect(isEmptyChat(initialChatState)).toBe(false);
+    expect(isEmptyChat(run())).toBe(true);
+  });
+
+  it("does not show over a returning visitor's history", () => {
+    expect(isEmptyChat(run({ type: "hydrated", stored: stored(["user", "Q1"]) }))).toBe(false);
+  });
+
+  it("goes with the first question and comes back when the chat is cleared", () => {
+    const asked = run({ type: "ask", question: "Hi" });
+    expect(isEmptyChat(asked)).toBe(false);
+    const answered = reduce(
+      asked,
+      { type: "delta", turn: turnOf(asked), text: "Hello" },
+      { type: "done", turn: turnOf(asked) },
+    );
+    expect(isEmptyChat(answered)).toBe(false);
+    expect(isEmptyChat(chatReducer(answered, { type: "clear" }))).toBe(true);
   });
 });
 

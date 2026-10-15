@@ -148,6 +148,14 @@ export const initialChatState: ChatState = {
 /** Waiting for the first word of a reply: the typing indicator shows. */
 export const isWaiting = (state: ChatState) => state.active !== null && state.replyId === null;
 
+/**
+ * Nothing said yet: the chat shows its starters and the AI notice. Not while
+ * a history may still arrive (they would flash for a returning visitor), nor
+ * once a question is on its way.
+ */
+export const isEmptyChat = (state: ChatState) =>
+  state.hydrated && state.messages.length === 0 && state.active === null;
+
 // Failures that asking again could mend. A question too long, a conversation
 // the server will not pick up, or a limit that lasts until tomorrow would only
 // fail the same way.

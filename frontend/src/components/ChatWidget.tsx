@@ -5,7 +5,7 @@ import { BrandSymbol } from "@/components/brand/BrandLogo";
 import MessageActions from "@/components/chat/MessageActions";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { toast as notify } from "@/components/ui/sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { EMAIL } from "@/config/contact";
@@ -23,6 +23,7 @@ import {
   continuableReply,
   type Feedback,
   initialChatState,
+  isEmptyChat,
   isWaiting,
   retryableQuestion,
   type StoredMessage,
@@ -144,9 +145,6 @@ const ChatWidget = ({
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const initialScrollDoneRef = useRef(false);
-  // Starter questions must not flash for a returning visitor whose history is
-  // still being fetched, and a question waits for it (see chatReducer).
-  const { hydrated } = chat;
 
   // A key the backend turned away (left over from an older format, or edited)
   // is dropped, so the next question starts a new conversation instead of
@@ -439,7 +437,26 @@ const ChatWidget = ({
     }
   };
 
-  const emptyState = hydrated ? (
+  // The AI notice is the panel's description, so it is read out whenever
+  // focus moves in. It shows under the starters while the chat is empty, and
+  // stays mounted for screen readers alone the rest of the time (while the
+  // history loads, and once a conversation is under way): one text, in one
+  // element at a time.
+  const aiNotice = (shown: boolean) => (
+    <SheetDescription
+      className={
+        shown
+          ? // As wide as the starters and no wider: a zero width keeps it out
+            // of the column's sizing, and min-w-full fills it.
+            "mt-6 w-0 min-w-full text-balance text-meta text-muted-foreground"
+          : "sr-only"
+      }
+    >
+      {t.chat.notice}
+    </SheetDescription>
+  );
+
+  const emptyState = (
     <div className="flex h-full flex-col items-center justify-center py-16 text-center">
       <span
         aria-hidden="true"
@@ -448,25 +465,28 @@ const ChatWidget = ({
         <MessageSquare className="h-6 w-6" />
       </span>
       <h3 className="text-xl font-semibold md:text-card-title">{t.chat.prompt}</h3>
-      <ul className="mt-6 flex flex-col items-stretch gap-2">
-        {t.chat.starters.map((question) => (
-          <li key={question}>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start whitespace-normal text-left"
-              onClick={() => handleSendMessage(question)}
-              disabled={isLoading || isStreaming}
-            >
-              {question}
-            </Button>
-          </li>
-        ))}
-      </ul>
+      <div className="mt-6 flex flex-col">
+        <ul className="flex flex-col items-stretch gap-2">
+          {t.chat.starters.map((question) => (
+            <li key={question}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start whitespace-normal text-left"
+                onClick={() => handleSendMessage(question)}
+                disabled={isLoading || isStreaming}
+              >
+                {question}
+              </Button>
+            </li>
+          ))}
+        </ul>
+        {aiNotice(true)}
+      </div>
     </div>
-  ) : null;
+  );
 
-  const showEmptyState = messages.length === 0 && !isStreaming;
+  const showEmptyState = isEmptyChat(chat);
 
   // What the status region reads out once a turn finishes: the whole reply in
   // one go, rather than the log announcing it word by word as it streams.
@@ -512,7 +532,6 @@ const ChatWidget = ({
         side="right"
         lockScroll={false}
         closeLabel={t.common.close}
-        aria-describedby={undefined}
         // A side panel: the page behind stays readable and clickable, and a
         // click outside must not dismiss a conversation in progress.
         onInteractOutside={(event) => event.preventDefault()}
@@ -539,7 +558,7 @@ const ChatWidget = ({
 
         <div className="flex min-h-0 flex-1 flex-col">
           <ScrollArea className="flex-1 p-4">
-            {showEmptyState && emptyState}
+            {showEmptyState ? emptyState : aiNotice(false)}
             {/* The conversation is a log, but a silent one: streamed in word
                 by word, it would be read out word by word. A finished reply is
                 read once by the status region below; a failure by its alert. */}
