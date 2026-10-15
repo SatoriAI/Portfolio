@@ -48,7 +48,7 @@ Vex also reads the site's own writing. The build publishes the project write-ups
 
 ### Addresses and crawlers
 
-The build also writes `/sitemap.xml` and the static server's routes from the same list (the `site-map` plugin, built from [`src/lib/siteMap.ts`](src/lib/siteMap.ts)): home, the standalone pages in `src/config/navigation.ts`, and every published workshop piece. `serve` runs without `-s`, so `dist/serve.json` answers those paths, with or without a trailing slash, with the app, and any other address with `404.html`, the same app showing its not-found page under a real 404. A new page needs its entry in `navigation.ts`, or it will 404 on a direct load. The social preview, `public/og.png`, is drawn from `og/og.svg` by `sh og/render.sh`; rerun it after editing the SVG.
+The build also writes `/sitemap.xml` and the static server's routes from the same list (the `site-map` plugin, built from [`src/lib/siteMap.ts`](src/lib/siteMap.ts)): home, the standalone pages in `src/config/navigation.ts`, and every published workshop piece. `serve` runs without `-s`, so `dist/serve.json` answers those paths, with or without a trailing slash, with the app, the old addresses in `navigation.ts` with a 301, and any other address with `404.html`, the same app showing its not-found page under a real 404 and without a canonical. `src/lib/siteMap.test.ts` fails if `App.tsx` declares a route the list lacks. The social preview, `public/og.png`, is drawn from `og/og.svg` by `sh og/render.sh`; rerun it after editing the SVG.
 
 ### Visual identity
 

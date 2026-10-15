@@ -14,7 +14,7 @@ const NotFound = () => {
   const location = useLocation();
   const { language } = useSettings();
   const t = translations[language];
-  usePageMeta(t.meta.notFound);
+  usePageMeta({ ...t.meta.notFound, canonical: false });
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);

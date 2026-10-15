@@ -50,12 +50,14 @@ const WorkshopArticle = () => {
     [asideRef],
   );
   const article = articlesFor(workshopArticles, language, { drafts: showDrafts }).find(
-    (piece) => piece.slug === slug,
+    // Slugs are lower case; the address matches as the router does, in any case.
+    (piece) => piece.slug === slug?.toLowerCase(),
   );
+  // Set after the NotFound shown in its place, so a missing piece is named as one.
   usePageMeta(
     article
       ? { title: `${article.title} · Dawid Hanrahan`, description: article.summary }
-      : t.meta.workshop,
+      : { ...t.meta.notFound, canonical: false },
   );
 
   const text = useArticleText(article);

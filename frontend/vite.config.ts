@@ -1,10 +1,16 @@
 import react from "@vitejs/plugin-react-swc";
-import { copyFile, readFile, writeFile } from "fs/promises";
+import { readFile, writeFile } from "fs/promises";
 import path from "path";
 import { defineConfig, type Plugin } from "vite";
 
 import { pages, redirects } from "./src/config/navigation";
-import { appRewrites, publishedPieceSlugs, sitemapXml, sitePaths } from "./src/lib/siteMap";
+import {
+  notFoundHtml,
+  publishedPieceSlugs,
+  serveConfig,
+  sitemapXml,
+  sitePaths,
+} from "./src/lib/siteMap";
 import { VEX_LANGUAGES, vexBundle } from "./src/lib/vexKnowledge";
 import { readVexContent } from "./src/lib/vexKnowledgeFiles";
 import { parseArticle, parseHeader } from "./src/lib/workshop";
@@ -68,9 +74,9 @@ const vexKnowledge = (): Plugin => ({
 /**
  * Tells crawlers and the static server which addresses exist (see
  * src/lib/siteMap.ts): `/sitemap.xml` lists the pages, and `serve.json`
- * answers each known one with the app while every other address falls
- * through to `404.html`, the same app, which shows its not-found page under
- * a real 404 status. Merged into whatever serve.json the build has already
+ * answers each known one with the app, each old one with a 301, while every
+ * other address falls through to `404.html`, the same app, which shows its
+ * not-found page under a real 404 status. Merged into whatever serve.json the build has already
  * written, so other settings for the server keep their own owner.
  */
 const siteMap = (): Plugin => {
@@ -86,24 +92,11 @@ const siteMap = (): Plugin => {
       this.emitFile({ type: "asset", fileName: "sitemap.xml", source: sitemapXml(paths) });
     },
     async writeBundle({ dir = "dist" }) {
-      const known = [...paths, ...redirects.map((redirect) => redirect.from)];
       const configFile = path.join(dir, "serve.json");
       const config = await readFile(configFile, "utf8").then(JSON.parse, () => ({}));
-      await writeFile(
-        configFile,
-        JSON.stringify(
-          {
-            ...config,
-            // No `/404` or `/index` aliases, and no listing of a folder such as /fonts/.
-            cleanUrls: false,
-            directoryListing: false,
-            rewrites: [...(config.rewrites ?? []), ...appRewrites(known)],
-          },
-          null,
-          2,
-        ),
-      );
-      await copyFile(path.join(dir, "index.html"), path.join(dir, "404.html"));
+      await writeFile(configFile, JSON.stringify(serveConfig(config, paths, redirects), null, 2));
+      const index = await readFile(path.join(dir, "index.html"), "utf8");
+      await writeFile(path.join(dir, "404.html"), notFoundHtml(index));
     },
   };
 };

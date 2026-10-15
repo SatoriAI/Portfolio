@@ -6,15 +6,21 @@ import { absoluteUrl } from "@/lib/siteMap";
 type PageMeta = {
   title: string;
   description: string;
+  /** False for a page with no address of its own, such as not-found. */
+  canonical?: boolean;
 };
+
+const ADDRESS_TAGS = ['link[rel="canonical"]', 'meta[property="og:url"]'];
 
 /**
  * Gives a route its own title, description, canonical address and Open Graph
  * text, over the defaults in index.html. Scrapers that do not run scripts
  * (link previews) read those defaults; a crawler that renders the page, as
- * Google does, reads these.
+ * Google does, reads these. A page without an address of its own takes the
+ * canonical and og:url out while it is shown, rather than naming the address
+ * that was mistyped, or home.
  */
-export function usePageMeta({ title, description }: PageMeta) {
+export function usePageMeta({ title, description, canonical = true }: PageMeta) {
   const { pathname } = useLocation();
 
   useEffect(() => {
@@ -33,11 +39,16 @@ export function usePageMeta({ title, description }: PageMeta) {
       element?.setAttribute(attribute, value);
       return () => element?.setAttribute(attribute, previous);
     });
+    const removed = canonical
+      ? []
+      : ADDRESS_TAGS.flatMap((selector) => document.head.querySelector(selector) ?? []);
+    removed.forEach((element) => element.remove());
     document.title = title;
 
     return () => {
       document.title = previousTitle;
       restore.forEach((undo) => undo());
+      document.head.append(...removed);
     };
-  }, [title, description, pathname]);
+  }, [title, description, canonical, pathname]);
 }
