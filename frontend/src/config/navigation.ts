@@ -16,10 +16,15 @@ export const homeSections: readonly NavItem[] = [
   { labelKey: "contact", to: "/#contact" },
 ];
 
-/** Standalone routes. */
+/** Standalone routes. The sitemap and the server's routes are built from these (lib/siteMap.ts). */
 export const pages: readonly NavItem[] = [
   { labelKey: "experience", to: "/experience" },
   { labelKey: "academic", to: "/research" },
   { labelKey: "education", to: "/education" },
   { labelKey: "workshop", to: "/workshop" },
+];
+
+/** Old addresses, kept so shared links still land; each opens its page's current one. */
+export const redirects: readonly { from: string; to: string }[] = [
+  { from: "/academic", to: "/research" },
 ];

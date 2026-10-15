@@ -9,7 +9,7 @@ const copy = {
           "Every prototype starts as a Mark I. Here I write up the next ones: experiments in AI, production software and mathematics, with numbers and conclusions.",
       },
       home: {
-        title: "Dawid Hanrahan · Design tomorrow, ship today",
+        title: "Dawid Hanrahan · Mathematician by training, engineer by trade",
         description:
           "Design tomorrow, ship today: Python backends, AI systems and products of my own, built with a mathematician's precision. See what runs.",
       },
@@ -691,7 +691,7 @@ const copy = {
           "Każdy prototyp zaczyna się od Mark I. Tu opisuję kolejne wersje: eksperymenty z AI, oprogramowaniem na produkcji i matematyką, z liczbami i wnioskami.",
       },
       home: {
-        title: "Dawid Hanrahan · Projektuję jutro, wdrażam dziś",
+        title: "Dawid Hanrahan · Matematyk z wykształcenia, inżynier z zawodu",
         description:
           "Projektuję jutro, wdrażam dziś: backend w Pythonie, systemy AI i własne produkty, zbudowane z precyzją matematyka. Zobacz, co działa.",
       },

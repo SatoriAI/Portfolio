@@ -6,6 +6,7 @@ import PageLayout from "@/components/layout/PageLayout";
 import ScrollToTop from "@/components/ScrollToTop";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { redirects } from "@/config/navigation";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { VexProvider } from "@/contexts/VexContext";
 import { queryClient } from "@/lib/queries";
@@ -35,8 +36,9 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/experience" element={<Experience />} />
                 <Route path="/research" element={<Academic />} />
-                {/* The page's old address, kept so shared links still land. */}
-                <Route path="/academic" element={<Navigate to="/research" replace />} />
+                {redirects.map(({ from, to }) => (
+                  <Route key={from} path={from} element={<Navigate to={to} replace />} />
+                ))}
                 <Route path="/education" element={<Education />} />
                 <Route path="/workshop" element={<Workshop />} />
                 <Route path="/workshop/:slug" element={<WorkshopArticle />} />

@@ -1,9 +1,17 @@
 import react from "@vitejs/plugin-react-swc";
-import { readFile } from "fs/promises";
+import { readFile, writeFile } from "fs/promises";
 import path from "path";
 import { defineConfig, loadEnv, type Plugin } from "vite";
 
-import { serveConfig } from "./src/lib/securityHeaders";
+import { pages, redirects } from "./src/config/navigation";
+import { serveConfig as securityServeConfig } from "./src/lib/securityHeaders";
+import {
+  notFoundHtml,
+  publishedPieceSlugs,
+  serveConfig,
+  sitemapXml,
+  sitePaths,
+} from "./src/lib/siteMap";
 import { VEX_LANGUAGES, vexBundle } from "./src/lib/vexKnowledge";
 import { readVexContent } from "./src/lib/vexKnowledgeFiles";
 import { parseArticle, parseHeader } from "./src/lib/workshop";
@@ -79,10 +87,40 @@ const securityHeaders = (apiBaseUrl: string | undefined): Plugin => ({
     this.emitFile({
       type: "asset",
       fileName: "serve.json",
-      source: JSON.stringify(serveConfig(apiBaseUrl), null, 2),
+      source: JSON.stringify(securityServeConfig(apiBaseUrl), null, 2),
     });
   },
 });
+
+/**
+ * Tells crawlers and the static server which addresses exist (see
+ * src/lib/siteMap.ts): `/sitemap.xml` lists the pages, and `serve.json`
+ * answers each known one with the app, each old one with a 301, while every
+ * other address falls through to `404.html`, the same app, which shows its
+ * not-found page under a real 404 status. Merged into whatever serve.json the build has already
+ * written, so other settings for the server keep their own owner.
+ */
+const siteMap = (): Plugin => {
+  let paths: string[] = [];
+  return {
+    name: "site-map",
+    apply: "build",
+    async generateBundle() {
+      paths = sitePaths(
+        pages.map((page) => page.to),
+        publishedPieceSlugs(await readVexContent()),
+      );
+      this.emitFile({ type: "asset", fileName: "sitemap.xml", source: sitemapXml(paths) });
+    },
+    async writeBundle({ dir = "dist" }) {
+      const configFile = path.join(dir, "serve.json");
+      const config = await readFile(configFile, "utf8").then(JSON.parse, () => ({}));
+      await writeFile(configFile, JSON.stringify(serveConfig(config, paths, redirects), null, 2));
+      const index = await readFile(path.join(dir, "index.html"), "utf8");
+      await writeFile(path.join(dir, "404.html"), notFoundHtml(index));
+    },
+  };
+};
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -93,7 +131,9 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     markdownQueries(),
     vexKnowledge(),
+    // Writes serve.json first; siteMap merges its routes into it afterwards.
     securityHeaders(loadEnv(mode, process.cwd()).VITE_API_BASE_URL?.trim()),
+    siteMap(),
     react(),
   ],
   resolve: {

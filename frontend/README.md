@@ -46,6 +46,10 @@ The chat is available on every route: `PageLayout` renders the widget and its fl
 
 Vex also reads the site's own writing. The build publishes the project write-ups and workshop pieces in `src/content/` as `/vex-kb/pl.json` and `/vex-kb/en.json` (the `vex-knowledge` plugin in `vite.config.ts`, built from [`src/lib/vexKnowledge.ts`](src/lib/vexKnowledge.ts)); the dev server answers the same paths from the files as they are. The backend fetches them from the deployed site, so a published edit reaches Vex with the next deploy and no step of its own. The site's pages never load these files, but they are public, as everything Vex can say is.
 
+### Addresses and crawlers
+
+The build also writes `/sitemap.xml` and the static server's routes from the same list (the `site-map` plugin, built from [`src/lib/siteMap.ts`](src/lib/siteMap.ts)): home, the standalone pages in `src/config/navigation.ts`, and every published workshop piece. `serve` runs without `-s`, so `dist/serve.json` answers those paths, with or without a trailing slash, with the app, the old addresses in `navigation.ts` with a 301, and any other address with `404.html`, the same app showing its not-found page under a real 404 and without a canonical. `src/lib/siteMap.test.ts` fails if `App.tsx` declares a route the list lacks. The social preview, `public/og.png`, is drawn from `og/og.svg` by `sh og/render.sh`; rerun it after editing the SVG.
+
 ### Visual identity
 
 The site implements Dawid's Visual Identity Kit ("Binary Axis", v5), which is versioned alongside the code in [`../visual-kit/`](../visual-kit/README.md) — read that first when adding colours, type, motion or decoration. It gives a single light palette, Manrope for text and IBM Plex Mono for tags, dates and labels, a 1160 px content column, and two decorative motifs. Everything lives in three places:
