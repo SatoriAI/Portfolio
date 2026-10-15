@@ -1,8 +1,10 @@
 /*
- * Dawid Hanrahan Visual Identity Kit — version 5.1
+ * Dawid Hanrahan Visual Identity Kit — version 5.2
  *
- * Colour, type, radius, elevation and layout tokens. Shadows are expressed in
- * ink rather than neutral black; a grey shadow over this palette reads as dirt.
+ * Colour, type, radius, elevation and layout tokens. Shadows are cast in the
+ * shadow token, never neutral black; a grey shadow over this palette reads as
+ * dirt. The dark theme (Night Ink) redefines colour and elevation only, under
+ * [data-theme="dark"] on the root element.
  */
 :root {
   /* Colour */
@@ -17,6 +19,8 @@
   /* 3.28:1 on background, 3.45:1 on surface. Do not lighten: 1.4.11 needs 3:1. */
   --brand-control-border: #848A9A;
   --brand-primary-hover: #293A5C;
+  /* Every shadow is cast in this. Ink in light; near-black in dark. */
+  --brand-shadow: 23 35 61;
 
   /* Type */
   --brand-font: "Manrope", system-ui, sans-serif;
@@ -32,12 +36,12 @@
   --brand-radius: var(--brand-radius-surface);
 
   /* Elevation. Only for something actionable. */
-  --brand-elevation-lift: 0 8px 24px -12px rgb(23 35 61 / 0.25);
-  --brand-elevation-float: 0 12px 32px -12px rgb(23 35 61 / 0.5);
-  --brand-elevation-sm: 0 1px 2px 0 rgb(23 35 61 / 0.06);
-  --brand-elevation-md: 0 4px 6px -1px rgb(23 35 61 / 0.1), 0 2px 4px -2px rgb(23 35 61 / 0.1);
-  --brand-elevation-lg: 0 10px 15px -3px rgb(23 35 61 / 0.12), 0 4px 6px -4px rgb(23 35 61 / 0.12);
-  --brand-elevation-xl: 0 20px 25px -5px rgb(23 35 61 / 0.14), 0 8px 10px -6px rgb(23 35 61 / 0.14);
+  --brand-elevation-lift: 0 8px 24px -12px rgb(var(--brand-shadow) / 0.25);
+  --brand-elevation-float: 0 12px 32px -12px rgb(var(--brand-shadow) / 0.5);
+  --brand-elevation-sm: 0 1px 2px 0 rgb(var(--brand-shadow) / 0.06);
+  --brand-elevation-md: 0 4px 6px -1px rgb(var(--brand-shadow) / 0.1), 0 2px 4px -2px rgb(var(--brand-shadow) / 0.1);
+  --brand-elevation-lg: 0 10px 15px -3px rgb(var(--brand-shadow) / 0.12), 0 4px 6px -4px rgb(var(--brand-shadow) / 0.12);
+  --brand-elevation-xl: 0 20px 25px -5px rgb(var(--brand-shadow) / 0.14), 0 8px 10px -6px rgb(var(--brand-shadow) / 0.14);
 
   /* Layout */
   --brand-content-max: 1160px;
@@ -49,4 +53,28 @@
   --brand-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --brand-duration-entrance: 400ms;
   --brand-duration-hover: 180ms;
+}
+
+/* Night Ink. Ratios on background: ink 15.1, text-secondary 7.6, iris 8.1,
+   control-border 4.0 (3.6 on surface). Shadow alphas roughly double. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --brand-background: #0E1424;
+  --brand-surface: #161F33;
+  --brand-ink: #E6E9F2;
+  --brand-text-secondary: #9EA6BC;
+  --brand-lavender: #221D3A;
+  --brand-blush: #2C1C29;
+  --brand-iris: #B2A3E8;
+  --brand-border: #262F45;
+  --brand-control-border: #6C7591;
+  --brand-primary-hover: #C4CADB;
+  --brand-shadow: 3 6 14;
+
+  --brand-elevation-lift: 0 8px 24px -12px rgb(var(--brand-shadow) / 0.5);
+  --brand-elevation-float: 0 12px 32px -12px rgb(var(--brand-shadow) / 0.7);
+  --brand-elevation-sm: 0 1px 2px 0 rgb(var(--brand-shadow) / 0.12);
+  --brand-elevation-md: 0 4px 6px -1px rgb(var(--brand-shadow) / 0.2), 0 2px 4px -2px rgb(var(--brand-shadow) / 0.2);
+  --brand-elevation-lg: 0 10px 15px -3px rgb(var(--brand-shadow) / 0.24), 0 4px 6px -4px rgb(var(--brand-shadow) / 0.24);
+  --brand-elevation-xl: 0 20px 25px -5px rgb(var(--brand-shadow) / 0.28), 0 8px 10px -6px rgb(var(--brand-shadow) / 0.28);
 }
