@@ -30,7 +30,63 @@
       content="Mathematician by training. Engineer by trade. Python backend at Nokia, Xperi and PwC, AI at Addepto. PhD candidate in harmonic analysis."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/icon-512.png" />
+    <meta property="og:site_name" content="Dawid Hanrahan" />
+    <!-- Absolute, as scrapers resolve nothing. These are the home page's; the
+         app sets the text, og:url and the canonical per page (usePageMeta). -->
+    <meta property="og:url" content="https://www.dawidhanrahan.com/" />
+    <link rel="canonical" href="https://www.dawidhanrahan.com/" />
+    <!-- Rendered from og/og.svg by og/render.sh. -->
+    <meta property="og:image" content="https://www.dawidhanrahan.com/og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Dawid Hanrahan. Mathematician by training. Engineer by trade."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Only facts the site already states. A data block, never executed. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Person",
+            "@id": "https://www.dawidhanrahan.com/#person",
+            "name": "Dawid Hanrahan",
+            "url": "https://www.dawidhanrahan.com/",
+            "image": "https://www.dawidhanrahan.com/avatar.webp",
+            "jobTitle": "Software engineer",
+            "description": "Mathematician by training. Engineer by trade.",
+            "alumniOf": {
+              "@type": "CollegeOrUniversity",
+              "name": "Wrocław University of Science and Technology"
+            },
+            "knowsAbout": [
+              "Python",
+              "Backend development",
+              "Artificial intelligence",
+              "Harmonic analysis",
+              "Heat kernels"
+            ],
+            "sameAs": [
+              "https://github.com/SatoriAI",
+              "https://orcid.org/0009-0000-0534-0408",
+              "https://arxiv.org/search/math?searchtype=author&query=Hanrahan,+D"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://www.dawidhanrahan.com/#website",
+            "url": "https://www.dawidhanrahan.com/",
+            "name": "Dawid Hanrahan",
+            "inLanguage": ["en", "pl"],
+            "publisher": { "@id": "https://www.dawidhanrahan.com/#person" }
+          }
+        ]
+      }
+    </script>
   </head>
 
   <body>

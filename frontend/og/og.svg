@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- The social preview, 1200 x 630. og/render.sh draws it to public/og.png.
+       Kit tokens only (visual-kit/README.md): background, ink, text-secondary,
+       iris; the diffusion fields in the corners, the text on the calm centre. -->
+  <defs>
+    <style>
+      @font-face { font-family: "Manrope"; src: url("../public/fonts/Manrope.ttf"); font-weight: 200 800; }
+      @font-face { font-family: "IBM Plex Mono"; src: url("../public/fonts/IBMPlexMono-Medium.woff2"); font-weight: 500; }
+      .label { font: 500 22px "IBM Plex Mono"; letter-spacing: 0.1em; fill: #65509A; }
+      .name { font: 600 96px "Manrope"; letter-spacing: -0.035em; fill: #17233D; }
+      .line { font: 400 38px "Manrope"; fill: #566078; }
+      .site { font: 500 22px "IBM Plex Mono"; letter-spacing: 0.02em; fill: #566078; }
+    </style>
+    <radialGradient id="lavender">
+      <stop stop-color="#C6B4E7" />
+      <stop offset="1" stop-color="#E8E1FA" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="blush">
+      <stop stop-color="#EDC2D7" />
+      <stop offset="1" stop-color="#F6E2EB" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#F8F9FC" />
+  <ellipse cx="40" cy="640" rx="520" ry="300" fill="url(#lavender)" />
+  <ellipse cx="1180" cy="-20" rx="560" ry="320" fill="url(#blush)" />
+
+  <!-- The Binary Axis symbol, navy, from visual-kit/symbol/dh-navy.svg. -->
+  <g transform="translate(88 80) scale(1.1)" fill="none" stroke="#17233D" stroke-width="8.5"
+    stroke-linecap="round" stroke-linejoin="round">
+    <path d="M49 18V77H31A17.5 17.5 0 0 1 31 42H49" />
+    <path d="M49 57C55 43 75 42 82 55V77" />
+  </g>
+
+  <text class="label" x="96" y="306">THEOREM.</text>
+  <text class="name" x="90" y="402">Dawid Hanrahan</text>
+  <text class="line" x="96" y="466">Mathematician by training. Engineer by trade.</text>
+  <text class="site" x="96" y="556">www.dawidhanrahan.com</text>
+
+  <!-- The rhythm motif: 1 px-weight lines on the grid, one dot breaking it. -->
+  <g stroke="#65509A" stroke-width="2">
+    <path d="M880 520V568M900 520V568M920 520V568M940 520V568M960 520V568M980 520V568M1000 520V568M1020 520V568M1040 520V568" />
+  </g>
+  <circle cx="1080" cy="562" r="6" fill="#17233D" />
+</svg>
