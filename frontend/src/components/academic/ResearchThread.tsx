@@ -261,10 +261,8 @@ const ResearchThread = ({
   domainNames,
   className,
 }: ResearchThreadProps) => {
-  // A linked degree opens straight in the row.
-  const [linked] = useState(() => schools.findIndex((school) => slugOf(school) === linkedSlug()));
-  const [selected, setSelected] = useState(Math.max(0, linked));
-  const [phase, setPhase] = useState<Phase>(linked >= 0 ? "compact" : "road");
+  const [selected, setSelected] = useState(0);
+  const [phase, setPhase] = useState<Phase>("road");
   const prefersReducedMotion = usePrefersReducedMotion();
   const wide = useMediaQuery(MEDIA.md);
 
@@ -358,6 +356,20 @@ const ResearchThread = ({
   // where it belongs; winding and unwinding animate there from wherever the
   // parts are now.
   const lastPhase = useRef(phase);
+
+  // A linked degree opens straight in the row, before the first paint. Read
+  // once mounted, as the address's hash is the browser's alone: a page
+  // rendered at build time shows the road, and the browser takes it over so.
+  useLayoutEffect(() => {
+    const linked = schools.findIndex((school) => slugOf(school) === linkedSlug());
+    if (linked < 0) return;
+    setSelected(linked);
+    setPhase("compact");
+    settled.current = 1;
+    lastPhase.current = "compact";
+    // Once, on arrival: choosing a degree later writes the hash itself.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useLayoutEffect(() => {
     if (!geometry) return;
     const moving = phase === "winding" || phase === "unwinding";

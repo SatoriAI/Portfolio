@@ -1,54 +1,11 @@
 import react from "@vitejs/plugin-react-swc";
-import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { defineConfig, loadEnv, type Plugin } from "vite";
 
-import { pages as navigationPages, redirects } from "./src/config/navigation";
-import { pageHtml } from "./src/lib/headTags";
-import { type PageHead, pageMeta } from "./src/lib/pageMeta";
+import { markdownQueries } from "./markdownQueries";
 import { serveConfig as securityServeConfig } from "./src/lib/securityHeaders";
-import {
-  localizedRedirects,
-  notFoundHtml,
-  pageAddresses,
-  pageFile,
-  publishedPieces,
-  publishedPieceSlugs,
-  serveConfig,
-  sitemapXml,
-  sitePaths,
-} from "./src/lib/siteMap";
 import { VEX_LANGUAGES, vexBundle } from "./src/lib/vexKnowledge";
 import { readVexContent } from "./src/lib/vexKnowledgeFiles";
-import { parseArticle, parseHeader } from "./src/lib/workshop";
-
-/**
- * Answers two queries on the site's Markdown at build time, so the bundle
- * holds only what a page shows of a document, never its whole text:
- *
- * - `<project>.md?card`, what the home page shows of a project, its title,
- *   summary and stack (see src/content/projects/index.ts);
- * - `<piece>.md?header`, a workshop piece without its text, for the lists
- *   (see src/content/workshop/index.ts); the text loads with the piece's page.
- */
-const markdownQueries = (): Plugin => ({
-  name: "markdown-queries",
-  enforce: "pre",
-  async load(id) {
-    const [file, query] = id.split("?");
-    if (query === "header") {
-      const { body: _body, ...header } = parseArticle(file, await readFile(file, "utf8"));
-      return `export default ${JSON.stringify(header)};`;
-    }
-    if (query !== "card") return null;
-    const { header } = parseHeader(await readFile(file, "utf8"));
-    if (!header.title || !header.summary || !header.stack) {
-      this.error(`Project document needs a title, a summary and a stack: ${file}`);
-    }
-    const stack = header.stack.split(",").map((name) => name.trim());
-    return `export default ${JSON.stringify({ title: header.title, summary: header.summary, stack })};`;
-  },
-});
 
 /**
  * Publishes the site's Markdown for Vex as `/vex-kb/<pl|en>.json` (see
@@ -98,67 +55,27 @@ const securityHeaders = (apiBaseUrl: string | undefined): Plugin => ({
   },
 });
 
-/**
- * Tells crawlers and the static server which addresses exist (see
- * src/lib/siteMap.ts), in both languages: `/sitemap.xml` lists the pages
- * with their alternates; each page gets its own HTML file carrying its
- * language, title and head tags (src/lib/pageMeta.ts), so a scraper that
- * runs no script reads the page it asked for; and `serve.json` answers each
- * address with its file, each old one with a 301, while every other address
- * falls through to `404.html`, the same app, which shows its not-found page
- * under a real 404 status. Merged into whatever serve.json the build has
- * already written, so other settings for the server keep their own owner.
- */
-const siteMap = (): Plugin => {
-  let pages: { address: string; head: PageHead }[] = [];
-  return {
-    name: "site-map",
-    apply: "build",
-    async generateBundle() {
-      const pieces = publishedPieces(await readVexContent());
-      const paths = sitePaths(
-        navigationPages.map((page) => page.to),
-        publishedPieceSlugs(pieces),
-      );
-      pages = pageAddresses(paths).map(({ language, path, address }) => ({
-        address,
-        head: pageMeta(path, language, pieces),
-      }));
-      const sitemap = sitemapXml(pages.map((page) => page.head));
-      this.emitFile({ type: "asset", fileName: "sitemap.xml", source: sitemap });
-    },
-    async writeBundle({ dir = "dist" }) {
-      const configFile = path.join(dir, "serve.json");
-      const config = await readFile(configFile, "utf8").then(JSON.parse, () => ({}));
-      const addresses = pages.map((page) => page.address);
-      const moved = localizedRedirects(redirects);
-      await writeFile(configFile, JSON.stringify(serveConfig(config, addresses, moved), null, 2));
-      // 404.html from the template as Vite wrote it, before home's own page replaces it.
-      const template = await readFile(path.join(dir, "index.html"), "utf8");
-      await writeFile(path.join(dir, "404.html"), notFoundHtml(template));
-      for (const { address, head } of pages) {
-        const file = path.join(dir, pageFile(address));
-        await mkdir(path.dirname(file), { recursive: true });
-        await writeFile(file, pageHtml(template, head));
-      }
-    },
-  };
-};
-
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+//
+// `npm run build` builds the site twice: for the browser, into dist, and
+// for Node (`--ssr`, into dist-ssr), the app that scripts/prerender.mjs
+// renders into each page's HTML. The second build carries only what
+// rendering needs: Vex's knowledge and the server's settings are the
+// browser build's, and the prerender writes the pages, the sitemap and the
+// routes in serve.json.
+export default defineConfig(({ mode, isSsrBuild }) => ({
   server: {
     host: "::",
     port: 8080,
   },
   plugins: [
     markdownQueries(),
-    vexKnowledge(),
-    // Writes serve.json first; siteMap merges its routes into it afterwards.
-    securityHeaders(loadEnv(mode, process.cwd()).VITE_API_BASE_URL?.trim()),
-    siteMap(),
+    ...(isSsrBuild
+      ? []
+      : [vexKnowledge(), securityHeaders(loadEnv(mode, process.cwd()).VITE_API_BASE_URL?.trim())]),
     react(),
   ],
+  define: { __BUILD_YEAR__: JSON.stringify(new Date().getFullYear()) },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

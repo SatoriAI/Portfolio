@@ -2,6 +2,7 @@ import { type ReactNode, type RefObject, useRef } from "react";
 import { createPortal } from "react-dom";
 
 import { recededFilter } from "@/components/experience/circleStyles";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useLatest } from "@/hooks/use-latest";
 import { useScrollFrame } from "@/hooks/use-scroll-frame";
 import { clamp01, easeInOutCubic } from "@/lib/motion";
@@ -63,6 +64,9 @@ const CircleFlight = ({ roles, section, from, to, onPhase }: CircleFlightProps) 
   const phase = useRef<FlightPhase | null>(null);
   // Read through a ref, so a new callback each render does not restart the loop.
   const tell = useLatest(onPhase);
+  // The copies fly over the whole page, from document.body, which only the
+  // browser has.
+  const hydrated = useHydrated();
 
   // A ring's look changes as roles are chosen, through React; only how many
   // circles there are restarts the loop.
@@ -117,6 +121,7 @@ const CircleFlight = ({ roles, section, from, to, onPhase }: CircleFlightProps) 
     { watch: roles.length },
   );
 
+  if (!hydrated) return null;
   return createPortal(
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-30">
       {roles.map((role, index) => (

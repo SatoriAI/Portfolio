@@ -95,7 +95,7 @@ type DomainGlyphProps = {
 };
 
 const DomainGlyph = ({ kind, delayMs = 0, entrance = "reveal", className }: DomainGlyphProps) => {
-  const { ref, isRevealed, isInitiallyVisible, prefersReducedMotion } =
+  const { ref, isRevealed, isInitiallyVisible, isMeasured, prefersReducedMotion } =
     useScrollReveal<HTMLSpanElement>();
   const { front, back, point } = STROKES[kind];
 
@@ -128,7 +128,9 @@ const DomainGlyph = ({ kind, delayMs = 0, entrance = "reveal", className }: Doma
   // A mount entrance is a CSS animation, which needs no script timing: it
   // plays the moment the glyph is painted, in a background tab as well.
   const onMount = entrance === "mount" && !prefersReducedMotion;
-  const onReveal = entrance === "reveal" && !prefersReducedMotion && !isInitiallyVisible;
+  // Drawn until the browser has placed it, as in the HTML the build wrote.
+  const onReveal =
+    entrance === "reveal" && isMeasured && !prefersReducedMotion && !isInitiallyVisible;
   const drawn = !onReveal || isRevealed;
 
   const strokeProps = (strokeDelayMs: number) => ({

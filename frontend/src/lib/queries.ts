@@ -20,17 +20,19 @@ import type { ArticleHeader } from "./workshop";
  * blanks or loses its place.
  */
 
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // The content changes when Dawid edits it, not while someone reads.
-      staleTime: Infinity,
-      refetchOnWindowFocus: false,
-      // One quiet retry, then the page's own error state and its retry button.
-      retry: 1,
+/** One per page in the browser, and one per page rendered at build time. */
+export const createQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        // The content changes when Dawid edits it, not while someone reads.
+        staleTime: Infinity,
+        refetchOnWindowFocus: false,
+        // One quiet retry, then the page's own error state and its retry button.
+        retry: 1,
+      },
     },
-  },
-});
+  });
 
 const useListQuery = <Api, Ui>(
   resource: string,
@@ -59,9 +61,23 @@ export const useTestimonials = () =>
  * A workshop piece's text, its own chunk, fetched once per piece and
  * language; idle until the piece is known.
  */
+const articleTextKey = (article: ArticleHeader | undefined) => [
+  "workshop-text",
+  article?.slug,
+  article?.language,
+  article?.draft,
+];
+
 export const useArticleText = (article: ArticleHeader | undefined) =>
   useQuery({
-    queryKey: ["workshop-text", article?.slug, article?.language, article?.draft],
+    queryKey: articleTextKey(article),
     queryFn: () => loadArticleBody(article as ArticleHeader),
     enabled: article !== undefined,
+  });
+
+/** A piece's text, fetched ahead of its page's first render (see preparePage). */
+export const prefetchArticleText = (client: QueryClient, article: ArticleHeader) =>
+  client.prefetchQuery({
+    queryKey: articleTextKey(article),
+    queryFn: () => loadArticleBody(article),
   });

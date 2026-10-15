@@ -8,6 +8,8 @@ import { usePrefersReducedMotion } from "@/hooks/use-media-query";
  * `isRevealed` turns true then and stays; `isInitiallyVisible` is true for an
  * element already on screen when it mounted, which should not animate at
  * all, and under reduced motion everything is revealed from the start.
+ * `isMeasured` is false until the browser has placed the element: in a page
+ * rendered at build time, and while the browser takes that page over.
  */
 export function useScrollReveal<T extends HTMLElement = HTMLElement>({
   // A positive bottom margin reveals a section shortly before it scrolls into
@@ -17,7 +19,8 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>({
 }: { rootMargin?: string; threshold?: number } = {}) {
   const [element, setElement] = useState<T | null>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
-  const isInitiallyVisible = useOnScreenAtMount(element);
+  const onScreenAtMount = useOnScreenAtMount(element);
+  const isInitiallyVisible = onScreenAtMount === true;
   const [seen, setSeen] = useState(false);
   useOnceInView(element, () => setSeen(true), {
     rootMargin,
@@ -28,6 +31,7 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>({
     ref: setElement,
     isRevealed: seen || isInitiallyVisible || prefersReducedMotion,
     isInitiallyVisible,
+    isMeasured: onScreenAtMount !== undefined,
     prefersReducedMotion,
   } as const;
 }

@@ -2,7 +2,9 @@ import { readdirSync, readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { describe, expect, it } from "vitest";
 
-import { pages, redirects } from "@/config/navigation";
+import { pages } from "@/config/navigation";
+import { workshopArticles } from "@/content/workshop";
+import { PAGES } from "@/pages/routes";
 
 import { pageMeta } from "./pageMeta";
 import {
@@ -12,14 +14,12 @@ import {
   notFoundHtml,
   pageAddresses,
   pageFile,
-  publishedPieces,
   publishedPieceSlugs,
   serveConfig,
   sitemapXml,
   sitePaths,
 } from "./siteMap";
-import { readVexContent } from "./vexKnowledgeFiles";
-import { parseArticle } from "./workshop";
+import { type ArticleHeader, parseArticle } from "./workshop";
 
 const source = (relative: string) =>
   readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
@@ -40,17 +40,16 @@ describe("canonicalPath", () => {
 const piece = (title: string) =>
   `---\ntitle: ${title}\ndate: 2026-10-01\nformat: figure\n---\nText.`;
 
-const files = {
-  "workshop/heat.en.md": piece("Heat"),
-  "workshop/heat.pl.md": piece("Ciepło"),
-  "workshop/clock.pl.md": piece("Zegar"),
-  "workshop/unfinished.en.draft.md": piece("Draft"),
-  "projects/slip.en.md": "",
-};
+const pieces: ArticleHeader[] = Object.entries({
+  "heat.en.md": piece("Heat"),
+  "heat.pl.md": piece("Ciepło"),
+  "clock.pl.md": piece("Zegar"),
+  "unfinished.en.draft.md": piece("Draft"),
+}).map(([path, raw]) => parseArticle(path, raw));
 
 describe("publishedPieceSlugs", () => {
   it("lists each published piece once, whatever its languages, and no drafts", () => {
-    expect(publishedPieceSlugs(publishedPieces(files))).toEqual(["clock", "heat"]);
+    expect(publishedPieceSlugs(pieces)).toEqual(["clock", "heat"]);
   });
 });
 
@@ -73,7 +72,6 @@ describe("the site's addresses", () => {
   });
 
   it("make a sitemap of canonical addresses, each with its alternates", () => {
-    const pieces = publishedPieces(files);
     const heads = pageAddresses(paths).map(({ language, path }) =>
       pageMeta(path, language, pieces),
     );
@@ -90,10 +88,10 @@ describe("the site's addresses", () => {
     expect(xml.match(/<xhtml:link/g)).toHaveLength((paths.length - 1) * 2 * 3);
   });
 
-  it("cover every published piece, as the site's own parser reads the folder", async () => {
+  it("cover every published piece, as the site's own parser reads the folder", () => {
     const built = sitePaths(
       pages.map((page) => page.to),
-      publishedPieceSlugs(publishedPieces(await readVexContent())),
+      publishedPieceSlugs(workshopArticles),
     );
     const folder = fileURLToPath(new URL("../content/workshop", import.meta.url));
     const published = readdirSync(folder)
@@ -104,34 +102,16 @@ describe("the site's addresses", () => {
     for (const article of published) expect(built).toContain(`/workshop/${article.slug}`);
   });
 
-  it("cover every route App.tsx declares, so none 404s on a direct load", () => {
-    const known = new Set([
-      ...sitePaths(
-        pages.map((page) => page.to),
-        [],
-      ),
-      ...redirects.map((r) => r.from),
-    ]);
-    // Every `path=` in the file, in any quoting and wherever it sits among
-    // the attributes: a string, a string in braces, or an expression.
-    const PATH = /\bpath=(?:"([^"]*)"|'([^']*)'|\{\s*(["'`])(.*?)\3\s*\}|\{([^}]*)\})/g;
-    const found = [...source("../App.tsx").matchAll(PATH)];
-    const literals = found
-      .map((match) => match[1] ?? match[2] ?? match[4])
-      .filter((path) => path !== undefined);
-    const expressions = found.map((match) => match[5]?.trim()).filter(Boolean);
-    expect(literals.length).toBeGreaterThan(0);
-
-    // The redirects' own routes, mapped from navigation.ts.
-    expect(expressions).toEqual(["from"]);
+  it("cover every page the app routes to, so none 404s on a direct load", () => {
+    const known = sitePaths(
+      pages.map((page) => page.to),
+      [],
+    );
     // A route with a parameter must be listed here, with how its addresses
     // reach the server; /workshop/:slug from the published pieces.
     const parameterRoutes = ["/workshop/:slug"];
-    for (const path of literals.filter((path) => path.includes(":"))) {
-      expect(parameterRoutes).toContain(path);
-    }
-    for (const path of literals.filter((path) => path !== "*" && !path.includes(":"))) {
-      expect(known).toContain(path);
+    for (const { path } of PAGES) {
+      expect(path.includes(":") ? parameterRoutes : known).toContain(path);
     }
   });
 });

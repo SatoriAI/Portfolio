@@ -2,6 +2,7 @@ import { BrandSymbol } from "@/components/brand/BrandLogo";
 import Container from "@/components/layout/Container";
 import { EMAIL } from "@/config/contact";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { cn } from "@/lib/utils";
 import { translations } from "@/utils/translations";
 
@@ -12,6 +13,9 @@ type SiteFooterProps = {
 const SiteFooter = ({ className }: SiteFooterProps) => {
   const { language } = useSettings();
   const t = translations[language];
+  // The year the page was built, as its HTML says, until the browser has
+  // taken the page over; then the reader's.
+  const year = useHydrated() ? new Date().getFullYear() : __BUILD_YEAR__;
   return (
     <footer className={cn("border-t border-border py-8", className)}>
       {/* One row from lg; below it the two lines stack, left-aligned with the
@@ -36,7 +40,7 @@ const SiteFooter = ({ className }: SiteFooterProps) => {
             the floating chat button, where the margin is narrower than it
             (24px below lg, 48px until the content's cap leaves room). */}
         <span className="font-mono text-meta text-muted-foreground sm:max-lg:mr-16 lg:max-[1335px]:mr-10">
-          © {new Date().getFullYear()} · {t.common.tagline}
+          © {year} · {t.common.tagline}
         </span>
       </Container>
     </footer>

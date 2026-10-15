@@ -1,8 +1,9 @@
-// Run after `vite build`: checks the HTML the build wrote, which no unit test
-// sees. Every address in the sitemap must have its file, and every page must
-// name its language (Polish under pl/) and its canonical address, and its
+// Run last in `npm run build`: checks the HTML the build wrote, which no unit
+// test sees. Every address in the sitemap must have its file, and every page
+// must name its language (Polish under pl/) and its canonical address, and its
 // alternates in both languages and x-default (a workshop piece written in one
-// language only has none); 404.html must name no address at all; and no file
+// language only has none), and carry its content in the root; 404.html must
+// name no address at all, and leave the root empty; and no file
 // may carry a script that runs from inline, nor a theme baked into <html>,
 // nor lack boot.js (theme and language before the first paint). An inline
 // script would work locally and be blocked in production by the site's
@@ -36,11 +37,16 @@ for (const file of files) {
   const hreflangs = [...html.matchAll(/<link rel="alternate" hreflang="([^"]+)"/g)].map(
     ([, hreflang]) => hreflang,
   );
+  // A page carries its content (scripts/prerender.mjs); 404.html none, as
+  // the app renders whichever address it was opened at.
+  const empty = html.includes('<div id="root"></div>');
   if (file === "404.html") {
     if (canonicals || hreflangs.length || /property="og:(url|locale)/.test(html))
       fail("names an address, though it answers for every unknown one");
+    if (!empty) fail("a rendered page, though it answers for every unknown address");
     continue;
   }
+  if (empty) fail("an empty root");
   // A file under pl/ is the Polish page, any other the English one.
   const language = file.startsWith("pl/") ? "pl" : "en";
   if (!html.includes(`<html lang="${language}">`)) fail(`not <html lang="${language}">`);

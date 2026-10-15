@@ -2,6 +2,7 @@
 # platform-specific binaries built for macOS.
 node_modules/
 dist/
+dist-ssr/
 
 .env
 .env.local

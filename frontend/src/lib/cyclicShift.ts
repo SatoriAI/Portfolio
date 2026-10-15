@@ -17,10 +17,20 @@ export type Ring = {
   amplitude: number;
 };
 
+/**
+ * A drawing coordinate to a hundredth: Node's sine and the browser's can
+ * differ in the last digit, and the page the build wrote must match the one
+ * the browser renders.
+ */
+const hundredth = (value: number) => Math.round(value * 100) / 100;
+
 /** Where position `x` of `n` stands, clockwise from twelve o'clock. */
 export const ringPoint = (center: number, radius: number, x: number, n: number) => {
   const angle = (2 * Math.PI * x) / n;
-  return { x: center + radius * Math.sin(angle), y: center - radius * Math.cos(angle) };
+  return {
+    x: hundredth(center + radius * Math.sin(angle)),
+    y: hundredth(center - radius * Math.cos(angle)),
+  };
 };
 
 /** The mode's distance from the centre at position `x` (a real number). */

@@ -80,16 +80,17 @@ export function useOnceInView(
  * Whether the element was already on screen when it mounted, read before the
  * first paint: an entrance for something the reader is already looking at
  * would show it and then hide it, so such an element is simply shown.
+ * Undefined until measured, which a page rendered at build time never is.
  */
 export function useOnScreenAtMount(target: InViewTarget) {
-  const [onScreen, setOnScreen] = useState(false);
+  const [onScreen, setOnScreen] = useState<boolean>();
   const measured = useRef(false);
   useLayoutEffect(() => {
     const element = elementOf(target);
     if (!element || measured.current) return;
     measured.current = true;
     const box = element.getBoundingClientRect();
-    if (box.top < window.innerHeight && box.bottom > 0) setOnScreen(true);
+    setOnScreen(box.top < window.innerHeight && box.bottom > 0);
   }, [target]);
   return onScreen;
 }
