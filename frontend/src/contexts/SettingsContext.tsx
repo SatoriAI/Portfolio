@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
+import { flipOverride, initialOverride, type Theme } from "@/lib/theme";
+
 type Language = "en" | "pl";
-export type Theme = "light" | "dark";
+export type { Theme };
 
 interface SettingsContextType {
   language: Language;
@@ -75,8 +77,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [system, setSystem] = useState<Theme>(systemTheme);
   const [override, setOverride] = useState<Theme | null>(() => {
     try {
-      const saved = localStorage.getItem("theme");
-      if ((saved === "light" || saved === "dark") && saved !== systemTheme()) return saved;
+      return initialOverride(localStorage.getItem("theme"), systemTheme());
     } catch (_error) {
       console.error(_error);
     }
@@ -121,10 +122,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => applyTheme(theme), [theme]);
 
+  // From what is on the page and what the machine says now, not from this
+  // render's closure: two flips before a re-render must flip twice.
   const flipTheme = () => {
-    const next: Theme = theme === "light" ? "dark" : "light";
-    applyTheme(next);
-    setOverride(next === system ? null : next);
+    const current: Theme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+    const machine = systemTheme();
+    const override = flipOverride(current, machine);
+    applyTheme(override ?? machine);
+    setOverride(override);
   };
 
   return (

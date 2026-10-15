@@ -57,7 +57,8 @@ export default {
         lavender: {
           DEFAULT: "hsl(var(--lavender))",
           deep: "hsl(var(--lavender-deep))",
-          // On a control, hovered or open; plain lavender is for panels.
+          // Lavender on surface: a control hovered or open, or a tile set on a
+          // card. Plain lavender is for panels and bands on the page.
           hover: "hsl(var(--lavender-hover))",
         },
         blush: {

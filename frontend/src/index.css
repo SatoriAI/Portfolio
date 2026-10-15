@@ -40,6 +40,10 @@
    semantic roles below follow it without a block of their own. */
 @layer base {
   :root {
+    /* The chosen theme, not the machine, decides the browser's own UI
+       (scrollbars, unstyled fields, autofill); index.html's color-scheme
+       meta only covers the moment before this sheet applies. */
+    color-scheme: light;
     /* Kit palette */
     --background: 225 40% 98%; /* #F8F9FC cloud */
     --surface: 0 0% 100%; /* #FFFFFF */
@@ -148,7 +152,8 @@
      light highlighter in both themes, since only the paper is on them. */
   .paper {
     --foreground: 221 45% 16%; /* #17233D */
-    --muted-foreground: 222 17% 40%; /* #566078 */
+    /* Captions: 4.86:1 on the dark theme's dimmed paper, 7.51:1 on light. */
+    --muted-foreground: 223 19% 32%; /* #434C62 */
     --lavender-deep: 261 52% 81%; /* #C6B4E7 */
   }
 }

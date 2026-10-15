@@ -10,6 +10,10 @@ import { translations } from "@/utils/translations";
 const SPREAD_MS = 400;
 const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
+/** The transition in flight. A quick second flip skips the first, whose end
+ *  must then leave the second's `theme-switch` class alone. */
+let current: ReturnType<Document["startViewTransition"]> | null = null;
+
 type ThemeToggleProps = {
   /** The action in words beside the icon, where there is room (the menu sheet). */
   labelled?: boolean;
@@ -49,13 +53,24 @@ const ThemeToggle = ({ labelled = false, className }: ThemeToggleProps) => {
     const transition = document.startViewTransition(() => {
       flushSync(flipTheme);
     });
-    transition.ready.then(() => {
-      root.animate(
-        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
-        { duration: SPREAD_MS, easing: EASE, pseudoElement: "::view-transition-new(root)" },
-      );
-    });
-    transition.finished.finally(() => root.classList.remove("theme-switch"));
+    current = transition;
+    transition.ready
+      .then(() => {
+        root.animate(
+          { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+          { duration: SPREAD_MS, easing: EASE, pseudoElement: "::view-transition-new(root)" },
+        );
+      })
+      // A skipped transition (a second flip, a hidden tab) rejects `ready`;
+      // the theme has still changed, so there is nothing to recover.
+      .catch(() => {});
+    transition.finished
+      .catch(() => {})
+      .finally(() => {
+        if (current !== transition) return;
+        current = null;
+        root.classList.remove("theme-switch");
+      });
   };
 
   return (
@@ -66,8 +81,9 @@ const ThemeToggle = ({ labelled = false, className }: ThemeToggleProps) => {
       title={labelled ? undefined : action}
       className={cn(
         // The language toggle's size and edge, so the two read as a pair, and
-        // a finger's 44 px round it.
-        "tap-target relative inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-control-border bg-card text-foreground transition-colors duration-200 hover:bg-lavender-hover",
+        // a finger's 44 px round it. Hover only where there is one: after a
+        // tap, a phone keeps the hover and the button would look pressed.
+        "tap-target relative inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-control-border bg-card text-foreground transition-colors duration-200 [@media(hover:hover)]:hover:bg-lavender-hover",
         labelled ? "px-3 text-sm font-medium" : "w-10",
         className,
       )}
