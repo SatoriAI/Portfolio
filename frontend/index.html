@@ -13,12 +13,14 @@
     <meta name="theme-color" content="#F8F9FC" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0E1424" media="(prefers-color-scheme: dark)" />
 
-    <!-- The theme is set before the first paint, so the page never shows the
-         wrong one first: the reader's remembered choice, else the machine's.
-         A file of its own, not inline, because the site's CSP allows scripts
-         from the site only; classic and blocking on purpose, it is a few
-         lines. SettingsContext keeps the theme in step afterwards. -->
-    <script src="/theme.js"></script>
+    <!-- Before the first paint: the theme is set, so the page never shows the
+         wrong one first (the reader's remembered choice, else the machine's),
+         and a Polish reader new to the English home page goes to /pl before
+         the bundle loads. A file of its own, not inline, because the site's
+         CSP allows scripts from the site only; classic and blocking on
+         purpose, it is a few lines. SettingsContext keeps the theme in step
+         afterwards. -->
+    <script src="/boot.js"></script>
 
     <!-- The kit supplies a separate micro cut with a heavier stroke for 16-48px;
          these are its files, not the standard symbol scaled down. -->
@@ -43,8 +45,10 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Dawid Hanrahan" />
-    <!-- Absolute, as scrapers resolve nothing. These are the home page's; the
-         app sets the text, og:url and the canonical per page (usePageMeta). -->
+    <!-- Absolute, as scrapers resolve nothing. The template's are the home
+         page's; the build writes each page's own, with its alternates and
+         og:locale, into the page's file (src/lib/pageMeta.ts), and the app
+         keeps them on the page shown (usePageMeta). -->
     <meta property="og:url" content="https://www.dawidhanrahan.com/" />
     <link rel="canonical" href="https://www.dawidhanrahan.com/" />
     <!-- Rendered from og/og.svg by og/render.sh. -->

@@ -23,7 +23,6 @@ import SectionHeading from "@/components/layout/SectionHeading";
 import Reveal from "@/components/Reveal";
 import { useSettings } from "@/contexts/SettingsContext";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
-import { usePageMeta } from "@/hooks/use-page-meta";
 import { BOUNDS_START, INFLUENCE_START } from "@/lib/kernelFigures";
 import type { UiPublication } from "@/lib/publicationsService";
 import { usePublications } from "@/lib/queries";
@@ -70,7 +69,6 @@ const Academic = () => {
   const kernels = story.kernels;
   const transformers = t.academic.interests.transformers;
   const [hook, clue, limits, outlook] = transformers.paragraphs;
-  usePageMeta(t.meta.research);
   const publicationsQuery = usePublications();
   const publications = publicationsQuery.data ?? [];
 

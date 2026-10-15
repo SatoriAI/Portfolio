@@ -23,7 +23,6 @@ import { showDrafts, workshopArticles } from "@/content/workshop";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useVex } from "@/contexts/VexContext";
 import { useLiveChecks } from "@/hooks/use-live-checks";
-import { usePageMeta } from "@/hooks/use-page-meta";
 import { isThisSite } from "@/lib/projectLinks";
 import { useProjects } from "@/lib/queries";
 import { fillTemplate, formatCounter } from "@/lib/text";
@@ -39,7 +38,6 @@ const Index = () => {
   const { askVex } = useVex();
   const { language } = useSettings();
   const t = translations[language];
-  usePageMeta(t.meta.home);
 
   // The workshop's newest pieces; the section is left out while there are none.
   const pieces = articlesFor(workshopArticles, language, { drafts: showDrafts }).slice(

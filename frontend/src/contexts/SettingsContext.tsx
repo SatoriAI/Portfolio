@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
+import type { Language } from "@/lib/locale";
 import { flipOverride, initialOverride, type Theme } from "@/lib/theme";
 
-type Language = "en" | "pl";
 export type { Theme };
 
 interface SettingsContextType {
+  /** The page's language, as its address names it (lib/locale.ts). */
   language: Language;
-  setLanguage: (lang: Language) => void;
   /** The theme on screen: the machine's, unless the reader flipped it. */
   theme: Theme;
   /** Switches to the other theme. Flipping back to the machine's own theme
@@ -47,31 +47,14 @@ const applyTheme = (theme: Theme) => {
   });
 };
 
-export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>(() => {
-    try {
-      const saved = localStorage.getItem("language") as Language | null;
-      if (saved === "en" || saved === "pl") return saved;
-    } catch (_error) {
-      console.error(_error);
-    }
-
-    if (typeof navigator !== "undefined") {
-      const raw =
-        Array.isArray(navigator.languages) && navigator.languages.length > 0
-          ? navigator.languages
-          : navigator.language
-            ? [navigator.language]
-            : [];
-      const browserLanguages = raw.filter(Boolean);
-      const primary = (browserLanguages[0] || "en").toLowerCase();
-      const suggested: Language = primary.startsWith("pl") ? "pl" : "en";
-      return suggested;
-    }
-
-    return "en";
-  });
-
+/**
+ * The language holds for the whole visit: the language toggle is a link to
+ * the page's address in the other language, which loads afresh.
+ */
+export const SettingsProvider: React.FC<{ language: Language; children: React.ReactNode }> = ({
+  language,
+  children,
+}) => {
   // There are two stops, the machine's theme and the other one, so only the
   // other one is ever stored: a choice equal to the machine's is no choice.
   const [system, setSystem] = useState<Theme>(systemTheme);
@@ -96,12 +79,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [override]);
 
-  useEffect(() => {
-    localStorage.setItem("language", language);
-  }, [language]);
-
-  // Titles and descriptions are per page (usePageMeta); only the document
-  // language is global.
+  // Each page's HTML already names its language; 404.html, shared by both,
+  // is English until the app has read the address.
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
@@ -133,14 +112,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <SettingsContext.Provider
-      value={{
-        language,
-        setLanguage,
-        theme,
-        flipTheme,
-      }}
-    >
+    <SettingsContext.Provider value={{ language, theme, flipTheme }}>
       {children}
     </SettingsContext.Provider>
   );

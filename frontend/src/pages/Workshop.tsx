@@ -6,7 +6,6 @@ import SectionHeading from "@/components/layout/SectionHeading";
 import WorkshopIndex from "@/components/workshop/WorkshopIndex";
 import { showDrafts, workshopArticles } from "@/content/workshop";
 import { useSettings } from "@/contexts/SettingsContext";
-import { usePageMeta } from "@/hooks/use-page-meta";
 import { articlesFor } from "@/lib/workshop";
 import { translations } from "@/utils/translations";
 
@@ -19,7 +18,6 @@ const Workshop = () => {
   const { language } = useSettings();
   const t = translations[language];
   const w = t.workshop;
-  usePageMeta(t.meta.workshop);
 
   const articles = articlesFor(workshopArticles, language, { drafts: showDrafts });
   const indexLabels = {

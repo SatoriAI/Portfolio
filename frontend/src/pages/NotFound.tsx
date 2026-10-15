@@ -7,14 +7,12 @@ import Section from "@/components/layout/Section";
 import Reveal from "@/components/Reveal";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/contexts/SettingsContext";
-import { usePageMeta } from "@/hooks/use-page-meta";
 import { translations } from "@/utils/translations";
 
 const NotFound = () => {
   const location = useLocation();
   const { language } = useSettings();
   const t = translations[language];
-  usePageMeta({ ...t.meta.notFound, canonical: false });
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);

@@ -1,4 +1,7 @@
+import { useLocation } from "react-router-dom";
+
 import { useSettings } from "@/contexts/SettingsContext";
+import { localizedPath, storeLanguageChoice } from "@/lib/locale";
 import { cn } from "@/lib/utils";
 import { translations } from "@/utils/translations";
 
@@ -11,9 +14,15 @@ type LanguageToggleProps = {
   className?: string;
 };
 
-/** Segmented EN / PL control; the pressed segment is the active language. */
+/**
+ * Segmented EN / PL control; the marked segment is the active language.
+ * Each segment is a link to this page's address in its language, which
+ * loads afresh, and remembers the choice, so the home page never moves a
+ * reader who has chosen (lib/locale.ts).
+ */
 const LanguageToggle = ({ className }: LanguageToggleProps) => {
-  const { language, setLanguage } = useSettings();
+  const { language } = useSettings();
+  const { pathname, search, hash } = useLocation();
   const t = translations[language];
 
   return (
@@ -28,17 +37,22 @@ const LanguageToggle = ({ className }: LanguageToggleProps) => {
       {LANGUAGES.map(({ code, label, name }) => {
         const active = code === language;
         return (
-          <button
+          <a
             key={code}
-            type="button"
+            href={`${localizedPath(code, pathname)}${search}${hash}`}
+            hrefLang={code}
             lang={code}
-            aria-pressed={active}
+            aria-current={active ? "true" : undefined}
             aria-label={name}
-            onClick={() => setLanguage(code)}
+            onClick={(event) => {
+              storeLanguageChoice(code);
+              // Already this language: the choice is noted, the page stays.
+              if (active) event.preventDefault();
+            }}
             className={cn(
               // A finger's 44 px: the hit area reaches past the pill above and
               // below, and outward at the ends, where nothing else is pressed.
-              "relative h-full rounded-lg px-2.5 transition-colors duration-200",
+              "relative inline-flex h-full items-center rounded-lg px-2.5 transition-colors duration-200",
               "after:absolute after:-inset-y-[7px] after:left-0 after:right-0 first:after:-left-2.5 last:after:-right-2.5",
               active
                 ? "bg-primary text-primary-foreground"
@@ -46,7 +60,7 @@ const LanguageToggle = ({ className }: LanguageToggleProps) => {
             )}
           >
             {label}
-          </button>
+          </a>
         );
       })}
     </div>

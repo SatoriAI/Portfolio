@@ -8,7 +8,6 @@ import PageClosing from "@/components/layout/PageClosing";
 import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
 import { useSettings } from "@/contexts/SettingsContext";
-import { usePageMeta } from "@/hooks/use-page-meta";
 import { useSchools, useTestimonials } from "@/lib/queries";
 import type { UiSchool } from "@/lib/schoolsService";
 import { formatCounter } from "@/lib/text";
@@ -37,7 +36,6 @@ const Education = () => {
   const { language } = useSettings();
   const t = translations[language];
   const story = t.academic.story;
-  usePageMeta(t.meta.education);
   const schoolsQuery = useSchools();
   const testimonialsQuery = useTestimonials();
   const schools = schoolsQuery.data ?? [];
