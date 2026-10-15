@@ -6,6 +6,7 @@ import BrandLogo from "@/components/brand/BrandLogo";
 import HeatField from "@/components/brand/HeatField";
 import LanguageToggle from "@/components/LanguageToggle";
 import Container from "@/components/layout/Container";
+import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -87,9 +88,10 @@ const SiteHeader = () => {
           </Link>
 
           <div className="flex items-center gap-3 md:gap-6">
-            {/* Seven links, the toggle and the full-size logo fit in Polish
-              only from about 1100px, so the row appears at xl. */}
-            <nav aria-label={t.common.menu} className="hidden items-center gap-6 xl:flex">
+            {/* Seven links, both toggles and the full-size logo fit in Polish
+              only from about 1180px, so the row appears at xl, 16px apart:
+              at 24 the Polish row met the logo. */}
+            <nav aria-label={t.common.menu} className="hidden items-center gap-4 xl:flex">
               {homeSections.map((item) => (
                 <Link
                   key={item.to}
@@ -114,7 +116,12 @@ const SiteHeader = () => {
               ))}
             </nav>
 
-            <LanguageToggle />
+            <div className="flex items-center gap-2">
+              <LanguageToggle />
+              {/* Beside the language where the links have the bar; in the
+                menu sheet, with words, where they fold into it. */}
+              <ThemeToggle className="hidden xl:inline-flex" />
+            </div>
 
             <div className="xl:hidden">
               <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
@@ -140,6 +147,13 @@ const SiteHeader = () => {
                     </p>
                     {pages.map(renderMobileLink)}
                   </nav>
+                  <Separator className="my-3" />
+                  <div className="flex flex-col gap-2 px-4">
+                    <p className="pb-1 font-mono text-meta uppercase tracking-widest text-muted-foreground">
+                      {t.common.appearance}
+                    </p>
+                    <ThemeToggle labelled />
+                  </div>
                 </SheetContent>
               </Sheet>
             </div>

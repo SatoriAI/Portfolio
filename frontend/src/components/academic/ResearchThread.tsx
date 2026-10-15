@@ -703,7 +703,7 @@ const ResearchThread = ({
                         isCurrent ? "outline-lavender-deep" : "outline-transparent",
                       )}
                     >
-                      <span className="absolute inset-0 grid place-items-center rounded-full transition-[transform,box-shadow] duration-200 ease-brand group-hover:shadow-lift group-focus-visible:[box-shadow:0_0_0_calc(3px/var(--glyph-scale,1))_hsl(var(--surface)),0_0_0_calc(5px/var(--glyph-scale,1))_hsl(var(--iris)),0_8px_24px_-12px_hsl(var(--ink)/0.25)] [@media(hover:hover)]:motion-safe:group-hover:-translate-y-1">
+                      <span className="absolute inset-0 grid place-items-center rounded-full transition-[transform,box-shadow] duration-200 ease-brand group-hover:shadow-lift group-focus-visible:[box-shadow:0_0_0_calc(3px/var(--glyph-scale,1))_hsl(var(--surface)),0_0_0_calc(5px/var(--glyph-scale,1))_hsl(var(--iris)),0_8px_24px_-12px_hsl(var(--shadow)/calc(0.25*var(--shadow-strength)))] [@media(hover:hover)]:motion-safe:group-hover:-translate-y-1">
                         <svg
                           aria-hidden="true"
                           viewBox="0 0 120 120"

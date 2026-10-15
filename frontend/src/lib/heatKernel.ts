@@ -127,13 +127,37 @@ export const heatGradient = (
   return [gx, gy];
 };
 
-// Kit tokens, as RGB. `background` is the page; the deep tints are the kit's
-// illustration-only colours and appear nowhere else in the interface.
-const BACKGROUND = [248, 249, 252] as const;
-const CHANNEL_RGB = [
-  [198, 180, 231], // lavender-deep
-  [237, 194, 215], // blush-deep
-] as const;
+type Rgb = readonly [number, number, number];
+/** What a field is painted with: the ground it rests on and its two heats. */
+export type FieldPalette = { ground: Rgb; channels: readonly [Rgb, Rgb] };
+
+// Kit tokens, as RGB, per theme. The ground is the page (`background`) or a
+// section's `surface`; the deep tints are the kit's illustration-only colours
+// and appear nowhere else in the interface. In dark they are lighter than
+// the ground, so the field glows rather than stains.
+const PALETTES = {
+  light: {
+    background: [248, 249, 252],
+    surface: [255, 255, 255],
+    channels: [
+      [198, 180, 231], // lavender-deep
+      [237, 194, 215], // blush-deep
+    ],
+  },
+  dark: {
+    background: [14, 20, 36],
+    surface: [22, 31, 51],
+    channels: [
+      [74, 61, 122], // lavender-deep
+      [94, 53, 80], // blush-deep
+    ],
+  },
+} as const;
+
+export const fieldPalette = (
+  theme: "light" | "dark",
+  ground: "background" | "surface" = "background",
+): FieldPalette => ({ ground: PALETTES[theme][ground], channels: PALETTES[theme].channels });
 /** No cell is ever painted more than this deep: the text above stays legible. */
 const MAX_ALPHA = 0.85;
 
@@ -154,14 +178,14 @@ const imageFor = (ctx: CanvasRenderingContext2D, cols: number, rows: number) => 
  * coarse grid is indistinguishable from a per-pixel evaluation and costs a
  * hundredth as much. `alphaAt` receives each cell's centre as fractions of the
  * width and height, and writes the lavender and blush alpha there into `out`;
- * the colours are mixed over `background`, the page's by default.
+ * the palette's heats are mixed over its ground.
  */
 export const paintField = (
   ctx: CanvasRenderingContext2D,
   cols: number,
   rows: number,
   alphaAt: (u: number, v: number, out: [number, number]) => void,
-  background: readonly [number, number, number] = BACKGROUND,
+  palette: FieldPalette,
 ) => {
   const image = imageFor(ctx, cols, rows);
   const data = image.data;
@@ -172,13 +196,13 @@ export const paintField = (
       alpha[0] = 0;
       alpha[1] = 0;
       alphaAt((col + 0.5) / cols, v, alpha);
-      let r: number = background[0];
-      let g: number = background[1];
-      let b: number = background[2];
+      let r: number = palette.ground[0];
+      let g: number = palette.ground[1];
+      let b: number = palette.ground[2];
       for (let channel = 0; channel < 2; channel++) {
         const a = Math.min(alpha[channel], MAX_ALPHA);
         if (a <= 0) continue;
-        const [cr, cg, cb] = CHANNEL_RGB[channel];
+        const [cr, cg, cb] = palette.channels[channel];
         r += (cr - r) * a;
         g += (cg - g) * a;
         b += (cb - b) * a;

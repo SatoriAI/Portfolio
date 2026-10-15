@@ -37,6 +37,11 @@ const copy = {
     common: {
       tagline: "Mathematician by training, engineer by trade",
       language: "Language",
+      appearance: "Appearance",
+      themeSystem: "System",
+      themeSystemNow: "System, now {theme}",
+      themeLight: "Light",
+      themeDark: "Dark",
       menu: "Menu",
       openMenu: "Open navigation menu",
       close: "Close",
@@ -723,6 +728,11 @@ const copy = {
     common: {
       tagline: "Matematyk z wykształcenia, inżynier z zawodu",
       language: "Język",
+      appearance: "Wygląd",
+      themeSystem: "Systemowy",
+      themeSystemNow: "Systemowy, teraz {theme}",
+      themeLight: "Jasny",
+      themeDark: "Ciemny",
       menu: "Menu",
       openMenu: "Otwórz menu nawigacji",
       close: "Zamknij",
