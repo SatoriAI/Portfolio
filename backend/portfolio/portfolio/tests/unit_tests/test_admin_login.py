@@ -2,8 +2,10 @@ import time
 from typing import Any
 from unittest.mock import patch
 
+import fakeredis
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
+from django.core.cache import caches
 from django.http import HttpResponse
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
@@ -21,6 +23,15 @@ from portfolio.admin_login import (
 PASSWORD = "correct-horse-battery"  # nosec B105: a test user's password
 WRONG = "not-the-password"
 LOCKED = "Too many failed sign-ins"
+# Django's own Redis cache, talking to an in-process fake rather than a server.
+FAKE_REDIS = {
+    "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
+    "vex": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://fake:6379/0",
+        "OPTIONS": {"connection_class": fakeredis.FakeConnection},
+    },
+}
 REDIS_DOWN = {
     "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
     "vex": {
@@ -143,10 +154,30 @@ class AdminLoginThrottleTestCase(TestCase):
             self.assert_locked(self.sign_in(PASSWORD))
         checked.assert_not_called()
 
-    def test_a_count_that_expires_between_add_and_incr_starts_a_new_window(self) -> None:
+    def test_one_ips_flood_does_not_use_up_the_usernames_ceiling(self) -> None:
+        for _ in range(USERNAME_LIMIT + 10):
+            self.sign_in(WRONG)
+        self.assert_signed_in(self.sign_in(PASSWORD, ip="2.2.2.2"))
+
+    def test_a_key_that_expires_before_incr_checks_it_leaves_the_attempt_uncounted(self) -> None:
         with patch.object(vex_cache, "add"):  # as if the key expired right after add
+            self.assertEqual(_reserve("admin-login-attempts:test", 60), 0)
+        self.assertIsNone(vex_cache.get("admin-login-attempts:test"))
+
+    @override_settings(CACHES=FAKE_REDIS)
+    def test_a_key_redis_recreates_without_expiry_gets_the_windows(self) -> None:
+        # Django's incr checks the key exists, then INCRBY; expiring in between, Redis recreates it at 1 with no TTL.
+        backend = caches["vex"]
+        key = backend.make_and_validate_key("admin-login-attempts:test")
+        client = backend._cache.get_client(key, write=True)  # pylint: disable=protected-access
+
+        def expiring_incr(*_args: Any, **_kwargs: Any) -> int:
+            client.delete(key)
+            return int(client.incr(key))
+
+        with patch.object(vex_cache, "incr", side_effect=expiring_incr):
             self.assertEqual(_reserve("admin-login-attempts:test", 60), 1)
-        self.assertEqual(vex_cache.get("admin-login-attempts:test"), 1)
+        self.assertTrue(0 < client.ttl(key) <= 60)
 
     @override_settings(CACHES=REDIS_DOWN)
     def test_with_redis_down_passwords_are_checked_unthrottled(self) -> None:

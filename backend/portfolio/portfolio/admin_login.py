@@ -6,9 +6,10 @@ front of the password check:
   one count; per username alone, it would be the only limit, and anyone could lock Dawid out in a few tries.
 - one username gets USERNAME_LIMIT attempts in USERNAME_WINDOW_SECONDS from all IPs together, and is then refused for
   the rest of that window. This is what stops a guesser spread over many IPs. Its price is that such a guesser can
-  keep Dawid out for up to the window; that was accepted.
+  keep Dawid out for up to the window; that was accepted. Only attempts the pair limit lets through count here, so
+  one IP adds at most PAIR_LIMIT per PAIR_WINDOW_SECONDS and cannot reach the ceiling alone.
 
-Every attempt is counted before its password is checked and uncounted only when it succeeds. Checking first and
+Every attempt is counted before its password is checked; a success clears its pair's count. Checking first and
 counting after would let any number of simultaneous attempts through the check, each seeing the count as it was
 before any of them failed. Counted first, at most PAIR_LIMIT attempts for a pair are ever checked, however many
 arrive at once.
@@ -52,14 +53,19 @@ def username_key(username: str) -> str:
 
 
 def _reserve(key: str, timeout: int) -> int:
-    """Counts one attempt and returns the count, this one included. A key that expires between add and incr would make
-    incr raise ValueError; it is then the first attempt of a new window."""
+    """Counts one attempt and returns the count, this one included, or 0 when it could not be counted.
+
+    Django's incr checks that the key exists and then increments it, and the key can expire in between. Before the
+    check, incr raises ValueError: that one attempt goes uncounted. After it, Redis creates the key afresh at 1 with no
+    expiry at all, which would count for ever; so a count of 1, however it came about, gets the window's expiry."""
     vex_cache.add(key, 0, timeout)
     try:
-        return int(vex_cache.incr(key))
+        count = int(vex_cache.incr(key))
     except ValueError:
-        vex_cache.set(key, 1, timeout)
-        return 1
+        return 0
+    if count == 1:
+        vex_cache.touch(key, timeout)
+    return count
 
 
 class ThrottledAdminAuthenticationForm(AdminAuthenticationForm):
@@ -72,24 +78,23 @@ class ThrottledAdminAuthenticationForm(AdminAuthenticationForm):
         username = self.cleaned_data.get("username")
         if not username or not self.cleaned_data.get("password"):
             return super().clean()  # a field is missing, so nothing is checked and nothing counts
-        pair, name = pair_key(self.request, username), username_key(username)
+        pair = pair_key(self.request, username)
         try:
             pair_count = _reserve(pair, PAIR_WINDOW_SECONDS)
-            name_count = _reserve(name, USERNAME_WINDOW_SECONDS)  # a fixed window: it is never refreshed
-            if pair_count <= PAIR_LIMIT:
-                # Sliding: the pair's lockout runs from its latest checked attempt. Refused ones do not extend it.
-                vex_cache.touch(pair, PAIR_WINDOW_SECONDS)
+            if pair_count > PAIR_LIMIT:
+                # Refused before the username is counted, so one IP's flood cannot use up the username's ceiling.
+                self._refuse(PAIR_WINDOW_SECONDS)
+            # Sliding: the pair's lockout runs from its latest checked attempt. Refused ones do not extend it.
+            vex_cache.touch(pair, PAIR_WINDOW_SECONDS)
+            # A fixed window, never refreshed. Successes count too: fifty an hour is far beyond Dawid's own use.
+            if _reserve(username_key(username), USERNAME_WINDOW_SECONDS) > USERNAME_LIMIT:
+                self._refuse(USERNAME_WINDOW_SECONDS)
         except CacheUnavailable:
-            pair_count = name_count = 0
-        if name_count > USERNAME_LIMIT:
-            self._refuse(USERNAME_WINDOW_SECONDS)
-        if pair_count > PAIR_LIMIT:
-            self._refuse(PAIR_WINDOW_SECONDS)
+            pass
         cleaned_data = super().clean()  # a wrong password raises here, and its attempt stays counted
         try:
             vex_cache.delete(pair)
-            vex_cache.decr(name)
-        except (CacheUnavailable, ValueError):  # ValueError: the username's window ended during the check
+        except CacheUnavailable:
             pass
         return cleaned_data
 
