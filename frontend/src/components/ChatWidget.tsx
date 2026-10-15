@@ -568,7 +568,7 @@ const ChatWidget = ({
                   <div
                     className={`prose prose-sm rounded-xl px-4 prose-headings:font-semibold prose-headings:leading-tight prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-p:my-2 prose-a:text-iris prose-a:underline prose-a:decoration-1 prose-a:underline-offset-2 prose-code:before:content-[''] prose-code:after:content-[''] prose-pre:rounded-lg prose-pre:bg-primary prose-pre:p-3 prose-pre:text-primary-foreground prose-ol:my-2 prose-ol:ml-5 prose-ol:list-decimal prose-ul:my-2 prose-ul:ml-5 prose-ul:list-disc prose-li:my-1 prose-hr:my-3 ${
                       message.isUser
-                        ? "prose-invert max-w-[85%] bg-primary py-2 text-primary-foreground"
+                        ? "prose-invert max-w-[85%] bg-chosen py-2 text-chosen-foreground"
                         : message.error
                           ? "border border-destructive/40 bg-blush py-2 text-foreground"
                           : "border border-border bg-lavender/40 py-2 text-foreground"
@@ -638,7 +638,7 @@ const ChatWidget = ({
                     {bubble}
                     <div
                       aria-hidden="true"
-                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-chosen text-chosen-foreground"
                     >
                       <User className="h-4 w-4" />
                     </div>

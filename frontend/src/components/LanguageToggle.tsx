@@ -40,9 +40,12 @@ const LanguageToggle = ({ className }: LanguageToggleProps) => {
               // below, and outward at the ends, where nothing else is pressed.
               "relative h-full rounded-lg px-2.5 transition-colors duration-200",
               "after:absolute after:-inset-y-[7px] after:left-0 after:right-0 first:after:-left-2.5 last:after:-right-2.5",
+              // Chosen: navy in light, lavender with an iris edge in dark. The
+              // other segment's hover is the panel tint, so in dark it never
+              // looks chosen; in light the two lavenders are one.
               active
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-lavender-hover hover:text-foreground",
+                ? "bg-chosen text-chosen-foreground shadow-[inset_0_0_0_1px_hsl(var(--chosen-edge))]"
+                : "text-muted-foreground hover:bg-lavender hover:text-foreground",
             )}
           >
             {label}
