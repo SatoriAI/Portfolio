@@ -48,11 +48,7 @@ const copy = {
       inputPlaceholder: "Ask Vex about Dawid",
       // The text box's accessible name; the placeholder is only a hint.
       inputLabel: "Message to Vex",
-      starters: [
-        "What's his experience with Kubernetes?",
-        "Tell me about his PhD research",
-        "Is he available for contract work?",
-      ],
+      starters: ["What's his experience with Kubernetes?", "Tell me about his PhD research"],
       // Follows the reason in the chat's error notice; {email} becomes a mailto link.
       errorFallback: "Email me at {email} and I'll reply within a few hours.",
       // The reason a question went unanswered, by the code the backend sends;
@@ -733,11 +729,7 @@ const copy = {
       prompt: "Porozmawiaj z Vex.",
       inputPlaceholder: "Zapytaj Vex o Dawida",
       inputLabel: "Wiadomość do Vex",
-      starters: [
-        "Jakie ma doświadczenie z Kubernetesem?",
-        "Opowiedz o jego badaniach doktorskich",
-        "Czy jest dostępny do pracy kontraktowej?",
-      ],
+      starters: ["Jakie ma doświadczenie z Kubernetesem?", "Opowiedz o jego badaniach doktorskich"],
       errorFallback: "Napisz na {email} — odpowiem w ciągu kilku godzin.",
       errors: {
         rate_limited: "To sporo pytań naraz. Daj Vex minutę i spróbuj ponownie.",
