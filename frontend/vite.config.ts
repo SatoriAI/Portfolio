@@ -1,9 +1,10 @@
 import react from "@vitejs/plugin-react-swc";
-import { readdir, readFile } from "fs/promises";
+import { readFile } from "fs/promises";
 import path from "path";
 import { defineConfig, type Plugin } from "vite";
 
 import { VEX_LANGUAGES, vexBundle } from "./src/lib/vexKnowledge";
+import { readVexContent } from "./src/lib/vexKnowledgeFiles";
 import { parseArticle, parseHeader } from "./src/lib/workshop";
 
 /**
@@ -40,41 +41,27 @@ const markdownQueries = (): Plugin => ({
  * server from the files as they are. The backend fetches these; the site's
  * own pages never load them.
  */
-const vexKnowledge = (): Plugin => {
-  const content = path.resolve(__dirname, "./src/content");
-  const read = async () => {
-    const files: Record<string, string> = {};
-    for (const folder of ["projects", "workshop"]) {
-      for (const name of await readdir(path.join(content, folder))) {
-        if (name.endsWith(".md")) {
-          files[`${folder}/${name}`] = await readFile(path.join(content, folder, name), "utf8");
-        }
-      }
-    }
-    return files;
-  };
-  return {
-    name: "vex-knowledge",
-    configureServer(server) {
-      server.middlewares.use(async (request, response, next) => {
-        const match = /^\/vex-kb\/(pl|en)\.json$/.exec(request.url ?? "");
-        if (!match) return next();
-        response.setHeader("Content-Type", "application/json");
-        response.end(JSON.stringify(vexBundle(await read(), match[1] as "pl" | "en")));
+const vexKnowledge = (): Plugin => ({
+  name: "vex-knowledge",
+  configureServer(server) {
+    server.middlewares.use(async (request, response, next) => {
+      const match = /^\/vex-kb\/(pl|en)\.json$/.exec(request.url ?? "");
+      if (!match) return next();
+      response.setHeader("Content-Type", "application/json");
+      response.end(JSON.stringify(vexBundle(await readVexContent(), match[1] as "pl" | "en")));
+    });
+  },
+  async generateBundle() {
+    const files = await readVexContent();
+    for (const language of VEX_LANGUAGES) {
+      this.emitFile({
+        type: "asset",
+        fileName: `vex-kb/${language}.json`,
+        source: JSON.stringify(vexBundle(files, language)),
       });
-    },
-    async generateBundle() {
-      const files = await read();
-      for (const language of VEX_LANGUAGES) {
-        this.emitFile({
-          type: "asset",
-          fileName: `vex-kb/${language}.json`,
-          source: JSON.stringify(vexBundle(files, language)),
-        });
-      }
-    },
-  };
-};
+    }
+  },
+});
 
 // https://vitejs.dev/config/
 export default defineConfig({

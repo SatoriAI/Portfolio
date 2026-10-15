@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { VEX_LANGUAGES, vexBundle } from "./vexKnowledge";
+import { readVexContent } from "./vexKnowledgeFiles";
 
 const doc = (title: string, body = "Tekst.") => `---\ntitle: ${title}\n---\n${body}\n`;
 
@@ -34,30 +35,22 @@ describe("vexBundle", () => {
   });
 });
 
-/** Every content file, as vite.config.ts reads them for the build. */
-const content = Object.fromEntries(
-  Object.entries(
-    import.meta.glob<string>(["../content/projects/*.md", "../content/workshop/*.md"], {
-      query: "?raw",
-      import: "default",
-      eager: true,
-    }),
-  ).map(([path, raw]) => [path.replace("../content/", ""), raw]),
-);
-
 const sha256 = async (text: string) =>
   [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)))]
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
 
 describe("the bundles the build publishes", () => {
-  // Vex's evals read the same files with a copy of this reader (fixture.py in
+  // Read with the build's own reader, from the files the build reads. Vex's
+  // evals read the same files with a copy of vexBundle (fixture.py in
   // backend/portfolio/vex/tests/evals), and its test_fixture.py compares what
   // that copy makes of them with this same snapshot. A change to the content
   // or to either reader fails a test until the snapshot is rewritten on
-  // purpose (`npx vitest run -u`) and both readers agree with it again. Each
-  // text is held by its digest, so the snapshot copies no article.
+  // purpose (`cd frontend && npx vitest run -u src/lib/vexKnowledge.test.ts`)
+  // and both readers agree with it again. Each text is held by its digest, so
+  // the snapshot copies no article.
   it("match the snapshot the backend's evals are checked against", async () => {
+    const content = await readVexContent();
     const snapshot: Record<string, unknown> = {};
     for (const language of VEX_LANGUAGES) {
       snapshot[language] = await Promise.all(

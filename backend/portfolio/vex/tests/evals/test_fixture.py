@@ -15,7 +15,7 @@ from vex.tests.evals.fixture import SITE_SNAPSHOT, SiteSource, header_title, sit
 class SiteReaderTestCase(SimpleTestCase):
     def test_the_site_reads_as_the_frontend_publishes_it(self) -> None:
         # Fails when the content, or either reader, changed without the snapshot: rewrite it from the frontend
-        # (`npx vitest run -u`), then make this side agree.
+        # (`cd frontend && npx vitest run -u src/lib/vexKnowledge.test.ts`), then make this side agree.
         snapshot = json.loads(SITE_SNAPSHOT.read_text(encoding="utf-8"))
         read = {
             locale: [

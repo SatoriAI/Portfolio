@@ -16,6 +16,10 @@ on:
     # reaches her.
     paths:
       - 'backend/portfolio/vex/ai/**'
+      - 'backend/portfolio/vex/models.py'
+      - 'backend/portfolio/vex/choices.py'
+      - 'backend/portfolio/vex/utils/**'
+      - 'backend/portfolio/utils/**'
       - 'backend/portfolio/vex/tests/evals/**'
       - 'backend/portfolio/vex/migrations/**'
       - 'backend/portfolio/portfolio/settings.py'
@@ -30,6 +34,7 @@ on:
       # The site's Markdown, and the frontend's build of it for her (vex-kb).
       - 'frontend/src/content/**'
       - 'frontend/src/lib/vexKnowledge.ts'
+      - 'frontend/src/lib/vexKnowledgeFiles.ts'
       - 'frontend/src/lib/workshop.ts'
       - 'frontend/vite.config.ts'
       # The run's environment and command.
@@ -59,8 +64,9 @@ permissions:
 concurrency:
   # A new push supersedes the pull request's run in flight: an answer about a
   # replaced commit is money spent on nothing. A manual run and the weekly one
-  # are each in a group of their own, and wait for the one before rather than
-  # cancel it.
+  # are each in a group of their own and never cancel the run in progress.
+  # GitHub keeps one pending run per group, though, so a newer one queued
+  # behind it replaces an older one still waiting.
   group: vex-evals-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
