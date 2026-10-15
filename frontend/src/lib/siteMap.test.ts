@@ -4,10 +4,15 @@ import { describe, expect, it } from "vitest";
 
 import { pages, redirects } from "@/config/navigation";
 
+import { pageMeta } from "./pageMeta";
 import {
   absoluteUrl,
   canonicalPath,
+  localizedRedirects,
   notFoundHtml,
+  pageAddresses,
+  pageFile,
+  publishedPieces,
   publishedPieceSlugs,
   serveConfig,
   sitemapXml,
@@ -35,16 +40,17 @@ describe("canonicalPath", () => {
 const piece = (title: string) =>
   `---\ntitle: ${title}\ndate: 2026-10-01\nformat: figure\n---\nText.`;
 
+const files = {
+  "workshop/heat.en.md": piece("Heat"),
+  "workshop/heat.pl.md": piece("Ciepło"),
+  "workshop/clock.pl.md": piece("Zegar"),
+  "workshop/unfinished.en.draft.md": piece("Draft"),
+  "projects/slip.en.md": "",
+};
+
 describe("publishedPieceSlugs", () => {
   it("lists each published piece once, whatever its languages, and no drafts", () => {
-    const files = {
-      "workshop/heat.en.md": piece("Heat"),
-      "workshop/heat.pl.md": piece("Ciepło"),
-      "workshop/clock.pl.md": piece("Zegar"),
-      "workshop/unfinished.en.draft.md": piece("Draft"),
-      "projects/slip.en.md": "",
-    };
-    expect(publishedPieceSlugs(files)).toEqual(["clock", "heat"]);
+    expect(publishedPieceSlugs(publishedPieces(files))).toEqual(["clock", "heat"]);
   });
 });
 
@@ -55,17 +61,39 @@ describe("the site's addresses", () => {
     expect(paths).toEqual(["/", "/experience", "/workshop", "/workshop/clock", "/workshop/heat"]);
   });
 
-  it("make a sitemap of absolute addresses", () => {
-    const xml = sitemapXml(paths);
-    expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
-    expect(xml.match(/<loc>/g)).toHaveLength(paths.length);
-    expect(xml).toContain("<loc>https://www.dawidhanrahan.com/workshop/heat</loc>");
+  it("are each in both languages, each in a file of its own", () => {
+    const addresses = pageAddresses(["/", "/experience"]).map(({ address }) => address);
+    expect(addresses).toEqual(["/", "/experience", "/pl", "/pl/experience"]);
+    expect(addresses.map(pageFile)).toEqual([
+      "index.html",
+      "experience/index.html",
+      "pl/index.html",
+      "pl/experience/index.html",
+    ]);
+  });
+
+  it("make a sitemap of canonical addresses, each with its alternates", () => {
+    const pieces = publishedPieces(files);
+    const heads = pageAddresses(paths).map(({ language, path }) =>
+      pageMeta(path, language, pieces),
+    );
+    const xml = sitemapXml(heads);
+    expect(xml).toContain('xmlns:xhtml="http://www.w3.org/1999/xhtml"');
+    // Every page twice, but clock, written in Polish only, once.
+    expect(xml.match(/<loc>/g)).toHaveLength(paths.length * 2 - 1);
+    expect(xml).toContain("<loc>https://www.dawidhanrahan.com/pl/workshop/heat</loc>");
+    expect(xml).toContain("<loc>https://www.dawidhanrahan.com/pl/workshop/clock</loc>");
+    expect(xml).not.toContain("<loc>https://www.dawidhanrahan.com/workshop/clock</loc>");
+    expect(xml).toContain(
+      '<xhtml:link rel="alternate" hreflang="x-default" href="https://www.dawidhanrahan.com/workshop/heat"/>',
+    );
+    expect(xml.match(/<xhtml:link/g)).toHaveLength((paths.length - 1) * 2 * 3);
   });
 
   it("cover every published piece, as the site's own parser reads the folder", async () => {
     const built = sitePaths(
       pages.map((page) => page.to),
-      publishedPieceSlugs(await readVexContent()),
+      publishedPieceSlugs(publishedPieces(await readVexContent())),
     );
     const folder = fileURLToPath(new URL("../content/workshop", import.meta.url));
     const published = readdirSync(folder)
@@ -109,26 +137,31 @@ describe("the site's addresses", () => {
 });
 
 describe("serveConfig", () => {
-  const paths = ["/", "/experience"];
-  const moved = [{ from: "/academic", to: "/research" }];
+  const addresses = ["/", "/experience", "/pl", "/pl/experience"];
+  const moved = localizedRedirects([{ from: "/academic", to: "/research" }]);
 
-  it("answers known paths with the app and old ones with a 301, over others' settings", () => {
-    const headers = [{ source: "**", headers: [] }];
-    const config = serveConfig({ headers }, paths, moved);
-    expect(config.headers).toBe(headers);
+  it("answers each address with its own file and old ones with a 301, in both languages", () => {
+    const security = { source: "**", headers: [{ key: "X-Frame-Options", value: "DENY" }] };
+    const config = serveConfig({ headers: [security] }, addresses, moved);
     expect(config.rewrites).toEqual([
       { source: "/", destination: "/index.html" },
-      { source: "/experience", destination: "/index.html" },
+      { source: "/experience", destination: "/experience/index.html" },
+      { source: "/pl", destination: "/pl/index.html" },
+      { source: "/pl/experience", destination: "/pl/experience/index.html" },
     ]);
     expect(config.redirects).toEqual([
       { source: "/academic", destination: "/research", type: 301 },
+      { source: "/pl/academic", destination: "/pl/research", type: 301 },
     ]);
+    // Others' headers kept, then a page asked about on every visit, the bundle kept for good.
+    expect(config.headers?.map((entry) => entry.source)).toEqual(["**", "**/*.html", "assets/**"]);
+    expect(config.headers?.[0]).toBe(security);
   });
 
   it("gives the same file when merged twice, and keeps routes it does not own", () => {
     const other = { source: "/elsewhere", destination: "/other.html" };
-    const once = serveConfig({ rewrites: [other] }, paths, moved);
-    expect(serveConfig(once, paths, moved)).toEqual(once);
+    const once = serveConfig({ rewrites: [other] }, addresses, moved);
+    expect(serveConfig(once, addresses, moved)).toEqual(once);
     expect(once.rewrites).toContainEqual(other);
   });
 });
@@ -138,6 +171,8 @@ describe("notFoundHtml", () => {
     const index = source("../../index.html");
     const page = notFoundHtml(index);
     expect(page).not.toMatch(/<link rel="canonical"|property="og:url"/);
+    // Nor does it name a language's address: the app reads that from the address.
+    expect(page).not.toMatch(/hreflang="|property="og:locale/);
     expect(page).toContain('property="og:image"');
     expect(index.length - page.length).toBeLessThan(200);
   });

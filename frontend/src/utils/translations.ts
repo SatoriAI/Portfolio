@@ -1,4 +1,4 @@
-import { typesetDeep } from "@/lib/typography";
+import { typesetDeep } from "../lib/typography";
 
 const copy = {
   en: {

@@ -9,6 +9,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useVex } from "@/contexts/VexContext";
 import { useInView } from "@/hooks/use-in-view";
 import { LauncherAsideProvider, useLauncherAsideTarget } from "@/hooks/use-launcher-aside";
+import { usePageMeta } from "@/hooks/use-page-meta";
 import { translations } from "@/utils/translations";
 
 /**
@@ -24,6 +25,8 @@ const PageLayout = () => {
   const { language } = useSettings();
   const t = translations[language];
   const { isOpen, pendingQuestion, askVex, closeVex, consumeQuestion } = useVex();
+  // The head follows the page shown, whichever page it is (see usePageMeta).
+  usePageMeta();
 
   // The launcher unmounts while the chat is open, so Radix cannot return focus
   // to it; do that here once it is back.

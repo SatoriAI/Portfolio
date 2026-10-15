@@ -1,10 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo } from "react";
 
-type Language = "en" | "pl";
+import type { Language } from "@/lib/locale";
 
 interface SettingsContextType {
   language: Language;
-  setLanguage: (lang: Language) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -17,46 +16,22 @@ export const useSettings = () => {
   return context;
 };
 
-// The Visual Identity Kit defines a light theme only, so the site has no theme
-// setting; language is the one preference that persists.
-export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>(() => {
-    try {
-      const saved = localStorage.getItem("language") as Language | null;
-      if (saved === "en" || saved === "pl") return saved;
-    } catch (_error) {
-      console.error(_error);
-    }
-
-    if (typeof navigator !== "undefined") {
-      const raw =
-        Array.isArray(navigator.languages) && navigator.languages.length > 0
-          ? navigator.languages
-          : navigator.language
-            ? [navigator.language]
-            : [];
-      const browserLanguages = raw.filter(Boolean);
-      const primary = (browserLanguages[0] || "en").toLowerCase();
-      const suggested: Language = primary.startsWith("pl") ? "pl" : "en";
-      return suggested;
-    }
-
-    return "en";
-  });
-
-  useEffect(() => {
-    localStorage.setItem("language", language);
-  }, [language]);
-
-  // Titles and descriptions are per page (usePageMeta); only the document
-  // language is global.
+/**
+ * The language of the page, as its address names it (lib/locale.ts). It
+ * holds for the whole visit: the toggle is a link to the page's address in
+ * the other language, which loads afresh. The Visual Identity Kit's light
+ * theme is the only one, so language is the one setting.
+ */
+export const SettingsProvider: React.FC<{ language: Language; children: React.ReactNode }> = ({
+  language,
+  children,
+}) => {
+  // Each page's HTML already names its language; 404.html, shared by both,
+  // is English until the app has read the address.
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
 
-  return (
-    <SettingsContext.Provider value={{ language, setLanguage }}>
-      {children}
-    </SettingsContext.Provider>
-  );
+  const value = useMemo(() => ({ language }), [language]);
+  return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 };

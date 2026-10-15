@@ -30,15 +30,17 @@ Three routes — `/`, `/experience` and `/academic` — in `src/pages/`, on top 
 
 - `src/config/endpoints.ts` — every backend route, in one place
 - `src/lib/*Service.ts` — one module per domain, mapping the API's `translations` payloads onto UI types
-- `src/contexts/SettingsContext.tsx` — language (`en`/`pl`), persisted in `localStorage`
+- `src/lib/locale.ts` — the language, read from the address: English at the plain paths, Polish under `/pl`
 - `src/config/navigation.ts` — the header's links, shared by the desktop nav and the mobile sheet
-- `src/utils/translations.ts` — all site copy in both languages, including per-page titles (`usePageMeta`)
+- `src/utils/translations.ts` — all site copy in both languages, including per-page titles (`src/lib/pageMeta.ts`)
 
 Pages are composed from `src/components/layout/` (header, footer, `Section`, `SectionHeading`, the 12-column `Grid`) and one folder of page-specific pieces per route: `src/components/home/` (the skills-as-years ledger and the project index), `src/components/experience/` (the to-scale career timeline and the role entries) and `src/components/academic/` (the heat-kernel and cyclic-shift figures, the Jacobi-locality illustration, the research thread, the publication stack with its domain glyphs, and the quote wall). The shadcn primitives stay in `src/components/ui/`. The home page is in the main bundle; the other routes and the chat's Markdown renderer load lazily.
 
 Pure layout logic lives in `src/lib/` where the node test suite can reach it: `timeline.ts` lays overlapping roles out into lanes, `skillYears.ts` reads a year count out of the backend's level text and declines the Polish unit, and `typography.ts` binds Polish one-letter words to the word after them with a non-breaking space — the Polish half of `translations.ts` passes through it once at module load.
 
-There is no i18n library. Localised content comes from the backend's `django-parler` translations, and the chosen language is forwarded as an `Accept-Language` header by `src/lib/apiClient.ts`.
+There is no i18n library. Localised content comes from the backend's `django-parler` translations, and the page's language is forwarded as an `Accept-Language` header by `src/lib/apiClient.ts`.
+
+The address decides the language. English lives at `/`, `/research` and so on; Polish at `/pl`, `/pl/research`, the same English words after the prefix. The app reads the language once at boot and gives the router `/pl` as its basename, so routes and links are written without a prefix. The EN / PL toggle is a link to the same page in the other language, which loads afresh and stores the reader's choice as `languageChoice` in `localStorage`. The one automatic switch: a reader opening `/` with no stored choice whose browser prefers Polish is sent to `/pl` before anything renders (`autoLanguageRedirect`, run at the top of `src/main.tsx`, since the CSP allows no inline script). No other address ever switches.
 
 ### Vex
 
@@ -48,7 +50,7 @@ Vex also reads the site's own writing. The build publishes the project write-ups
 
 ### Addresses and crawlers
 
-The build also writes `/sitemap.xml` and the static server's routes from the same list (the `site-map` plugin, built from [`src/lib/siteMap.ts`](src/lib/siteMap.ts)): home, the standalone pages in `src/config/navigation.ts`, and every published workshop piece. `serve` runs without `-s`, so `dist/serve.json` answers those paths, with or without a trailing slash, with the app, the old addresses in `navigation.ts` with a 301, and any other address with `404.html`, the same app showing its not-found page under a real 404 and without a canonical. `src/lib/siteMap.test.ts` fails if `App.tsx` declares a route the list lacks. The social preview, `public/og.png`, is drawn from `og/og.svg` by `sh og/render.sh`; rerun it after editing the SVG.
+The build also writes `/sitemap.xml`, one HTML file per page and language, and the static server's routes from the same list (the `site-map` plugin, built from [`src/lib/siteMap.ts`](src/lib/siteMap.ts)): home, the standalone pages in `src/config/navigation.ts`, and every published workshop piece, each in both languages. Each file is `index.html` with that page's `<html lang>`, title, description, canonical, `hreflang` alternates (en, pl, x-default) and `og:locale` written in from [`src/lib/pageMeta.ts`](src/lib/pageMeta.ts), the same function the app uses to keep the head current as a reader moves between pages, so a scraper that runs no script reads the right page. `serve` runs without `-s`, so `dist/serve.json` answers each address, with or without a trailing slash, with its own file, the old addresses in `navigation.ts` with a 301 in both languages, and any other address with `404.html`, the same app showing its not-found page in the address's language under a real 404 and without a canonical. Pages are sent `Cache-Control: no-cache`; the hashed files in `assets/` are cached for a year. `scripts/check-dist.mjs` runs after every build and fails it if a page lacks its language, canonical or alternates, if `404.html` names an address, or if any file carries an inline script. `src/lib/siteMap.test.ts` fails if `App.tsx` declares a route the list lacks. The social preview, `public/og.png`, is drawn from `og/og.svg` by `sh og/render.sh`; rerun it after editing the SVG.
 
 ### Visual identity
 

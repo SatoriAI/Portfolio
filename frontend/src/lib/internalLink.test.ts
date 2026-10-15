@@ -24,6 +24,14 @@ describe("internalPath", () => {
     );
   });
 
+  it("drops a language prefix, which the router adds back in the reader's language", () => {
+    expect(internalPath("https://www.dawidhanrahan.com/pl/research", origin)).toBe("/research");
+    expect(internalPath("https://www.dawidhanrahan.com/pl", origin)).toBe("/");
+    expect(internalPath("/pl/workshop/heat#proof", origin)).toBe("/workshop/heat#proof");
+    expect(internalPath("/pl#projects", origin)).toBe("/#projects");
+    expect(internalPath("/plan", origin)).toBe("/plan");
+  });
+
   it("leaves other sites, other schemes and protocol-relative links to a new tab", () => {
     expect(internalPath("https://tallyfox.example.com", origin)).toBeNull();
     expect(internalPath("//evil.example/research", origin)).toBeNull();

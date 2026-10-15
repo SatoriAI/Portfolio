@@ -34,8 +34,10 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Dawid Hanrahan" />
-    <!-- Absolute, as scrapers resolve nothing. These are the home page's; the
-         app sets the text, og:url and the canonical per page (usePageMeta). -->
+    <!-- Absolute, as scrapers resolve nothing. The template's are the home
+         page's; the build writes each page's own, with its alternates and
+         og:locale, into the page's file (src/lib/pageMeta.ts), and the app
+         keeps them on the page shown (usePageMeta). -->
     <meta property="og:url" content="https://www.dawidhanrahan.com/" />
     <link rel="canonical" href="https://www.dawidhanrahan.com/" />
     <!-- Rendered from og/og.svg by og/render.sh. -->

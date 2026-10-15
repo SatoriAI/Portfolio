@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { redirects } from "@/config/navigation";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { VexProvider } from "@/contexts/VexContext";
+import { type Language, languageBasename } from "@/lib/locale";
 import { queryClient } from "@/lib/queries";
 
 import Index from "./pages/Index";
@@ -22,13 +23,15 @@ const Workshop = lazy(() => import("./pages/Workshop"));
 const WorkshopArticle = lazy(() => import("./pages/WorkshopArticle"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const App = () => (
+// The routes are written once, without a language: under /pl the router's
+// basename carries the prefix, for every Link and navigate as well.
+const App = ({ language }: { language: Language }) => (
   <QueryClientProvider client={queryClient}>
-    <SettingsProvider>
+    <SettingsProvider language={language}>
       <VexProvider>
         <TooltipProvider>
           <Sonner />
-          <BrowserRouter>
+          <BrowserRouter basename={languageBasename(language)}>
             <ScrollToTop />
             <Routes>
               {/* Every page inside one layout, which stays mounted between them. */}

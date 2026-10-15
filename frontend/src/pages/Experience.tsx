@@ -23,7 +23,6 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useVex } from "@/contexts/VexContext";
 import { useDismissOutside } from "@/hooks/use-dismiss-outside";
 import { useIsMobile, usePrefersReducedMotion } from "@/hooks/use-media-query";
-import { usePageMeta } from "@/hooks/use-page-meta";
 import { useTimelineSelection } from "@/hooks/use-timeline-selection";
 import { useExperiences, useProjects, useSkills } from "@/lib/queries";
 import { laneSegments, skillReach } from "@/lib/skillLanes";
@@ -65,7 +64,6 @@ const Experience = () => {
   const { language } = useSettings();
   const { askVex } = useVex();
   const t = translations[language];
-  usePageMeta(t.meta.experience);
   const experiencesQuery = useExperiences();
   const experiences = useMemo(() => experiencesQuery.data ?? [], [experiencesQuery.data]);
 

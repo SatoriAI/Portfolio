@@ -1,30 +1,34 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 
-import { applyHeadTags, pageHeadTags, type PageMeta } from "@/lib/headTags";
+import { workshopArticles } from "@/content/workshop";
+import { useSettings } from "@/contexts/SettingsContext";
+import { applyHeadTags } from "@/lib/applyHeadTags";
+import { pageHeadTags } from "@/lib/headTags";
+import { pageMeta } from "@/lib/pageMeta";
 
 /**
- * Gives a route its own title, description, canonical address and Open Graph
- * text, over the defaults in index.html. Scrapers that do not run scripts
- * (link previews) read those defaults; a crawler that renders the page, as
- * Google does, reads these. A page without an address of its own takes the
- * canonical and og:url out while it is shown, rather than naming the address
- * that was mistyped, or home.
+ * Keeps the head on the page being shown: its title, description,
+ * canonical address, alternates and Open Graph text, from the same
+ * pageMeta the build writes into each page's HTML. A load already has them
+ * right; this carries them along as the reader moves between pages, and
+ * fills them in on 404.html, which names no address. A page without an
+ * address of its own has its canonical, og:url and alternates taken out
+ * while it is shown, rather than naming the address that was mistyped.
  */
-export function usePageMeta({ title, description, canonical = true }: PageMeta) {
+export function usePageMeta() {
   const { pathname } = useLocation();
+  const { language } = useSettings();
+  const head = useMemo(() => pageMeta(pathname, language, workshopArticles), [pathname, language]);
 
   useEffect(() => {
     const previousTitle = document.title;
-    const restore = applyHeadTags(
-      document,
-      pageHeadTags({ title, description, canonical }, pathname),
-    );
-    document.title = title;
+    const restore = applyHeadTags(document, pageHeadTags(head));
+    document.title = head.title;
 
     return () => {
       document.title = previousTitle;
       restore();
     };
-  }, [title, description, canonical, pathname]);
+  }, [head]);
 }

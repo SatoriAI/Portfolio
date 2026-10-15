@@ -12,7 +12,6 @@ import MetaLine from "@/components/workshop/MetaLine";
 import { showDrafts, workshopArticles } from "@/content/workshop";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useLauncherAside } from "@/hooks/use-launcher-aside";
-import { usePageMeta } from "@/hooks/use-page-meta";
 import { useScrollFrame } from "@/hooks/use-scroll-frame";
 import { useArticleText } from "@/lib/queries";
 import { fillTemplate, pad2 } from "@/lib/text";
@@ -53,13 +52,6 @@ const WorkshopArticle = () => {
     // Slugs are lower case; the address matches as the router does, in any case.
     (piece) => piece.slug === slug?.toLowerCase(),
   );
-  // Set after the NotFound shown in its place, so a missing piece is named as one.
-  usePageMeta(
-    article
-      ? { title: `${article.title} · Dawid Hanrahan`, description: article.summary }
-      : { ...t.meta.notFound, canonical: false },
-  );
-
   const text = useArticleText(article);
   const sections = useMemo(() => (text.data ? splitSections(text.data) : []), [text.data]);
 
