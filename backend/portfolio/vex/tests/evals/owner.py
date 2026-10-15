@@ -135,9 +135,9 @@ def roles() -> None:
         en={
             "role": "Thermal Simulation Engineer",
             "location": "Testowo (hybrid)",
-            "product": "CoolCell, a simulation service that predicts how hot each cell of an electric bus's battery "
+            "product": "Thermarrow, a simulation service that predicts how hot each cell of an electric bus's battery "
             "pack gets during fast charging, so pack designers can place cooling plates before building a prototype.",
-            "responsibilities": "Jan owns CoolCell's finite-element solver: its numerics, its performance and its "
+            "responsibilities": "Jan owns Thermarrow's finite-element solver: its numerics, its performance and its "
             "validation against lab measurements.",
             "contributions": [
                 "Wrote an adaptive time-stepping scheme for the solver.",
@@ -152,10 +152,10 @@ def roles() -> None:
         pl={
             "role": "Inżynier symulacji termicznych",
             "location": "Testowo (hybrydowo)",
-            "product": "CoolCell, usługa symulacyjna, która przewiduje, jak bardzo nagrzewa się każde ogniwo "
+            "product": "Thermarrow, usługa symulacyjna, która przewiduje, jak bardzo nagrzewa się każde ogniwo "
             "baterii autobusu elektrycznego przy szybkim ładowaniu, żeby projektanci mogli rozmieścić płyty "
             "chłodzące przed zbudowaniem prototypu.",
-            "responsibilities": "Jan odpowiada za solver metody elementów skończonych w CoolCell: jego numerykę, "
+            "responsibilities": "Jan odpowiada za solver metody elementów skończonych w Thermarrow: jego numerykę, "
             "wydajność i walidację z pomiarami z laboratorium.",
             "contributions": [
                 "Napisał adaptacyjny schemat kroku czasowego dla solvera.",
@@ -178,8 +178,8 @@ def roles() -> None:
         en={
             "role": "Data Engineer",
             "location": "Remote",
-            "product": "LoadSense, a platform that forecasts electricity demand for regional grid operators.",
-            "responsibilities": "Jan built and ran the pipelines that bring smart-meter data into LoadSense.",
+            "product": "Voltwren, a platform that forecasts electricity demand for regional grid operators.",
+            "responsibilities": "Jan built and ran the pipelines that bring smart-meter data into Voltwren.",
             "contributions": [
                 "Built the ingestion pipeline for 1,200 smart-meter feeds in Apache Airflow.",
                 "Introduced data-quality checks that stop a broken feed before it reaches the forecasts.",
@@ -192,9 +192,9 @@ def roles() -> None:
         pl={
             "role": "Inżynier danych",
             "location": "Zdalnie",
-            "product": "LoadSense, system prognozujący zapotrzebowanie na prąd dla regionalnych operatorów sieci.",
+            "product": "Voltwren, system prognozujący zapotrzebowanie na prąd dla regionalnych operatorów sieci.",
             "responsibilities": "Jan budował i utrzymywał potoki, które wprowadzają dane z inteligentnych liczników "
-            "do LoadSense.",
+            "do Voltwren.",
             "contributions": [
                 "Zbudował w Apache Airflow potok pobierający dane z 1200 inteligentnych liczników.",
                 "Wprowadził kontrole jakości danych, które zatrzymują zepsute źródło, zanim trafi do prognoz.",
@@ -307,10 +307,10 @@ def projects() -> None:
     )
     create(
         Project,
-        title="Crosswise",
+        title="Cluequill",
         tags=["Python", "Django"],
-        demo="https://crosswise.example.com",
-        repository="https://example.org/jan-testowy/crosswise",
+        demo="https://cluequill.example.com",
+        repository="https://example.org/jan-testowy/cluequill",
         en={"description": "A crossword generator for teachers: type in the words of a lesson, print the puzzle."},
         pl={"description": "Generator krzyżówek dla nauczycieli: wpisz słowa z lekcji i wydrukuj krzyżówkę."},
     )

@@ -77,8 +77,8 @@ class DocumentAdminTestCase(MediaRootMixin):
         return response
 
     def test_an_uploaded_file_becomes_the_text_vex_reads(self) -> None:
-        self.post(file=SimpleUploadedFile("favourites.pdf", pdf_bytes("Favourite dish: spaghetti")))
-        self.assertEqual(Document.objects.get().content, "Favourite dish: spaghetti")
+        self.post(file=SimpleUploadedFile("favourites.pdf", pdf_bytes("Favourite dish: shakshuka")))
+        self.assertEqual(Document.objects.get().content, "Favourite dish: shakshuka")
 
     def test_text_edited_in_the_same_save_wins_over_the_file(self) -> None:
         self.post(file=SimpleUploadedFile("notes.txt", b"From the file"), content="Typed by hand")
@@ -90,7 +90,7 @@ class DocumentAdminTestCase(MediaRootMixin):
         self.assertFalse(Document.objects.exists())
 
     def test_the_list_shows_and_filters_documents_without_text(self) -> None:
-        DocumentFactory(title="Filled", content="Spaghetti.", url=None)
+        DocumentFactory(title="Filled", content="Shakshuka.", url=None)
         DocumentFactory(title="Hollow", content="", url=None)
         url = reverse("admin:vex_document_changelist")
         self.assertContains(self.client.get(url), "Text for Vex")
@@ -118,10 +118,10 @@ class BackfillMigrationTestCase(MediaRootMixin):
                 cursor.execute("INSERT INTO langchain_pg_embedding VALUES (%s, %s)", [document, metadata])
 
     def test_a_document_gets_the_text_of_its_file(self) -> None:
-        document = DocumentFactory(file=ContentFile(pdf_bytes("Spaghetti"), name="fav.pdf"), content="", url=None)
+        document = DocumentFactory(file=ContentFile(pdf_bytes("Shakshuka"), name="fav.pdf"), content="", url=None)
         self.run_backfill()
         document.refresh_from_db()
-        self.assertEqual(document.content, "Spaghetti")
+        self.assertEqual(document.content, "Shakshuka")
 
     def test_a_document_without_a_file_gets_its_old_chunks_back_in_page_order(self) -> None:
         document = DocumentFactory(file=None, content="", url=None)
@@ -130,8 +130,8 @@ class BackfillMigrationTestCase(MediaRootMixin):
         self.make_legacy_table(
             [
                 ("Page two starts here.", f'{{"document_pk": {pk}, "page": 1}}'),
-                ("Favourite dishes: spaghetti, kung pao chicken", f'{{"document_pk": {pk}, "page": 0}}'),
-                ("spaghetti, kung pao chicken\nFavourite drink: water", f'{{"document_pk": {pk}, "page": 0}}'),
+                ("Favourite dishes: shakshuka and pad thai", f'{{"document_pk": {pk}, "page": 0}}'),
+                ("shakshuka and pad thai\nFavourite drink: water", f'{{"document_pk": {pk}, "page": 0}}'),
                 ("Someone else's text", f'{{"document_pk": {other.pk}, "page": 0}}'),
             ]
         )
@@ -140,7 +140,7 @@ class BackfillMigrationTestCase(MediaRootMixin):
         other.refresh_from_db()
         self.assertEqual(
             document.content,
-            "Favourite dishes: spaghetti, kung pao chicken\nFavourite drink: water\nPage two starts here.",
+            "Favourite dishes: shakshuka and pad thai\nFavourite drink: water\nPage two starts here.",
         )
         self.assertEqual(other.content, "Typed in the admin")
 
@@ -164,7 +164,7 @@ class BackfillMigrationTestCase(MediaRootMixin):
 @override_settings(VEX_SITE_CONTENT_URL="")
 class VexKbCommandTestCase(TestCase):
     def test_reports_the_sources_and_their_size(self) -> None:
-        DocumentFactory(title="Favourites", language="pl", content="Spaghetti.", url=None, description="")
+        DocumentFactory(title="Favourites", language="pl", content="Shakshuka.", url=None, description="")
         out = StringIO()
         call_command("vex_kb", "--locale", "pl", stdout=out)
         report = out.getvalue()

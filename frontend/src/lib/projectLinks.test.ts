@@ -52,7 +52,7 @@ describe("isThisSite", () => {
   });
 
   it("does not claim another project, an empty demo or a malformed one", () => {
-    expect(isThisSite(project("https://turl.info"))).toBe(false);
+    expect(isThisSite(project("https://tallyfox.example.com"))).toBe(false);
     expect(isThisSite(project(""))).toBe(false);
     expect(isThisSite(project("not a url"))).toBe(false);
   });

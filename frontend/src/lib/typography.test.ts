@@ -12,7 +12,9 @@ describe("bindOrphans", () => {
   });
 
   it("binds at the start of the text and after an opening bracket or quote", () => {
-    expect(bindOrphans("W Nokii (i w Xperi)")).toBe(`W${NBSP}Nokii (i${NBSP}w${NBSP}Xperi)`);
+    expect(bindOrphans("W Testowie (i w Kelvinbrook)")).toBe(
+      `W${NBSP}Testowie (i${NBSP}w${NBSP}Kelvinbrook)`,
+    );
   });
 
   it("leaves longer words and one-letter words at the end alone", () => {
@@ -25,7 +27,7 @@ describe("bindOrphans", () => {
   });
 
   it("is idempotent", () => {
-    const once = bindOrphans("w Nokii i w Xperi");
+    const once = bindOrphans("w Testowie i w Kelvinbrook");
     expect(bindOrphans(once)).toBe(once);
   });
 });

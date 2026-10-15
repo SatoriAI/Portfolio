@@ -17,9 +17,6 @@ on:
       - main
     paths:
       - 'frontend/**'
-      # The snapshot of Vex's site sources that src/lib/vexKnowledge.test.ts
-      # writes and the backend's evals are checked against.
-      - 'backend/portfolio/vex/tests/evals/site_sources.json'
       - '.github/workflows/frontend-quality.yml'
       - '.github/actions/setup-node/**'
   # Deliberately unfiltered by branch. `branches:` here matches the *base* of the
@@ -29,9 +26,6 @@ on:
   pull_request:
     paths:
       - 'frontend/**'
-      # The snapshot of Vex's site sources that src/lib/vexKnowledge.test.ts
-      # writes and the backend's evals are checked against.
-      - 'backend/portfolio/vex/tests/evals/site_sources.json'
       - '.github/workflows/frontend-quality.yml'
       - '.github/actions/setup-node/**'
   # With path filters there is otherwise no way to ask for a run on a ref whose

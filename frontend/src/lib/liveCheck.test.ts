@@ -6,7 +6,7 @@ describe("checkHost", () => {
   it("times an answer, whatever it contains", async () => {
     const times = [100, 184.4];
     const fetchImpl = vi.fn().mockResolvedValue(new Response(null, { status: 503 }));
-    const result = await checkHost("https://picko.world", {
+    const result = await checkHost("https://tallyfox.example.com", {
       fetchImpl,
       now: () => times.shift()!,
     });
@@ -16,7 +16,9 @@ describe("checkHost", () => {
 
   it("calls a network failure no answer", async () => {
     const fetchImpl = vi.fn().mockRejectedValue(new TypeError("Failed to fetch"));
-    expect(await checkHost("https://picko.world", { fetchImpl })).toEqual({ answered: false });
+    expect(await checkHost("https://tallyfox.example.com", { fetchImpl })).toEqual({
+      answered: false,
+    });
   });
 
   it("gives up at the time limit", async () => {
@@ -27,7 +29,7 @@ describe("checkHost", () => {
           init?.signal?.addEventListener("abort", () => reject(new DOMException("", "AbortError"))),
         ),
     );
-    const pending = checkHost("https://picko.world", { fetchImpl, timeoutMs: 8000 });
+    const pending = checkHost("https://tallyfox.example.com", { fetchImpl, timeoutMs: 8000 });
     await vi.advanceTimersByTimeAsync(8000);
     expect(await pending).toEqual({ answered: false });
     vi.useRealTimers();

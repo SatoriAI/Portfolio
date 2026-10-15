@@ -40,11 +40,13 @@ class EvalKnowledgeTestCase(TestCase):
 
     def test_the_prompt_speaks_for_the_invented_owner_alone(self) -> None:
         # The package's conftest puts him in the settings; every mention of Dawid, in the rules, the persona or the
-        # knowledge, would be a fact about someone the evals' knowledge does not hold.
+        # knowledge, would be a fact about someone the evals' knowledge does not hold. Lowercase, so the check also
+        # covers his production contact address.
         for locale in ("en", "pl"):
             with self.subTest(locale=locale):
                 prompt = system_prompt(locale)
                 self.assertIn(f"{owner.NAME}'s portfolio website", prompt)
                 self.assertIn(f"[{owner.EMAIL}](mailto:{owner.EMAIL})", prompt)
                 self.assertIn("<persona>", prompt)
-                self.assertNotIn("Dawid", prompt)
+                for name in ("dawid", "hanrahan"):
+                    self.assertNotIn(name, prompt.lower())

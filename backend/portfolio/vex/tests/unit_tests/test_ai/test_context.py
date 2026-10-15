@@ -11,20 +11,22 @@ class AskedFromTestCase(TestCase):
         role = ExperienceFactory(
             position="Developer",
             role="Python Web Developer",
-            company="Nokia Solutions and Networks",
+            company="Gridwhistle Power Networks",
             start=date(2020, 3, 1),
             end=date(2024, 6, 30),
             i18n={"pl": {"role": "Programista Python"}},
         )
         self.assertEqual(
             resolve_context({"kind": "experience", "id": role.pk}),
-            'The visitor asked this from the role "Python Web Developer at Nokia Solutions and Networks (2020–2024)" '
+            'The visitor asked this from the role "Python Web Developer at Gridwhistle Power Networks (2020–2024)" '
             "on the Experience page (/experience).",
         )
 
     def test_a_current_role_runs_to_the_present(self) -> None:
-        role = ExperienceFactory(role="AI Engineer", company="Addepto", start=date(2025, 1, 1), end=None)
-        self.assertIn('"AI Engineer at Addepto (2025–present)"', resolve_context({"kind": "experience", "id": role.pk}))
+        role = ExperienceFactory(role="AI Engineer", company="Kelvinbrook", start=date(2025, 1, 1), end=None)
+        self.assertIn(
+            '"AI Engineer at Kelvinbrook (2025–present)"', resolve_context({"kind": "experience", "id": role.pk})
+        )
 
     def test_a_hidden_role_names_nothing(self) -> None:
         role = ExperienceFactory(visible=False)

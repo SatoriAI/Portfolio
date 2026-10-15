@@ -20,9 +20,9 @@ class CopyPositionToRoleTestCase(TransactionTestCase):
         Experience = apps.get_model("work", "Experience")
         ExperienceTranslation = apps.get_model("work", "ExperienceTranslation")
         experience = Experience.objects.create(
-            position="Python Developer", start="2022-09-01", company="Xperi", technologies=[]
+            position="Python Developer", start="2022-09-01", company="Kelvinbrook", technologies=[]
         )
-        for language, location in (("en", "Wroclaw"), ("pl", "Wrocław")):
+        for language, location in (("en", "Testtown"), ("pl", "Testowo")):
             ExperienceTranslation.objects.create(master=experience, language_code=language, location=location)
         self.pk = experience.pk
 
@@ -87,7 +87,7 @@ class MarkPhoneAppsTestCase(TransactionTestCase):
             lambda: MigrationExecutor(connection).migrate(MigrationExecutor(connection).loader.graph.leaf_nodes())
         )
         Project = executor.loader.project_state(self.BEFORE).apps.get_model("work", "Project")
-        self.pks = {title: Project.objects.create(title=title).pk for title in ("Slip", "tURL")}
+        self.pks = {title: Project.objects.create(title=title).pk for title in ("Slip", "Tidebell")}
 
     def test_slip_is_marked_and_the_rest_are_not(self) -> None:
         executor = MigrationExecutor(connection)
@@ -95,4 +95,4 @@ class MarkPhoneAppsTestCase(TransactionTestCase):
         executor.migrate(self.AFTER)
         Project = executor.loader.project_state(self.AFTER).apps.get_model("work", "Project")
         marked = dict(Project.objects.filter(pk__in=self.pks.values()).values_list("title", "mobile"))
-        self.assertDictEqual(marked, {"Slip": True, "tURL": False})
+        self.assertDictEqual(marked, {"Slip": True, "Tidebell": False})

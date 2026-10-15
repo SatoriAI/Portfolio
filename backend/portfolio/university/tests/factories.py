@@ -81,7 +81,7 @@ class SchoolFactory(DjangoModelFactory, i18nMixin):
             "Warsaw University of Technology",
             "AGH University of Science and Technology",
             "Jagiellonian University",
-            "Wrocław University of Science and Technology",
+            "Poznań University of Technology",
             "Gdańsk University of Technology",
         ],
     )

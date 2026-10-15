@@ -18,12 +18,12 @@ class PromptTestCase(TestCase):
 
     def test_rules_then_persona_then_knowledge(self) -> None:
         ConfigurationFactory(i18n={"en": {"system_prompt": "Be breezy."}, "pl": {"system_prompt": "Bądź luzacki."}})
-        DocumentFactory(title="Favourites", language="pl", description="", url=None, content="Spaghetti.")
+        DocumentFactory(title="Favourites", language="pl", description="", url=None, content="Shakshuka.")
         prompt = system_prompt("pl")
         rules = prompt.index("You are Vex")
         notes = prompt.index("<persona>\nBądź luzacki.\n</persona>")
         known = prompt.index(
-            '<knowledge>\n<source kind="document" title="Favourites">\nSpaghetti.\n</source>\n</knowledge>'
+            '<knowledge>\n<source kind="document" title="Favourites">\nShakshuka.\n</source>\n</knowledge>'
         )
         self.assertLess(rules, notes)
         self.assertLess(notes, known)
