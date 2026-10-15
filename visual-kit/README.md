@@ -1,6 +1,6 @@
 # Dawid Hanrahan Visual Identity Kit
 
-Version 5.1 · Binary Axis mark · 24 September 2026
+Version 5.2 · Binary Axis mark · 15 October 2026
 
 This kit defines the visual direction for Dawid Hanrahan's personal portfolio. It is intended for designers and developers building portfolio pages, presentations, social assets, and supporting materials.
 
@@ -68,22 +68,44 @@ Avoid superlatives, *innovative*, *passionate*, *world-class*, exclamation marks
 
 ## Colour palette
 
-| Token | Value | Primary use |
-| --- | --- | --- |
-| `background` | `#F8F9FC` | Main page background |
-| `surface` | `#FFFFFF` | Cards, menus, and fields |
-| `ink` | `#17233D` | Headings, body text, and primary actions |
-| `text-secondary` | `#566078` | Supporting copy and metadata |
-| `lavender` | `#E8E1FA` | Visualisation and feature-section backgrounds |
-| `blush` | `#F6E2EB` | Secondary accent and illustration |
-| `iris` | `#65509A` | Links, focus, and active states |
-| `border` | `#E0E3EB` | Decorative dividers and card outlines |
-| `control-border` | `#848A9A` | Form and secondary-control boundaries |
-| `primary-hover` | `#293A5C` | Primary-action hover state |
+| Token | Light | Dark | Primary use |
+| --- | --- | --- | --- |
+| `background` | `#F8F9FC` | `#0E1424` | Main page background |
+| `surface` | `#FFFFFF` | `#161F33` | Cards, menus, and fields |
+| `ink` | `#17233D` | `#E6E9F2` | Headings, body text, and primary actions |
+| `text-secondary` | `#566078` | `#9EA6BC` | Supporting copy and metadata |
+| `lavender` | `#E8E1FA` | `#262140` | Visualisation and feature-section backgrounds |
+| `lavender-hover` | `#E8E1FA` | `#322A5A` | Lavender on `surface`: a control hovered or open, or a tile on a card |
+| `blush` | `#F6E2EB` | `#42293E` | Secondary accent and illustration |
+| `iris` | `#65509A` | `#B2A3E8` | Links, focus, and active states |
+| `border` | `#E0E3EB` | `#262F45` | Decorative dividers and card outlines |
+| `control-border` | `#848A9A` | `#6C7591` | Form and secondary-control boundaries |
+| `primary-hover` | `#293A5C` | `#C4CADB` | Primary-action hover state |
+| `shadow` | `#17233D` | `#03060E` | The colour every shadow is cast in (see Elevation) |
 
 As a general composition guide, use approximately 75% light neutrals, 20% pastels, and 5% navy or strong accents. Use white on navy or iris and navy on pastel surfaces. Pastels are backgrounds, not colours for small text. A pale border must never be the only indication that a control is interactive.
 
 `control-border` is the one value here chosen against a measurement rather than by eye. A control boundary must reach 3:1 against the surface behind it (WCAG 1.4.11), and most controls sit on `background`, not on `surface`. `#848A9A` reaches 3.28:1 on `background` and 3.45:1 on `surface`. Do not lighten it. `border` is decorative only — at 1.28:1 on white it carries no information, which is exactly why a control may never rely on it alone.
+
+The dark column is described under Dark theme.
+
+## Dark theme
+
+The dark theme is called **Night Ink**. It is built from the same ink. In light, navy is the text and cloud is the page. In dark they swap, the pastels become deep tints of the same hues, and iris lightens until it reads as a link again. Token names and roles do not change, so an interface switches theme by switching values and nothing else.
+
+- **The reader's system decides first.** A first visit follows `prefers-color-scheme` and keeps following it while the page is open. There are two stops, the machine's theme and the other one: the reader can flip to the other, which is remembered, and flipping back returns the page to the machine and forgets the choice. If the machine later turns to the theme the reader flipped to, the choice is forgotten too, so every flip changes the page. The page never paints in the wrong theme first: the theme is set before the first paint.
+- **The control** is one button that flips the theme, the language control's size and edge: 40 px square beside EN/PL where the links have the menu bar (from 1280 px), and in the menu sheet below that, under an Appearance group label, with its action in words beside the icon. The icon is where the click goes, Lucide's `moon` in light and `sun` in dark, and its accessible name says so ("Switch to dark", „Przełącz na ciemny”). A three-way System, Light and Dark control was built and dropped: with two looks and three states one click in every three changed nothing on screen, and a menu for it cost a second click and a chevron to explain itself.
+- **The switch is the reader's heat source.** The new theme spreads out from the button as a circle, 400 ms on the brand ease, played once. Under `prefers-reduced-motion` it changes at once.
+- **Contrast is measured, not inherited.** On `background`: `ink` 15.1:1, `text-secondary` 7.6:1, `iris` 8.1:1, `control-border` 4.0:1 (3.6:1 on `surface`). `text-secondary` sits higher than its light counterpart because 13 px mono metadata loses more on dark than on light. `border` stays decorative at about 1.4:1.
+- **Lavender has two jobs, so dark has two lavenders.** Light lavender is a panel at 1.20:1 on `background` and a hover at 1.27:1 on `surface`; one dark value could not be both. `lavender` (#262140) fills panels, bands and figures at 1.20:1 on the dark `background`, so they stay as calm as in light; `lavender-hover` (#322A5A) is lavender on `surface`, at 1.27:1: a hovered or open control, or a small tile set on a card such as Vex's empty-state icon, where the panel tint (1.09:1 there) would vanish. A hover appears only where the device has one, so a tap does not leave a control looking pressed. In light both are #E8E1FA. Text on either keeps 10.7:1 (`ink`) and 5.3:1 (`text-secondary`) or more. `blush` (#42293E) keeps its single value.
+- **Depth comes from the surface, not the shadow.** `surface` is one step lighter than `background`, and shadows are cast in `shadow`, which is near-black in dark at twice the light alpha, never past 0.6: a `float` at 1.0 is a solid slab, not a shadow.
+- **Scrims dim.** The page behind a sheet or dialog is covered in `shadow` at the elevation alphas (0.4 for a sheet or dialog, 0.15 for a timeline card), never in the text colour, which in dark would lighten the page instead of dimming it.
+- **The mark goes white**, as the logo rules already allow on dark backgrounds. The favicon keeps its navy tile in both themes.
+- **Real captures are never dimmed or inverted.** A light screenshot in a dark frame is a window onto someone else's product.
+- **Paper stays paper.** The teaching quotes' sticky notes are objects in the scene, not interface: they keep a dimmed yellow (#CEC57E, 10.4:1 on the page, so a grid of them does not light the room) and their text stays light-theme navy (8.9:1); the course and term under each note use #434C62, 4.86:1 on the dimmed paper and 7.51:1 on light, since the page's `text-secondary` falls to 3.6:1 there.
+- **Light stays light.** The circuit's bands of white light are cast in `sheen`, white in light and #F2F0FF in dark, never in `surface`, which in dark is navy and would draw them as dark notches on the lit wire.
+- **Brand marks keep their colour unless it disappears.** A technology mark that falls under 3:1 on `surface` (black or near-black marks) is drawn in `currentColor` instead, like the practices without a brand.
+- **The heat field glows rather than stains.** Its illustration tints become `#4A3D7A` (lavender) and `#5E3550` (blush) mixed over the dark `background`, and the menu bar's peak still has to keep every link at 4.5:1.
 
 ## Typography
 
@@ -119,7 +141,7 @@ Workshop articles are set on a reading scale of their own, larger than the body 
 
 ## Elevation
 
-Shadows are cast in `ink` at low alpha, never in neutral black. A grey shadow over this palette reads as dirt rather than depth.
+Shadows are cast in `shadow` at low alpha, never in neutral black. A grey shadow over this palette reads as dirt rather than depth. In light `shadow` is `ink`; in dark it is `#03060E`, because a shadow cast in the dark theme's light ink would glow. The alphas below are the light theme's; dark uses twice each, capped at 0.6.
 
 | Token | Value | Use |
 | --- | --- | --- |
@@ -129,7 +151,7 @@ Shadows are cast in `ink` at low alpha, never in neutral black. A grey shadow ov
 
 Name the card elevation `lift`, not `card`. In a Tailwind theme a shadow key that collides with a colour key is read as a shadow-*colour* utility, which silently renders the lift in white on a near-white page.
 
-Menus, dialogs, popovers and toasts keep the conventional four-step ramp, re-tinted to ink so borrowed components do not import a foreign grey: `sm` `0 1px 2px 0 / 0.06`, `md` `0 4px 6px -1px / 0.10`, `lg` `0 10px 15px -3px / 0.12`, `xl` `0 20px 25px -5px / 0.14`.
+Menus, dialogs, popovers and toasts keep the conventional four-step ramp, re-tinted to `shadow` so borrowed components do not import a foreign grey: `sm` `0 1px 2px 0 / 0.06`, `md` `0 4px 6px -1px / 0.10`, `lg` `0 10px 15px -3px / 0.12`, `xl` `0 20px 25px -5px / 0.14`.
 
 Elevation still signals interactivity. A card that is not actionable gets none of these, and neither does a static panel.
 
@@ -190,8 +212,11 @@ Nothing about the mark, the typography, the spacing scale, the layout grid, the 
 - Elevation, an icon specification, the radius scale, the column gutter, the breakpoints and the heading tracking values are now written down. All six were already decided in the implementation and simply undocumented, so these entries record existing practice rather than changing it.
 
 
-## Changes since 5.1
+## Changes in 5.2
 
+- A dark theme, Night Ink: a dark value for every palette token, the theme control and its behaviour, and the rules for marks, captures, paper and the heat field (see Dark theme). `palette.json` gains a `dark` object, and `brand-tokens.css` a `[data-theme="dark"]` block.
+- Elevation: shadows are cast in a new `shadow` token instead of `ink`, so the dark theme can cast them in near-black.
+- `mini-brand-sheet` still shows the light palette only.
 - Motion: from xl up the contact graph runs on the page's circuit, shown while it is closed and switched off while it is open (see Motion, Home).
 - Typography: the group label inside a section, and the stage heading set like it in ink, are written down (see Typography); the site had three versions of the label.
 - Fonts: IBM Plex Mono Medium joins the Regular, as WOFF2 with the Regular's character set, so the 500 the labels use is the real cut.
@@ -200,7 +225,7 @@ Nothing about the mark, the typography, the spacing scale, the layout grid, the 
 
 This kit defines an art direction and implementation baseline, not a finished website. The reference sheet contains representative samples rather than fictional projects or results. Final project names, evidence, contact details, and site languages still need real content.
 
-Dark mode and semantic success or error colours are not defined in this version. They should be added when the actual interface and form requirements are known.
+Semantic success or error colours are not defined in this version. They should be added when the actual interface and form requirements are known.
 
 ## Fonts and licences
 

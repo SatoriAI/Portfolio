@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   expired,
+  fieldPalette,
   heatAt,
   heatGradient,
   type HeatModel,
@@ -119,5 +120,24 @@ describe("prepare", () => {
 
   it("leaves out a source too faint to show anywhere", () => {
     expect(prepare([{ x: 0, y: 0, bornAt: 0 }], { ...model, peak: 0.001 }, 1)).toEqual([]);
+  });
+});
+
+describe("fieldPalette", () => {
+  it("rests on the page's or the section's ground in each theme", () => {
+    expect(fieldPalette("light").ground).toEqual([248, 249, 252]);
+    expect(fieldPalette("light", "surface").ground).toEqual([255, 255, 255]);
+    expect(fieldPalette("dark").ground).toEqual([14, 20, 36]);
+    expect(fieldPalette("dark", "surface").ground).toEqual([22, 31, 51]);
+  });
+
+  it("stains darker than its ground in light and glows lighter in dark", () => {
+    const sum = (rgb: readonly number[]) => rgb.reduce((a, b) => a + b, 0);
+    for (const ground of ["background", "surface"] as const) {
+      const light = fieldPalette("light", ground);
+      const dark = fieldPalette("dark", ground);
+      for (const heat of light.channels) expect(sum(heat)).toBeLessThan(sum(light.ground));
+      for (const heat of dark.channels) expect(sum(heat)).toBeGreaterThan(sum(dark.ground));
+    }
   });
 });

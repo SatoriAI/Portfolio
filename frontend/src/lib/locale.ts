@@ -40,18 +40,10 @@ export const localizedPath = (language: Language, path: string) => {
 /**
  * A reader's explicit choice of language, made with the toggle. Kept apart
  * from the `language` key the site used to write on every visit, which
- * cannot tell a choice from a default.
+ * cannot tell a choice from a default. public/boot.js reads it, by this name,
+ * to leave a reader who has chosen where they are.
  */
 export const LANGUAGE_CHOICE_KEY = "languageChoice";
-
-export const readLanguageChoice = (): Language | null => {
-  try {
-    const stored = localStorage.getItem(LANGUAGE_CHOICE_KEY);
-    return LANGUAGES.find((language) => language === stored) ?? null;
-  } catch {
-    return null;
-  }
-};
 
 export const storeLanguageChoice = (language: Language) => {
   try {
@@ -59,24 +51,4 @@ export const storeLanguageChoice = (language: Language) => {
   } catch {
     // Storage blocked: the choice holds for this visit, through the address.
   }
-};
-
-/**
- * Where the home page sends a reader before anything renders, or null to
- * stay. Only the English home page, only for a reader who has never chosen
- * a language and whose browser prefers Polish: every other address, and any
- * choice made with the toggle, is kept as it is. A crawler asks in English,
- * so it always reads the page it requested.
- */
-export const autoLanguageRedirect = ({
-  pathname,
-  choice,
-  browserLanguages,
-}: {
-  pathname: string;
-  choice: Language | null;
-  browserLanguages: readonly string[];
-}): string | null => {
-  if (pathname !== "/" || choice !== null) return null;
-  return (browserLanguages[0] ?? "").toLowerCase().startsWith("pl") ? "/pl" : null;
 };

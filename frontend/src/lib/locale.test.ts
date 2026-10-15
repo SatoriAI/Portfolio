@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { autoLanguageRedirect, languageOf, localizedPath, stripLanguage } from "./locale";
+import { languageOf, localizedPath, stripLanguage } from "./locale";
 
 describe("the language in an address", () => {
   it("is Polish under /pl, in any case and with or without a slash", () => {
@@ -24,36 +24,5 @@ describe("the language in an address", () => {
     expect(stripLanguage("/pl#projects")).toBe("/#projects");
     expect(stripLanguage("/PL/research?x=1#y")).toBe("/research?x=1#y");
     expect(stripLanguage("/plan")).toBe("/plan");
-  });
-});
-
-describe("autoLanguageRedirect", () => {
-  const polish = ["pl-PL", "en-GB"];
-
-  it("sends a Polish browser that has never chosen from the English home page to /pl", () => {
-    expect(autoLanguageRedirect({ pathname: "/", choice: null, browserLanguages: polish })).toBe(
-      "/pl",
-    );
-    expect(autoLanguageRedirect({ pathname: "/", choice: null, browserLanguages: ["PL"] })).toBe(
-      "/pl",
-    );
-  });
-
-  it("keeps any choice made with the toggle, English included", () => {
-    expect(autoLanguageRedirect({ pathname: "/", choice: "en", browserLanguages: polish })).toBe(
-      null,
-    );
-    expect(autoLanguageRedirect({ pathname: "/", choice: "pl", browserLanguages: polish })).toBe(
-      null,
-    );
-  });
-
-  it("never moves any other address, nor a browser that prefers another language", () => {
-    for (const pathname of ["/research", "/workshop/heat", "/pl", "/nope"]) {
-      expect(autoLanguageRedirect({ pathname, choice: null, browserLanguages: polish })).toBe(null);
-    }
-    for (const browserLanguages of [["en-US", "pl-PL"], ["de"], []]) {
-      expect(autoLanguageRedirect({ pathname: "/", choice: null, browserLanguages })).toBe(null);
-    }
   });
 });

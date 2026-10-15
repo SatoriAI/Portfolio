@@ -154,7 +154,12 @@ describe("serveConfig", () => {
       { source: "/pl/academic", destination: "/pl/research", type: 301 },
     ]);
     // Others' headers kept, then a page asked about on every visit, the bundle kept for good.
-    expect(config.headers?.map((entry) => entry.source)).toEqual(["**", "**/*.html", "assets/**"]);
+    expect(config.headers?.map((entry) => entry.source)).toEqual([
+      "**",
+      "**/*.html",
+      "boot.js",
+      "assets/**",
+    ]);
     expect(config.headers?.[0]).toBe(security);
   });
 

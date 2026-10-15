@@ -371,10 +371,10 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
               !answered
                 ? "border-iris bg-card text-iris"
                 : grade === "perfect"
-                  ? "border-iris bg-iris text-white"
+                  ? "border-iris bg-iris text-primary-foreground"
                   : grade === "almost"
                     ? "border-primary bg-primary text-primary-foreground"
-                    : "border-muted-foreground bg-muted-foreground text-white",
+                    : "border-muted-foreground bg-muted-foreground text-primary-foreground",
             )}
             style={{
               left: x(guess),

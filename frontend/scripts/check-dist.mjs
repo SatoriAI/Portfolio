@@ -2,8 +2,10 @@
 // sees. Every page must name its language and its canonical address, and its
 // alternates in both languages and x-default (a workshop piece written in one
 // language only has none); 404.html must name no address at all; and no file
-// may carry a script that runs from inline, which the site's policy
-// (script-src 'self') would block in production while it works locally.
+// may carry a script that runs from inline, nor a theme baked into <html>,
+// nor lack boot.js (theme and language before the first paint). An inline
+// script would work locally and be blocked in production by the site's
+// policy (script-src 'self').
 import { readdir, readFile } from "fs/promises";
 import path from "path";
 
@@ -24,6 +26,10 @@ for (const file of files) {
     const type = /\btype="([^"]*)"/.exec(attributes)?.[1];
     if (!/\bsrc=/.test(attributes) && !DATA_SCRIPTS.has(type)) fail("an inline script");
   }
+
+  // The theme is the reader's, set by boot.js; a page must never ship one.
+  if (/<html\b[^>]*\b(data-theme|class)=/.test(html)) fail("a theme baked into <html>");
+  if (!html.includes('<script src="/boot.js"></script>')) fail("no boot.js");
 
   const canonicals = html.match(/<link rel="canonical"/g)?.length ?? 0;
   const hreflangs = [...html.matchAll(/<link rel="alternate" hreflang="([^"]+)"/g)].map(

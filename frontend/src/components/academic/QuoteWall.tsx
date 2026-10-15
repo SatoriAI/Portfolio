@@ -217,7 +217,7 @@ const QuoteWall = ({ testimonials, themes, evidence, labels, className }: QuoteW
                 // Its tilt at rest, which it turns to as it is stuck up.
                 data-tilt={selected !== null && says ? 0 : index % 2 ? 1 : -1}
                 className={cn(
-                  "relative rounded-motif bg-note px-6 pb-6 pt-8 shadow-md",
+                  "paper relative rounded-motif bg-note px-6 pb-6 pt-8 shadow-md",
                   "transition-[opacity,transform] duration-200 ease-brand motion-reduce:transition-opacity",
                   says ? "opacity-100" : "opacity-40",
                   // Squared up while its theme is chosen; otherwise a degree

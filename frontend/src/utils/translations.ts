@@ -37,6 +37,9 @@ const copy = {
     common: {
       tagline: "Mathematician by training, engineer by trade",
       language: "Language",
+      appearance: "Appearance",
+      switchToLight: "Switch to light",
+      switchToDark: "Switch to dark",
       menu: "Menu",
       openMenu: "Open navigation menu",
       close: "Close",
@@ -723,6 +726,9 @@ const copy = {
     common: {
       tagline: "Matematyk z wykształcenia, inżynier z zawodu",
       language: "Język",
+      appearance: "Wygląd",
+      switchToLight: "Przełącz na jasny",
+      switchToDark: "Przełącz na ciemny",
       menu: "Menu",
       openMenu: "Otwórz menu nawigacji",
       close: "Zamknij",

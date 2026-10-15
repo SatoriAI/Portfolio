@@ -103,11 +103,13 @@ type ServeConfig = {
 
 /**
  * How long a browser keeps a file, matched on the file's path: a page is
- * asked about again on every visit, so a deploy shows at once; the bundle's
+ * asked about again on every visit, so a deploy shows at once, and so is
+ * boot.js, which every page runs first; the bundle's
  * files carry a hash of their content in their names, so they never change.
  */
 const CACHE_HEADERS: Headers[] = [
   { source: "**/*.html", headers: [{ key: "Cache-Control", value: "no-cache" }] },
+  { source: "boot.js", headers: [{ key: "Cache-Control", value: "no-cache" }] },
   {
     source: "assets/**",
     headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],

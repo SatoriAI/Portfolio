@@ -189,7 +189,7 @@ const TimelineDialog = <Id extends TimelineId>({
       <DialogPortal>
         <DialogOverlay
           ref={overlay}
-          className="bg-foreground/15 backdrop-blur-none data-[state=closed]:animate-none data-[state=open]:animate-none"
+          className="bg-scrim-faint backdrop-blur-none data-[state=closed]:animate-none data-[state=open]:animate-none"
         />
         <DialogPrimitive.Content
           ref={mountPanel}
@@ -204,7 +204,7 @@ const TimelineDialog = <Id extends TimelineId>({
             "sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[calc(100%-3rem)] sm:max-w-5xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-card sm:border sm:border-border"
           }
         >
-          <DialogPrimitive.Close className="tap-target absolute right-4 top-4 z-10 rounded-lg p-2 text-muted-foreground transition-colors duration-200 hover:bg-lavender hover:text-foreground">
+          <DialogPrimitive.Close className="tap-target absolute right-4 top-4 z-10 rounded-lg p-2 text-muted-foreground transition-colors duration-200 hover:bg-lavender-hover hover:text-foreground">
             <X className="h-4 w-4" />
             <span className="sr-only">{labels.close}</span>
           </DialogPrimitive.Close>
