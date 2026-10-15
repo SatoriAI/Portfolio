@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 
-import { workshopArticles } from "@/content/workshop";
+import { showDrafts, workshopArticles } from "@/content/workshop";
 import { useSettings } from "@/contexts/SettingsContext";
 import { applyHeadTags } from "@/lib/applyHeadTags";
 import { pageHeadTags } from "@/lib/headTags";
@@ -19,7 +19,10 @@ import { pageMeta } from "@/lib/pageMeta";
 export function usePageMeta() {
   const { pathname } = useLocation();
   const { language } = useSettings();
-  const head = useMemo(() => pageMeta(pathname, language, workshopArticles), [pathname, language]);
+  const head = useMemo(
+    () => pageMeta(pathname, language, workshopArticles, { drafts: showDrafts }),
+    [pathname, language],
+  );
 
   useEffect(() => {
     const previousTitle = document.title;

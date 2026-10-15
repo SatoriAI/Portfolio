@@ -40,13 +40,16 @@ const everyLanguage = (path: string): PageHead["alternates"] => [
  * prefix, in any case) in `language`. A workshop piece takes its title and
  * summary from `pieces`, as the page shows it; a piece written in one
  * language only names that language's address as canonical and has no
- * alternates. Any other path is not-found, without an address.
+ * alternates. Any other path is not-found, without an address. Drafts count
+ * only when asked for, as the workshop's pages show them (showDrafts).
  */
 export const pageMeta = (
   path: string,
   language: Language,
-  pieces: readonly ArticleHeader[],
+  all: readonly ArticleHeader[],
+  { drafts = false } = {},
 ): PageHead => {
+  const pieces = drafts ? all : all.filter((piece) => !piece.draft);
   const meta = translations[language].meta;
   const page = canonicalPath(path);
 
@@ -61,8 +64,7 @@ export const pageMeta = (
   }
 
   const slug = /^\/workshop\/([^/]+)$/.exec(page)?.[1];
-  const shown =
-    slug && articlesFor(pieces, language, { drafts: true }).find((p) => p.slug === slug);
+  const shown = slug && articlesFor(pieces, language, { drafts }).find((p) => p.slug === slug);
   if (shown) {
     const inBoth = LANGUAGES.every((other) =>
       pieces.some((piece) => piece.slug === slug && piece.language === other),

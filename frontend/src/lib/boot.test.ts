@@ -56,8 +56,11 @@ describe("boot.js, the language", () => {
     }
   });
 
-  it("ignores the old language key, written on every visit and so no choice", () => {
-    expect(boot({ languages: polish, stored: { language: "en" } }).replaced).toEqual(["/pl"]);
+  it("counts English under the old language key as a choice, and nothing else there", () => {
+    // Written on every visit as the browser's language, so for a Polish
+    // browser "en" there came from the toggle; "pl" there is just the default.
+    expect(boot({ languages: polish, stored: { language: "en" } }).replaced).toEqual([]);
+    expect(boot({ languages: polish, stored: { language: "pl" } }).replaced).toEqual(["/pl"]);
   });
 
   it("never moves any other address, nor a browser that prefers another language", () => {
@@ -78,7 +81,9 @@ describe("boot.js, the theme", () => {
     expect(boot({ storageThrows: true, dark: true }).theme).toBe("dark");
   });
 
-  it("is left alone when the page is leaving for /pl", () => {
-    expect(boot({ languages: polish, dark: true }).theme).toBeUndefined();
+  it("is set even when the page is leaving for /pl, so it never shows the wrong one", () => {
+    const leaving = boot({ languages: polish, dark: true });
+    expect(leaving.replaced).toEqual(["/pl"]);
+    expect(leaving.theme).toBe("dark");
   });
 });

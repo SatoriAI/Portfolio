@@ -80,6 +80,17 @@ describe("pageMeta", () => {
     }
   });
 
+  it("counts a draft only where the pages show drafts", () => {
+    const withDraft = [...pieces, { ...piece("clock", "pl", "Zegar"), draft: true }];
+    expect(pageMeta("/workshop/clock", "pl", withDraft).alternates).toEqual([]);
+    expect(pageMeta("/workshop/clock", "pl", withDraft, { drafts: true })).toMatchObject({
+      title: "Zegar · Dawid Hanrahan",
+      canonical: `${SITE}/pl/workshop/clock`,
+    });
+    const onlyDraft = [{ ...piece("new", "en", "New"), draft: true }];
+    expect(pageMeta("/workshop/new", "en", onlyDraft).canonical).toBeNull();
+  });
+
   it("gives an unknown address the not-found text and no address at all", () => {
     for (const path of ["/nope", "/workshop/nope", "/workshop/heat/more"]) {
       const head = pageMeta(path, "pl", pieces);

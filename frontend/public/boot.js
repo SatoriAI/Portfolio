@@ -11,6 +11,15 @@
     }
   };
 
+  // The theme first, so even a page that leaves at once never shows the
+  // wrong one: the reader's remembered choice, else the machine's.
+  // SettingsContext takes over after.
+  var theme = stored("theme");
+  if (theme !== "light" && theme !== "dark") {
+    theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  document.documentElement.dataset.theme = theme;
+
   // A reader opening the English home page who has never chosen a language
   // with the toggle (src/lib/locale.ts keeps that choice) and whose browser
   // prefers Polish goes to /pl, before the bundle is even fetched. No other
@@ -20,21 +29,17 @@
   var languages =
     navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
   var preferred = String(languages[0] || "").toLowerCase();
+  // The site used to store "language" on every visit, as the browser's
+  // language until the toggle changed it; for a browser that prefers Polish,
+  // "en" there can only have come from the toggle, so it counts as a choice.
+  var choseEnglishBefore = stored("language") === "en";
   if (
     location.pathname === "/" &&
     choice !== "en" &&
     choice !== "pl" &&
+    !choseEnglishBefore &&
     preferred.indexOf("pl") === 0
   ) {
     location.replace("/pl" + location.search + location.hash);
-    return;
   }
-
-  // The theme: the reader's remembered choice, else the machine's.
-  // SettingsContext takes over after.
-  var theme = stored("theme");
-  if (theme !== "light" && theme !== "dark") {
-    theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  }
-  document.documentElement.dataset.theme = theme;
 })();

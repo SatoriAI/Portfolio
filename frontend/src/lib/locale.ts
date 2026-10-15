@@ -40,8 +40,9 @@ export const localizedPath = (language: Language, path: string) => {
 /**
  * A reader's explicit choice of language, made with the toggle. Kept apart
  * from the `language` key the site used to write on every visit, which
- * cannot tell a choice from a default. public/boot.js reads it, by this name,
- * to leave a reader who has chosen where they are.
+ * mostly cannot tell a choice from a default (public/boot.js reads the one
+ * case it can). boot.js reads this key, by this name, to leave a reader who
+ * has chosen where they are.
  */
 export const LANGUAGE_CHOICE_KEY = "languageChoice";
 

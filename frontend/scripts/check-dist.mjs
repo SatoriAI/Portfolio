@@ -1,5 +1,6 @@
 // Run after `vite build`: checks the HTML the build wrote, which no unit test
-// sees. Every page must name its language and its canonical address, and its
+// sees. Every address in the sitemap must have its file, and every page must
+// name its language (Polish under pl/) and its canonical address, and its
 // alternates in both languages and x-default (a workshop piece written in one
 // language only has none); 404.html must name no address at all; and no file
 // may carry a script that runs from inline, nor a theme baked into <html>,
@@ -40,7 +41,9 @@ for (const file of files) {
       fail("names an address, though it answers for every unknown one");
     continue;
   }
-  if (!/<html lang="(en|pl)">/.test(html)) fail("no html lang");
+  // A file under pl/ is the Polish page, any other the English one.
+  const language = file.startsWith("pl/") ? "pl" : "en";
+  if (!html.includes(`<html lang="${language}">`)) fail(`not <html lang="${language}">`);
   if (canonicals !== 1) fail(`${canonicals} canonical links`);
   const complete = hreflangs.join() === HREFLANGS.join();
   const oneLanguagePiece =
@@ -48,7 +51,25 @@ for (const file of files) {
   if (!complete && !oneLanguagePiece) fail(`alternates ${JSON.stringify(hreflangs)}`);
 }
 
-if (files.length < 2) problems.push(`only ${files.length} HTML files in ${dist}`);
+// Every address the sitemap lists has its file, and so does 404.html. A file
+// the sitemap leaves out is only the other language of a one-language piece,
+// whose canonical names the page that is listed.
+const sitemap = await readFile(path.join(dist, "sitemap.xml"), "utf8");
+const listed = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(([, loc]) => {
+  const { pathname } = new URL(loc);
+  return pathname === "/" ? "index.html" : `${pathname.slice(1)}/index.html`;
+});
+if (listed.length === 0) problems.push("sitemap.xml lists no address");
+for (const file of [...listed, "404.html"]) {
+  if (!files.includes(file)) problems.push(`${file}: missing`);
+}
+for (const file of files.filter((name) => name !== "404.html" && !listed.includes(name))) {
+  const html = await readFile(path.join(dist, file), "utf8");
+  const canonical = /<link rel="canonical" href="([^"]+)"/.exec(html)?.[1];
+  const own = `/${file.replace(/(^|\/)index\.html$/, "")}`;
+  if (!canonical || new URL(canonical).pathname === own)
+    problems.push(`${file}: a page the sitemap does not list`);
+}
 if (problems.length) {
   console.error(`check-dist: ${problems.length} problem(s)\n${problems.join("\n")}`);
   process.exit(1);
