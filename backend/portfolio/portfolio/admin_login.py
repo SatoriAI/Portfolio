@@ -4,10 +4,12 @@ front of the password check:
 - one IP at one username gets PAIR_LIMIT attempts, and is then refused until PAIR_WINDOW_SECONDS have passed since
   the last attempt that was checked. The pair, not either half alone: per IP, an office or a mobile network would share
   one count; per username alone, it would be the only limit, and anyone could lock Dawid out in a few tries.
-- one username gets USERNAME_LIMIT attempts in USERNAME_WINDOW_SECONDS from all IPs together, and is then refused for
-  the rest of that window. This is what stops a guesser spread over many IPs. Its price is that such a guesser can
-  keep Dawid out for up to the window; that was accepted. Only attempts the pair limit lets through count here, so
-  one IP adds at most PAIR_LIMIT per PAIR_WINDOW_SECONDS and cannot reach the ceiling alone.
+- one username gets USERNAME_LIMIT attempts per clock hour (USERNAME_WINDOW_SECONDS) from all IPs together, and is
+  then refused for the rest of that hour. This is what stops a guesser spread over many IPs. Its price is that such a
+  guesser can keep Dawid out for up to the hour; that was accepted. Only attempts the pair limit lets through count
+  here, so one IP adds at most PAIR_LIMIT per PAIR_WINDOW_SECONDS and cannot reach the ceiling alone. An attempt the
+  username's ceiling refuses has still counted on, and renewed, its pair's window, so a pair can stay locked up to
+  PAIR_WINDOW_SECONDS past the username's hour.
 
 Every attempt is counted before its password is checked; a success clears its pair's count. Checking first and
 counting after would let any number of simultaneous attempts through the check, each seeing the count as it was
@@ -20,6 +22,7 @@ deploy does not reset them. Like Vex's own limits it fails open: with Redis down
 unthrottled rather than refusing every sign-in."""
 
 import hashlib
+import time
 from typing import Any, NoReturn
 
 from django.contrib.admin.forms import AdminAuthenticationForm
@@ -48,8 +51,15 @@ def pair_key(request: HttpRequest | None, username: str) -> str:
     return f"admin-login-attempts:{ip}:{_hashed(username)}"
 
 
+def username_window() -> int:
+    """The clock hour (for USERNAME_WINDOW_SECONDS of an hour) an attempt falls in."""
+    return int(time.time()) // USERNAME_WINDOW_SECONDS
+
+
 def username_key(username: str) -> str:
-    return f"admin-login-attempts:{_hashed(username)}"
+    # The window is in the key, so a key that somehow lost its expiry stops being used when its hour ends, rather than
+    # locking the username for good. The expiry it is given only clears it away.
+    return f"admin-login-attempts:{username_window()}:{_hashed(username)}"
 
 
 def _reserve(key: str, timeout: int) -> int:
@@ -57,7 +67,9 @@ def _reserve(key: str, timeout: int) -> int:
 
     Django's incr checks that the key exists and then increments it, and the key can expire in between. Before the
     check, incr raises ValueError: that one attempt goes uncounted. After it, Redis creates the key afresh at 1 with no
-    expiry at all, which would count for ever; so a count of 1, however it came about, gets the window's expiry."""
+    expiry at all; so a count of 1, however it came about, gets the window's expiry. Neither limit depends on that
+    (the pair's expiry is renewed by every attempt it checks, and the username's key changes every window), but it
+    keeps stray keys from piling up in Redis."""
     vex_cache.add(key, 0, timeout)
     try:
         count = int(vex_cache.incr(key))
@@ -86,7 +98,7 @@ class ThrottledAdminAuthenticationForm(AdminAuthenticationForm):
                 self._refuse(PAIR_WINDOW_SECONDS)
             # Sliding: the pair's lockout runs from its latest checked attempt. Refused ones do not extend it.
             vex_cache.touch(pair, PAIR_WINDOW_SECONDS)
-            # A fixed window, never refreshed. Successes count too: fifty an hour is far beyond Dawid's own use.
+            # A fixed window, the clock hour. Successes count too: fifty an hour is far beyond Dawid's own use.
             if _reserve(username_key(username), USERNAME_WINDOW_SECONDS) > USERNAME_LIMIT:
                 self._refuse(USERNAME_WINDOW_SECONDS)
         except CacheUnavailable:

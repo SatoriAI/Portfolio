@@ -17,6 +17,7 @@ from portfolio.admin_login import (
     USERNAME_WINDOW_SECONDS,
     _reserve,
     pair_key,
+    username_key,
     vex_cache,
 )
 
@@ -154,10 +155,31 @@ class AdminLoginThrottleTestCase(TestCase):
             self.assert_locked(self.sign_in(PASSWORD))
         checked.assert_not_called()
 
+    def test_a_username_count_stranded_without_expiry_does_not_lock_the_next_hour(self) -> None:
+        now = time.time()
+        with patch("time.time", return_value=now - USERNAME_WINDOW_SECONDS):
+            vex_cache.set(username_key("admin"), USERNAME_LIMIT * 10, None)  # no expiry at all
+            self.assert_locked(self.sign_in(PASSWORD, ip="2.2.2.2"))
+        with patch("time.time", return_value=now):
+            self.assert_signed_in(self.sign_in(PASSWORD, ip="3.3.3.3"))
+
     def test_one_ips_flood_does_not_use_up_the_usernames_ceiling(self) -> None:
         for _ in range(USERNAME_LIMIT + 10):
             self.sign_in(WRONG)
         self.assert_signed_in(self.sign_in(PASSWORD, ip="2.2.2.2"))
+
+    @override_settings(CACHES=REDIS_DOWN)
+    def test_with_redis_down_passwords_are_checked_unthrottled(self) -> None:
+        with self.assertLogs("vex.utils.cache", level="ERROR"):
+            self.fail_sign_ins()
+            self.assert_signed_in(self.sign_in(PASSWORD))
+
+
+class ReserveTestCase(TestCase):
+    """Counting one attempt when the key expires in the middle of Django's incr."""
+
+    def setUp(self) -> None:
+        vex_cache.clear()
 
     def test_a_key_that_expires_before_incr_checks_it_leaves_the_attempt_uncounted(self) -> None:
         with patch.object(vex_cache, "add"):  # as if the key expired right after add
@@ -178,9 +200,3 @@ class AdminLoginThrottleTestCase(TestCase):
         with patch.object(vex_cache, "incr", side_effect=expiring_incr):
             self.assertEqual(_reserve("admin-login-attempts:test", 60), 1)
         self.assertTrue(0 < client.ttl(key) <= 60)
-
-    @override_settings(CACHES=REDIS_DOWN)
-    def test_with_redis_down_passwords_are_checked_unthrottled(self) -> None:
-        with self.assertLogs("vex.utils.cache", level="ERROR"):
-            self.fail_sign_ins()
-            self.assert_signed_in(self.sign_in(PASSWORD))
