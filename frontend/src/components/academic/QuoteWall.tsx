@@ -178,15 +178,17 @@ const QuoteWall = ({ testimonials, themes, evidence, labels, className }: QuoteW
                   className={cn(
                     "flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors duration-200",
                     pressed
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-control-border bg-card text-foreground hover:border-iris hover:text-iris",
+                      ? "border-chosen-edge bg-chosen text-chosen-foreground"
+                      : // The ink edge and the panel tint: in dark the
+                        // chosen chip's lavender and iris edge stay its own.
+                        "border-control-border bg-card text-foreground hover:border-foreground hover:bg-lavender",
                   )}
                 >
                   {theme.label}
                   <span
                     className={cn(
                       "font-mono text-meta",
-                      pressed ? "text-primary-foreground/70" : "text-muted-foreground",
+                      pressed ? "text-chosen-foreground/70" : "text-muted-foreground",
                     )}
                   >
                     {counts[theme.key]}

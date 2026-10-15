@@ -373,7 +373,8 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
                 : grade === "perfect"
                   ? "border-iris bg-iris text-primary-foreground"
                   : grade === "almost"
-                    ? "border-primary bg-primary text-primary-foreground"
+                    ? // A result, not an action: chosen, so in dark it is no light slab.
+                      "border-chosen-edge bg-chosen text-chosen-foreground"
                     : "border-muted-foreground bg-muted-foreground text-primary-foreground",
             )}
             style={{

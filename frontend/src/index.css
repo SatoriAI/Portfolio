@@ -69,6 +69,16 @@
     --lavender-hover: 257 71% 93%; /* #E8E1FA */
     /* The circuit's bands of white light. */
     --sheen: 0 0% 100%; /* #FFFFFF */
+    /* A chosen state that is not an action: the pressed segment or filter,
+       and the reader's own message. Navy, as primary, in light. */
+    --chosen: var(--ink);
+    --chosen-foreground: var(--surface);
+    --chosen-edge: var(--ink);
+    /* A primary button that cannot be pressed: the fill faded in light. */
+    --primary-disabled: var(--ink);
+    --primary-disabled-foreground: var(--surface);
+    --primary-disabled-edge: var(--ink);
+    --primary-disabled-opacity: 0.5;
     /* Every shadow is cast in this, at the kit's alphas times the strength:
        ink in light. In dark, ink turns light and a shadow in it would glow. */
     --shadow: var(--ink);
@@ -146,6 +156,20 @@
     --destructive: 355 77% 74%;
     /* Near-white, faintly iris: a band of light on the lit wire, not a gap. */
     --sheen: 248 100% 97%; /* #F2F0FF */
+    /* The light fill is for primary actions only: in dark it is the
+       brightest thing on the page. A chosen state is lavender with an iris
+       edge (7.3:1 on surface), so it never rests on the pale fill alone. */
+    --chosen: var(--lavender-hover);
+    --chosen-foreground: var(--ink);
+    --chosen-edge: var(--iris);
+    /* A disabled primary button is off, not a faded beacon: the card, muted
+       text and the decorative edge. The control edge would make it the
+       outline button, which is enabled; disabled controls are exempt from
+       the 3:1 boundary rule. */
+    --primary-disabled: var(--surface);
+    --primary-disabled-foreground: var(--text-secondary);
+    --primary-disabled-edge: var(--border);
+    --primary-disabled-opacity: 1;
   }
 
   /* Paper stays paper: the teaching notes keep light-theme writing and the
