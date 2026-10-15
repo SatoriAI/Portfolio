@@ -41,7 +41,7 @@ class AdminLoginThrottleTestCase(TestCase):
         headers = {"X-Real-IP": ip} if ip else {}
         return self.client.post(self.url, {"username": username, "password": password}, headers=headers)
 
-    def fail(self, times: int = FAILURE_LIMIT, **kwargs: str | None) -> None:
+    def fail_sign_ins(self, times: int = FAILURE_LIMIT, **kwargs: str | None) -> None:
         for _ in range(times):
             response = self.sign_in(WRONG, **kwargs)
             self.assertEqual(response.status_code, 200)
@@ -55,15 +55,15 @@ class AdminLoginThrottleTestCase(TestCase):
         self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_the_right_password_is_refused_once_the_pair_has_failed_too_often(self) -> None:
-        self.fail()
+        self.fail_sign_ins()
         self.assert_locked(self.sign_in(PASSWORD))
 
     def test_one_fewer_failure_does_not_lock(self) -> None:
-        self.fail(FAILURE_LIMIT - 1)
+        self.fail_sign_ins(FAILURE_LIMIT - 1)
         self.assert_signed_in(self.sign_in(PASSWORD))
 
     def test_the_lock_holds_one_ip_at_one_username(self) -> None:
-        self.fail()
+        self.fail_sign_ins()
         self.assert_signed_in(self.sign_in(PASSWORD, ip="2.2.2.2"))
         self.assertNotContains(self.sign_in(WRONG, username="someone-else"), LOCKED)
 
@@ -77,22 +77,22 @@ class AdminLoginThrottleTestCase(TestCase):
         self.assert_locked(self.sign_in(PASSWORD))
 
     def test_requests_without_the_header_share_one_count(self) -> None:
-        self.fail(ip=None)
+        self.fail_sign_ins(ip=None)
         self.assert_locked(self.sign_in(PASSWORD, ip=None))
         self.assert_signed_in(self.sign_in(PASSWORD))
 
     def test_a_successful_sign_in_clears_the_count(self) -> None:
-        self.fail(FAILURE_LIMIT - 1)
+        self.fail_sign_ins(FAILURE_LIMIT - 1)
         self.assert_signed_in(self.sign_in(PASSWORD))
-        self.fail(FAILURE_LIMIT - 1)
+        self.fail_sign_ins(FAILURE_LIMIT - 1)
         self.assert_signed_in(self.sign_in(PASSWORD))
 
     def test_the_lock_lifts_once_the_window_since_the_last_failure_has_passed(self) -> None:
         now, last = time.time(), time.time() + 600
         with patch("time.time", return_value=now):
-            self.fail(FAILURE_LIMIT - 1)
+            self.fail_sign_ins(FAILURE_LIMIT - 1)
         with patch("time.time", return_value=last):
-            self.fail(1)
+            self.fail_sign_ins(1)
         with patch("time.time", return_value=now + LOCKOUT_SECONDS + 1):
             self.assert_locked(self.sign_in(PASSWORD))
         with patch("time.time", return_value=last + LOCKOUT_SECONDS + 1):
@@ -101,5 +101,5 @@ class AdminLoginThrottleTestCase(TestCase):
     @override_settings(CACHES=REDIS_DOWN)
     def test_with_redis_down_passwords_are_checked_unthrottled(self) -> None:
         with self.assertLogs("vex.utils.cache", level="ERROR"):
-            self.fail()
+            self.fail_sign_ins()
             self.assert_signed_in(self.sign_in(PASSWORD))

@@ -22,10 +22,10 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 
-from portfolio.admin_login import ThrottledAdminAuthenticationForm
-
 # Used for building examples with translations in the documentation
 from utils.drf import ParlerTranslatedFieldsFieldExtension  # noqa: F401  # pylint: disable=unused-import
+
+from .admin_login import ThrottledAdminAuthenticationForm
 
 admin.site.login_form = ThrottledAdminAuthenticationForm
 
