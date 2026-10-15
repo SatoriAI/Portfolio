@@ -19,9 +19,9 @@ class WorkContentTestCase(TestCase):
         self.role = Experience.objects.create(
             position="Python Developer",
             start="2022-09-01",
-            company="Xperi",
+            company="Kelvinbrook",
             technologies=["Python"],
-            location="Wroclaw",
+            location="Testowo",
         )
 
     def test_a_database_matches_its_own_export(self) -> None:

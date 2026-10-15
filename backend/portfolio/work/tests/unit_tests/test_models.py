@@ -104,7 +104,7 @@ class WorkModelsTestCase(TestCase):
         self.assertFalse(obj.mobile)
 
     def test_project_can_be_marked_as_a_phone_app(self) -> None:
-        obj = Project.objects.create(title="Slip", mobile=True)
+        obj = Project.objects.create(title="Tallyfox", mobile=True)
         obj.refresh_from_db()
         self.assertTrue(obj.mobile)
 

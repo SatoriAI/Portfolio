@@ -15,8 +15,8 @@ describe("internalPath", () => {
   });
 
   it("turns the site's full address into a path, on any of its hosts", () => {
-    expect(internalPath("https://www.dawidhanrahan.com/experience#nokia", origin)).toBe(
-      "/experience#nokia",
+    expect(internalPath("https://www.dawidhanrahan.com/experience#gridwhistle", origin)).toBe(
+      "/experience#gridwhistle",
     );
     expect(internalPath("https://dawidhanrahan.com/education", origin)).toBe("/education");
     expect(internalPath("http://localhost:8080/research?x=1", "http://localhost:8080")).toBe(
@@ -25,9 +25,9 @@ describe("internalPath", () => {
   });
 
   it("leaves other sites, other schemes and protocol-relative links to a new tab", () => {
-    expect(internalPath("https://picko.world", origin)).toBeNull();
+    expect(internalPath("https://tallyfox.example.com", origin)).toBeNull();
     expect(internalPath("//evil.example/research", origin)).toBeNull();
-    expect(internalPath("mailto:dawid@example.com", origin)).toBeNull();
+    expect(internalPath("mailto:jan@example.com", origin)).toBeNull();
     expect(internalPath("javascript:alert(1)", origin)).toBeNull();
     expect(internalPath(undefined, origin)).toBeNull();
   });

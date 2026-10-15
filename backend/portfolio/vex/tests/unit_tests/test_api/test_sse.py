@@ -335,7 +335,7 @@ class AskedFromStreamTestCase(StreamViewTestCase):
         return model
 
     def test_a_question_asked_from_a_role_carries_the_role_and_keeps_it_for_later_turns(self) -> None:
-        role = ExperienceFactory(role="Python Web Developer", company="Nokia", start=date(2020, 1, 1), end=None)
+        role = ExperienceFactory(role="Python Web Developer", company="Gridwhistle", start=date(2020, 1, 1), end=None)
         line = resolve_context({"kind": "experience", "id": role.pk})
         session = session_key()
 

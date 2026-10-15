@@ -71,7 +71,6 @@ class CaseResult:
 class Report:
     repeats: int = 1
     threshold: float = 0.9
-    knowledge: str = "fixture"
     digests: dict[str, str] = field(default_factory=dict)
     results: list[CaseResult] = field(default_factory=list)
 
@@ -105,7 +104,6 @@ class Report:
             "reasoning_effort": settings.VEX_REASONING_EFFORT,
             "judge": JUDGE_MODEL,
             "judge_reasoning_effort": JUDGE_REASONING_EFFORT,
-            "knowledge": self.knowledge,
             "knowledge_digests": self.digests,
             "repeats": self.repeats,
             "threshold": self.threshold,
@@ -183,8 +181,7 @@ class Report:
                 self.headline(),
                 "",
                 f"Model `{setup['model']}` ({setup['reasoning_effort']}), judge `{setup['judge']}` "
-                f"({setup['judge_reasoning_effort']}), prompt `{setup['prompt_version']}`, "
-                f"{setup['knowledge']} knowledge.",
+                f"({setup['judge_reasoning_effort']}), prompt `{setup['prompt_version']}`.",
                 "",
                 "| | Case | Runs passed | Problems |",
                 "|---|---|---|---|",

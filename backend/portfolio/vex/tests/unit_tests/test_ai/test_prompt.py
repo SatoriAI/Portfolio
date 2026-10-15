@@ -9,7 +9,7 @@ from vex.tests.factories import ConfigurationFactory, DocumentFactory
 from vex.utils.cache import cache
 
 
-@override_settings(VEX_SITE_CONTENT_URL="", VEX_CONTACT_EMAIL="dawid@example.com")
+@override_settings(VEX_SITE_CONTENT_URL="", VEX_CONTACT_EMAIL="jan@example.com")
 class PromptTestCase(TestCase):
     def setUp(self) -> None:
         cache.clear()
@@ -18,12 +18,12 @@ class PromptTestCase(TestCase):
 
     def test_rules_then_persona_then_knowledge(self) -> None:
         ConfigurationFactory(i18n={"en": {"system_prompt": "Be breezy."}, "pl": {"system_prompt": "Bądź luzacki."}})
-        DocumentFactory(title="Favourites", language="pl", description="", url=None, content="Spaghetti.")
+        DocumentFactory(title="Favourites", language="pl", description="", url=None, content="Shakshuka.")
         prompt = system_prompt("pl")
         rules = prompt.index("You are Vex")
         notes = prompt.index("<persona>\nBądź luzacki.\n</persona>")
         known = prompt.index(
-            '<knowledge>\n<source kind="document" title="Favourites">\nSpaghetti.\n</source>\n</knowledge>'
+            '<knowledge>\n<source kind="document" title="Favourites">\nShakshuka.\n</source>\n</knowledge>'
         )
         self.assertLess(rules, notes)
         self.assertLess(notes, known)
@@ -31,7 +31,7 @@ class PromptTestCase(TestCase):
 
     def test_the_rules_name_the_contact_address_and_the_sites_language(self) -> None:
         polish, english = system_prompt("pl"), system_prompt("en")
-        self.assertIn("[dawid@example.com](mailto:dawid@example.com)", polish)
+        self.assertIn("[jan@example.com](mailto:jan@example.com)", polish)
         self.assertIn("reply in Polish", polish)
         self.assertIn("reply in English", english)
 

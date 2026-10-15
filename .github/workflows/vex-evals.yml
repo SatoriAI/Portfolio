@@ -5,15 +5,16 @@
 #
 # It costs money, so it runs only when her brain changes, once a week on main
 # (the model behind the API can change under an unchanged prompt), and on
-# request. Vex answers from the evals' own fixture, in an empty database: the
-# site's public content and made-up personal notes, never Dawid's documents.
+# request. Vex answers, under her real rules, for an invented site owner from
+# the evals' own knowledge about him, in an empty database: nothing about
+# Dawid, public or private, goes into the run.
 name: Vex Evals
 
 on:
   pull_request:
     # Whatever decides what Vex reads and how she answers, and what the run is
-    # built from. The rest of the frontend, its pages and styles, never
-    # reaches her.
+    # built from. The frontend is not among them: the run reads the invented
+    # owner's site writing from the evals, not the site's Markdown.
     paths:
       - 'backend/portfolio/vex/ai/**'
       - 'backend/portfolio/vex/models.py'
@@ -31,12 +32,6 @@ on:
       - 'backend/portfolio/university/models.py'
       - 'backend/portfolio/university/choices.py'
       - 'backend/portfolio/locale/**'
-      # The site's Markdown, and the frontend's build of it for her (vex-kb).
-      - 'frontend/src/content/**'
-      - 'frontend/src/lib/vexKnowledge.ts'
-      - 'frontend/src/lib/vexKnowledgeFiles.ts'
-      - 'frontend/src/lib/workshop.ts'
-      - 'frontend/vite.config.ts'
       # The run's environment and command.
       - 'backend/pyproject.toml'
       - 'backend/uv.lock'
@@ -106,7 +101,7 @@ jobs:
     services:
       postgres:
         # As in backend-quality.yml. The evals build an empty test database on
-        # it and load their fixture there.
+        # it and create the invented owner's rows there.
         image: pgvector/pgvector:pg17
         ports:
           - 5432:5432

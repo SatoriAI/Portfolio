@@ -77,10 +77,10 @@ describe("buildTimeline", () => {
 
 describe("companyInitials", () => {
   it("takes the capitals of the first word, at most two", () => {
-    expect(companyInitials("Nokia Solutions and Networks")).toBe("N");
-    expect(companyInitials("Xperi")).toBe("X");
-    expect(companyInitials("PeakData")).toBe("PD");
-    expect(companyInitials("CloudFerro")).toBe("CF");
+    expect(companyInitials("Gridwhistle Power Networks")).toBe("G");
+    expect(companyInitials("Kelvinbrook")).toBe("K");
+    expect(companyInitials("LedgerLark")).toBe("LL");
+    expect(companyInitials("TideBell")).toBe("TB");
   });
 
   it("falls back to the first letter of a name without capitals", () => {
@@ -90,8 +90,8 @@ describe("companyInitials", () => {
 
 describe("companyShortName", () => {
   it("keeps the first word, and a one-word name whole", () => {
-    expect(companyShortName("Nokia Solutions and Networks")).toBe("Nokia");
-    expect(companyShortName("CloudFerro")).toBe("CloudFerro");
+    expect(companyShortName("Gridwhistle Power Networks")).toBe("Gridwhistle");
+    expect(companyShortName("TideBell")).toBe("TideBell");
   });
 });
 

@@ -13,7 +13,7 @@ const role = (
   position: "Python Developer",
   start: "2024-04-01",
   end: "",
-  company: "CloudFerro",
+  company: "Kelvinbrook",
   technologies: ["Python"],
   ...extra,
 });

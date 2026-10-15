@@ -44,19 +44,19 @@ class OptionsTestCase(SimpleTestCase):
 class LanguageTestCase(SimpleTestCase):
     def test_the_language_with_more_signs(self) -> None:
         for text, language in (
-            ("Dawid jest programistą.", "pl"),
-            ("Dawid is a programmer and a teacher.", "en"),
+            ("Jan jest programistą.", "pl"),
+            ("Jan is a programmer and a teacher.", "en"),
             ("The answer jest here.", "mixed"),
-            ("Dawid uprawia hokej podwodny", None),
+            ("Jan uprawia hokej podwodny", None),
             ("", None),
         ):
             with self.subTest(text=text):
                 self.assertEqual(language_of(text), language)
 
     def test_a_mixed_answer_fails_the_language_check(self) -> None:
-        case = Case("mixed", "Kim jest Dawid?", "pl", language="pl")
+        case = Case("mixed", "Kim jest Jan?", "pl", language="pl")
         self.assertEqual(failures(case, "The answer jest here."), ["answered in a mix of languages, not pl"])
-        self.assertEqual(failures(case, "Dawid uprawia hokej podwodny"), [])
+        self.assertEqual(failures(case, "Jan uprawia hokej podwodny"), [])
 
 
 class ReportTestCase(SimpleTestCase):

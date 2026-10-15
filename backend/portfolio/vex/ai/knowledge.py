@@ -31,14 +31,15 @@ TTL_SECONDS = 300
 SITE_TIMEOUT = httpx.Timeout(5, connect=2)
 SITE_MAX_BYTES = 4_000_000
 
-# The rows Vex reads, as each model exposes them (vex_queryset, representation_for), with the page that shows them.
+# The rows Vex reads, as each model exposes them (vex_queryset, representation_for), with the page that shows them
+# and the section's title ({name}: the site owner's first name).
 DATABASE_SECTIONS: tuple[tuple[type[models.Model], str, str, tuple[str, ...]], ...] = (
     (Experience, "/experience", "Work experience", ("-start", "pk")),
     (Skill, "/experience", "Skills", ("pk",)),
     (Project, "/#projects", "Projects", ("pk",)),
     (School, "/education", "Education", ("-start", "pk")),
     (Publication, "/research", "Publications", ("-year", "pk")),
-    (Testimonial, "/education", "What students say about Dawid's teaching", ("pk",)),
+    (Testimonial, "/education", "What students say about {name}'s teaching", ("pk",)),
 )
 
 Kind = Literal["document", "site", "database"]
@@ -101,7 +102,7 @@ def database_sources(locale: str) -> list[Source]:
             queryset = queryset.prefetch_related("translations")
         text = "\n\n".join(row.representation_for(locale) for row in queryset)
         if text:
-            sources.append(Source("database", title, text, path))
+            sources.append(Source("database", title.format(name=settings.VEX_OWNER_FIRST_NAME), text, path))
     return sources
 
 

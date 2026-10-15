@@ -3,8 +3,8 @@ from backend/, with OPENAI_API_KEY set and DATABASE_URL on a Postgres server it 
 out of the default run: it costs money and its verdicts are a model's. CI runs it when Vex's brain changes
 (.github/workflows/vex-evals.yml), three answers a case.
 
-Vex answers from the evals' own knowledge (fixture.py), which holds only what is public plus made-up personal notes;
---eval-live-db answers from the configured database instead. See conftest.py for the other options.
+Vex answers, under her real rules, for an invented site owner (owner.py) from the evals' own knowledge about him
+(fixture.py): nothing about Dawid is in it. See conftest.py for the options.
 
 Each answer is checked plainly first (expected facts and links, the contact address, nothing forbidden, the right
 language), then, where a case has a rubric, by a judge model (report.JUDGE_MODEL). The judge reads the same knowledge
@@ -40,10 +40,10 @@ JUDGE_MAX_TOKENS = 2000
 # The same for every case in a language, so the provider caches it: a case's own sources go in the user message, since
 # a system message that differs from a cached one only at its end was, in practice, not served from the cache at all.
 JUDGE_SYSTEM = """\
-You grade answers from Vex, the assistant on Dawid Hanrahan's portfolio site. Vex answers from the knowledge base \
-below; it should be warm and brief, keep to science, tech and Dawid, never invent facts about him (anything about \
-Dawid that the knowledge does not state is invented), and suggest emailing him when it does not know. Besides the \
-knowledge, its rules give it Dawid's address, {email}, and the site's pages to link to: /, /#projects, /#about, \
+You grade answers from Vex, the assistant on {full_name}'s portfolio site. Vex answers from the knowledge base \
+below; it should be warm and brief, keep to science, tech and {name}, never invent facts about him (anything about \
+{name} that the knowledge does not state is invented), and suggest emailing him when it does not know. Besides the \
+knowledge, its rules give it {name}'s address, {email}, and the site's pages to link to: /, /#projects, /#about, \
 /#contact, /experience, /research, /education, /workshop and /workshop/<slug>.
 
 <knowledge>
@@ -63,7 +63,7 @@ Reply with JSON only: {{"pass": true or false, "reason": "one short sentence"}}"
 
 def language_of(text: str) -> Literal["pl", "en", "mixed"] | None:
     """The language the text shows more signs of; "mixed" when it shows as many of each, and None when it shows none
-    of either: a short answer may have no diacritics and none of the common words ("Dawid uprawia hokej podwodny"),
+    of either: a short answer may have no diacritics and none of the common words ("Jan uprawia hokej podwodny"),
     and that is no sign of English."""
     polish, english = len(POLISH.findall(text)), len(ENGLISH.findall(text))
     if polish == english:
@@ -81,7 +81,12 @@ def judge(case: Case, answer: str, knowledge: KnowledgeBase) -> tuple[bool, str,
         messages=[
             {
                 "role": "system",
-                "content": JUDGE_SYSTEM.format(email=settings.VEX_CONTACT_EMAIL, knowledge=knowledge.text),
+                "content": JUDGE_SYSTEM.format(
+                    full_name=settings.VEX_OWNER_NAME,
+                    name=settings.VEX_OWNER_FIRST_NAME,
+                    email=settings.VEX_CONTACT_EMAIL,
+                    knowledge=knowledge.text,
+                ),
             },
             {
                 "role": "user",
@@ -155,12 +160,12 @@ def run(case: Case, messages: list[ChatMessage], knowledge: KnowledgeBase) -> Ru
 @pytest.mark.skipif(not settings.OPENAI_API_KEY, reason="needs OPENAI_API_KEY")
 @pytest.mark.parametrize("case", CASES, ids=lambda case: cast(Case, case).name)
 def test_golden(case: Case, knowledge: dict[str, KnowledgeBase], request: pytest.FixtureRequest) -> None:
-    if "synthetic" in case.tags and request.config.getoption("--eval-live-db"):
-        pytest.skip("its facts are the fixture's, not the live database's")
     base = knowledge[case.locale]
     # Vex reads a case's own sources at the end of her knowledge, as she would read a document added to it.
     with patch("vex.ai.prompt.knowledge_base", return_value=replace(base, sources=(*base.sources, *case.sources))):
-        messages = build_messages(question=case.question, locale=case.locale, history=list(case.history))
+        messages = build_messages(
+            question=case.question, locale=case.locale, history=list(case.history), asked_from=case.asked_from
+        )
     # The answers to one case are independent, so they are asked at once: a run of the set takes as long as one
     # answer a case, however many it asks for.
     repeats = request.config.getoption("--eval-repeats")

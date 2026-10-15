@@ -50,7 +50,13 @@ const texts = (state: ChatState) =>
 describe("where a question was asked", () => {
   it("names a role and a project by the ids the API gave them", () => {
     const role = mapApiExperienceToUi(
-      { id: 7, company: "Nokia", start: "2020-01-01", end: "", translations: {} } as ApiExperience,
+      {
+        id: 7,
+        company: "Gridwhistle",
+        start: "2020-01-01",
+        end: "",
+        translations: {},
+      } as ApiExperience,
       "pl",
     );
     const project = mapApiProjectToUi(

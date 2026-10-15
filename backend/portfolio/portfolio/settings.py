@@ -298,6 +298,10 @@ VEX_DAILY_BUDGET_USD = Decimal(env("VEX_DAILY_BUDGET_USD", default="5.00"))
 VEX_SITE_CONTENT_URL = env("VEX_SITE_CONTENT_URL", default="http://localhost:8080" if DEBUG else "")
 # The address Vex offers when it does not know; the one the site's contact section shows.
 VEX_CONTACT_EMAIL = env("VEX_CONTACT_EMAIL", default="dawidhanrahan@gmail.com")
+# Whose site Vex speaks for, as her rules name him: in full once, then by first name. The evals swap in the invented
+# owner of their own knowledge (vex/tests/evals/owner.py).
+VEX_OWNER_NAME = "Dawid Hanrahan"
+VEX_OWNER_FIRST_NAME = "Dawid"
 
 # Logs to stdout, which is what Railway keeps: Vex's own INFO lines (one per answer, with its tokens and timings) and
 # Django's warnings and errors. Without this, Vex's INFO lines are dropped and Django's errors go only to email.

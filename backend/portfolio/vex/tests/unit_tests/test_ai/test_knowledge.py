@@ -16,7 +16,7 @@ SITE = "https://site.test"
 BUNDLE = {
     "language": "en",
     "sources": [
-        {"path": "/#projects", "title": "Slip", "text": "Slip reads receipts."},
+        {"path": "/#projects", "title": "Tallyfox", "text": "Tallyfox reads receipts."},
         {"path": "/workshop/heat", "title": "Heat", "text": "Heat kernels."},
     ],
 }
@@ -36,16 +36,16 @@ class KnowledgeBaseTestCase(TestCase):
         self.addCleanup(patcher.stop)
 
     def test_documents_then_the_site_then_the_database_each_as_a_tagged_source(self) -> None:
-        DocumentFactory(title="Favourites", language="en", description="", url=None, content="Spaghetti.")
-        DocumentFactory(title="Ulubione", language="pl", description="", url=None, content="Spaghetti po polsku.")
+        DocumentFactory(title="Favourites", language="en", description="", url=None, content="Shakshuka.")
+        DocumentFactory(title="Ulubione", language="pl", description="", url=None, content="Szakszuka.")
         SkillFactory(name="Django")
         base = build("en")
         self.assertEqual(
             [(source.kind, source.title) for source in base.sources],
-            [("document", "Favourites"), ("site", "Slip"), ("site", "Heat"), ("database", "Skills")],
+            [("document", "Favourites"), ("site", "Tallyfox"), ("site", "Heat"), ("database", "Skills")],
         )
         self.assertTrue(base.site_loaded)
-        self.assertIn('<source kind="document" title="Favourites">\nSpaghetti.\n</source>', base.text)
+        self.assertIn('<source kind="document" title="Favourites">\nShakshuka.\n</source>', base.text)
         self.assertIn('<source kind="site" path="/workshop/heat" title="Heat">\nHeat kernels.\n</source>', base.text)
         self.assertIn('<source kind="database" path="/experience" title="Skills">\nSkill: Django', base.text)
         self.get.assert_called_once_with(
@@ -152,7 +152,9 @@ class SiteSourcesTestCase(TestCase):
 
     def test_entries_of_the_wrong_shape_are_skipped(self) -> None:
         bundle = {"sources": [BUNDLE["sources"][0], "text", {"path": 1, "title": "x", "text": "y"}, {"title": "t"}]}
-        self.assertEqual(parse_site_bundle(bundle), [Source("site", "Slip", "Slip reads receipts.", "/#projects")])
+        self.assertEqual(
+            parse_site_bundle(bundle), [Source("site", "Tallyfox", "Tallyfox reads receipts.", "/#projects")]
+        )
 
 
 class StaleWhileRebuildingTestCase(SimpleTestCase):

@@ -43,10 +43,5 @@ def pytest_addoption(parser: Parser) -> None:
         default=0.9,
         help="The share of cases that must pass for the run to pass.",
     )
-    group.addoption(
-        "--eval-live-db",
-        action="store_true",
-        help="Answer from the configured database (DATABASE_URL) rather than the fixture; skips the synthetic cases.",
-    )
     group.addoption("--eval-json", help="Where to write every answer and verdict, as JSON.")
     group.addoption("--eval-markdown", help="Where to append the results as a Markdown table.")
