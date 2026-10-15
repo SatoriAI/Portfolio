@@ -53,7 +53,7 @@ const SiteHeader = () => {
       <Link
         to={item.to}
         onClick={handleSectionClick(item)}
-        className="rounded-xl px-4 py-3 text-base font-medium text-foreground transition-colors duration-200 hover:bg-lavender"
+        className="rounded-xl px-4 py-3 text-base font-medium text-foreground transition-colors duration-200 hover:bg-lavender-hover"
       >
         {t.nav[item.labelKey]}
       </Link>

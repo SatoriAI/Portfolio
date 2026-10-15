@@ -60,6 +60,11 @@
     --published: var(--ink);
     --preprint: var(--text-secondary);
     --primary-hover: 220 38% 26%; /* #293A5C */
+    /* Lavender as a hover or an open state, on a control. In light it is the
+       lavender itself; in dark the panel tint would not show on surface. */
+    --lavender-hover: 257 71% 93%; /* #E8E1FA */
+    /* The circuit's bands of white light. */
+    --sheen: 0 0% 100%; /* #FFFFFF */
     /* Every shadow is cast in this, at the kit's alphas times the strength:
        ink in light. In dark, ink turns light and a shadow in it would glow. */
     --shadow: var(--ink);
@@ -114,9 +119,12 @@
     --surface: 221 40% 14%; /* #161F33 */
     --ink: 225 32% 93%; /* #E6E9F2 */
     --text-secondary: 224 18% 68%; /* #9EA6BC */
-    /* As light lavender is on white, about 1.27:1 on surface: a hover or a
-       feature band has to show. */
-    --lavender: 250 36% 26%; /* #322A5A */
+    /* Two lavenders, as light lavender is two contrasts: a panel or band at
+       1.20:1 on background, as it is on cloud, and a hover at 1.27:1 on
+       surface, as it is on white. One value for both made the figures loud
+       or the hovers invisible. */
+    --lavender: 250 32% 19%; /* #262140 */
+    --lavender-hover: 250 36% 26%; /* #322A5A */
     --blush: 311 24% 21%; /* #42293E */
     --iris: 253 60% 77%; /* #B2A3E8 */
     --border: 223 29% 21%; /* #262F45 */
@@ -127,9 +135,13 @@
     /* The heat field glows rather than stains. */
     --lavender-deep: 253 33% 36%; /* #4A3D7A */
     --blush-deep: 320 28% 29%; /* #5E3550 */
-    --note: 53 64% 75%; /* #E8DE97, paper, a shade dimmer */
+    /* Paper, dimmed until it no longer lights the room: 10.4:1 on the page,
+       and its navy writing keeps 8.9:1. */
+    --note: 53 45% 65%; /* #CEC57E */
     /* Error copy needs 4.5:1 on navy too. */
     --destructive: 355 77% 74%;
+    /* Near-white, faintly iris: a band of light on the lit wire, not a gap. */
+    --sheen: 248 100% 97%; /* #F2F0FF */
   }
 
   /* Paper stays paper: the teaching notes keep light-theme writing and the

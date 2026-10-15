@@ -15,12 +15,14 @@
     "surface": "#161F33",
     "ink": "#E6E9F2",
     "text-secondary": "#9EA6BC",
-    "lavender": "#322A5A",
+    "lavender": "#262140",
     "blush": "#42293E",
     "iris": "#B2A3E8",
     "border": "#262F45",
     "control-border": "#6C7591",
     "primary-hover": "#C4CADB",
-    "shadow": "#03060E"
-  }
+    "shadow": "#03060E",
+    "lavender-hover": "#322A5A"
+  },
+  "lavender-hover": "#E8E1FA"
 }

@@ -42,7 +42,7 @@ const LanguageToggle = ({ className }: LanguageToggleProps) => {
               "after:absolute after:-inset-y-[7px] after:left-0 after:right-0 first:after:-left-2.5 last:after:-right-2.5",
               active
                 ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-lavender hover:text-foreground",
+                : "text-muted-foreground hover:bg-lavender-hover hover:text-foreground",
             )}
           >
             {label}

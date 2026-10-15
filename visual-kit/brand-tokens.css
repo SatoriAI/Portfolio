@@ -14,6 +14,8 @@
   --brand-text-secondary: #566078;
   --brand-lavender: #E8E1FA;
   --brand-blush: #F6E2EB;
+  /* On a control, hovered or open; plain lavender is for panels. */
+  --brand-lavender-hover: #E8E1FA;
   --brand-iris: #65509A;
   --brand-border: #E0E3EB;
   /* 3.28:1 on background, 3.45:1 on surface. Do not lighten: 1.4.11 needs 3:1. */
@@ -57,15 +59,16 @@
 }
 
 /* Night Ink. Ratios on background: ink 15.1, text-secondary 7.6, iris 8.1,
-   control-border 4.0 (3.6 on surface); lavender 1.27 on surface, so a hover
-   shows. Shadow alphas double, capped at 0.6. */
+   control-border 4.0 (3.6 on surface); lavender 1.20 on background for
+   panels, lavender-hover 1.27 on surface, so a hover shows. Shadow alphas double, capped at 0.6. */
 :root[data-theme="dark"] {
   color-scheme: dark;
   --brand-background: #0E1424;
   --brand-surface: #161F33;
   --brand-ink: #E6E9F2;
   --brand-text-secondary: #9EA6BC;
-  --brand-lavender: #322A5A;
+  --brand-lavender: #262140;
+  --brand-lavender-hover: #322A5A;
   --brand-blush: #42293E;
   --brand-iris: #B2A3E8;
   --brand-border: #262F45;

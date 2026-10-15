@@ -80,7 +80,7 @@ const SheetContent = React.forwardRef<
         {...props}
       >
         {children}
-        <SheetPrimitive.Close className="tap-target absolute right-4 top-4 rounded-lg p-1 text-muted-foreground transition-colors hover:bg-lavender hover:text-foreground disabled:pointer-events-none">
+        <SheetPrimitive.Close className="tap-target absolute right-4 top-4 rounded-lg p-1 text-muted-foreground transition-colors hover:bg-lavender-hover hover:text-foreground disabled:pointer-events-none">
           <X className="h-5 w-5" />
           <span className="sr-only">{closeLabel}</span>
         </SheetPrimitive.Close>

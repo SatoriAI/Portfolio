@@ -65,8 +65,9 @@ const ThemeToggle = ({ labelled = false, className }: ThemeToggleProps) => {
       aria-label={labelled ? undefined : action}
       title={labelled ? undefined : action}
       className={cn(
-        // The language toggle's size and edge, so the two read as a pair.
-        "inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-control-border bg-card text-foreground transition-colors duration-200 hover:bg-lavender",
+        // The language toggle's size and edge, so the two read as a pair, and
+        // a finger's 44 px round it.
+        "tap-target relative inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-control-border bg-card text-foreground transition-colors duration-200 hover:bg-lavender-hover",
         labelled ? "px-3 text-sm font-medium" : "w-10",
         className,
       )}

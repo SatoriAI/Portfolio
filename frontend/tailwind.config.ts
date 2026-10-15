@@ -57,6 +57,8 @@ export default {
         lavender: {
           DEFAULT: "hsl(var(--lavender))",
           deep: "hsl(var(--lavender-deep))",
+          // On a control, hovered or open; plain lavender is for panels.
+          hover: "hsl(var(--lavender-hover))",
         },
         blush: {
           DEFAULT: "hsl(var(--blush))",
