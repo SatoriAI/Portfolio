@@ -1,46 +1,50 @@
-"""The evals' copy of the frontend's reader for the site's Markdown (fixture.site_bundle) against the snapshot the
-frontend's own test writes (frontend/src/lib/vexKnowledge.test.ts). Part of the default run: it calls no model."""
+"""The evals' knowledge and prompt (fixture.py, owner.py, conftest.py): about the invented owner alone, read as
+production reads it. Part of the default run: it calls no model."""
 
-import hashlib
-import json
 from unittest.mock import patch
 
-from django.conf import settings
-from django.test import SimpleTestCase
+from django.test import TestCase
 
-from vex.ai.knowledge import Source
-from vex.tests.evals.fixture import SITE_SNAPSHOT, SiteSource, header_title, site_bundle, site_sources
+from vex.ai import knowledge
+from vex.ai.knowledge import build
+from vex.ai.prompt import system_prompt
+from vex.tests.evals import fixture, owner
+from vex.utils.cache import cache
 
 
-class SiteReaderTestCase(SimpleTestCase):
-    def test_the_site_reads_as_the_frontend_publishes_it(self) -> None:
-        # Fails when the content, or either reader, changed without the snapshot: rewrite it from the frontend
-        # (`cd frontend && npx vitest run -u src/lib/vexKnowledge.test.ts`), then make this side agree.
-        snapshot = json.loads(SITE_SNAPSHOT.read_text(encoding="utf-8"))
-        read = {
-            locale: [
-                {
-                    "path": source["path"],
-                    "title": source["title"],
-                    "sha256": hashlib.sha256(source["text"].encode("utf-8")).hexdigest(),
-                }
-                for source in site_bundle(locale)
-            ]
-            for locale, _name in settings.LANGUAGES
-        }
-        self.assertEqual(read, snapshot)
+class EvalKnowledgeTestCase(TestCase):
+    @classmethod
+    def setUpTestData(cls) -> None:
+        fixture.load()
 
-    def test_the_last_title_line_wins_as_in_the_frontend(self) -> None:
-        self.assertEqual(header_title('---\ntitle: First\nsummary: x\r\ntitle: "Second"\n---\nText.'), "Second")
+    def setUp(self) -> None:
+        cache.clear()
+        knowledge.clear_cache()
+        self.addCleanup(knowledge.clear_cache)
+        patcher = patch("vex.ai.knowledge.site_sources", fixture.site_sources)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
-    def test_a_title_is_read_only_from_the_header(self) -> None:
-        self.assertEqual(header_title('---\ntitle: ""\n---\ntitle: Body'), "")
-        self.assertEqual(header_title("title: No header\n"), "")
+    def test_every_part_of_the_knowledge_is_there_in_both_languages(self) -> None:
+        for locale, role in (("en", "Thermal Simulation Engineer"), ("pl", "Inżynier symulacji termicznych")):
+            with self.subTest(locale=locale):
+                base = build(locale)
+                self.assertEqual({source.kind for source in base.sources}, {"document", "site", "database"})
+                self.assertIn(role, base.text)
+                self.assertIn(
+                    f"What students say about {owner.FIRST_NAME}'s teaching", [source.title for source in base.sources]
+                )
 
-    def test_a_source_with_no_text_is_left_out_as_in_production(self) -> None:
-        bundle = [
-            SiteSource(path="/workshop/empty", title="Empty", text=""),
-            SiteSource(path="/workshop/full", title="Full", text="Text."),
-        ]
-        with patch("vex.tests.evals.fixture.site_bundle", return_value=bundle):
-            self.assertEqual(site_sources("en"), [Source("site", "Full", "Text.", "/workshop/full")])
+    def test_a_hidden_role_stays_out_as_in_production(self) -> None:
+        self.assertNotIn("Moonquay", build("en").text)
+
+    def test_the_prompt_speaks_for_the_invented_owner_alone(self) -> None:
+        # The package's conftest puts him in the settings; every mention of Dawid, in the rules, the persona or the
+        # knowledge, would be a fact about someone the evals' knowledge does not hold.
+        for locale in ("en", "pl"):
+            with self.subTest(locale=locale):
+                prompt = system_prompt(locale)
+                self.assertIn(f"{owner.NAME}'s portfolio website", prompt)
+                self.assertIn(f"[{owner.EMAIL}](mailto:{owner.EMAIL})", prompt)
+                self.assertIn("<persona>", prompt)
+                self.assertNotIn("Dawid", prompt)

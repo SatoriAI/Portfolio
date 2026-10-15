@@ -7,8 +7,7 @@ const content = fileURLToPath(new URL("../content", import.meta.url));
 /**
  * The site's Markdown that Vex reads, keyed by its path under src/content
  * (`workshop/heat.en.md`), for vexBundle. Node only: the build reads it here
- * (vite.config.ts) and so does the test that writes the snapshot Vex's evals
- * are checked against (vexKnowledge.test.ts), so both see the same files.
+ * (vite.config.ts).
  */
 export const readVexContent = async (): Promise<Record<string, string>> => {
   const files: Record<string, string> = {};

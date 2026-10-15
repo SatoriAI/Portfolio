@@ -1,9 +1,11 @@
-"""How an eval run is set up and judged as a whole: the knowledge Vex answers from, and the gate. Its options
-(--eval-repeats, --eval-threshold, --eval-live-db, --eval-json, --eval-markdown) are declared in portfolio/conftest.py.
+"""How an eval run is set up and judged as a whole: whose site Vex speaks for, the knowledge she answers from, and the
+gate. Its options (--eval-repeats, --eval-threshold, --eval-json, --eval-markdown) are declared in
+portfolio/conftest.py.
 
 A run passes when at least --eval-threshold of its cases pass, not only when every one does: the answers are a
 model's, and a case that fails one run in a hundred would otherwise fail the whole set now and then."""
 
+from collections.abc import Iterator
 from unittest.mock import patch
 
 import pytest
@@ -11,45 +13,42 @@ from _pytest.config import Config, ExitCode
 from _pytest.main import Session
 from _pytest.terminal import TerminalReporter
 from django.conf import settings
+from django.test import override_settings
 from pytest_django import DjangoDbBlocker
 
 from vex.ai.knowledge import KnowledgeBase, build
-from vex.tests.evals import fixture
+from vex.tests.evals import fixture, owner
 from vex.tests.evals.report import JUDGE_MODEL, REPORT
-
-
-class LiveDatabase:
-    """Replaces pytest-django's empty test database with the configured one. Each test still runs in a transaction
-    that is rolled back, and the evals write nothing anyway."""
-
-    @pytest.fixture(scope="session")
-    def django_db_setup(self) -> None:
-        pass
 
 
 def pytest_configure(config: Config) -> None:
     REPORT.repeats = config.getoption("--eval-repeats")
     REPORT.threshold = config.getoption("--eval-threshold")
-    if config.getoption("--eval-live-db"):
-        REPORT.knowledge = "live database"
-        # Registered after pytest-django, so its fixture wins over the plugin's.
-        config.pluginmanager.register(LiveDatabase(), "vex-evals-live-database")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package", autouse=True)
+def site_owner() -> Iterator[None]:
+    """Vex's real rules, speaking for the invented owner of the evals' knowledge rather than for Dawid. For this
+    package only: the rest of the suite runs with the settings' own."""
+    with override_settings(
+        VEX_OWNER_NAME=owner.NAME, VEX_OWNER_FIRST_NAME=owner.FIRST_NAME, VEX_CONTACT_EMAIL=owner.EMAIL
+    ):
+        yield
+
+
+@pytest.fixture(scope="package")
 def knowledge(
-    request: pytest.FixtureRequest,
+    site_owner: None,  # pylint: disable=redefined-outer-name,unused-argument
     django_db_setup: None,  # pylint: disable=unused-argument
     django_db_blocker: DjangoDbBlocker,
 ) -> dict[str, KnowledgeBase]:
-    """The knowledge base per language, built once for the run. The site's content is read from the repository in
-    either case, so no frontend needs to be running."""
+    """The knowledge base per language, built once for the run (this package is the run); no frontend needs to be
+    running."""
     if JUDGE_MODEL not in settings.VEX_PRICES:
         # Checked here rather than at start-up, so a stray variable cannot stop the rest of the suite.
         pytest.fail(f"VEX_EVAL_JUDGE_MODEL={JUDGE_MODEL!r} has no price in VEX_PRICES", pytrace=False)
     with django_db_blocker.unblock():
-        if not request.config.getoption("--eval-live-db"):
-            fixture.load()
+        fixture.load()
         with patch("vex.ai.knowledge.site_sources", fixture.site_sources):
             bases = {code: build(code) for code, _name in settings.LANGUAGES}
     REPORT.digests = {code: base.digest for code, base in bases.items()}
