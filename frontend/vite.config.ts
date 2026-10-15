@@ -1,9 +1,10 @@
 import react from "@vitejs/plugin-react-swc";
 import { readFile, writeFile } from "fs/promises";
 import path from "path";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 
 import { pages, redirects } from "./src/config/navigation";
+import { serveConfig as securityServeConfig } from "./src/lib/securityHeaders";
 import {
   notFoundHtml,
   publishedPieceSlugs,
@@ -72,6 +73,26 @@ const vexKnowledge = (): Plugin => ({
 });
 
 /**
+ * Emits `serve.json`, which `serve` reads from the directory it serves, so
+ * production sends the site's security headers (see src/lib/securityHeaders.ts).
+ * Built from the same VITE_API_BASE_URL as the bundle, so the policy always
+ * names the API the build calls.
+ */
+const securityHeaders = (apiBaseUrl: string | undefined): Plugin => ({
+  name: "security-headers",
+  apply: "build",
+  generateBundle() {
+    if (!apiBaseUrl)
+      this.error("VITE_API_BASE_URL is not set: the security headers name the API it points at.");
+    this.emitFile({
+      type: "asset",
+      fileName: "serve.json",
+      source: JSON.stringify(securityServeConfig(apiBaseUrl), null, 2),
+    });
+  },
+});
+
+/**
  * Tells crawlers and the static server which addresses exist (see
  * src/lib/siteMap.ts): `/sitemap.xml` lists the pages, and `serve.json`
  * answers each known one with the app, each old one with a 301, while every
@@ -102,15 +123,22 @@ const siteMap = (): Plugin => {
 };
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
   },
-  plugins: [markdownQueries(), vexKnowledge(), siteMap(), react()],
+  plugins: [
+    markdownQueries(),
+    vexKnowledge(),
+    // Writes serve.json first; siteMap merges its routes into it afterwards.
+    securityHeaders(loadEnv(mode, process.cwd()).VITE_API_BASE_URL?.trim()),
+    siteMap(),
+    react(),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-});
+}));

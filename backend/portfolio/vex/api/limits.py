@@ -12,6 +12,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import SimpleRateThrottle
 
+from utils.functions import client_ip
 from vex.utils.cache import CacheUnavailable
 from vex.utils.cache import cache as vex_cache
 from vex.utils.session import is_valid_session_key
@@ -80,18 +81,11 @@ class VexThrottle(SimpleRateThrottle):
             return True
 
     def get_ident(self, request: Request) -> str | None:
-        # Behind Railway's edge REMOTE_ADDR is the proxy, and X-Forwarded-For can carry whatever the client sent.
-        # Only the header the edge itself sets (X-Real-IP) names the visitor. Locally (no header configured) there
-        # is no proxy at all, so REMOTE_ADDR is the visitor.
-        if not (header := settings.TRUSTED_CLIENT_IP_HEADER):
-            return request.META.get("REMOTE_ADDR", "")
-        if ip := request.headers.get(header, "").strip():
-            return ip
-        # With the header configured but absent, REMOTE_ADDR would be the proxy: every visitor would share one
-        # count, and one of them could lock everyone out. No identity means no per-IP limit for this request; the
-        # per-session limits still apply.
-        warn_missing_ip_header(header)
-        return None
+        if (ip := client_ip(request)) is None:
+            # Counted under the proxy's address, every visitor would share one count, and one of them could lock
+            # everyone out. No identity means no per-IP limit for this request; the per-session limits still apply.
+            warn_missing_ip_header(settings.TRUSTED_CLIENT_IP_HEADER)
+        return ip
 
     def get_cache_key(self, request: Request, view: Any) -> str | None:
         if (ident := self.get_ident(request)) is None:
