@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { flipOverride, initialOverride } from "./theme";
+import { flipOverride, initialOverride, overrideFromStorage } from "./theme";
 
 describe("initialOverride", () => {
   it("keeps a stored theme that differs from the machine's", () => {
@@ -42,5 +42,26 @@ describe("flipOverride", () => {
       const other = system === "light" ? "dark" : "light";
       expect(seen).toEqual([other, system, other, system]);
     }
+  });
+});
+
+describe("overrideFromStorage", () => {
+  it("follows another tab's flip away from the machine's theme", () => {
+    expect(overrideFromStorage("theme", "dark", "light")).toBe("dark");
+    expect(overrideFromStorage("theme", "light", "dark")).toBe("light");
+  });
+
+  it("follows the machine again when another tab flips back or clears", () => {
+    expect(overrideFromStorage("theme", null, "light")).toBeNull();
+    expect(overrideFromStorage(null, null, "dark")).toBeNull();
+  });
+
+  it("drops a stored theme equal to this machine's, as on load", () => {
+    expect(overrideFromStorage("theme", "dark", "dark")).toBeNull();
+  });
+
+  it("ignores every other key", () => {
+    expect(overrideFromStorage("languageChoice", "pl", "light")).toBeUndefined();
+    expect(overrideFromStorage("vex_chat_session_key", "x", "dark")).toBeUndefined();
   });
 });

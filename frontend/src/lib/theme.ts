@@ -10,6 +10,20 @@ export const initialOverride = (saved: string | null, system: Theme): Theme | nu
   (saved === "light" || saved === "dark") && saved !== system ? saved : null;
 
 /**
+ * What another tab's write to storage means here, or `undefined` when it is
+ * not about the theme. A cleared storage (`key` null) means no choice, and a
+ * value equal to this machine's theme is no choice either, as on load.
+ */
+export const overrideFromStorage = (
+  key: string | null,
+  newValue: string | null,
+  system: Theme,
+): Theme | null | undefined => {
+  if (key !== "theme" && key !== null) return undefined;
+  return initialOverride(key === null ? null : newValue, system);
+};
+
+/**
  * What to store after a flip from `current`: the other theme, unless that is
  * the machine's, in which case nothing, and the page follows the machine.
  */
