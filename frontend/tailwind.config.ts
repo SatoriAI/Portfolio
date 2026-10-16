@@ -23,6 +23,15 @@ export default {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
           hover: "hsl(var(--primary-hover))",
+          disabled: "hsl(var(--primary-disabled))",
+          "disabled-foreground": "hsl(var(--primary-disabled-foreground))",
+        },
+        // A chosen state that is not an action (index.css): navy in light,
+        // lavender with an iris edge in dark.
+        chosen: {
+          DEFAULT: "hsl(var(--chosen))",
+          foreground: "hsl(var(--chosen-foreground))",
+          edge: "hsl(var(--chosen-edge))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -167,8 +176,8 @@ export default {
       // Vex's answers are set with @tailwindcss/typography, whose colours are
       // its own greys: bold, headings, quotes and bullets drew near-black on
       // the dark theme's navy. Every prose colour is a theme token instead,
-      // and the inverted set (the reader's own messages, on the primary fill)
-      // follows primary-foreground.
+      // and the inverted set (the reader's own messages, on the chosen fill)
+      // follows chosen-foreground.
       typography: {
         DEFAULT: {
           css: {
@@ -189,18 +198,18 @@ export default {
             "--tw-prose-pre-bg": "hsl(var(--primary))",
             "--tw-prose-th-borders": "hsl(var(--control-border))",
             "--tw-prose-td-borders": "hsl(var(--border))",
-            "--tw-prose-invert-body": "hsl(var(--primary-foreground))",
-            "--tw-prose-invert-headings": "hsl(var(--primary-foreground))",
-            "--tw-prose-invert-lead": "hsl(var(--primary-foreground))",
-            "--tw-prose-invert-links": "hsl(var(--primary-foreground))",
-            "--tw-prose-invert-bold": "hsl(var(--primary-foreground))",
-            "--tw-prose-invert-counters": "hsl(var(--primary-foreground))",
-            "--tw-prose-invert-bullets": "hsl(var(--primary-foreground))",
-            "--tw-prose-invert-hr": "hsl(var(--primary-foreground))",
-            "--tw-prose-invert-quotes": "hsl(var(--primary-foreground))",
-            "--tw-prose-invert-quote-borders": "hsl(var(--primary-foreground))",
-            "--tw-prose-invert-captions": "hsl(var(--primary-foreground))",
-            "--tw-prose-invert-code": "hsl(var(--primary-foreground))",
+            "--tw-prose-invert-body": "hsl(var(--chosen-foreground))",
+            "--tw-prose-invert-headings": "hsl(var(--chosen-foreground))",
+            "--tw-prose-invert-lead": "hsl(var(--chosen-foreground))",
+            "--tw-prose-invert-links": "hsl(var(--chosen-foreground))",
+            "--tw-prose-invert-bold": "hsl(var(--chosen-foreground))",
+            "--tw-prose-invert-counters": "hsl(var(--chosen-foreground))",
+            "--tw-prose-invert-bullets": "hsl(var(--chosen-foreground))",
+            "--tw-prose-invert-hr": "hsl(var(--chosen-foreground))",
+            "--tw-prose-invert-quotes": "hsl(var(--chosen-foreground))",
+            "--tw-prose-invert-quote-borders": "hsl(var(--chosen-foreground))",
+            "--tw-prose-invert-captions": "hsl(var(--chosen-foreground))",
+            "--tw-prose-invert-code": "hsl(var(--chosen-foreground))",
           },
         },
       },

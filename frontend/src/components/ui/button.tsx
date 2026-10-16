@@ -17,7 +17,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary-hover",
+        // Disabled, it is the faded fill in light and an outlined card in dark
+        // (index.css), never a dimmed light slab.
+        default:
+          "bg-primary text-primary-foreground hover:bg-primary-hover disabled:bg-primary-disabled disabled:text-primary-disabled-foreground disabled:opacity-[var(--primary-disabled-opacity)] disabled:shadow-[inset_0_0_0_1px_hsl(var(--primary-disabled-edge))]",
         outline:
           "border border-control-border bg-card text-foreground hover:border-foreground hover:bg-lavender-hover",
         // The kit's "secondary" button is the outlined one; pastels are
