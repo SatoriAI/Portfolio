@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";
 
 import { useSettings } from "@/contexts/SettingsContext";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { localizedPath, storeLanguageChoice } from "@/lib/locale";
 import { cn } from "@/lib/utils";
 import { translations } from "@/utils/translations";
@@ -23,6 +24,9 @@ type LanguageToggleProps = {
 const LanguageToggle = ({ className }: LanguageToggleProps) => {
   const { language } = useSettings();
   const { pathname, search, hash } = useLocation();
+  // The address's query and #item only once the page is taken over: the
+  // build rendered it without either, and the takeover must match.
+  const rest = useHydrated() ? `${search}${hash}` : "";
   const t = translations[language];
 
   return (
@@ -39,7 +43,7 @@ const LanguageToggle = ({ className }: LanguageToggleProps) => {
         return (
           <a
             key={code}
-            href={`${localizedPath(code, pathname)}${search}${hash}`}
+            href={`${localizedPath(code, pathname)}${rest}`}
             hrefLang={code}
             lang={code}
             aria-current={active ? "true" : undefined}

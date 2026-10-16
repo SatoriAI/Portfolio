@@ -77,7 +77,7 @@ export function mapApiExperienceToUi(experience: ApiExperience, language: string
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "";
     const date = new Date(dateStr);
-    return date.getFullYear().toString();
+    return date.getUTCFullYear().toString();
   };
 
   const startYear = formatDate(experience.start);

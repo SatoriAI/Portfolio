@@ -22,6 +22,7 @@ import { skillLayers } from "@/config/skillLayers";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useVex } from "@/contexts/VexContext";
 import { useDismissOutside } from "@/hooks/use-dismiss-outside";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useIsMobile, usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { useTimelineSelection } from "@/hooks/use-timeline-selection";
 import { useExperiences, useProjects, useSkills } from "@/lib/queries";
@@ -70,7 +71,16 @@ const Experience = () => {
   // The roles in the order they began, as the timeline lays them out, each
   // with its circle and its name in the address.
   // The career on its axis, shared by the timeline's order and the skill lanes.
-  const career = useMemo(() => buildTimeline(experiences, new Date()), [experiences]);
+  // A role still running runs to the month its data was fetched in while the
+  // browser takes over the page the build drew with that data, so both draw
+  // the same axis; then to this month, the reader's.
+  const hydrated = useHydrated();
+  const asOf = new Date(hydrated ? Date.now() : experiencesQuery.dataUpdatedAt);
+  const asOfMonth = asOf.toISOString().slice(0, 7);
+  const career = useMemo(
+    () => buildTimeline(experiences, new Date(asOfMonth)),
+    [experiences, asOfMonth],
+  );
 
   const roles = useMemo(() => {
     const byId = new Map(experiences.map((experience) => [experience.id, experience]));
