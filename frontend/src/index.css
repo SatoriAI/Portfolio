@@ -179,8 +179,8 @@
     --primary-disabled-opacity: 1;
     /* The launcher belongs to no section and sits on every page, so at rest
        it is a secondary control (the card, the control edge at 4.0:1 on the
-       page, an ink icon) and lights near-white only when the reader points
-       at it or focuses it: colour from the reader, not resting brightness. */
+       page, an ink icon) and lights near-white only under a pointer: colour
+       from the reader, not resting brightness. */
     --launcher: var(--surface);
     --launcher-foreground: var(--ink);
     --launcher-edge: var(--control-border);
