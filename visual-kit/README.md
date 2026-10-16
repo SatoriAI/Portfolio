@@ -219,7 +219,7 @@ Nothing about the mark, the typography, the spacing scale, the layout grid, the 
 - A dark theme, Night Ink: a dark value for every palette token, the theme control and its behaviour, and the rules for marks, captures, paper and the heat field (see Dark theme). `palette.json` gains a `dark` object, and `brand-tokens.css` a `[data-theme="dark"]` block.
 - Elevation: shadows are cast in a new `shadow` token instead of `ink`, so the dark theme can cast them in near-black.
 - Dark theme: the light `primary` fill is kept for primary actions; chosen states and disabled primary buttons take their own quieter values (see Dark theme). The chat launcher rests quiet in dark and lights only under a hovering pointer.
-- `mini-brand-sheet` still shows the light palette only.
+- `mini-brand-sheet.html` shows the Night Ink palette under the light one; `mini-brand-sheet.png` and `.svg` are not regenerated yet and still show the light palette only.
 - Motion: from xl up the contact graph runs on the page's circuit, shown while it is closed and switched off while it is open (see Motion, Home).
 - Typography: the group label inside a section, and the stage heading set like it in ink, are written down (see Typography); the site had three versions of the label.
 - Fonts: IBM Plex Mono Medium joins the Regular, as WOFF2 with the Regular's character set, so the 500 the labels use is the real cut.

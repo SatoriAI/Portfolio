@@ -108,6 +108,18 @@ export const SettingsProvider: React.FC<{ language: Language; children: React.Re
     return () => query.removeEventListener("change", onChange);
   }, []);
 
+  // A flip in another tab arrives as a storage event (never in the tab that
+  // wrote it), and the same rule as on load decides whether it is a choice.
+  // Writing the same value back changes nothing, so no event bounces back.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== "theme" && event.key !== null) return;
+      setOverride(initialOverride(event.newValue, systemTheme()));
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   useEffect(() => {
     if (hydrated) applyTheme(theme);
   }, [hydrated, theme]);

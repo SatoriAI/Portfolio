@@ -147,11 +147,11 @@ const SiteHeader = () => {
                     {pages.map(renderMobileLink)}
                   </nav>
                   <Separator className="my-3" />
-                  <div className="flex flex-col gap-2 px-4">
-                    <p className="pb-1 font-mono text-meta uppercase tracking-widest text-muted-foreground">
+                  <div className="flex flex-col gap-1">
+                    <p className="px-4 pb-1 font-mono text-meta uppercase tracking-widest text-muted-foreground">
                       {t.common.appearance}
                     </p>
-                    <ThemeToggle labelled className="self-start" />
+                    <ThemeToggle labelled />
                   </div>
                 </SheetContent>
               </Sheet>
