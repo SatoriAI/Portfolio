@@ -27,7 +27,15 @@ const ChatLauncher = forwardRef<HTMLButtonElement, ChatLauncherProps>(
       onFocus={preloadMarkdown}
       aria-label={label}
       className={cn(
-        "fixed right-6 z-40 h-14 w-14 rounded-xl shadow-float transition-[transform,opacity,visibility] duration-200 ease-brand hover:-translate-y-0.5 motion-reduce:transform-none",
+        "fixed right-6 z-40 h-14 w-14 rounded-xl shadow-float-edged transition-[transform,opacity,visibility,background-color,color,box-shadow] duration-200 ease-brand motion-reduce:transform-none",
+        // Navy in light; in dark quiet at rest (index.css). It lights only
+        // under a pointer that can hover: a tap on a phone would flash it, and
+        // focus has the iris ring, which also keeps it from coming back lit
+        // when the chat hands focus back on closing. Lit, the edge goes with
+        // the plain float, as a filled button has none. The unguarded
+        // hover:bg-launcher keeps the base button's hover from showing on touch.
+        "bg-launcher text-launcher-foreground hover:bg-launcher",
+        "[@media(hover:hover)]:hover:-translate-y-0.5 [@media(hover:hover)]:hover:bg-launcher-lit [@media(hover:hover)]:hover:text-launcher-lit-foreground [@media(hover:hover)]:hover:shadow-float",
         aside && "invisible translate-y-2 opacity-0",
       )}
       style={{ bottom: "calc(env(safe-area-inset-bottom) + 1.5rem)" }}

@@ -79,6 +79,13 @@
     --primary-disabled-foreground: var(--surface);
     --primary-disabled-edge: var(--ink);
     --primary-disabled-opacity: 0.5;
+    /* The chat launcher, on every page: navy at rest and a shade lighter
+       when touched, as any primary button, in light. */
+    --launcher: var(--ink);
+    --launcher-foreground: var(--surface);
+    --launcher-edge: var(--ink);
+    --launcher-lit: var(--primary-hover);
+    --launcher-lit-foreground: var(--surface);
     /* Every shadow is cast in this, at the kit's alphas times the strength:
        ink in light. In dark, ink turns light and a shadow in it would glow. */
     --shadow: var(--ink);
@@ -170,6 +177,15 @@
     --primary-disabled-foreground: var(--text-secondary);
     --primary-disabled-edge: var(--border);
     --primary-disabled-opacity: 1;
+    /* The launcher belongs to no section and sits on every page, so at rest
+       it is a secondary control (the card, the control edge at 4.0:1 on the
+       page, an ink icon) and lights near-white only under a pointer: colour
+       from the reader, not resting brightness. */
+    --launcher: var(--surface);
+    --launcher-foreground: var(--ink);
+    --launcher-edge: var(--control-border);
+    --launcher-lit: var(--ink);
+    --launcher-lit-foreground: var(--surface);
   }
 
   /* Paper stays paper: the teaching notes keep light-theme writing and the

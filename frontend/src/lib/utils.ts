@@ -31,6 +31,7 @@ const twMerge = extendTailwindMerge({
           shadow: [
             "lift",
             "float",
+            "float-edged",
             "press",
             "rim",
             "rim-focus",
