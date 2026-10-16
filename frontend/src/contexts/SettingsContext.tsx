@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 import { useHydrated } from "@/hooks/use-hydrated";
 import type { Language } from "@/lib/locale";
-import { flipOverride, initialOverride, type Theme } from "@/lib/theme";
+import { flipOverride, initialOverride, overrideFromStorage, type Theme } from "@/lib/theme";
 
 export type { Theme };
 
@@ -113,8 +113,8 @@ export const SettingsProvider: React.FC<{ language: Language; children: React.Re
   // Writing the same value back changes nothing, so no event bounces back.
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
-      if (event.key !== "theme" && event.key !== null) return;
-      setOverride(initialOverride(event.newValue, systemTheme()));
+      const next = overrideFromStorage(event.key, event.newValue, systemTheme());
+      if (next !== undefined) setOverride(next);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
