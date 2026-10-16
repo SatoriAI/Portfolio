@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { renderAfresh } from "@/hooks/use-hydrated";
 import { languageBasename, languageOf, stripLanguage } from "@/lib/locale";
 import { createQueryClient } from "@/lib/queries";
+import { startAfter } from "@/lib/startAfter";
 import { preparePage } from "@/pages/routes";
 
 import App, { AppRoutes } from "./App.tsx";
@@ -28,8 +29,10 @@ const app = (
 // chunk and a workshop piece's text. Rendered with anything else, it would
 // differ, and React would throw the page away and draw it again. 404.html's
 // root is empty, as no page was rendered for an address that does not exist.
+// Preparing can fail (a deploy between the HTML and its chunks); the page is
+// taken over all the same.
 if (root.hasChildNodes()) {
-  void preparePage(stripLanguage(window.location.pathname), language, queryClient).then(() =>
+  void startAfter(preparePage(stripLanguage(window.location.pathname), language, queryClient), () =>
     hydrateRoot(root, app, {
       // A mismatch is a bug in the render, not something to recover from quietly.
       onRecoverableError: (error) => console.error("Hydration:", error),

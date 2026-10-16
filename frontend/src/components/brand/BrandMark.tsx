@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 
 import type { TechIcon } from "@/config/techIcons";
-import { useTheme } from "@/contexts/SettingsContext";
+import { cn } from "@/lib/utils";
 
 /** Relative luminance of a #RRGGBB colour (WCAG 2). */
 const luminance = (hex: string) => {
@@ -19,21 +19,21 @@ const DARK_SURFACE = luminance("#161F33");
  * A brand's mark from config/techIcons, in the brand's own colour.
  * Decorative: a name always stands beside it. In the dark theme a mark that
  * would fall under 3:1 on the surface (the black and near-black ones) takes
- * the text colour instead, as the practices without a brand do.
+ * the text colour instead, as the practices without a brand do: chosen in
+ * CSS by the theme on the page, so the HTML rendered at build time, before
+ * anyone's theme is known, is right in both.
  */
 const BrandMark = forwardRef<SVGSVGElement, { icon: TechIcon; className?: string }>(
   ({ icon, className }, ref) => {
-    const theme = useTheme();
     const mark = luminance(icon.hex);
     const ratio = (Math.max(mark, DARK_SURFACE) + 0.05) / (Math.min(mark, DARK_SURFACE) + 0.05);
-    const fades = theme === "dark" && ratio < 3;
     return (
       <svg
         ref={ref}
         aria-hidden="true"
         viewBox="0 0 24 24"
-        fill={fades ? "currentColor" : icon.hex}
-        className={className}
+        fill={icon.hex}
+        className={cn(ratio < 3 && "dark:fill-current", className)}
       >
         <path d={icon.path} />
       </svg>

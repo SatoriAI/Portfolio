@@ -18,9 +18,12 @@ export type Ring = {
 };
 
 /**
- * A drawing coordinate to a hundredth: Node's sine and the browser's can
- * differ in the last digit, and the page the build wrote must match the one
- * the browser renders.
+ * A drawing coordinate to a hundredth. Unrounded, one of the ring's points
+ * came out as 183.36478658202674 at build time (Node) and 183.3647865820267
+ * in Chrome, which React's development build reports as a hydration mismatch
+ * (production keeps the build's value, a ten-trillionth off). The other
+ * figures' coordinates agree in both engines, or React would report the
+ * next mismatch once this one is gone.
  */
 const hundredth = (value: number) => Math.round(value * 100) / 100;
 

@@ -76,6 +76,10 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
     react(),
   ],
   define: { __BUILD_YEAR__: JSON.stringify(new Date().getFullYear()) },
+  // The browser build lists its chunks for the prerender, which links each
+  // page's own; the Node build needs none of public/.
+  build: isSsrBuild ? {} : { manifest: true },
+  publicDir: isSsrBuild ? false : "public",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

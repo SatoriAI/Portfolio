@@ -70,9 +70,10 @@ export const SettingsProvider: React.FC<{ language: Language; children: React.Re
   });
   // A page's HTML is rendered at build time, without a reader, in light;
   // the browser takes it over in light too, then renders the reader's theme
-  // at once. boot.js has already put that theme on the page by then, so only
-  // what draws by the theme in script (the toggle's icon, the heat fields)
-  // waits the one render.
+  // at once. boot.js has already put that theme on the page by then, and
+  // markup that differs by theme (the toggle, the brand marks) follows it in
+  // CSS, so only what paints by the theme in script (the heat fields'
+  // canvases) waits the one render.
   const hydrated = useHydrated();
   const theme = hydrated ? (override ?? system) : "light";
 

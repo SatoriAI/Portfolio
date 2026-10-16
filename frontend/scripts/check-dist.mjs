@@ -5,13 +5,19 @@
 // language only has none), and carry its content in the root; 404.html must
 // name no address at all, and leave the root empty; and no file
 // may carry a script that runs from inline, nor a theme baked into <html>,
-// nor lack boot.js (theme and language before the first paint). An inline
+// nor lack boot.js (theme and language before the first paint), nor link a
+// file in assets/ the build did not write. An inline
 // script would work locally and be blocked in production by the site's
 // policy (script-src 'self').
-import { readdir, readFile } from "fs/promises";
+import { access, readdir, readFile } from "fs/promises";
 import path from "path";
 
 const dist = process.argv[2] ?? "dist";
+const exists = (file) =>
+  access(file).then(
+    () => true,
+    () => false,
+  );
 const DATA_SCRIPTS = new Set(["application/json", "application/ld+json"]);
 const HREFLANGS = ["en", "pl", "x-default"];
 
@@ -32,6 +38,13 @@ for (const file of files) {
   // The theme is the reader's, set by boot.js; a page must never ship one.
   if (/<html\b[^>]*\b(data-theme|class)=/.test(html)) fail("a theme baked into <html>");
   if (!html.includes('<script src="/boot.js"></script>')) fail("no boot.js");
+
+  // Every script and style a page links (its chunks among them) is in the build.
+  for (const [, href] of html.matchAll(
+    /<(?:script|link)\b[^>]*\b(?:src|href)="\/(assets\/[^"]+)"/g,
+  )) {
+    if (!(await exists(path.join(dist, href)))) fail(`links ${href}, which the build lacks`);
+  }
 
   const canonicals = html.match(/<link rel="canonical"/g)?.length ?? 0;
   const hreflangs = [...html.matchAll(/<link rel="alternate" hreflang="([^"]+)"/g)].map(

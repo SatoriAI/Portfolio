@@ -31,15 +31,16 @@ import App, { AppRoutes } from "./App";
 
 /**
  * The markup of the page at `address` (`/pl/research`), once everything on
- * it has loaded. API-backed sections render as loading, as they do in the
- * browser before their data arrives. Any error fails the render, and the
- * build with it, rather than leaving a page for the browser to render.
+ * it has loaded, and the source modules it needs beyond the main chunk
+ * (see preparePage). API-backed sections render as loading, as they do in
+ * the browser before their data arrives. Any error fails the render, and
+ * the build with it, rather than leaving a page for the browser to render.
  */
 export const render = async (address: string) => {
   const language = languageOf(address);
   const queryClient = createQueryClient();
-  await preparePage(stripLanguage(address), language, queryClient);
-  return new Promise<string>((resolve, reject) => {
+  const modules = await preparePage(stripLanguage(address), language, queryClient);
+  const html = await new Promise<string>((resolve, reject) => {
     let html = "";
     const sink = new Writable({
       write(chunk, _encoding, done) {
@@ -64,6 +65,7 @@ export const render = async (address: string) => {
       },
     );
   });
+  return { html, modules };
 };
 
 /**

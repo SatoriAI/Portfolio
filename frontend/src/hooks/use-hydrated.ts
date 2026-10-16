@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 // False at build time, and in the browser while it takes over a page the
 // build rendered; main.tsx sets it when it renders a page afresh instead
-// (404.html), where nothing has to match.
+// (404.html), where there is nothing to match.
 let renderedAfresh = false;
 
 /** Called by main.tsx before rendering a page that has no prerendered content. */
@@ -12,16 +12,20 @@ export const renderAfresh = () => {
 
 /**
  * False while rendering at build time and while the browser takes over the
- * page that render wrote (see main.tsx), true once it has. Whatever only the
- * browser can know (the reader's theme, the year, a portal into
+ * page that render wrote (see main.tsx), true from the effect after. Whatever
+ * only the browser can know (the reader's theme, the year, a portal into
  * document.body) waits for it, so the takeover renders exactly what the
  * build wrote.
  *
- * Set from an effect rather than read through useSyncExternalStore: the
- * store's re-render is synchronous, and a synchronous update reaching the
- * page's Suspense boundary before React has taken it over makes React throw
- * the boundary's HTML away and render it again (error #421). An effect's
- * update waits for the boundary.
+ * An effect's update, not a useSyncExternalStore: the store's correction is
+ * a synchronous update, which React cannot hold back while the page's
+ * Suspense boundary is still being taken over, so it throws the boundary's
+ * HTML away and renders it afresh (error #421). An update from an effect
+ * has default priority, and React takes the boundary over first.
+ *
+ * A component mounted after the takeover still starts at false and renders
+ * once more. Flipping the flag for good after the first takeover would be
+ * wrong while a Suspense boundary is still being taken over after the rest.
  */
 export const useHydrated = () => {
   const [hydrated, setHydrated] = useState(renderedAfresh);

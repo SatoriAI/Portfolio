@@ -27,10 +27,24 @@ type ThemeToggleProps = {
  * a sun in dark.
  */
 const ThemeToggle = ({ labelled = false, className }: ThemeToggleProps) => {
-  const { language, theme, flipTheme } = useSettings();
+  const { language, flipTheme } = useSettings();
   const t = translations[language].common;
-  const Icon = theme === "light" ? Moon : Sun;
-  const action = theme === "light" ? t.switchToDark : t.switchToLight;
+  // Both ways are in the markup and the theme on the page shows one: a
+  // page's HTML is rendered before anyone's theme is known, and boot.js sets
+  // the theme before the first paint. The hidden one is display: none, so
+  // assistive technology meets only the one shown.
+  const ways = [
+    {
+      Icon: Moon,
+      action: t.switchToDark,
+      display: labelled ? "contents dark:hidden" : "flex dark:hidden",
+    },
+    {
+      Icon: Sun,
+      action: t.switchToLight,
+      display: labelled ? "hidden dark:contents" : "hidden dark:flex",
+    },
+  ];
 
   // The switch is the reader's own heat source: the new theme is revealed as
   // a circle growing from the button, once. Without view transitions, or
@@ -77,8 +91,6 @@ const ThemeToggle = ({ labelled = false, className }: ThemeToggleProps) => {
     <button
       type="button"
       onClick={onClick}
-      aria-label={labelled ? undefined : action}
-      title={labelled ? undefined : action}
       className={cn(
         // The language toggle's size and edge, so the two read as a pair, and
         // a finger's 44 px round it. Hover only where there is one: after a
@@ -88,8 +100,17 @@ const ThemeToggle = ({ labelled = false, className }: ThemeToggleProps) => {
         className,
       )}
     >
-      <Icon aria-hidden="true" className="size-4" />
-      {labelled && action}
+      {ways.map(({ Icon, action, display }) => (
+        // Unlabelled, the way covers the button, so its title shows anywhere on it.
+        <span
+          key={action}
+          title={labelled ? undefined : action}
+          className={cn(!labelled && "absolute inset-0 items-center justify-center", display)}
+        >
+          <Icon aria-hidden="true" className="size-4" />
+          <span className={cn(!labelled && "sr-only")}>{action}</span>
+        </span>
+      ))}
     </button>
   );
 };

@@ -358,8 +358,10 @@ const ResearchThread = ({
   const lastPhase = useRef(phase);
 
   // A linked degree opens straight in the row, before the first paint. Read
-  // once mounted, as the address's hash is the browser's alone: a page
-  // rendered at build time shows the road, and the browser takes it over so.
+  // once mounted, as the address's hash is the browser's alone. The thread
+  // mounts only once the API's schools arrive, so today it is never in a
+  // page rendered at build time; with the schools in the build (a snapshot
+  // of the API), that page shows the road and the browser takes it over so.
   useLayoutEffect(() => {
     const linked = schools.findIndex((school) => slugOf(school) === linkedSlug());
     if (linked < 0) return;
