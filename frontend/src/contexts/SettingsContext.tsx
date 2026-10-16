@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
+import { useHydrated } from "@/hooks/use-hydrated";
 import type { Language } from "@/lib/locale";
 import { flipOverride, initialOverride, type Theme } from "@/lib/theme";
 
@@ -59,6 +60,7 @@ export const SettingsProvider: React.FC<{ language: Language; children: React.Re
   // other one is ever stored: a choice equal to the machine's is no choice.
   const [system, setSystem] = useState<Theme>(systemTheme);
   const [override, setOverride] = useState<Theme | null>(() => {
+    if (typeof window === "undefined") return null;
     try {
       return initialOverride(localStorage.getItem("theme"), systemTheme());
     } catch (_error) {
@@ -66,7 +68,14 @@ export const SettingsProvider: React.FC<{ language: Language; children: React.Re
     }
     return null;
   });
-  const theme = override ?? system;
+  // A page's HTML is rendered at build time, without a reader, in light;
+  // the browser takes it over in light too, then renders the reader's theme
+  // at once. boot.js has already put that theme on the page by then, and
+  // markup that differs by theme (the toggle, the brand marks) follows it in
+  // CSS, so only what paints by the theme in script (the heat fields'
+  // canvases) waits the one render.
+  const hydrated = useHydrated();
+  const theme = hydrated ? (override ?? system) : "light";
 
   // Stored and in state stay in step: a saved choice the machine has since
   // caught up with is forgotten, so the next flip always changes the page.
@@ -99,7 +108,9 @@ export const SettingsProvider: React.FC<{ language: Language; children: React.Re
     return () => query.removeEventListener("change", onChange);
   }, []);
 
-  useEffect(() => applyTheme(theme), [theme]);
+  useEffect(() => {
+    if (hydrated) applyTheme(theme);
+  }, [hydrated, theme]);
 
   // From what is on the page and what the machine says now, not from this
   // render's closure: two flips before a re-render must flip twice.

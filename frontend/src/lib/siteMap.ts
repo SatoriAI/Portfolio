@@ -1,14 +1,14 @@
 import { LANGUAGES, localizedPath } from "./locale";
 import type { PageHead } from "./pageMeta";
-import { type ArticleHeader, parseArticle } from "./workshop";
+import type { ArticleHeader } from "./workshop";
 
 /**
  * The site's addresses as a crawler and the static server see them, built
  * from the same sources the app routes on: the standalone pages and old
  * addresses in config/navigation.ts and the published workshop pieces in
  * src/content, each in both languages (lib/locale.ts). The build
- * (vite.config.ts) turns them into `/sitemap.xml`, into one HTML file per
- * address, and into the server's `serve.json`, so a known address is
+ * (scripts/prerender.mjs) turns them into `/sitemap.xml`, into one HTML file
+ * per address, and into the server's `serve.json`, so a known address is
  * answered with its own file, an old one with a 301, and any other with a
  * real 404.
  */
@@ -23,21 +23,9 @@ export const canonicalPath = (path: string) => path.toLowerCase().replace(/\/+$/
 
 export const absoluteUrl = (path: string) => `${SITE_URL}${canonicalPath(path)}`;
 
-/**
- * The published workshop pieces, without their text, from the content files
- * keyed by their path under src/content (see readVexContent), read by the
- * parser the site itself uses, drafts left out.
- */
-export const publishedPieces = (files: Record<string, string>): ArticleHeader[] =>
-  Object.entries(files)
-    .filter(([path]) => path.startsWith("workshop/"))
-    .map(([path, raw]) => parseArticle(path, raw))
-    .filter((piece) => !piece.draft)
-    .map(({ body: _body, ...header }) => header);
-
-/** The slugs of the published pieces, once per piece whatever its languages, sorted. */
+/** The slugs of the published pieces, once per piece whatever its languages, sorted; no drafts. */
 export const publishedPieceSlugs = (pieces: readonly ArticleHeader[]): string[] =>
-  [...new Set(pieces.map((piece) => piece.slug))].sort();
+  [...new Set(pieces.filter((piece) => !piece.draft).map((piece) => piece.slug))].sort();
 
 /** Every page a reader can land on: home, the standalone pages, each piece. */
 export const sitePaths = (pages: readonly string[], pieceSlugs: readonly string[]): string[] => [

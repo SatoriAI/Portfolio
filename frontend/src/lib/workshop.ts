@@ -1,4 +1,4 @@
-import { typeset } from "./typography";
+import { typeset } from "./typography.ts";
 
 /**
  * "Z warsztatu": short pieces written as Markdown files in the repo, one file

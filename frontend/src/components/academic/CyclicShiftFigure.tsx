@@ -67,9 +67,10 @@ type CyclicShiftFigureProps = {
 };
 
 const CyclicShiftFigure = ({ labels, k, add, describedBy }: CyclicShiftFigureProps) => {
-  const { ref, isInitiallyVisible, isRevealed, prefersReducedMotion } =
+  const { ref, isInitiallyVisible, isMeasured, isRevealed, prefersReducedMotion } =
     useScrollReveal<HTMLElement>();
-  const animateEntrance = !prefersReducedMotion && !isInitiallyVisible;
+  // Drawn until the browser has placed it, as in the HTML the build wrote.
+  const animateEntrance = isMeasured && !prefersReducedMotion && !isInitiallyVisible;
   const drawn = !animateEntrance || isRevealed;
 
   // The number 0, carried a places round with every other number.

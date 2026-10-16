@@ -4,7 +4,11 @@ import { matchesMedia, MEDIA, mediaList } from "@/lib/media";
 
 /**
  * Whether a media query matches, kept in sync as it changes. Read
- * synchronously, so the first render already matches the viewport.
+ * synchronously, so the first render already matches the viewport; except
+ * on a page rendered at build time, which has no viewport and matches
+ * nothing (a phone's layout, with motion), and in the browser's takeover of
+ * that page, which must render the same; React re-renders with the
+ * viewport's answer straight after.
  */
 export function useMediaQuery(query: string) {
   const subscribe = useCallback(
@@ -15,7 +19,11 @@ export function useMediaQuery(query: string) {
     },
     [query],
   );
-  return useSyncExternalStore(subscribe, () => matchesMedia(query));
+  return useSyncExternalStore(
+    subscribe,
+    () => matchesMedia(query),
+    () => false,
+  );
 }
 
 /**

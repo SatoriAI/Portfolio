@@ -11,6 +11,10 @@ const cast = (a: number) => `hsl(var(--shadow) / min(calc(${a} * var(--shadow-st
 // the dark theme is a second block there and this file does not change.
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  // `dark:` follows the theme on the page (boot.js sets it before the first
+  // paint), for markup that must be right before the script runs: a page's
+  // HTML is rendered at build time, without a reader or a theme.
+  darkMode: ["selector", '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {

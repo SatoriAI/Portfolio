@@ -17,10 +17,23 @@ export type Ring = {
   amplitude: number;
 };
 
+/**
+ * A drawing coordinate to a hundredth. Unrounded, one of the ring's points
+ * came out as 183.36478658202674 at build time (Node) and 183.3647865820267
+ * in Chrome, which React's development build reports as a hydration mismatch
+ * (production keeps the build's value, a ten-trillionth off). The other
+ * figures' coordinates agree in both engines, or React would report the
+ * next mismatch once this one is gone.
+ */
+const hundredth = (value: number) => Math.round(value * 100) / 100;
+
 /** Where position `x` of `n` stands, clockwise from twelve o'clock. */
 export const ringPoint = (center: number, radius: number, x: number, n: number) => {
   const angle = (2 * Math.PI * x) / n;
-  return { x: center + radius * Math.sin(angle), y: center - radius * Math.cos(angle) };
+  return {
+    x: hundredth(center + radius * Math.sin(angle)),
+    y: hundredth(center - radius * Math.cos(angle)),
+  };
 };
 
 /** The mode's distance from the centre at position `x` (a real number). */

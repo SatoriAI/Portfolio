@@ -32,6 +32,10 @@ const texts = {
 
 export const workshopArticles: readonly ArticleHeader[] = Object.values(headers);
 
+/** The source file of a piece's text, as the build's manifest names its chunk. */
+export const articleModule = ({ slug, language, draft }: ArticleHeader) =>
+  `src/content/workshop/${slug}.${language}${draft ? ".draft" : ""}.md`;
+
 /** A piece's Markdown text, without its header. */
 export const loadArticleBody = async ({ slug, language, draft }: ArticleHeader) => {
   const raw = await texts[`./${slug}.${language}${draft ? ".draft" : ""}.md`]();

@@ -17,6 +17,9 @@ type RevealProps = PropsWithChildren<{
  * 400ms on cubic-bezier(.22,1,.36,1), once, and skipped entirely under
  * prefers-reduced-motion. Content that is already on screen when it mounts
  * renders visible straight away, so nothing above the fold ever fades in.
+ * Until it is measured it is shown too: a page rendered at build time is
+ * read as it is, by a crawler, before the script runs, or without it, and
+ * the browser hides what is below the fold before its first paint after.
  */
 export default function Reveal({
   as: Tag = "div",
@@ -25,10 +28,10 @@ export default function Reveal({
   offset = 8,
   children,
 }: RevealProps) {
-  const { ref, isRevealed, isInitiallyVisible, prefersReducedMotion } =
+  const { ref, isRevealed, isInitiallyVisible, isMeasured, prefersReducedMotion } =
     useScrollReveal<HTMLElement>();
 
-  const skipAnimation = prefersReducedMotion || isInitiallyVisible;
+  const skipAnimation = !isMeasured || prefersReducedMotion || isInitiallyVisible;
   const visible = skipAnimation || isRevealed;
 
   // Inline transform ensures JIT doesn't purge required classes
