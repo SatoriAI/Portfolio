@@ -64,6 +64,17 @@ const rowAcross = (width: number, stops: number, y: number): Point[] =>
 /** A stop's disc, unscaled, in px. */
 export const DISC = 120;
 
+/** The phone's stops, one under the next, in px from the stage's top. */
+const phoneStopY = (index: number) => 36 + index * 104;
+
+/**
+ * The stage's height, which depends on the layout alone, not on the width:
+ * known before the stage is measured, so its place can be kept from the
+ * first paint of a page the build rendered, when no width is known yet.
+ */
+export const roadHeight = (phone: boolean, count = 3) =>
+  phone ? phoneStopY(Math.max(1, count) - 1) + 70 : LOW + DISC / 2 + 20 + 96;
+
 /** The kit's ease, and an even in-and-out for the travelling parts. */
 export const cubicBezier = (x1: number, y1: number, x2: number, y2: number) => {
   const cx = 3 * x1;
@@ -158,7 +169,7 @@ export const roadGeometry = (width: number, phone: boolean, count = 3): RoadGeom
     compact = rowAcross(width, stops, 42);
     restScale = 1;
     compactScale = 56 / DISC;
-    height = LOW + DISC / 2 + 20 + 96;
+    height = roadHeight(false, stops);
     // Under the row's years (from 80 to 96), a gap, then the chosen degree's
     // name and the card.
     cardTop = 120;
@@ -175,11 +186,11 @@ export const roadGeometry = (width: number, phone: boolean, count = 3): RoadGeom
       { x: width, y: end.y + 40 },
     ]);
   } else {
-    rest = Array.from({ length: stops }, (_, i) => ({ x: 30, y: 36 + i * 104 }));
+    rest = Array.from({ length: stops }, (_, i) => ({ x: 30, y: phoneStopY(i) }));
     compact = rowAcross(width, stops, 28);
     restScale = 60 / DISC;
     compactScale = 48 / DISC;
-    height = rest[stops - 1].y + 70;
+    height = roadHeight(true, stops);
     // Under the row's years (from 58 to 74), a gap, then the name and card.
     cardTop = 92;
     pieces = rest.slice(1).map((to, i) => line(rest[i], to));

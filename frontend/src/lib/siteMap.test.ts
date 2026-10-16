@@ -138,6 +138,7 @@ describe("serveConfig", () => {
       "**",
       "**/*.html",
       "boot.js",
+      "snapshot.json",
       "assets/**",
     ]);
     expect(config.headers?.[0]).toBe(security);

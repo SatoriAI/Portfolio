@@ -1,4 +1,5 @@
 import {
+  type CSSProperties,
   type KeyboardEvent,
   useCallback,
   useEffect,
@@ -20,6 +21,7 @@ import {
   roadFrame,
   type RoadGeometry,
   roadGeometry,
+  roadHeight,
   spiralPath,
   unwindMs,
   windMs,
@@ -619,7 +621,18 @@ const ResearchThread = ({
         orientation={vertical ? "vertical" : "horizontal"}
         activationMode="manual"
       >
-        <div ref={stage} className="relative flow-root" style={{ minHeight: geometry?.height }}>
+        {/* Its height held from the first paint, by breakpoint as `wide` is,
+            though the road is only drawn once the stage's width is known. */}
+        <div
+          ref={stage}
+          className="relative flow-root min-h-[--road-phone] md:min-h-[--road-wide]"
+          style={
+            {
+              "--road-phone": `${roadHeight(true, schools.length)}px`,
+              "--road-wide": `${roadHeight(false, schools.length)}px`,
+            } as CSSProperties
+          }
+        >
           {geometry && (
             <>
               <svg

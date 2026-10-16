@@ -10,7 +10,11 @@
 // wrote, so its other settings keep their own owner. Each page also links the
 // chunks the browser takes it over with (its route's, a piece's text), from
 // the browser build's manifest, so they load alongside the main chunk rather
-// than after it; the manifest itself is not shipped.
+// than after it; the manifest itself is not shipped. The API's lists come
+// from one snapshot (src/lib/snapshot.ts): each page is rendered with the
+// lists it reads and carries them for the browser, and the whole snapshot is
+// published for the next build to fall back on. A build the API does not
+// answer still deploys, with the previous deploy's lists or with none.
 import { mkdir, readFile, rm, writeFile } from "fs/promises";
 import path from "path";
 import { pathToFileURL } from "url";
@@ -21,8 +25,18 @@ process.env.NODE_ENV ??= "production";
 const dist = "dist";
 const ROOT = '<div id="root"></div>';
 
-const { movedAddresses, notFoundHtml, pageHtml, render, serveConfig, sitemapXml, sitePages } =
-  await import(pathToFileURL(path.resolve("dist-ssr/entry-server.js")).href);
+const {
+  buildSnapshot,
+  movedAddresses,
+  notFoundHtml,
+  pageHtml,
+  render,
+  serveConfig,
+  SNAPSHOT_FILE,
+  snapshotElement,
+  sitemapXml,
+  sitePages,
+} = await import(pathToFileURL(path.resolve("dist-ssr/entry-server.js")).href);
 
 const manifestFile = path.join(dist, ".vite", "manifest.json");
 const manifest = JSON.parse(await readFile(manifestFile, "utf8"));
@@ -56,11 +70,18 @@ const template = await readFile(path.join(dist, "index.html"), "utf8");
 if (!template.includes(ROOT)) throw new Error(`index.html lacks ${ROOT}`);
 await writeFile(path.join(dist, "404.html"), notFoundHtml(template));
 
+// The site the previous deploy is at, for its snapshot: the live one unless set.
+const snapshot = await buildSnapshot(process.env.PREVIOUS_SITE_URL || undefined);
+if (snapshot) await writeFile(path.join(dist, SNAPSHOT_FILE), JSON.stringify(snapshot));
+
 for (const { address, file, head } of sitePages) {
-  const { html: content, modules } = await render(address);
+  const { html: content, modules, lists } = await render(address, snapshot);
   const html = pageHtml(template, head)
     .replace("  </head>", () => `${chunkLinks(modules)}  </head>`)
-    .replace(ROOT, () => `<div id="root">${content}</div>`);
+    .replace(
+      ROOT,
+      () => `<div id="root">${content}</div>${lists ? `\n    ${snapshotElement(lists)}` : ""}`,
+    );
   await mkdir(path.dirname(path.join(dist, file)), { recursive: true });
   await writeFile(path.join(dist, file), html);
 }

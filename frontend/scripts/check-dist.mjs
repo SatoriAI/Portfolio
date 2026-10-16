@@ -2,7 +2,8 @@
 // test sees. Every address in the sitemap must have its file, and every page
 // must name its language (Polish under pl/) and its canonical address, and its
 // alternates in both languages and x-default (a workshop piece written in one
-// language only has none), and carry its content in the root; 404.html must
+// language only has none), and carry its content in the root (with no list
+// still loading, when the build had the API's lists); 404.html must
 // name no address at all, and leave the root empty; and no file
 // may carry a script that runs from inline, nor a theme baked into <html>,
 // nor lack boot.js (theme and language before the first paint), nor link a
@@ -25,6 +26,8 @@ const files = (await readdir(dist, { recursive: true }))
   .filter((name) => name.endsWith(".html"))
   .sort();
 const problems = [];
+// Written by the prerender when it had the API's lists (src/lib/snapshot.ts).
+const snapshot = await exists(path.join(dist, "snapshot.json"));
 
 for (const file of files) {
   const html = await readFile(path.join(dist, file), "utf8");
@@ -60,6 +63,9 @@ for (const file of files) {
     continue;
   }
   if (empty) fail("an empty root");
+  // With the API's lists in hand, a page still loading one reads a list its
+  // route does not name (src/pages/routes.ts).
+  if (snapshot && html.includes('role="status"')) fail("a list loading, though the build had it");
   // A file under pl/ is the Polish page, any other the English one.
   const language = file.startsWith("pl/") ? "pl" : "en";
   if (!html.includes(`<html lang="${language}">`)) fail(`not <html lang="${language}">`);

@@ -9,6 +9,7 @@ import { fetchProjects, mapApiProjectToUi } from "./projectsService";
 import { fetchPublications, mapApiPublicationToUi } from "./publicationsService";
 import { fetchSchools, mapApiSchoolToUi } from "./schoolsService";
 import { fetchSkills, mapApiSkillToUi } from "./skillsService";
+import type { ListName, Snapshot } from "./snapshot";
 import { fetchTestimonials, mapApiTestimonialToUi } from "./testimonialsService";
 import type { ArticleHeader } from "./workshop";
 
@@ -34,8 +35,24 @@ export const createQueryClient = () =>
     },
   });
 
+/**
+ * Puts the lists the build fetched (lib/snapshot.ts) into `client` as each
+ * one's data, as of when they were fetched; the same call on both sides of
+ * a page, so the browser takes over what the build drew. Each is marked
+ * stale, so the page's first render in the browser fetches it again at once,
+ * picking up edits made since the build; only then does the staleTime above
+ * hold. An unchanged answer keeps the same data (React Query shares what is
+ * equal), so nothing on the page redraws.
+ */
+export const seedLists = (client: QueryClient, snapshot: Snapshot) => {
+  for (const [name, data] of Object.entries(snapshot.lists)) {
+    client.setQueryData([name], data, { updatedAt: snapshot.fetchedAt });
+    void client.invalidateQueries({ queryKey: [name], exact: true, refetchType: "none" });
+  }
+};
+
 const useListQuery = <Api, Ui>(
-  resource: string,
+  resource: ListName,
   fetcher: () => Promise<Api[]>,
   map: (item: Api, language: string) => Ui,
 ) => {
