@@ -13,6 +13,7 @@ import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/com
 import { homeSections, type NavItem, pages } from "@/config/navigation";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useActiveSection } from "@/hooks/use-active-section";
+import { sectionScrollBehavior } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import { translations } from "@/utils/translations";
 
@@ -44,7 +45,9 @@ const SiteHeader = () => {
   const handleSectionClick = (item: NavItem) => (event: MouseEvent<HTMLAnchorElement>) => {
     if (pathname === "/" && `/${hash}` === item.to) {
       event.preventDefault();
-      document.getElementById(item.to.slice(2))?.scrollIntoView({ block: "start" });
+      document
+        .getElementById(item.to.slice(2))
+        ?.scrollIntoView({ block: "start", behavior: sectionScrollBehavior() });
     }
   };
 

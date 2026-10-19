@@ -2,7 +2,13 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 import { useHydrated } from "@/hooks/use-hydrated";
 import type { Language } from "@/lib/locale";
-import { flipOverride, initialOverride, overrideFromStorage, type Theme } from "@/lib/theme";
+import {
+  flipOverride,
+  initialOverride,
+  overrideFromStorage,
+  type Theme,
+  themeOf,
+} from "@/lib/theme";
 
 export type { Theme };
 
@@ -38,6 +44,11 @@ const systemTheme = (): Theme =>
 // overrides both, so the browser's chrome matches the page and not the machine.
 const THEME_COLOR: Record<Theme, string> = { light: "#F8F9FC", dark: "#0E1424" };
 
+/** The theme on the page now, as boot.js or applyTheme put it there; light
+ *  where there is no page, at build time. */
+const themeOnPage = (): Theme =>
+  typeof document === "undefined" ? "light" : themeOf(document.documentElement.dataset.theme);
+
 /** Puts a theme on the page at once. index.html does the same before the first
  *  paint; this keeps it in step afterwards, synchronously, so a view
  *  transition captures the new theme in its callback. */
@@ -68,14 +79,14 @@ export const SettingsProvider: React.FC<{ language: Language; children: React.Re
     }
     return null;
   });
-  // A page's HTML is rendered at build time, without a reader, in light;
-  // the browser takes it over in light too, then renders the reader's theme
-  // at once. boot.js has already put that theme on the page by then, and
-  // markup that differs by theme (the toggle, the brand marks) follows it in
-  // CSS, so only what paints by the theme in script (the heat fields'
-  // canvases) waits the one render.
+  // Nothing in the markup reads this theme: what differs by theme (the
+  // toggle, the brand marks) follows the page's data-theme in CSS. Only the
+  // heat fields' canvases paint by it, and they paint while the browser takes
+  // a page over, so until then it is the theme boot.js put on the page
+  // before the first paint, not a guess: a dark reader's fields never paint
+  // a light frame. At build time there is no page, and nothing paints.
   const hydrated = useHydrated();
-  const theme = hydrated ? (override ?? system) : "light";
+  const theme = hydrated ? (override ?? system) : themeOnPage();
 
   // Stored and in state stay in step: a saved choice the machine has since
   // caught up with is forgotten, so the next flip always changes the page.
@@ -127,7 +138,7 @@ export const SettingsProvider: React.FC<{ language: Language; children: React.Re
   // From what is on the page and what the machine says now, not from this
   // render's closure: two flips before a re-render must flip twice.
   const flipTheme = () => {
-    const current: Theme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+    const current = themeOnPage();
     const machine = systemTheme();
     const override = flipOverride(current, machine);
     applyTheme(override ?? machine);

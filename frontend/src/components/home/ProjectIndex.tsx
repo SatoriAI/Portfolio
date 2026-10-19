@@ -10,6 +10,7 @@ import ProjectField, { type ProjectFieldLabels } from "@/components/home/Project
 import ProjectWindow from "@/components/home/ProjectWindow";
 import { projectIcons } from "@/config/projectIcons";
 import { techIcon } from "@/config/techIcons";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useOnceInView } from "@/hooks/use-in-view";
 import type { LiveChecks } from "@/hooks/use-live-checks";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
@@ -65,9 +66,24 @@ export type ProjectIndexLabels = {
 };
 
 /** Decorative: the name stands beside it, so the icon says nothing more. */
-const ProjectIcon = ({ project, className }: { project: UiProject; className?: string }) => {
+const ProjectIcon = ({
+  project,
+  shown,
+  className,
+}: {
+  project: UiProject;
+  /** In the open frame, which the page's HTML shows before the script runs. */
+  shown: boolean;
+  className?: string;
+}) => {
   // The site's own copy of the project's icon first, then the backend's image.
   const icon = projectIcons[project.title] ?? project.image;
+  // Every frame is in the page's HTML, the closed ones hidden but laid out,
+  // so lazy loading would fetch all their icons at parse time, competing
+  // with the bundle on a slow line. Only the open frame's names its file at
+  // once, so it is not an empty tile; the others wait for the browser to
+  // take over, as they did when script alone drew the page.
+  const hydrated = useHydrated();
   return (
     <span
       className={cn(
@@ -76,7 +92,12 @@ const ProjectIcon = ({ project, className }: { project: UiProject; className?: s
       )}
     >
       {icon ? (
-        <img src={icon} alt="" loading="lazy" className="h-full w-full object-cover" />
+        <img
+          src={shown || hydrated ? icon : undefined}
+          alt=""
+          loading="lazy"
+          className="h-full w-full object-cover"
+        />
       ) : (
         // Until a project has an icon, its initial, drawn to scale at any size.
         <svg viewBox="0 0 100 100" aria-hidden="true" className="h-full w-full">
@@ -196,7 +217,13 @@ const ProjectFrame = ({
         <ProjectWindow
           screenshot={screenshot}
           alt={fillTemplate(labels.screenshotAlt, { title: project.title })}
-          icon={<ProjectIcon project={project} className="size-16 rounded-card md:size-20" />}
+          icon={
+            <ProjectIcon
+              project={project}
+              shown={active}
+              className="size-16 rounded-card md:size-20"
+            />
+          }
           subtitle={subtitle}
           checkState={checkState}
           always={self}

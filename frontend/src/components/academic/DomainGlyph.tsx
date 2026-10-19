@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { GLYPH_SCALE } from "@/lib/domainGlyph";
+import { entrance as scrollEntrance } from "@/lib/entrance";
 import { cn } from "@/lib/utils";
 
 /**
@@ -128,19 +129,24 @@ const DomainGlyph = ({ kind, delayMs = 0, entrance = "reveal", className }: Doma
   // A mount entrance is a CSS animation, which needs no script timing: it
   // plays the moment the glyph is painted, in a background tab as well.
   const onMount = entrance === "mount" && !prefersReducedMotion;
-  // Drawn until the browser has placed it, as in the HTML the build wrote.
-  const onReveal =
-    entrance === "reveal" && isMeasured && !prefersReducedMotion && !isInitiallyVisible;
-  const drawn = !onReveal || isRevealed;
+  // Drawn until the browser has placed it, as in the HTML the build wrote;
+  // the transitions are on only from the reveal on (see lib/entrance).
+  const { shown: drawn, entering: drawing } = scrollEntrance({
+    // A mount entrance never enters on scroll, as if never measured.
+    measured: entrance === "reveal" && isMeasured,
+    initiallyVisible: isInitiallyVisible,
+    reducedMotion: prefersReducedMotion,
+    revealed: isRevealed,
+  });
 
   const strokeProps = (strokeDelayMs: number) => ({
     className: cn(
       onMount && "animate-draw motion-reduce:animate-none",
-      onReveal && "transition-[stroke-dashoffset] duration-500 ease-brand",
+      drawing && "transition-[stroke-dashoffset] duration-500 ease-brand",
       drawn ? "[stroke-dashoffset:0]" : "[stroke-dashoffset:1]",
     ),
     style:
-      onMount || onReveal
+      onMount || drawing
         ? {
             animationDelay: `${delayMs + strokeDelayMs}ms`,
             transitionDelay: `${delayMs + strokeDelayMs}ms`,
@@ -186,7 +192,7 @@ const DomainGlyph = ({ kind, delayMs = 0, entrance = "reveal", className }: Doma
             cy={point[1]}
             r={3}
             style={
-              onMount || onReveal
+              onMount || drawing
                 ? { animationDelay: `${apexDelayMs}ms`, transitionDelay: `${apexDelayMs}ms` }
                 : undefined
             }
@@ -194,7 +200,7 @@ const DomainGlyph = ({ kind, delayMs = 0, entrance = "reveal", className }: Doma
               "fill-primary",
               onMount &&
                 "duration-400 animate-in fade-in-0 fill-mode-both motion-reduce:animate-none",
-              onReveal && "transition-opacity duration-400 ease-brand",
+              drawing && "transition-opacity duration-400 ease-brand",
               drawn ? "opacity-100" : "opacity-0",
             )}
           />

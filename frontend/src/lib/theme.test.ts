@@ -1,6 +1,20 @@
 import { describe, expect, it } from "vitest";
 
-import { flipOverride, initialOverride, overrideFromStorage } from "./theme";
+import { flipOverride, initialOverride, overrideFromStorage, themeOf } from "./theme";
+
+describe("themeOf", () => {
+  // What the heat fields paint by while the browser takes a page over: the
+  // theme boot.js put on the page, so a dark page never paints a light frame.
+  it("reads dark from a page boot.js marked dark", () => {
+    expect(themeOf("dark")).toBe("dark");
+  });
+
+  it("reads light from a light page, an unmarked one, or anything else", () => {
+    expect(themeOf("light")).toBe("light");
+    expect(themeOf(undefined)).toBe("light");
+    expect(themeOf("")).toBe("light");
+  });
+});
 
 describe("initialOverride", () => {
   it("keeps a stored theme that differs from the machine's", () => {

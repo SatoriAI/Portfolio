@@ -3,6 +3,7 @@ import { MathText } from "@/components/Formula";
 import { RangeInput } from "@/components/ui/range-input";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { modePath, ringPoint } from "@/lib/cyclicShift";
+import { entrance } from "@/lib/entrance";
 import { fillTemplate } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
@@ -69,14 +70,18 @@ type CyclicShiftFigureProps = {
 const CyclicShiftFigure = ({ labels, k, add, describedBy }: CyclicShiftFigureProps) => {
   const { ref, isInitiallyVisible, isMeasured, isRevealed, prefersReducedMotion } =
     useScrollReveal<HTMLElement>();
-  // Drawn until the browser has placed it, as in the HTML the build wrote.
-  const animateEntrance = isMeasured && !prefersReducedMotion && !isInitiallyVisible;
-  const drawn = !animateEntrance || isRevealed;
+  // Drawn until the browser has placed it, as in the HTML the build wrote;
+  // the transitions are on only from the reveal on (see lib/entrance).
+  const { shown: drawn, entering: drawing } = entrance({
+    measured: isMeasured,
+    initiallyVisible: isInitiallyVisible,
+    reducedMotion: prefersReducedMotion,
+    revealed: isRevealed,
+  });
 
   // The number 0, carried a places round with every other number.
   const zero = ringPoint(C, RING.radius, add, N);
-  const drawTransition =
-    animateEntrance && "transition-[stroke-dashoffset] duration-700 ease-brand";
+  const drawTransition = drawing && "transition-[stroke-dashoffset] duration-700 ease-brand";
 
   return (
     <FigureFrame kind="illustration" label={labels.label}>
@@ -114,7 +119,7 @@ const CyclicShiftFigure = ({ labels, k, add, describedBy }: CyclicShiftFigurePro
             vectorEffect="non-scaling-stroke"
             className={cn(
               "stroke-iris/40",
-              animateEntrance && "transition-opacity delay-700 duration-200",
+              drawing && "transition-opacity delay-700 duration-200",
               drawn ? "opacity-100" : "opacity-0",
             )}
           />
@@ -124,7 +129,7 @@ const CyclicShiftFigure = ({ labels, k, add, describedBy }: CyclicShiftFigurePro
             strokeWidth={2}
             pathLength={1}
             strokeDasharray={1}
-            style={animateEntrance ? { transitionDelay: "400ms" } : undefined}
+            style={drawing ? { transitionDelay: "400ms" } : undefined}
             className={cn(
               "stroke-iris",
               drawTransition,
@@ -138,13 +143,9 @@ const CyclicShiftFigure = ({ labels, k, add, describedBy }: CyclicShiftFigurePro
                 cx={x}
                 cy={y}
                 r={1.6}
-                style={
-                  animateEntrance
-                    ? { transitionDelay: `${index * ELEMENT_STAGGER_MS}ms` }
-                    : undefined
-                }
+                style={drawing ? { transitionDelay: `${index * ELEMENT_STAGGER_MS}ms` } : undefined}
                 className={cn(
-                  animateEntrance && "transition-opacity duration-200",
+                  drawing && "transition-opacity duration-200",
                   drawn ? "opacity-100" : "opacity-0",
                 )}
               />

@@ -202,7 +202,17 @@
   html {
     /* Prevent layout shift when scrollbars appear/disappear */
     scrollbar-gutter: stable both-edges;
-    scroll-behavior: smooth;
+    /* Not smooth for every scroll: the browser would also glide from the top
+       when it puts a reloaded page back where the reader was. The router's
+       section links ask for it themselves (lib/media's sectionScrollBehavior). */
+  }
+
+  /* The browser's own scroll to a section the address names (an in-page
+     link, or arriving at /#projects) glides; :target is that section. */
+  @media (prefers-reduced-motion: no-preference) {
+    html:has(:target) {
+      scroll-behavior: smooth;
+    }
   }
 
   html,
@@ -244,10 +254,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    html {
-      scroll-behavior: auto;
-    }
-
     /* Overlays (the sheet, dialogs, tooltips, tab panels) enter and leave
        through tailwindcss-animate's keyframes, which read these variables:
        pinned here, they still fade but never slide or grow. */

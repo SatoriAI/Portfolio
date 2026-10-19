@@ -5,6 +5,7 @@ import CopiedAnnouncement from "@/components/feedback/CopiedAnnouncement";
 import { useCircuit } from "@/components/home/circuitContext";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useElementSize } from "@/hooks/use-element-size";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useInView, useOnceInView } from "@/hooks/use-in-view";
 import { useLatest } from "@/hooks/use-latest";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
@@ -147,6 +148,10 @@ const NodeBody = ({
 
 const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps) => {
   const prefersReducedMotion = usePrefersReducedMotion();
+  // The avatar sits at the foot of the page, so its HTML names no file: one
+  // fetched at parse time competes with the bundle on a slow line. The
+  // browser fetches it once it has the page, as when script drew it.
+  const avatar = useHydrated() ? AVATAR : undefined;
   const [hot, setHot] = useState<number | null>(null);
   const clipboard = useCopyToClipboard(COPIED_MS);
   const copied = clipboard.copied;
@@ -467,7 +472,7 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
           )}
           style={{ left: `${HUB.x}%`, top: `${HUB.y}%`, transitionDuration: `${HUB_MS}ms` }}
         >
-          <img src={AVATAR} alt="" width={144} height={144} className="size-full" />
+          <img src={avatar} alt="" width={144} height={144} className="size-full" />
         </span>
         {nodes.map((node, index) => (
           <div
@@ -486,7 +491,7 @@ const ContactGraph = ({ email, githubUrl, onAskVex, labels }: ContactGraphProps)
           aria-hidden="true"
           className="grid size-16 place-items-center overflow-hidden rounded-full bg-lavender shadow-[0_0_0_6px_hsl(var(--iris)/0.12)]"
         >
-          <img src={AVATAR} alt="" width={64} height={64} className="size-full" />
+          <img src={avatar} alt="" width={64} height={64} className="size-full" />
         </span>
         <ol className="ml-8">
           {nodes.map((node, index) => (
