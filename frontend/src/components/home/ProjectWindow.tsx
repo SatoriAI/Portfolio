@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { useHydrated } from "@/hooks/use-hydrated";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import type { CheckState } from "@/lib/liveCheck";
 import { EASE_BRAND } from "@/lib/motion";
@@ -56,6 +57,11 @@ const ProjectWindow = ({
   const prefersReducedMotion = usePrefersReducedMotion();
   const image = useRef<HTMLImageElement>(null);
   const [painted, setPainted] = useState(always || answered(checkState));
+  // A capture still waiting for its answer is hidden, so the page's HTML
+  // names no file for it: fetched at parse time, the hidden captures would
+  // compete with the bundle on a slow line. The browser fetches it once it
+  // has the page, as it did when the page was drawn by script alone.
+  const hydrated = useHydrated();
   const lastPhase = useRef(checkState.phase);
 
   useEffect(() => {
@@ -89,7 +95,7 @@ const ProjectWindow = ({
   const shot = (
     <img
       ref={image}
-      src={screenshot}
+      src={painted || hydrated ? screenshot : undefined}
       alt={alt}
       className={cn(
         "absolute inset-0 h-full w-full object-cover object-top",

@@ -132,15 +132,19 @@ const DomainGlyph = ({ kind, delayMs = 0, entrance = "reveal", className }: Doma
   const onReveal =
     entrance === "reveal" && isMeasured && !prefersReducedMotion && !isInitiallyVisible;
   const drawn = !onReveal || isRevealed;
+  // The transitions, and their delays, are on only from the reveal on, so
+  // the glyph the HTML drew is undrawn at once when measured, never wiped
+  // out: a delay alone still runs a transition, holding the old value first.
+  const drawing = onReveal && drawn;
 
   const strokeProps = (strokeDelayMs: number) => ({
     className: cn(
       onMount && "animate-draw motion-reduce:animate-none",
-      onReveal && "transition-[stroke-dashoffset] duration-500 ease-brand",
+      drawing && "transition-[stroke-dashoffset] duration-500 ease-brand",
       drawn ? "[stroke-dashoffset:0]" : "[stroke-dashoffset:1]",
     ),
     style:
-      onMount || onReveal
+      onMount || drawing
         ? {
             animationDelay: `${delayMs + strokeDelayMs}ms`,
             transitionDelay: `${delayMs + strokeDelayMs}ms`,
@@ -186,7 +190,7 @@ const DomainGlyph = ({ kind, delayMs = 0, entrance = "reveal", className }: Doma
             cy={point[1]}
             r={3}
             style={
-              onMount || onReveal
+              onMount || drawing
                 ? { animationDelay: `${apexDelayMs}ms`, transitionDelay: `${apexDelayMs}ms` }
                 : undefined
             }
@@ -194,7 +198,7 @@ const DomainGlyph = ({ kind, delayMs = 0, entrance = "reveal", className }: Doma
               "fill-primary",
               onMount &&
                 "duration-400 animate-in fade-in-0 fill-mode-both motion-reduce:animate-none",
-              onReveal && "transition-opacity duration-400 ease-brand",
+              drawing && "transition-opacity duration-400 ease-brand",
               drawn ? "opacity-100" : "opacity-0",
             )}
           />

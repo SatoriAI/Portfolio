@@ -16,6 +16,7 @@ import { MARKED } from "@/components/experience/circleStyles";
 import ChoiceHint from "@/components/layout/ChoiceHint";
 import { projectIcons } from "@/config/projectIcons";
 import { useTheme } from "@/contexts/SettingsContext";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useOnceInView } from "@/hooks/use-in-view";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import {
@@ -173,9 +174,13 @@ const rowsFor = (layout: FieldLayout) => {
 /** The icon on a white face, or the initial where a project has none. */
 const PuckFace = ({ project }: { project: UiProject }) => {
   const icon = projectIcons[project.title] ?? project.image;
+  // The field has no width until the browser measures it, so in the page's
+  // HTML every puck is out of sight and names no file: fetched at parse
+  // time, the icons would compete with the bundle on a slow line.
+  const hydrated = useHydrated();
   return icon ? (
     <img
-      src={icon}
+      src={hydrated ? icon : undefined}
       alt=""
       draggable={false}
       className="pointer-events-none size-[64%] object-contain"

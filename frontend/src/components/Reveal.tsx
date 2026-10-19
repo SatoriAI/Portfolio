@@ -20,6 +20,8 @@ type RevealProps = PropsWithChildren<{
  * Until it is measured it is shown too: a page rendered at build time is
  * read as it is, by a crawler, before the script runs, or without it, and
  * the browser hides what is below the fold before its first paint after.
+ * That hiding is instant: the transition is on only from the reveal on, so
+ * it plays the entrance and never fades out what the HTML showed.
  */
 export default function Reveal({
   as: Tag = "div",
@@ -33,12 +35,15 @@ export default function Reveal({
 
   const skipAnimation = !isMeasured || prefersReducedMotion || isInitiallyVisible;
   const visible = skipAnimation || isRevealed;
+  // The transition, and its delay, only from the reveal on (a delay alone
+  // still runs a transition, holding the old value first).
+  const entering = !skipAnimation && isRevealed;
 
   // Inline transform ensures JIT doesn't purge required classes
   const style: CSSProperties | undefined = skipAnimation
     ? undefined
     : {
-        transitionDelay: `${Number.isNaN(delayMs) ? 0 : delayMs}ms`,
+        transitionDelay: entering ? `${Number.isNaN(delayMs) ? 0 : delayMs}ms` : undefined,
         transform: visible ? "translate3d(0,0,0)" : `translate3d(0, ${offset}px, 0)`,
       };
 
@@ -47,7 +52,7 @@ export default function Reveal({
       ref={ref}
       style={style}
       className={cn(
-        !skipAnimation && "transition-[opacity,transform] duration-400 ease-brand",
+        entering && "transition-[opacity,transform] duration-400 ease-brand",
         visible ? "opacity-100" : "opacity-0 will-change-[transform,opacity]",
         className,
       )}

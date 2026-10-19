@@ -5,6 +5,9 @@
  */
 export type Theme = "light" | "dark";
 
+/** The theme a page's data-theme names: dark only when it says so. */
+export const themeOf = (value: string | undefined): Theme => (value === "dark" ? "dark" : "light");
+
 /** The stored choice worth keeping: a valid theme that differs from the machine's. */
 export const initialOverride = (saved: string | null, system: Theme): Theme | null =>
   (saved === "light" || saved === "dark") && saved !== system ? saved : null;

@@ -72,11 +72,14 @@ const CyclicShiftFigure = ({ labels, k, add, describedBy }: CyclicShiftFigurePro
   // Drawn until the browser has placed it, as in the HTML the build wrote.
   const animateEntrance = isMeasured && !prefersReducedMotion && !isInitiallyVisible;
   const drawn = !animateEntrance || isRevealed;
+  // The transitions, and their delays, are on only from the reveal on, so
+  // the figure the HTML drew is undrawn at once when measured, never wiped
+  // out: a delay alone still runs a transition, holding the old value first.
+  const drawing = animateEntrance && drawn;
 
   // The number 0, carried a places round with every other number.
   const zero = ringPoint(C, RING.radius, add, N);
-  const drawTransition =
-    animateEntrance && "transition-[stroke-dashoffset] duration-700 ease-brand";
+  const drawTransition = drawing && "transition-[stroke-dashoffset] duration-700 ease-brand";
 
   return (
     <FigureFrame kind="illustration" label={labels.label}>
@@ -114,7 +117,7 @@ const CyclicShiftFigure = ({ labels, k, add, describedBy }: CyclicShiftFigurePro
             vectorEffect="non-scaling-stroke"
             className={cn(
               "stroke-iris/40",
-              animateEntrance && "transition-opacity delay-700 duration-200",
+              drawing && "transition-opacity delay-700 duration-200",
               drawn ? "opacity-100" : "opacity-0",
             )}
           />
@@ -124,7 +127,7 @@ const CyclicShiftFigure = ({ labels, k, add, describedBy }: CyclicShiftFigurePro
             strokeWidth={2}
             pathLength={1}
             strokeDasharray={1}
-            style={animateEntrance ? { transitionDelay: "400ms" } : undefined}
+            style={drawing ? { transitionDelay: "400ms" } : undefined}
             className={cn(
               "stroke-iris",
               drawTransition,
@@ -138,13 +141,9 @@ const CyclicShiftFigure = ({ labels, k, add, describedBy }: CyclicShiftFigurePro
                 cx={x}
                 cy={y}
                 r={1.6}
-                style={
-                  animateEntrance
-                    ? { transitionDelay: `${index * ELEMENT_STAGGER_MS}ms` }
-                    : undefined
-                }
+                style={drawing ? { transitionDelay: `${index * ELEMENT_STAGGER_MS}ms` } : undefined}
                 className={cn(
-                  animateEntrance && "transition-opacity duration-200",
+                  drawing && "transition-opacity duration-200",
                   drawn ? "opacity-100" : "opacity-0",
                 )}
               />
