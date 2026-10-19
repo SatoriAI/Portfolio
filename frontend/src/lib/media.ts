@@ -35,3 +35,7 @@ export const matchesMedia = (query: string) =>
 
 /** The reduced-motion preference now; components that render by it use the hook. */
 export const prefersReducedMotion = () => matchesMedia(MEDIA.reducedMotion);
+
+/** How the page travels to a section: it glides, or jumps under reduced motion. */
+export const sectionScrollBehavior = (): ScrollBehavior =>
+  prefersReducedMotion() ? "auto" : "smooth";

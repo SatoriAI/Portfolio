@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 
 import { arrivalScroll } from "@/lib/arrivalScroll";
+import { sectionScrollBehavior } from "@/lib/media";
 
 /**
  * The longest a link keeps at it, waiting for its section and then holding
@@ -68,7 +69,8 @@ const ScrollToTop = () => {
       const away = (offset > IN_PLACE_PX && delta < 0) || (offset < -IN_PLACE_PX && delta > 0);
       if (away) release();
     };
-    const align = () => target?.scrollIntoView({ block: "start" });
+    const align = () =>
+      target?.scrollIntoView({ block: "start", behavior: sectionScrollBehavior() });
 
     const settling = new ResizeObserver(align);
     const arrival = new MutationObserver(() => found(document.getElementById(id)));
