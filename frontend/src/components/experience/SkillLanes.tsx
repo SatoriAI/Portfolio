@@ -2,6 +2,7 @@ import { type ReactNode, useId, useLayoutEffect, useRef } from "react";
 
 import { TimelineAxis, TimelineGridlines } from "@/components/experience/TimelineAxis";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
+import { entrance } from "@/lib/entrance";
 import { prefersReducedMotion } from "@/lib/media";
 import { EASE_BRAND } from "@/lib/motion";
 import type { LaneSegment, SkillReach } from "@/lib/skillLanes";
@@ -34,7 +35,8 @@ import { cn } from "@/lib/utils";
  *
  * When the section comes into view the chart draws once, group by group:
  * each name lights up and its bars draw from their first month to their last.
- * It never plays again, and with reduced motion everything is simply shown.
+ * It never plays again; on screen when the page opens, or with reduced
+ * motion, everything is simply shown.
  */
 
 export type SkillLane = {
@@ -187,7 +189,13 @@ const SkillLanes = ({
   className,
 }: SkillLanesProps) => {
   const percent = (month: number) => `${(month / axis.months) * 100}%`;
-  const { ref: revealRef, isRevealed, prefersReducedMotion } = useScrollReveal<HTMLDivElement>();
+  const {
+    ref: revealRef,
+    isRevealed,
+    isInitiallyVisible,
+    isMeasured,
+    prefersReducedMotion,
+  } = useScrollReveal<HTMLDivElement>();
   const proofId = useId();
   const root = useRef<HTMLDivElement | null>(null);
 
@@ -222,13 +230,21 @@ const SkillLanes = ({
   ].filter((group) => group.items.length > 0);
 
   // The whole chart fits a screen, so the request sets off down the layers
-  // once, as it comes into view.
-  const shown = isRevealed;
+  // once, as it comes into view. As with Reveal (see lib/entrance), the
+  // chart is drawn in the page's HTML and wherever it was on screen when
+  // measured, and one measured below the fold is hidden at once, without a
+  // transition, to be drawn when it is reached.
+  const { shown, entering } = entrance({
+    measured: isMeasured,
+    initiallyVisible: isInitiallyVisible,
+    reducedMotion: prefersReducedMotion,
+    revealed: isRevealed,
+  });
   // Each layer waits for the one above it.
   const transition = (property: string, duration: number, layer: number, after = 0) =>
-    prefersReducedMotion
-      ? "none"
-      : `${property} ${duration}ms ${EASE_BRAND} ${layer * LAYER_STEP_MS + after}ms`;
+    entering
+      ? `${property} ${duration}ms ${EASE_BRAND} ${layer * LAYER_STEP_MS + after}ms`
+      : "none";
 
   return (
     <div
