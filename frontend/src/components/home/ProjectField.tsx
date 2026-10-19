@@ -32,6 +32,7 @@ import {
 import {
   arrivingPucks,
   type Direction,
+  fieldHeights,
   type FieldLayout,
   fieldLayout,
   glideHome,
@@ -644,10 +645,20 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
   const phone = layout.width < 640;
   const fade = fadeMask(phone ? 24 : 48, phone ? 32 : 40);
 
+  // Until the room is measured (in the page's HTML, and while the browser
+  // takes it over) the field's height comes from CSS: the room is a size
+  // container and the field takes its scale's height by the room's width,
+  // so the page keeps its height when the room is measured.
+  const measured = width > 0;
+  const heights = fieldHeights(projects.length);
+
   return (
     // The hint takes the gap under the heading, as on every page; the
     // field's own top pad then sits under the hint.
-    <div ref={roomRef} className="flex flex-col gap-3">
+    <div
+      ref={roomRef}
+      className={cn("flex flex-col gap-3", !measured && "[container-type:inline-size]")}
+    >
       {/* A project is always open, so the hint stays only until the
           reader's first choice of the visit (see choseThisVisit). */}
       <ChoiceHint
@@ -659,10 +670,24 @@ const ProjectField = ({ projects, selected, onOpen, labels }: ProjectFieldProps)
       </ChoiceHint>
       <div
         ref={fieldRef}
-        style={{ height: layout.height, width: layout.width || undefined }}
+        style={
+          measured
+            ? { height: layout.height, width: layout.width }
+            : ({
+                "--field-phone": `${heights.phone}px`,
+                "--field-tablet": `${heights.tablet}px`,
+                "--field-desk": `${heights.desk}px`,
+              } as CSSProperties)
+        }
         onPointerMove={onFieldPointerMove}
         onClick={onFieldClick}
-        className="relative isolate max-w-full select-none self-center overflow-hidden"
+        className={cn(
+          "relative isolate max-w-full select-none self-center overflow-hidden",
+          // SCALE_FROM, in CSS (projectField.test.ts holds the two to each
+          // other); the ranges do not overlap, so their order cannot matter.
+          !measured &&
+            "h-[--field-phone] [@container(640px<=width<1024px)]:h-[--field-tablet] [@container(width>=1024px)]:h-[--field-desk]",
+        )}
       >
         <canvas
           ref={canvasRef}
