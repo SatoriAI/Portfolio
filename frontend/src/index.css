@@ -3,14 +3,16 @@
 @tailwind utilities;
 
 /* Fonts ship with the Visual Identity Kit (../visual-kit/fonts) and are
-   self-hosted from public/fonts (licences alongside). Manrope is a single
+   self-hosted from public/fonts (licences alongside), all as WOFF2: the
+   kit's TTFs repacked, outlines and metrics unchanged, at about a third of
+   the bytes. Manrope is a single
    variable file; Plex Mono ships the two cuts the kit allows, 400 and 500.
    Only Manrope is preloaded: the Medium is needed only where a group label,
    stage heading or stamp is on the page, so it downloads there and nowhere
    else. Any other mono weight would be synthesised, so there is none. */
 @font-face {
   font-family: "Manrope";
-  src: url("/fonts/Manrope.ttf") format("truetype");
+  src: url("/fonts/Manrope.woff2") format("woff2");
   font-weight: 200 800;
   font-style: normal;
   font-display: swap;
@@ -18,7 +20,7 @@
 
 @font-face {
   font-family: "IBM Plex Mono";
-  src: url("/fonts/IBMPlexMono-Regular.ttf") format("truetype");
+  src: url("/fonts/IBMPlexMono-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
