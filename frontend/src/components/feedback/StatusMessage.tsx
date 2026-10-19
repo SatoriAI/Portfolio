@@ -26,6 +26,8 @@ const StatusMessage = ({
   <div
     className={cn("flex flex-col items-center justify-center gap-4 py-20 text-center", className)}
     aria-live="polite"
+    // Read by scripts/check-dist.mjs: a page the build had the lists for never ships one loading.
+    data-status={variant}
   >
     {variant === "loading" ? (
       <Spinner label={message} />

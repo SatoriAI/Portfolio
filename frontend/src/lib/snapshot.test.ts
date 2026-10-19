@@ -99,9 +99,16 @@ describe("pickLists", () => {
 
 describe("snapshotElement", () => {
   it("cannot be closed early by the data, and reads back as written", () => {
-    const snapshot = { fetchedAt: NOW, lists: { projects: [{ title: "</script><b>x" }] } };
+    // `<!--` too: inside a script element it would start the parser's
+    // escaped state, in which a later `<script` keeps the element open.
+    const snapshot = {
+      fetchedAt: NOW,
+      lists: { projects: [{ title: "</script><b>x" }, { title: "<!-- <script>" }] },
+    };
     const element = snapshotElement(snapshot);
     expect(element.match(/<\/script>/g)).toHaveLength(1);
+    expect(element).not.toContain("<!--");
+    expect(element.match(/<script/g)).toHaveLength(1);
     const text = /^<script type="application\/json" id="api-snapshot">(.*)<\/script>$/.exec(
       element,
     )?.[1];

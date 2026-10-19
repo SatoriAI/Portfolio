@@ -84,7 +84,7 @@ const Academic = () => {
   // first within each.
   const isPreprint = (paper: UiPublication) => /arxiv/i.test(paper.journal);
   const papersInOrder = [...publications].sort(
-    (a, b) => Number(isPreprint(a)) - Number(isPreprint(b)) || b.year - a.year,
+    (a, b) => Number(isPreprint(a)) - Number(isPreprint(b)) || (b.year ?? 0) - (a.year ?? 0),
   );
 
   const status = queryStatus([publicationsQuery], {

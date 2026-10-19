@@ -65,7 +65,8 @@ for (const file of files) {
   if (empty) fail("an empty root");
   // With the API's lists in hand, a page still loading one reads a list its
   // route does not name (src/pages/routes.ts).
-  if (snapshot && html.includes('role="status"')) fail("a list loading, though the build had it");
+  if (snapshot && html.includes('data-status="loading"'))
+    fail("a list loading, though the build had it");
   // A file under pl/ is the Polish page, any other the English one.
   const language = file.startsWith("pl/") ? "pl" : "en";
   if (!html.includes(`<html lang="${language}">`)) fail(`not <html lang="${language}">`);

@@ -143,6 +143,19 @@ const ALIASES: Readonly<Record<string, TechName>> = {
   Vue: "Vue.js",
 };
 
+const ICON_IDS = new Map<TechIcon, string>(
+  Object.entries(TECH_ICONS).map(([name, icon]) => [
+    icon,
+    `brand-mark-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+  ]),
+);
+
+/**
+ * The element id a mark is defined under in a page's sprite (see
+ * BrandSprite), from its name: `brand-mark-vue-js`. One per mark.
+ */
+export const techIconId = (icon: TechIcon): string | undefined => ICON_IDS.get(icon);
+
 /** The mark for a technology, by its name or its alias. */
 export const techIcon = (tag: string): TechIcon | undefined => {
   // A stack's tags come from the backend, so any string may be asked for.

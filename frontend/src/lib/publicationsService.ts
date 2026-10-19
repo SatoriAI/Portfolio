@@ -23,7 +23,8 @@ export type UiPublication = {
   id: number;
   title: string;
   journal: string;
-  year: number;
+  /** Null when the API has none: shown as none, never guessed from the clock. */
+  year: number | null;
   link: string;
   summary: string;
 };
@@ -39,7 +40,7 @@ export function mapApiPublicationToUi(
     id: publication.id,
     title: localized.title || publication.title || "",
     journal: publication.journal || "",
-    year: publication.year || new Date().getFullYear(),
+    year: publication.year || null,
     link: publication.link || "",
     summary: localized.summary || "",
   };

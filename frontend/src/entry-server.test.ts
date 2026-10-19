@@ -149,7 +149,7 @@ describe("the page render at build time", () => {
     it.each(pages)("renders %s with its lists, none loading", async (address, lists, text) => {
       const page = await render(address, snapshot);
       expect(textOf(page.html)).toContain(text);
-      expect(page.html).not.toContain('role="status"');
+      expect(page.html).not.toContain('data-status="loading"');
       // What the page's HTML carries for the browser: the lists it read, and only those.
       expect(page.lists).toEqual({
         fetchedAt: snapshot.fetchedAt,
@@ -159,7 +159,7 @@ describe("the page render at build time", () => {
     });
 
     it("renders them loading without a snapshot, and gives a page with no list none", async () => {
-      expect((await render("/research")).html).toContain('role="status"');
+      expect((await render("/research")).html).toContain('data-status="loading"');
       expect((await render("/workshop", snapshot)).lists).toBeUndefined();
     });
   });
