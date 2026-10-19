@@ -92,11 +92,19 @@ const ThemeToggle = ({ labelled = false, className }: ThemeToggleProps) => {
       type="button"
       onClick={onClick}
       className={cn(
-        // The language toggle's size and edge, so the two read as a pair, and
-        // a finger's 44 px round it. Hover only where there is one: after a
-        // tap, a phone keeps the hover and the button would look pressed.
-        "tap-target relative inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-control-border bg-card text-foreground transition-colors duration-200 [@media(hover:hover)]:hover:bg-lavender-hover",
-        labelled ? "px-3 text-sm font-medium" : "w-10",
+        // Hover only where there is one: after a tap, a phone keeps the hover
+        // and the button would look pressed.
+        "tap-target relative inline-flex items-center rounded-xl text-foreground transition-colors duration-200 [@media(hover:hover)]:hover:bg-lavender-hover",
+        labelled
+          ? // In the menu sheet, a full-width row under the links, with the
+            // control edge and the card that mark it as a switch, not a page:
+            // 15 px of padding inside the 1 px edge puts its icon on the
+            // links' 16 px text column, and full width keeps both languages'
+            // wordings the same size.
+            "w-full justify-start gap-3 border border-control-border bg-card px-[15px] py-3 text-base font-medium"
+          : // In the bar, the language toggle's size and edge, so the two
+            // read as a pair, and a finger's 44 px round it.
+            "h-10 w-10 justify-center gap-2 border border-control-border bg-card",
         className,
       )}
     >
