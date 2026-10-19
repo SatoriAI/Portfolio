@@ -4,7 +4,8 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { articleModule, showDrafts, workshopArticles } from "@/content/workshop";
 import type { Language } from "@/lib/locale";
-import { prefetchArticleText } from "@/lib/queries";
+import { prefetchArticleText, seedLists } from "@/lib/queries";
+import { type ListName, pickLists, type Snapshot } from "@/lib/snapshot";
 import { articlesFor } from "@/lib/workshop";
 
 import Index from "./Index";
@@ -47,41 +48,58 @@ export const NotFound = chunk("./NotFound.tsx");
  * The pages by path, written once, without a language: the router's
  * basename carries `/pl`. The landing page ships in the main chunk so first
  * paint never waits on a second request; the others load when navigated to.
+ * `lists` are the backend's lists the page reads (lib/queries.ts), which its
+ * HTML is rendered with and carries; a list left out would only be fetched
+ * in the browser, and the page would show it loading on both sides.
  */
 export const PAGES: readonly {
   path: string;
   Page: ComponentType & { preload?: () => Promise<void>; module?: string };
+  lists?: readonly ListName[];
 }[] = [
-  { path: "/", Page: Index },
-  { path: "/experience", Page: chunk("./Experience.tsx") },
-  { path: "/research", Page: chunk("./Academic.tsx") },
-  { path: "/education", Page: chunk("./Education.tsx") },
+  { path: "/", Page: Index, lists: ["projects"] },
+  {
+    path: "/experience",
+    Page: chunk("./Experience.tsx"),
+    lists: ["experiences", "skills", "projects"],
+  },
+  { path: "/research", Page: chunk("./Academic.tsx"), lists: ["publications"] },
+  { path: "/education", Page: chunk("./Education.tsx"), lists: ["schools", "testimonials"] },
   { path: "/workshop", Page: chunk("./Workshop.tsx") },
   { path: "/workshop/:slug", Page: chunk("./WorkshopArticle.tsx") },
 ];
 
 /**
  * What the page at `path` (the router's, without the language prefix)
- * needs before it can render in full, fetched into `queryClient`: its chunk,
- * and a workshop piece's text. Both entries await it, so the build writes
- * the whole page and the browser takes over the same page at once. Answers
- * the source modules it loaded beyond the main chunk, for the build to link
- * from the page's HTML.
+ * needs before it can render in full, put into `queryClient`: its chunk, a
+ * workshop piece's text, and its lists from `snapshot` (the build's whole
+ * one, or the part of it the page's HTML carries). Both entries await it,
+ * so the build writes the whole page and the browser takes over the same
+ * page at once. Answers the source modules it loaded beyond the main chunk,
+ * for the build to link from the page's HTML, and the lists it seeded, for
+ * the build to write into it.
  */
 export const preparePage = async (
   path: string,
   language: Language,
   queryClient: QueryClient,
-): Promise<string[]> => {
-  const match = PAGES.map(({ path: pattern, Page }) => ({
+  snapshot?: Snapshot,
+): Promise<{ modules: string[]; lists?: Snapshot }> => {
+  const match = PAGES.map(({ path: pattern, Page, lists }) => ({
     Page,
+    lists,
     params: matchPath(pattern, path)?.params,
   })).find(({ params }) => params);
+  const lists = pickLists(snapshot, match?.lists ?? []);
+  if (lists) seedLists(queryClient, lists);
   const Page = match?.Page ?? NotFound;
   const slug = match?.params?.slug?.toLowerCase();
   const piece = slug
     ? articlesFor(workshopArticles, language, { drafts: showDrafts }).find((p) => p.slug === slug)
     : undefined;
   await Promise.all([Page.preload?.(), piece && prefetchArticleText(queryClient, piece)]);
-  return [Page.module, piece && articleModule(piece)].filter((module) => module !== undefined);
+  const modules = [Page.module, piece && articleModule(piece)].filter(
+    (module) => module !== undefined,
+  );
+  return { modules, lists };
 };

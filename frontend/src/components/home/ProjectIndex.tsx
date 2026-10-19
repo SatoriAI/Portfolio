@@ -1,13 +1,15 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { CodeXml, ExternalLink, Lock } from "lucide-react";
 
 import AskVexPrompt from "@/components/AskVexPrompt";
+import { BrandSprite } from "@/components/brand/BrandMark";
 import BuildLine from "@/components/home/BuildLine";
 import LiveCheck, { type LiveCheckLabels } from "@/components/home/LiveCheck";
 import ProjectField, { type ProjectFieldLabels } from "@/components/home/ProjectField";
 import ProjectWindow from "@/components/home/ProjectWindow";
 import { projectIcons } from "@/config/projectIcons";
+import { techIcon } from "@/config/techIcons";
 import { useOnceInView } from "@/hooks/use-in-view";
 import type { LiveChecks } from "@/hooks/use-live-checks";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
@@ -306,6 +308,12 @@ const ProjectIndex = ({
     }
   };
 
+  // Every stack's marks, drawn once for all the panels (see BrandSprite).
+  const marks = useMemo(
+    () => projects.flatMap((project) => project.technologies.map(techIcon)),
+    [projects],
+  );
+
   if (projects.length === 0) return null;
 
   return (
@@ -322,28 +330,30 @@ const ProjectIndex = ({
       {/* Every project's panel is kept in one cell, the hidden ones invisible
           rather than removed, so the cell is as tall as the tallest and
           choosing another project never moves the page. */}
-      <div ref={panels} className="grid scroll-mt-28">
-        {projects.map((project) => (
-          <TabsPrimitive.Content
-            key={project.title}
-            value={project.title}
-            forceMount
-            className="rounded-card transition-none [grid-area:1/1] data-[state=inactive]:invisible data-[state=active]:duration-400 data-[state=active]:ease-brand data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-2 motion-reduce:data-[state=active]:animate-none"
-          >
-            <ProjectFrame
-              project={project}
-              subtitle={subtitles[project.title]}
-              facts={facts[project.title]}
-              screenshot={screenshots[project.title]}
-              labels={labels}
-              onAsk={onAsk}
-              checkState={project.demo ? stateOf(project.demo) : { phase: "idle" }}
-              onCheck={() => void check(project.demo)}
-              active={project.title === selected}
-            />
-          </TabsPrimitive.Content>
-        ))}
-      </div>
+      <BrandSprite icons={marks}>
+        <div ref={panels} className="grid scroll-mt-28">
+          {projects.map((project) => (
+            <TabsPrimitive.Content
+              key={project.title}
+              value={project.title}
+              forceMount
+              className="rounded-card transition-none [grid-area:1/1] data-[state=inactive]:invisible data-[state=active]:duration-400 data-[state=active]:ease-brand data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-bottom-2 motion-reduce:data-[state=active]:animate-none"
+            >
+              <ProjectFrame
+                project={project}
+                subtitle={subtitles[project.title]}
+                facts={facts[project.title]}
+                screenshot={screenshots[project.title]}
+                labels={labels}
+                onAsk={onAsk}
+                checkState={project.demo ? stateOf(project.demo) : { phase: "idle" }}
+                onCheck={() => void check(project.demo)}
+                active={project.title === selected}
+              />
+            </TabsPrimitive.Content>
+          ))}
+        </div>
+      </BrandSprite>
     </TabsPrimitive.Root>
   );
 };
