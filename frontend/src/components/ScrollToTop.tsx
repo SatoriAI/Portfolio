@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 
+import { arrivalScroll } from "@/lib/arrivalScroll";
+
 /**
  * The longest a link keeps at it, waiting for its section and then holding
  * it: a cold API can take well over ten seconds to answer.
@@ -19,7 +21,8 @@ const READER_INPUT = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
 /**
  * Keeps navigation predictable: a route change lands at the top, and a hash
  * (e.g. /#projects, also when arriving from another page) scrolls to that
- * section once it exists in the DOM. Back and Forward are left to the browser.
+ * section once it exists in the DOM. Back and Forward, and the page the
+ * reader opened, are left where the browser put them (see arrivalScroll).
  */
 const ScrollToTop = () => {
   const location = useLocation();
@@ -27,15 +30,13 @@ const ScrollToTop = () => {
   // The router reports the page's first location as a POP too, so a
   // traversal is a POP to any location other than the one the page opened on.
   const landing = useRef(location);
-  const traversal = useNavigationType() === "POP" && location !== landing.current;
+  const onLanding = location === landing.current;
+  const traversal = useNavigationType() === "POP" && !onLanding;
+  const scroll = arrivalScroll({ landing: onLanding, traversal, hash });
 
   useEffect(() => {
-    // Back and Forward return to a place the reader has already been, so the
-    // browser's own scroll restoration should win; scrolling to the top or to
-    // the section would drag them away from where they left the page.
-    if (traversal) return;
-
-    if (!hash) {
+    if (scroll === "stay") return;
+    if (scroll === "top") {
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
       return;
     }
@@ -95,7 +96,7 @@ const ScrollToTop = () => {
     if (present) found(present);
     else arrival.observe(document.body, { childList: true, subtree: true });
     return release;
-  }, [pathname, hash, traversal]);
+  }, [pathname, hash, scroll]);
 
   return null;
 };

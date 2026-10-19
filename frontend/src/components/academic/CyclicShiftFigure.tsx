@@ -3,6 +3,7 @@ import { MathText } from "@/components/Formula";
 import { RangeInput } from "@/components/ui/range-input";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { modePath, ringPoint } from "@/lib/cyclicShift";
+import { entrance } from "@/lib/entrance";
 import { fillTemplate } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
@@ -69,13 +70,14 @@ type CyclicShiftFigureProps = {
 const CyclicShiftFigure = ({ labels, k, add, describedBy }: CyclicShiftFigureProps) => {
   const { ref, isInitiallyVisible, isMeasured, isRevealed, prefersReducedMotion } =
     useScrollReveal<HTMLElement>();
-  // Drawn until the browser has placed it, as in the HTML the build wrote.
-  const animateEntrance = isMeasured && !prefersReducedMotion && !isInitiallyVisible;
-  const drawn = !animateEntrance || isRevealed;
-  // The transitions, and their delays, are on only from the reveal on, so
-  // the figure the HTML drew is undrawn at once when measured, never wiped
-  // out: a delay alone still runs a transition, holding the old value first.
-  const drawing = animateEntrance && drawn;
+  // Drawn until the browser has placed it, as in the HTML the build wrote;
+  // the transitions are on only from the reveal on (see lib/entrance).
+  const { shown: drawn, entering: drawing } = entrance({
+    measured: isMeasured,
+    initiallyVisible: isInitiallyVisible,
+    reducedMotion: prefersReducedMotion,
+    revealed: isRevealed,
+  });
 
   // The number 0, carried a places round with every other number.
   const zero = ringPoint(C, RING.radius, add, N);

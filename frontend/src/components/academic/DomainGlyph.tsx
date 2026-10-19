@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { GLYPH_SCALE } from "@/lib/domainGlyph";
+import { entrance as scrollEntrance } from "@/lib/entrance";
 import { cn } from "@/lib/utils";
 
 /**
@@ -128,14 +129,15 @@ const DomainGlyph = ({ kind, delayMs = 0, entrance = "reveal", className }: Doma
   // A mount entrance is a CSS animation, which needs no script timing: it
   // plays the moment the glyph is painted, in a background tab as well.
   const onMount = entrance === "mount" && !prefersReducedMotion;
-  // Drawn until the browser has placed it, as in the HTML the build wrote.
-  const onReveal =
-    entrance === "reveal" && isMeasured && !prefersReducedMotion && !isInitiallyVisible;
-  const drawn = !onReveal || isRevealed;
-  // The transitions, and their delays, are on only from the reveal on, so
-  // the glyph the HTML drew is undrawn at once when measured, never wiped
-  // out: a delay alone still runs a transition, holding the old value first.
-  const drawing = onReveal && drawn;
+  // Drawn until the browser has placed it, as in the HTML the build wrote;
+  // the transitions are on only from the reveal on (see lib/entrance).
+  const { shown: drawn, entering: drawing } = scrollEntrance({
+    // A mount entrance never enters on scroll, as if never measured.
+    measured: entrance === "reveal" && isMeasured,
+    initiallyVisible: isInitiallyVisible,
+    reducedMotion: prefersReducedMotion,
+    revealed: isRevealed,
+  });
 
   const strokeProps = (strokeDelayMs: number) => ({
     className: cn(

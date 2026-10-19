@@ -1,6 +1,7 @@
 import type { CSSProperties, ElementType, PropsWithChildren } from "react";
 
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
+import { entrance } from "@/lib/entrance";
 import { cn } from "@/lib/utils";
 
 type RevealProps = PropsWithChildren<{
@@ -33,14 +34,19 @@ export default function Reveal({
   const { ref, isRevealed, isInitiallyVisible, isMeasured, prefersReducedMotion } =
     useScrollReveal<HTMLElement>();
 
-  const skipAnimation = !isMeasured || prefersReducedMotion || isInitiallyVisible;
-  const visible = skipAnimation || isRevealed;
-  // The transition, and its delay, only from the reveal on (a delay alone
-  // still runs a transition, holding the old value first).
-  const entering = !skipAnimation && isRevealed;
+  const {
+    animated,
+    shown: visible,
+    entering,
+  } = entrance({
+    measured: isMeasured,
+    initiallyVisible: isInitiallyVisible,
+    reducedMotion: prefersReducedMotion,
+    revealed: isRevealed,
+  });
 
   // Inline transform ensures JIT doesn't purge required classes
-  const style: CSSProperties | undefined = skipAnimation
+  const style: CSSProperties | undefined = !animated
     ? undefined
     : {
         transitionDelay: entering ? `${Number.isNaN(delayMs) ? 0 : delayMs}ms` : undefined,
