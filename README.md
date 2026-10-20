@@ -21,8 +21,9 @@ A monorepo of two projects that are always developed together. Each half keeps i
 | [`frontend/`](./frontend) | The public single-page app | React 18 · TypeScript · Vite · Tailwind · shadcn/ui |
 
 ```text
-backend/            Django project, .railway/ deploy config, tools/chat-tester
+backend/            Django project, tools/chat-tester
 frontend/           Vite SPA
+.railway/           Railway settings for both services
 Makefile            every command this repository runs
 docker-compose.yml  both halves plus a Postgres
 lefthook.yml        commit hooks for both ecosystems
@@ -116,7 +117,17 @@ Actions are pinned to commit SHAs and bumped by [Dependabot](./.github/dependabo
 
 Both halves run on Railway in the shared `Mark 0` project, each as its own service built from this repository with a Root Directory of `backend` or `frontend`.
 
-The `.railway/*.toml` file in each half **is read by the platform** and is load-bearing: a service whose configured path does not resolve fails at `SNAPSHOT_CODE` with `service config not found`, before any build starts. The path is resolved from the **repository root**, not from the service's Root Directory, so it is stored as `backend/.railway/portfolio.toml` rather than `.railway/portfolio.toml`.
+Their settings are declared in [`.railway/railway.ts`](./.railway/railway.ts), Railway's Infrastructure as Code. Railway does not read that file during a deploy: the CLI evaluates it and applies the difference, so a change to it takes effect when someone applies it, not when it merges. It is a named partial (`portfolio`) because `Mark 0` also runs other repositories' apps, and it owns only the two Portfolio services. Every variable either service holds is listed by name with `preserve()`, which keeps its value on Railway and out of this repository; a name the file leaves out is deleted on apply, so set a new variable in Railway and add its name here.
+
+```bash
+npm ci --prefix .railway                     # the SDK the CLI resolves railway/iac from
+npx -y @railway/cli@5.71.0 config plan       # read-only: what would change
+npx -y @railway/cli@5.71.0 config apply      # change Railway to match the file
+```
+
+The CLI and the SDK in `.railway/package.json` are pinned together; bump them as a pair, since a newer CLI can read the same file differently. Treat a plan line reading `Delete variable` as a stop.
+
+Until the cutover, both services still read the Config as Code file in their half (`backend/.railway/portfolio.toml`, `frontend/.railway/portfolio-ui.toml`), which overrides the dashboard values the plan compares against. Those files are load-bearing until then: a service whose configured path does not resolve fails at `SNAPSHOT_CODE` with `service config not found`, before any build starts. Railway stops reading them on 2026-12-01.
 
 ## For agents
 
