@@ -127,7 +127,7 @@ npx -y @railway/cli@5.71.0 config apply      # change Railway to match the file
 
 The CLI and the SDK in `.railway/package.json` are pinned together; bump them as a pair, since a newer CLI can read the same file differently. Treat a plan line reading `Delete variable` as a stop.
 
-Until the cutover, both services still read the Config as Code file in their half (`backend/.railway/portfolio.toml`, `frontend/.railway/portfolio-ui.toml`), which overrides the dashboard values the plan compares against. Those files are load-bearing until then: a service whose configured path does not resolve fails at `SNAPSHOT_CODE` with `service config not found`, before any build starts. Railway stops reading them on 2026-12-01.
+Neither service reads a configuration file from this repository at deploy time any more: their Config as Code paths were cleared on 2026-10-20, after the file above had been applied, so a deploy runs on the settings the last apply wrote. A change made in the Railway dashboard instead drifts from the file, and the next plan names it.
 
 ## For agents
 
