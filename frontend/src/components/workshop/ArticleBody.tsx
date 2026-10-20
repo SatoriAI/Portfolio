@@ -7,8 +7,9 @@ import remarkGfm from "remark-gfm";
 import FigureFrame from "@/components/academic/FigureFrame";
 import CopiedAnnouncement from "@/components/feedback/CopiedAnnouncement";
 import { Formula, MathText } from "@/components/Formula";
-import { EXHIBITS, ILLUSTRATIONS } from "@/components/workshop/exhibitRegistry";
+import { EXHIBITS } from "@/components/workshop/exhibitRegistry";
 import type { ExhibitLabels } from "@/components/workshop/exhibits";
+import { ILLUSTRATIONS } from "@/components/workshop/illustrationRegistry";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { fillTemplate } from "@/lib/text";
 import { typeset } from "@/lib/typography";
@@ -27,7 +28,7 @@ import { cn } from "@/lib/utils";
  * An image whose address is `/figure/<name>` is one of the site's own
  * drawings instead (see exhibitRegistry), set where the text needs it:
  * `![what it shows](/figure/grokking "Caption")`. One the reader operates
- * (see ILLUSTRATIONS) is framed as an illustration, its caption inside.
+ * (see illustrationRegistry) is framed as an illustration, its caption inside.
  * Long words and URLs wrap rather than running out of the column.
  */
 

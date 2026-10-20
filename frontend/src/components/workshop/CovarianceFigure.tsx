@@ -28,6 +28,9 @@ export type CovarianceLabels = {
 /** The bars' scale runs to 5, the largest mean of the product the slider reaches. */
 const SCALE = 5;
 
+/** The covariance: the stretch between the two values. */
+const GAP = "border-x-2 border-iris/70 bg-blush-deep/60";
+
 const LIT = "transition-[width,left] duration-200 ease-brand motion-reduce:transition-none";
 
 /**
@@ -111,20 +114,22 @@ const CovarianceFigure = ({ labels }: { labels: CovarianceLabels }) => {
               <span className="font-mono tabular-nums text-foreground">{number(bar.value)}</span>
             </div>
             <div className="relative mt-1 h-2.5">
-              {/* The gap between the two values, on both bars' track. */}
-              <span
-                className={cn("absolute inset-y-0 bg-blush-deep", LIT)}
-                style={{ left: `${gapFrom * 100}%`, width: `${(gapTo - gapFrom) * 100}%` }}
-              />
               <span
                 className={cn("absolute inset-y-0 left-0 rounded-r-motif", bar.className, LIT)}
                 style={{ width: `${(bar.value / SCALE) * 100}%` }}
+              />
+              {/* The gap between the two values, over both bars: translucent,
+                  so the longer bar still shows through it to its end, and
+                  edged at the two values. */}
+              <span
+                className={cn("absolute -inset-y-0.5", GAP, LIT)}
+                style={{ left: `${gapFrom * 100}%`, width: `${(gapTo - gapFrom) * 100}%` }}
               />
             </div>
           </div>
         ))}
         <p className="flex items-center gap-3 pt-1 text-sm text-foreground/80">
-          <span aria-hidden="true" className="h-3 w-6 shrink-0 bg-blush-deep" />
+          <span aria-hidden="true" className={cn("h-3 w-6 shrink-0", GAP)} />
           <span>
             <MathText text={gapLine} />
           </span>

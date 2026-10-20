@@ -221,6 +221,7 @@ const copy = {
           averages: "cell averages",
           seen: "the wave the grid sees",
           spacing: "Grid spacing $h$ = 1/{n}",
+          spacingName: "Grid spacing h",
           fine: "finer grid",
           coarse: "coarser grid",
           readings: {
@@ -241,6 +242,7 @@ const copy = {
             readings: {
               within:
                 "On the wave above, the discrete operator acts at {r}% of the continuous one’s strength; at the limit of resolution, {e}%.",
+              edge: "The wave above sits right at this grid’s limit of resolution, where the discrete operator acts at {e}% of the continuous one’s strength.",
               beyond:
                 "The wave above lies beyond this grid’s resolution: the grid has no such oscillation.",
             },
@@ -930,6 +932,7 @@ const copy = {
           averages: "średnie w komórkach",
           seen: "fala widziana przez siatkę",
           spacing: "Odstęp siatki $h$ = 1/{n}",
+          spacingName: "Odstęp siatki h",
           fine: "gęstsza siatka",
           coarse: "rzadsza siatka",
           readings: {
@@ -948,6 +951,7 @@ const copy = {
             readings: {
               within:
                 "Na fali z wykresu powyżej dyskretny operator działa z {r}% siły ciągłego; na granicy rozdzielczości z {e}%.",
+              edge: "Fala z wykresu powyżej leży dokładnie na granicy rozdzielczości tej siatki, gdzie dyskretny operator działa z {e}% siły ciągłego.",
               beyond:
                 "Fala z wykresu powyżej leży poza rozdzielczością tej siatki: siatka nie ma takiej oscylacji.",
             },

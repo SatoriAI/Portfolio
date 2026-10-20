@@ -37,12 +37,14 @@ import { translations } from "@/utils/translations";
  * Text and figures share one column: from lg the 9 columns right of the
  * headings' rail (4–12), wider than the kit's 55–70 characters a line by
  * the owner's choice, so a figure is never wider than the prose around it.
- * Between md and lg, where 10 columns would run to about 84 characters a
- * line at 1000 px, the column is capped at 640 px: 58–69 characters in
- * English and Polish from 768 to 1023 px. A span of 8 was measured too and
- * fell to 45–50 at 768.
+ * Between md and lg, where the full width would run to about 84
+ * characters a line at 1000 px, the whole piece (the way back, the head,
+ * each section's heading, its text and figures) is one column of at most
+ * 640 px, centred: 63–68 characters a line in English and Polish from 768
+ * to 1023 px, with no empty strip on one side. A span of 8 was measured
+ * too and fell to 45–50 at 768.
  */
-const MEASURE = "md:max-w-[640px] lg:max-w-none";
+const MEASURE = "md:mx-auto md:w-full md:max-w-[640px] lg:mx-0 lg:max-w-none";
 
 const WorkshopArticle = () => {
   const { slug } = useParams();
@@ -101,7 +103,7 @@ const WorkshopArticle = () => {
         {/* The chat button stands aside over all of this, the evidence card included. */}
         <div ref={setArticle}>
           <Grid gapY={24}>
-            <Col spanLg={3}>
+            <Col spanMd={12} spanLg={3} className={MEASURE}>
               <Link
                 to="/workshop"
                 className="inline-flex w-fit items-center gap-1.5 rounded-sm font-mono text-meta text-iris underline decoration-1 underline-offset-4 transition-colors duration-200 hover:text-foreground lg:mt-1"
@@ -110,7 +112,7 @@ const WorkshopArticle = () => {
                 {w.all}
               </Link>
             </Col>
-            <Col spanMd={10} spanLg={9} className={cn("flex flex-col", MEASURE)}>
+            <Col spanMd={12} spanLg={9} className={cn("flex flex-col", MEASURE)}>
               {/* On a phone the title comes first and the details under it. */}
               <div className="order-3 mt-4 lg:order-1 lg:mb-4 lg:mt-0">
                 <MetaLine
@@ -137,7 +139,7 @@ const WorkshopArticle = () => {
             </Col>
             {exhibit && (
               // The result before the story: the piece's evidence, its caption beside it.
-              <Col spanMd={10} spanLg={9} className={cn("lg:col-start-4", MEASURE)}>
+              <Col spanMd={12} spanLg={9} className={cn("lg:col-start-4", MEASURE)}>
                 <figure className="grid gap-6 rounded-card border border-border bg-card p-6 md:p-8 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-center">
                   <div className="min-w-0">{exhibit(w.figure)}</div>
                   {article.caption && (
@@ -167,7 +169,7 @@ const WorkshopArticle = () => {
                   className="group mb-8 md:mb-12"
                   data-current={lit ? "true" : "false"}
                 >
-                  <Col spanLg={3}>
+                  <Col spanMd={12} spanLg={3} className={MEASURE}>
                     <div
                       className={cn(
                         "border-l-2 pl-4 transition-colors duration-200 motion-reduce:transition-none lg:sticky lg:top-28",
@@ -192,7 +194,7 @@ const WorkshopArticle = () => {
                       )}
                     </div>
                   </Col>
-                  <Col spanMd={10} spanLg={9} className={MEASURE}>
+                  <Col spanMd={12} spanLg={9} className={MEASURE}>
                     <ArticleBody
                       markdown={section.body}
                       labels={bodyLabels}

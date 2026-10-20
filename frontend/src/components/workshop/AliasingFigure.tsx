@@ -25,8 +25,10 @@ export type AliasingLabels = {
   wave: string;
   averages: string;
   seen: string;
-  /** The slider's name, with `{n}` for the number of cells; may carry `$…$`. */
+  /** The slider's label, with `{n}` for the number of cells; may carry `$…$`. */
   spacing: string;
+  /** The slider's accessible name, without the value its value text carries. */
+  spacingName: string;
   fine: string;
   coarse: string;
   /** One sentence per reading; `{k}`, `{f}` and `{p}` are filled. */
@@ -50,7 +52,7 @@ export type SymbolLabels = {
   readings: Record<SymbolReading, string>;
 };
 
-type SymbolReading = "within" | "beyond";
+type SymbolReading = "within" | "edge" | "beyond";
 
 /** Points along the drawn curves: smooth at five oscillations, at any width. */
 const SAMPLES = 400;
@@ -256,7 +258,9 @@ const AliasingFigure = ({ labels }: { labels: AliasingLabels }) => {
       f: seenWaves(WAVES, cells),
       p: keptPercent(WAVES, cells),
     });
-  const symbolReading: SymbolReading = WAVES <= bandEdge(cells) ? "within" : "beyond";
+  // At the band's edge the wave's share is the edge's own, so it is said once.
+  const symbolReading: SymbolReading =
+    WAVES < bandEdge(cells) ? "within" : WAVES === bandEdge(cells) ? "edge" : "beyond";
   const symbolSentence = (key: SymbolReading) =>
     fillTemplate(labels.symbol.readings[key], {
       r: Math.round(symbolRatio(WAVES, cells) * 100),
@@ -354,7 +358,7 @@ const AliasingFigure = ({ labels }: { labels: AliasingLabels }) => {
           <MathText text={fillTemplate(labels.spacing, { n: cells })} />
         </span>
         <RangeInput
-          aria-label={fillTemplate(labels.spacing, { n: cells }).replace(/\$/g, "")}
+          aria-label={labels.spacingName}
           min={0}
           max={CELLS_MAX - CELLS_MIN}
           step={1}

@@ -112,7 +112,7 @@ Przy przejściu na średnie komórkowe nawet mnożenie przestaje zachowywać si�
 
 Weźmy dwa zestawy wartości: $1, 3$ oraz $3, 1$. Ich średnie wynoszą po $2$, więc iloczyn średnich to $4$. Tymczasem iloczyny odpowiadających sobie wartości wynoszą $3, 3$, a ich średnia to $3$.
 
-![Wartości b równe 1 i 3 oraz u równe 3 i 1 na dwóch połówkach komórki, ich iloczyny i średnie; suwak zmienia u](/figure/covariance "Średnia iloczynu minus iloczyn średnich to dokładnie kowariancja, czyli średnią iloczynu odchyleń b i u od ich średnich. Gdy u rośnie tam, gdzie b maleje, różnica jest ujemna; gdy rosną razem, dodatnia; gdy u jest stałe, znika.")
+![Wartości b równe 1 i 3 oraz u równe 3 i 1 na dwóch połówkach komórki, ich iloczyny i średnie; suwak zmienia u](/figure/covariance "Średnia iloczynu minus iloczyn średnich to dokładnie kowariancja, czyli średnia iloczynu odchyleń b i u od ich średnich. Gdy u rośnie tam, gdzie b maleje, różnica jest ujemna; gdy rosną razem, dodatnia; gdy u jest stałe, znika.")
 
 Różnica opisuje informację o wspólnych zmianach obu funkcji, utraconą podczas uśredniania.
 

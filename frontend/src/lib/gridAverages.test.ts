@@ -59,7 +59,9 @@ describe("seenWaves", () => {
   });
 
   it("calls a folded wave slower", () => {
-    expect(gridReading(5, CELLS_DEFAULT)).toBe("slower");
+    expect(gridReading(5, 8)).toBe("slower");
+    expect(gridReading(5, CELLS_DEFAULT)).toBe("follows");
+    expect(bandEdge(CELLS_DEFAULT)).toBe(WAVES);
     expect(gridReading(5, 10)).toBe("follows");
   });
 });
@@ -83,7 +85,7 @@ describe("seenWave", () => {
       }
       return count;
     };
-    expect(crossings(CELLS_DEFAULT)).toBe(2 * seenWaves(WAVES, CELLS_DEFAULT));
+    expect(crossings(8)).toBe(2 * seenWaves(WAVES, 8));
     expect(crossings(6)).toBe(2);
   });
 });

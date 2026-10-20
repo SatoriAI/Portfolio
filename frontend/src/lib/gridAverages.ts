@@ -21,8 +21,12 @@ export const PHASE = 0.6;
 /** The coarsest and the finest grid the figure offers, in cells. */
 export const CELLS_MIN = 3;
 export const CELLS_MAX = 30;
-/** The grid shown first: one that already sees a slower wave. */
-export const CELLS_DEFAULT = 8;
+/**
+ * The grid shown first: the coarsest that still keeps up with the wave, so
+ * the wave sits exactly at its limit of resolution and the operator panel
+ * shows it on the 4/π² line.
+ */
+export const CELLS_DEFAULT = 10;
 
 const sinc = (z: number) => (z === 0 ? 1 : Math.sin(z) / z);
 
