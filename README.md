@@ -125,7 +125,11 @@ npx -y @railway/cli@5.71.0 config plan       # read-only: what would change
 npx -y @railway/cli@5.71.0 config apply      # change Railway to match the file
 ```
 
-The CLI and the SDK in `.railway/package.json` are pinned together; bump them as a pair, since a newer CLI can read the same file differently. Treat a plan line reading `Delete variable` as a stop.
+The CLI and the SDK in `.railway/package.json` are pinned together, with the CLI's version also in the workflow below; bump them as a set, since a newer CLI can read the same file differently. Treat a plan line reading `Delete variable` as a stop.
+
+[`railway-config.yml`](./.github/workflows/railway-config.yml) runs the same two commands in CI. A pull request touching `.railway/` is planned, and the redacted plan is in that run's job summary; merging it applies exactly that plan, fetched from the pull request's run rather than planned again. The plan pins the environment's state and the `.railway/` tree, so if the dashboard changed after review, or main's `.railway/` moved before the merge, the apply fails instead of overwriting either; plan again by pushing to a new pull request, or from a terminal. A destructive plan, one that deletes a service or a variable, also fails the apply by design: read it and apply it from a terminal with `--confirm-destructive`. A direct push to main has no plan and fails the same way.
+
+CI reads a Railway project token from the `RAILWAY_TOKEN` repository secret. Create it in Railway under `Mark 0` → Settings → Tokens, for the `production` environment, and add it under the repository's Settings → Secrets and variables → Actions. A project token is scoped to an environment, not to a partial: it can change every service in `Mark 0`'s production, including the other repositories' apps, and the plan step runs the pull request's `railway.ts` with it. Without the secret, as on a fork's or Dependabot's pull request, the workflow is skipped with a notice. The apply job runs in the `railway-production` environment, so required reviewers added there make every apply wait for an approval.
 
 Neither service reads a configuration file from this repository at deploy time any more: their Config as Code paths were cleared on 2026-10-20, after the file above had been applied, so a deploy runs on the settings the last apply wrote. A change made in the Railway dashboard instead drifts from the file, and the next plan names it.
 

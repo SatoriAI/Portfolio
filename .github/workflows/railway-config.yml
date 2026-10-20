@@ -1,0 +1,218 @@
+# Railway's Infrastructure as Code (.railway/railway.ts): a pull request plans
+# the change, and merging it applies exactly that plan.
+#
+# The plan is pinned rather than redone on main. `config plan --out` writes the
+# change set together with the environment's configEtag and the `.railway/` git
+# tree, and `config apply --plan` refuses the file when either has moved. So a
+# dashboard edit made after review fails the apply instead of being quietly
+# reverted, and a base branch whose `.railway/` changed since the plan fails it
+# too. Re-planning on main and applying that in a second job would pin against
+# drift only for the seconds between two jobs: it would apply whatever the
+# environment differed by at merge time, which nobody reviewed.
+#
+# A destructive plan (a deleted service or variable) fails the apply on
+# purpose: `--confirm-destructive` is never passed here, so a person reads
+# that plan and applies it from a terminal.
+name: Railway Config
+
+on:
+  # Deliberately unfiltered by branch, as in the other workflows: `branches:`
+  # matches the base of a pull request, and a stacked one would skip its plan.
+  # The workflow file is listed so a change to CI itself is exercised by a plan.
+  pull_request:
+    paths:
+      - '.railway/**'
+      - '.github/workflows/railway-config.yml'
+  # Only `.railway/**`: a commit that changes nothing there has nothing to
+  # apply. Listing the workflow file here would also make each Dependabot bump
+  # of the actions below an apply with no plan behind it, since Dependabot's
+  # pull requests get no secrets and so are never planned.
+  push:
+    branches:
+      - main
+    paths:
+      - '.railway/**'
+
+# Each job widens this only as far as it needs.
+permissions:
+  contents: read
+
+concurrency:
+  # A new push supersedes a pull request's plan in flight. A run on main is
+  # never cancelled; the apply job below also holds a lock of its own.
+  group: railway-config-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Pinned with the SDK in .railway/package.json and the commands in the
+  # README; bump all three together, since a newer CLI can read the same file
+  # differently.
+  RAILWAY_CLI: '@railway/cli@5.71.0'
+
+jobs:
+  # Secrets cannot be read in a job's `if`, so this says whether there is a
+  # token. There is none on a fork's or Dependabot's pull request, nor until
+  # the secret is added: the run is then skipped with a notice, never failed.
+  token:
+    name: Check for the Railway Token
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      present: ${{ steps.check.outputs.present }}
+
+    steps:
+      - name: Look for RAILWAY_TOKEN
+        id: check
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          if [ -n "${RAILWAY_TOKEN}" ]; then
+            echo "present=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "present=false" >> "${GITHUB_OUTPUT}"
+            if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then step="plan"; else step="apply"; fi
+            message="RAILWAY_TOKEN is not set for this run (a fork, Dependabot, or the secret is not added yet), so the Railway ${step} was skipped."
+            echo "::notice title=Railway skipped::${message}"
+            echo "${message}" >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+  plan:
+    name: Plan
+    needs: token
+    if: github.event_name == 'pull_request' && needs.token.outputs.present == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # The pull request's merge ref, which is the `.railway/` tree main will
+      # hold after the merge — the tree the plan pins.
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Nothing here pushes, and left on disk the token is readable by every
+          # step that follows — including a dependency's install script.
+          persist-credentials: false
+
+      # 24 because the CLI evaluates railway.ts with Node's type stripping.
+      - name: Set Up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: .railway/package-lock.json
+
+      # The CLI resolves railway/iac by walking up from the authoring file, so
+      # the SDK installed beside it is the one it finds.
+      - name: Install the SDK
+        run: npm ci --prefix .railway --no-audit --no-fund
+
+      # Values are redacted unless --show-values or --decrypt-variables is
+      # passed, and neither ever is: this output is public on a public
+      # repository, and so is the artifact.
+      - name: Plan
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          set -o pipefail
+          npx -y "${RAILWAY_CLI}" config plan --out railway-plan.json | tee "${RUNNER_TEMP}/plan.txt"
+
+      - name: Summarise the Plan
+        run: |
+          {
+            echo "### Railway plan"
+            echo
+            if [ "$(jq -r '.destructive' railway-plan.json)" = "true" ]; then
+              echo "> [!WARNING]"
+              echo "> This plan deletes a service or a variable. The apply on merge will fail by design; read the plan and apply it from a terminal with \`--confirm-destructive\`."
+              echo
+            fi
+            echo '```'
+            cat "${RUNNER_TEMP}/plan.txt"
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
+          if [ "$(jq -r '.destructive' railway-plan.json)" = "true" ]; then
+            echo "::warning title=Destructive Railway plan::Merging will fail the apply; see the job summary."
+          fi
+
+      # Found by the apply job through the pull request's head commit.
+      - name: Upload the Pinned Plan
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: railway-plan
+          path: railway-plan.json
+          if-no-files-found: error
+          # The longest a public repository allows, so a pull request that
+          # stays open a while still has its plan when it merges.
+          retention-days: 90
+
+  apply:
+    name: Apply
+    needs: token
+    if: github.event_name == 'push' && needs.token.outputs.present == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Add required reviewers to this environment in the repository's settings
+    # to make every apply wait for an approval.
+    environment: railway-production
+    # Two applies never overlap, whatever triggered them. GitHub keeps one
+    # pending run per group, so a third merge replaces a second still waiting;
+    # that is safe, because the third's plan then pins a tree the second
+    # changed and fails rather than applying the second's change unreviewed.
+    concurrency:
+      group: railway-production-apply
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      # To find the pull request this commit merged and its plan artifact.
+      pull-requests: read
+      actions: read
+
+    steps:
+      # The apply compares the plan's `.railway/` tree with this checkout's.
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # No SDK install: `--plan` applies the change set without evaluating
+      # railway.ts again.
+      - name: Set Up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+
+      # A push with no merged pull request behind it (a direct push to main)
+      # has no reviewed plan, and fails here by design.
+      - name: Fetch the Merged Pull Request's Plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          head_sha="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" \
+            --jq '[.[] | select(.merged_at != null)] | first | .head.sha // empty')"
+          if [ -z "${head_sha}" ]; then
+            echo "::error title=No pull request::${GITHUB_SHA} did not come from a merged pull request, so there is no reviewed plan to apply. Plan and apply from a terminal."
+            exit 1
+          fi
+          artifact_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?name=railway-plan&per_page=100" \
+            --jq "[.artifacts[] | select(.workflow_run.head_sha == \"${head_sha}\" and .expired == false)] | sort_by(.created_at) | last | .id // empty")"
+          if [ -z "${artifact_id}" ]; then
+            echo "::error title=No plan::No railway-plan artifact for ${head_sha}. The pull request merged before its plan finished, or its plan expired: re-run this job once a plan exists, or plan and apply from a terminal."
+            exit 1
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}/zip" > "${RUNNER_TEMP}/railway-plan.zip"
+          unzip -o "${RUNNER_TEMP}/railway-plan.zip" -d "${RUNNER_TEMP}/plan"
+
+      # The CLI refuses a destructive apply without --confirm-destructive on
+      # its own; this says why in the run, rather than in the CLI's words.
+      - name: Refuse a Destructive Plan
+        run: |
+          if [ "$(jq -r '.destructive' "${RUNNER_TEMP}/plan/railway-plan.json")" = "true" ]; then
+            echo "::error title=Destructive plan::This plan deletes a service or a variable. Read it, then apply from a terminal with --confirm-destructive."
+            exit 1
+          fi
+
+      - name: Apply the Pinned Plan
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: npx -y "${RAILWAY_CLI}" config apply --plan "${RUNNER_TEMP}/plan/railway-plan.json" --yes
