@@ -1,4 +1,6 @@
 import { Formula } from "@/components/Formula";
+import type { AliasingLabels } from "@/components/workshop/AliasingFigure";
+import type { CovarianceLabels } from "@/components/workshop/CovarianceFigure";
 import { EXPECTED_HITS, SEARCH_VARIANTS, type SearchVariant } from "@/lib/searchEvaluation";
 import { fillTemplate } from "@/lib/text";
 import { cn } from "@/lib/utils";
@@ -24,6 +26,13 @@ export type ExhibitLabels = {
   searchNote: string;
   /** The line under the heat identity. */
   heatCaption: string;
+  /** The line under the average of a product. */
+  averagesCaption: string;
+  /** The word in the edge of a figure that illustrates rather than measures. */
+  illustration: string;
+  /** The figures set inside "Does diffusion keep its character?". */
+  aliasing: AliasingLabels;
+  covariance: CovarianceLabels;
 };
 
 const LIT = "transition-colors duration-200 motion-reduce:transition-none";
@@ -92,5 +101,28 @@ export const HeatIdentity = ({ labels }: { labels: ExhibitLabels }) => (
       </span>
     </p>
     <p className="mt-4 text-sm text-muted-foreground">{labels.heatCaption}</p>
+  </div>
+);
+
+/**
+ * The sequel to the heat piece, in the same form: its key example as a
+ * formula. The average of a product is not the product of the averages,
+ * worked on the piece's own numbers; the inequality is the mark that lights.
+ * Two formulas either side of it, so on a phone the line breaks there.
+ */
+export const AverageOfProduct = ({ labels }: { labels: ExhibitLabels }) => (
+  <div aria-hidden="true" className="text-center">
+    <p className="text-2xl">
+      <span className="whitespace-nowrap">
+        <Formula tex="\frac{1 · 3 + 3 · 1}{2} = 3" />{" "}
+        <span className={cn(LIT, "group-focus-within/piece:text-iris group-hover/piece:text-iris")}>
+          <Formula tex="≠" />
+        </span>
+      </span>{" "}
+      <span className="whitespace-nowrap">
+        <Formula tex="4 = \frac{1 + 3}{2} · \frac{3 + 1}{2}" />
+      </span>
+    </p>
+    <p className="mt-4 text-sm text-muted-foreground">{labels.averagesCaption}</p>
   </div>
 );
