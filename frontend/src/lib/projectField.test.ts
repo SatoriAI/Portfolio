@@ -1,8 +1,11 @@
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
 import { describe, expect, it } from "vitest";
 
 import {
   arrivingPucks,
   EDGE,
+  fieldHeights,
   fieldLayout,
   glideHome,
   moveToSlot,
@@ -10,6 +13,7 @@ import {
   neighbour,
   pushFrom,
   restingPuck,
+  SCALE_FROM,
   settled,
   type StepEnv,
   stepPucks,
@@ -77,6 +81,35 @@ const run = (pucks: ReturnType<typeof restingPuck>[], env: StepEnv, seconds: num
     stepPucks(pucks, 1 / 60, env);
   }
 };
+
+describe("fieldHeights", () => {
+  it("is the field's height at every width, before the width is known", () => {
+    for (let count = 1; count <= 20; count++) {
+      const heights = fieldHeights(count);
+      for (const reducedMotion of [false, true]) {
+        const at = (width: number) => fieldLayout(count, width, reducedMotion).height;
+        for (const width of [0, 320, 390, SCALE_FROM.tablet - 0.5])
+          expect(at(width)).toBe(heights.phone);
+        for (const width of [SCALE_FROM.tablet, 800, SCALE_FROM.desk - 0.5])
+          expect(at(width)).toBe(heights.tablet);
+        for (const width of [SCALE_FROM.desk, 1064, 1600]) expect(at(width)).toBe(heights.desk);
+      }
+    }
+  });
+
+  it("switches at the breakpoints ProjectField's CSS sizes the field by", () => {
+    // Before the room is measured the field's height comes from container
+    // queries written out in the component; they must be the scale's own.
+    const component = readFileSync(
+      fileURLToPath(new URL("../components/home/ProjectField.tsx", import.meta.url)),
+      "utf8",
+    );
+    expect(component).toContain(
+      `[@container(${SCALE_FROM.tablet}px<=width<${SCALE_FROM.desk}px)]:h-[--field-tablet]`,
+    );
+    expect(component).toContain(`[@container(width>=${SCALE_FROM.desk}px)]:h-[--field-desk]`);
+  });
+});
 
 describe("stepPucks", () => {
   it("brings the arrival out from the centre to every home, and rests", () => {

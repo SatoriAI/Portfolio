@@ -36,6 +36,15 @@ type GrokkingPlotProps = {
   formatPercent: (value: number) => string;
   /** The guess's dashed line, which the chart nudges once to show it moves. */
   markerRef: Ref<SVGLineElement>;
+  /**
+   * Whether the geometry is at the plot's measured width. Until it is (in
+   * the page's HTML and while the browser takes it over), it is at a
+   * stand-in width, so the box takes the measured plot's height from CSS,
+   * by the chart's width as a size container, and the chart keeps the
+   * drawing out of sight (see GrokkingChart): the page keeps its height
+   * when the plot is measured, and nothing is shown at the wrong size.
+   */
+  measured: boolean;
 };
 
 const GrokkingPlot = ({
@@ -47,6 +56,7 @@ const GrokkingPlot = ({
   formatStep,
   formatPercent,
   markerRef,
+  measured,
 }: GrokkingPlotProps) => {
   const drawId = `${useId().replace(/:/g, "")}-draw`;
   const drawRef = useRef<SVGRectElement>(null);
@@ -76,7 +86,12 @@ const GrokkingPlot = ({
       width={width}
       height={height}
       viewBox={`0 0 ${width} ${height}`}
-      className="block h-auto w-full"
+      className={
+        measured
+          ? "block h-auto w-full"
+          : // PLOT_HEIGHT, in CSS (geometry.test.ts holds the two to each other).
+            "block h-[272px] w-full [@container(min-width:640px)]:h-[252px]"
+      }
       aria-hidden="true"
     >
       {[0, 0.5, 1].map((value) => (

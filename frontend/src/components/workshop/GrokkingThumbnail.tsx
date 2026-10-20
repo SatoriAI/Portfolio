@@ -42,7 +42,9 @@ const GrokkingThumbnail = ({ labels }: { labels: GrokkingThumbnailLabels }) => {
 
   return (
     <div ref={box} aria-hidden="true">
-      {width > 0 && (
+      {/* Drawn at the measured width; until then (in the page's HTML) its
+          room is held, so the page does not grow when it is measured. */}
+      {width > 0 ? (
         <svg width={width} height={HEIGHT} className="block overflow-visible">
           <rect
             x={x(DELAY_FROM)}
@@ -118,6 +120,8 @@ const GrokkingThumbnail = ({ labels }: { labels: GrokkingThumbnailLabels }) => {
             />
           ))}
         </svg>
+      ) : (
+        <div style={{ height: HEIGHT }} />
       )}
       <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-mono text-meta text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">

@@ -11,6 +11,7 @@ import { MARK_REACH } from "@/components/academic/grokking/marks";
 import { useGuessAndRead } from "@/components/academic/grokking/use-guess-and-read";
 import { Button } from "@/components/ui/button";
 import { useElementSize } from "@/hooks/use-element-size";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useOnceInView } from "@/hooks/use-in-view";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import {
@@ -134,6 +135,11 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
   // The plot's width in CSS pixels, so text in the SVG stays at its set size.
   const ref = useRef<HTMLDivElement>(null);
   const { width } = useElementSize(ref, { width: 560, height: 0 });
+  // False until the browser has taken the page over, by which time the plot
+  // is measured. Until then the plot is an empty box of its final height: a
+  // size container that sizes it, with the drawing and its labels, laid out
+  // at a stand-in width, kept out of sight.
+  const hydrated = useHydrated();
   const keyRef = useRef<HTMLUListElement>(null);
   const tipRef = useRef<HTMLDivElement>(null);
   const [keyBox, setKeyBox] = useState<Box | null>(null);
@@ -344,6 +350,7 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
           // crosshair line, the grown marks and the inked step label show.
           className={cn(
             "relative mt-1 rounded-motif",
+            !hydrated && "[container-type:inline-size] [&>*]:invisible",
             // A drag across the plot moves the marker and selects nothing.
             guessing ? "cursor-ew-resize select-none" : "cursor-crosshair",
           )}
@@ -357,6 +364,7 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
             formatStep={formatStep}
             formatPercent={formatPercent}
             markerRef={markerLine}
+            measured={hydrated}
           />
 
           {/* The guess's name, above the 100% line where no line goes, always

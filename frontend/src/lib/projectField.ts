@@ -41,10 +41,13 @@ type Scale = {
   maxCell: number;
 };
 
+/** The room's widths from which the tablet's and the desk's scale take over from a phone's. */
+export const SCALE_FROM = { tablet: 640, desk: 1024 } as const;
+
 const scaleFor = (width: number): Scale =>
-  width < 640
+  width < SCALE_FROM.tablet
     ? { perRow: 3, size: 64, rowHeight: 112, pad: 16, jitter: 5, lean: 0.06, maxCell: Infinity }
-    : width < 1024
+    : width < SCALE_FROM.desk
       ? { perRow: 4, size: 80, rowHeight: 136, pad: 20, jitter: 10, lean: 0.12, maxCell: 200 }
       : { perRow: 6, size: 96, rowHeight: 148, pad: 20, jitter: 14, lean: 0.12, maxCell: 240 };
 
@@ -91,6 +94,17 @@ export const fieldLayout = (count: number, width: number, reducedMotion: boolean
     still,
   };
 };
+
+/**
+ * The field's height for `count` projects on a phone, a tablet and a desk:
+ * the height depends on the room's width only through its scale, so these
+ * are all it can be, known before the width is (see ProjectField).
+ */
+export const fieldHeights = (count: number) => ({
+  phone: fieldLayout(count, 0, false).height,
+  tablet: fieldLayout(count, SCALE_FROM.tablet, false).height,
+  desk: fieldLayout(count, SCALE_FROM.desk, false).height,
+});
 
 export type Puck = {
   /** Home. */

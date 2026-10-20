@@ -6,7 +6,7 @@
        address survive a square crop (x 285 to 915). -->
   <defs>
     <style>
-      @font-face { font-family: "Manrope"; src: url("../public/fonts/Manrope.ttf"); font-weight: 200 800; }
+      @font-face { font-family: "Manrope"; src: url("../public/fonts/Manrope.woff2"); font-weight: 200 800; }
       @font-face { font-family: "IBM Plex Mono"; src: url("../public/fonts/IBMPlexMono-Medium.woff2"); font-weight: 500; }
       text { text-anchor: middle; }
       .name { font: 600 84px "Manrope"; letter-spacing: -0.035em; fill: #17233D; }
