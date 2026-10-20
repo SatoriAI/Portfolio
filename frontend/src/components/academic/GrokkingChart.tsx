@@ -136,7 +136,9 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const { width } = useElementSize(ref, { width: 560, height: 0 });
   // False until the browser has taken the page over, by which time the plot
-  // is measured: until then it is a size container that sizes the plot.
+  // is measured. Until then the plot is an empty box of its final height: a
+  // size container that sizes it, with the drawing and its labels, laid out
+  // at a stand-in width, kept out of sight.
   const hydrated = useHydrated();
   const keyRef = useRef<HTMLUListElement>(null);
   const tipRef = useRef<HTMLDivElement>(null);
@@ -348,7 +350,7 @@ const GrokkingChart = ({ labels, locale, className }: GrokkingChartProps) => {
           // crosshair line, the grown marks and the inked step label show.
           className={cn(
             "relative mt-1 rounded-motif",
-            !hydrated && "[container-type:inline-size]",
+            !hydrated && "[container-type:inline-size] [&>*]:invisible",
             // A drag across the plot moves the marker and selects nothing.
             guessing ? "cursor-ew-resize select-none" : "cursor-crosshair",
           )}

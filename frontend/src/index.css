@@ -5,8 +5,8 @@
 /* Fonts ship with the Visual Identity Kit (../visual-kit/fonts) and are
    self-hosted from public/fonts (licences alongside), all as WOFF2: the
    kit's TTFs repacked, outlines and metrics unchanged, at about a third of
-   the bytes. Manrope is a single
-   variable file; Plex Mono ships the two cuts the kit allows, 400 and 500.
+   the bytes. Manrope is a single variable file; Plex Mono ships the two
+   cuts the kit allows, 400 and 500.
    Only Manrope is preloaded: the Medium is needed only where a group label,
    stage heading or stamp is on the page, so it downloads there and nowhere
    else. Any other mono weight would be synthesised, so there is none. */

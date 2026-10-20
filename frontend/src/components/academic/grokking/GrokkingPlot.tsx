@@ -39,10 +39,10 @@ type GrokkingPlotProps = {
   /**
    * Whether the geometry is at the plot's measured width. Until it is (in
    * the page's HTML and while the browser takes it over), it is at a
-   * stand-in width; the box then takes the measured plot's height from CSS,
-   * by the chart's width as a size container (see GrokkingChart), so the
-   * page keeps its height when the plot is measured, and the stand-in
-   * drawing sits in it at the top left.
+   * stand-in width, so the box takes the measured plot's height from CSS,
+   * by the chart's width as a size container, and the chart keeps the
+   * drawing out of sight (see GrokkingChart): the page keeps its height
+   * when the plot is measured, and nothing is shown at the wrong size.
    */
   measured: boolean;
 };
@@ -86,7 +86,6 @@ const GrokkingPlot = ({
       width={width}
       height={height}
       viewBox={`0 0 ${width} ${height}`}
-      preserveAspectRatio={measured ? undefined : "xMinYMin meet"}
       className={
         measured
           ? "block h-auto w-full"
