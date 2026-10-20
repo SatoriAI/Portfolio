@@ -1,7 +1,16 @@
 import { useRef } from "react";
 
 import { useElementSize } from "@/hooks/use-element-size";
-import { GROKKING_RUNS, GROKKING_STEPS } from "@/lib/grokking";
+import { GROKKING_RUNS } from "@/lib/grokking";
+import {
+  DELAY_FROM,
+  DELAY_TO,
+  delayBand,
+  HEIGHT,
+  LAST_STEP,
+  PAD,
+  thumbnailScales,
+} from "@/lib/grokkingThumbnail";
 import { cn } from "@/lib/utils";
 
 /**
@@ -13,18 +22,6 @@ import { cn } from "@/lib/utils";
  * its labels stay at the kit's sizes on a phone and at 1440 alike.
  */
 
-const HEIGHT = 190;
-const PAD = { left: 36, right: 8, top: 10, bottom: 24 };
-const LAST_STEP = GROKKING_STEPS[GROKKING_STEPS.length - 1];
-
-/** From the step every run knows its training data to the step every run passes 50% on new data. */
-const firstStepWhere = (test: (values: number[]) => boolean, metric: "train" | "test") =>
-  GROKKING_STEPS.find((step) =>
-    test(GROKKING_RUNS.map((run) => run.points.find((point) => point.step === step)![metric])),
-  ) ?? LAST_STEP;
-const DELAY_FROM = firstStepWhere((values) => values.every((v) => v >= 0.99), "train");
-const DELAY_TO = firstStepWhere((values) => values.every((v) => v >= 0.5), "test");
-
 export type GrokkingThumbnailLabels = {
   newExamples: string;
   training: string;
@@ -35,8 +32,8 @@ const GrokkingThumbnail = ({ labels }: { labels: GrokkingThumbnailLabels }) => {
   const box = useRef<HTMLDivElement>(null);
   const { width } = useElementSize(box);
 
-  const x = (step: number) => PAD.left + ((width - PAD.left - PAD.right) * step) / LAST_STEP;
-  const y = (value: number) => PAD.top + (HEIGHT - PAD.top - PAD.bottom) * (1 - value);
+  const { x, y } = thumbnailScales(width);
+  const band = delayBand(width);
   const line = (metric: "train" | "test", points: (typeof GROKKING_RUNS)[number]["points"]) =>
     points.map((point) => `${x(point.step)},${y(point[metric])}`).join(" ");
 
@@ -46,16 +43,15 @@ const GrokkingThumbnail = ({ labels }: { labels: GrokkingThumbnailLabels }) => {
           room is held, so the page does not grow when it is measured. */}
       {width > 0 ? (
         <svg width={width} height={HEIGHT} className="block overflow-visible">
-          <rect
-            x={x(DELAY_FROM)}
-            y={y(1)}
-            width={x(DELAY_TO) - x(DELAY_FROM)}
-            height={y(0) - y(1)}
-            // Its edges turn iris when the row it sits in is pointed at (the
-            // workshop index's reading of a result); still elsewhere.
-            className="fill-blush stroke-transparent transition-colors duration-200 group-focus-within/piece:stroke-iris group-hover/piece:stroke-iris motion-reduce:transition-none"
-            strokeWidth={1.5}
-          />
+          {band && (
+            <rect
+              {...band}
+              // Its edges turn iris when the row it sits in is pointed at (the
+              // workshop index's reading of a result); still elsewhere.
+              className="fill-blush stroke-transparent transition-colors duration-200 group-focus-within/piece:stroke-iris group-hover/piece:stroke-iris motion-reduce:transition-none"
+              strokeWidth={1.5}
+            />
+          )}
           {/* Narrow on a phone: one size down, so the name stays inside its band. */}
           <text
             x={(x(DELAY_FROM) + x(DELAY_TO)) / 2}
