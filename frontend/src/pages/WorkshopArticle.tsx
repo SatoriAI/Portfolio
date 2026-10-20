@@ -28,11 +28,22 @@ import { translations } from "@/utils/translations";
  * section's heading standing in the margin beside it (numbered, under the
  * piece's own word for a section if it gives one, e.g. "Próba"), held in
  * view while its section is read; the section being read lights in iris.
- * The text keeps one reading column (columns 4–10, 55–70 characters a
- * line), the head on the same edge; on a phone each heading sits over its section. It ends on the
+ * The text and its figures keep one column (columns 4–12, see MEASURE),
+ * the head on the same edge; on a phone each heading sits over its section. It ends on the
  * shared closing, which carries the way on to the page the piece belongs
  * with. The floating chat button stands aside while the text is in view.
  */
+/**
+ * Text and figures share one column: from lg the 9 columns right of the
+ * headings' rail (4–12), wider than the kit's 55–70 characters a line by
+ * the owner's choice, so a figure is never wider than the prose around it.
+ * Between md and lg, where 10 columns would run to about 84 characters a
+ * line at 1000 px, the column is capped at 640 px: 58–69 characters in
+ * English and Polish from 768 to 1023 px. A span of 8 was measured too and
+ * fell to 45–50 at 768.
+ */
+const MEASURE = "md:max-w-[640px] lg:max-w-none";
+
 const WorkshopArticle = () => {
   const { slug } = useParams();
   const { language } = useSettings();
@@ -99,7 +110,7 @@ const WorkshopArticle = () => {
                 {w.all}
               </Link>
             </Col>
-            <Col spanMd={10} spanLg={7} className="flex flex-col">
+            <Col spanMd={10} spanLg={9} className={cn("flex flex-col", MEASURE)}>
               {/* On a phone the title comes first and the details under it. */}
               <div className="order-3 mt-4 lg:order-1 lg:mb-4 lg:mt-0">
                 <MetaLine
@@ -126,7 +137,7 @@ const WorkshopArticle = () => {
             </Col>
             {exhibit && (
               // The result before the story: the piece's evidence, its caption beside it.
-              <Col spanMd={10} spanLg={7} className="lg:col-start-4">
+              <Col spanMd={10} spanLg={9} className={cn("lg:col-start-4", MEASURE)}>
                 <figure className="grid gap-6 rounded-card border border-border bg-card p-6 md:p-8 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-center">
                   <div className="min-w-0">{exhibit(w.figure)}</div>
                   {article.caption && (
@@ -181,7 +192,7 @@ const WorkshopArticle = () => {
                       )}
                     </div>
                   </Col>
-                  <Col spanMd={10} spanLg={7}>
+                  <Col spanMd={10} spanLg={9} className={MEASURE}>
                     <ArticleBody
                       markdown={section.body}
                       labels={bodyLabels}

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { MathText } from "@/components/Formula";
 import { RangeInput } from "@/components/ui/range-input";
+import { useElementSize } from "@/hooks/use-element-size";
 import {
   bandEdge,
   cellAverages,
@@ -51,32 +52,114 @@ export type SymbolLabels = {
 
 type SymbolReading = "within" | "beyond";
 
-const WIDTH = 400;
-const HEIGHT = 168;
-const MIDDLE = HEIGHT / 2;
-const AMPLITUDE = 72;
 /** Points along the drawn curves: smooth at five oscillations, at any width. */
 const SAMPLES = 400;
 
-const xAt = (x: number) => x * WIDTH;
-const yAt = (value: number) => MIDDLE - value * AMPLITUDE;
-
-const curve = (f: (x: number) => number) =>
-  Array.from({ length: SAMPLES + 1 }, (_, i) => {
-    const x = i / SAMPLES;
-    return `${i === 0 ? "M" : "L"}${xAt(x).toFixed(2)} ${yAt(f(x)).toFixed(2)}`;
-  }).join("");
-
-/** The input wave never changes, so its path is drawn once. */
-const WAVE_PATH = curve((x) => wave(x));
+/**
+ * Both drawings are laid out in pixels at the width they are given, so a
+ * wider column shows more of the wave rather than thicker lines. Their
+ * heights are fixed by the layout (CSS, so the page the build writes holds
+ * the room) and capped, so at 1440 × 900 each plot, its readout and the
+ * slider fit on one screen.
+ */
+const WAVE_BOX = "h-[132px] sm:h-[160px] lg:h-[176px]";
+const SYMBOL_BOX = "h-[112px] sm:h-[128px] lg:h-[136px]";
+/** Room above and below the wave, in px, for the cell walls' overhang. */
+const WAVE_INSET = 6;
+/** Room above the symbol plot's 100% line, for the dot at the top. */
+const SYMBOL_INSET = 6;
 
 /** The second panel's frequencies run to the finest grid's limit, 15. */
 const L_MAX = bandEdge(CELLS_MAX);
-const SYMBOL = { height: 132, top: 8, bottom: 124 };
-const lAt = (l: number) => (l / L_MAX) * WIDTH;
-const ratioAt = (ratio: number) => SYMBOL.bottom - ratio * (SYMBOL.bottom - SYMBOL.top);
 /** The share left at the band's edge, 4/π², the same on every grid. */
 const EDGE_PERCENT = Math.round((4 / Math.PI ** 2) * 100);
+
+const path = (points: (readonly [number, number])[]) =>
+  points.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`).join("");
+
+/**
+ * A box of its final height that draws its contents once it knows its width:
+ * empty in the page the build writes and in the browser's first render, so
+ * the two agree, and drawn straight after, at the same height.
+ */
+const Measured = ({
+  className,
+  children,
+}: {
+  className: string;
+  children: (size: { width: number; height: number }) => JSX.Element;
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const size = useElementSize(ref);
+  return (
+    <div ref={ref} className={className} aria-hidden="true">
+      {size.width > 0 && size.height > 0 ? children(size) : null}
+    </div>
+  );
+};
+
+/** The wave, its cell averages on an n-cell grid, and the wave the grid sees. */
+const WavePlot = ({ cells, width, height }: { cells: number; width: number; height: number }) => {
+  const middle = height / 2;
+  const amplitude = middle - WAVE_INSET;
+  const xAt = (x: number) => x * width;
+  const yAt = (value: number) => middle - value * amplitude;
+  const curve = (f: (x: number) => number) =>
+    path(Array.from({ length: SAMPLES + 1 }, (_, i) => [xAt(i / SAMPLES), yAt(f(i / SAMPLES))]));
+  const averages = cellAverages(cells);
+  const h = 1 / cells;
+  return (
+    <svg width={width} height={height} className="block overflow-visible">
+      {averages.map((average, j) => (
+        <rect
+          key={`bar-${j}`}
+          x={xAt(j * h)}
+          width={xAt(h)}
+          y={Math.min(yAt(average), middle)}
+          height={Math.abs(yAt(average) - middle)}
+          className="fill-iris/15"
+        />
+      ))}
+      {/* The cell walls: the grid itself, h apart. */}
+      {Array.from({ length: cells + 1 }, (_, j) => (
+        <line
+          key={`wall-${j}`}
+          x1={xAt(j * h)}
+          x2={xAt(j * h)}
+          y1={0}
+          y2={height}
+          className="stroke-control-border/50"
+          strokeWidth={1}
+        />
+      ))}
+      <line x1={0} x2={width} y1={middle} y2={middle} className="stroke-control-border" />
+      <path
+        d={curve((x) => wave(x))}
+        fill="none"
+        className="stroke-muted-foreground"
+        strokeWidth={1.25}
+      />
+      <path
+        d={curve((x) => seenWave(x, cells))}
+        fill="none"
+        className="stroke-iris"
+        strokeWidth={2}
+        strokeDasharray="6 4"
+      />
+      {averages.map((average, j) => (
+        <line
+          key={`average-${j}`}
+          x1={xAt(j * h)}
+          x2={xAt((j + 1) * h)}
+          y1={yAt(average)}
+          y2={yAt(average)}
+          className="stroke-primary"
+          strokeWidth={2.5}
+        />
+      ))}
+    </svg>
+  );
+};
 
 /**
  * How the operator on an n-cell grid acts on an oscillation with ℓ waves,
@@ -86,76 +169,57 @@ const EDGE_PERCENT = Math.round((4 / Math.PI ** 2) * 100);
  * between them is shaded; beyond the limit the grid has no oscillations at
  * all. The figure's own wave is the dot.
  */
-const SymbolPlot = ({ cells }: { cells: number }) => {
+const SymbolPlot = ({ cells, width, height }: { cells: number; width: number; height: number }) => {
+  const top = SYMBOL_INSET;
+  const bottom = height - 1;
+  const lAt = (l: number) => (l / L_MAX) * width;
+  const ratioAt = (ratio: number) => bottom - ratio * (bottom - top);
   const edge = bandEdge(cells);
-  const steps = 120;
-  const line = Array.from({ length: steps + 1 }, (_, i) => {
-    const l = (edge * i) / steps;
-    return `${i === 0 ? "M" : "L"}${lAt(l).toFixed(2)} ${ratioAt(symbolRatio(l, cells)).toFixed(2)}`;
-  }).join("");
+  const steps = Math.max(60, Math.round(width / 3));
+  const line = path(
+    Array.from({ length: steps + 1 }, (_, i) => {
+      const l = (edge * i) / steps;
+      return [lAt(l), ratioAt(symbolRatio(l, cells))] as const;
+    }),
+  );
   const gap = `${line}L${lAt(edge).toFixed(2)} ${ratioAt(1)}L0 ${ratioAt(1)}Z`;
   return (
-    <svg
-      viewBox={`0 0 ${WIDTH} ${SYMBOL.height}`}
-      className="block h-auto w-full overflow-visible"
-      aria-hidden="true"
-    >
+    <svg width={width} height={height} className="block overflow-visible">
       <path d={gap} className="fill-iris/15" />
       <rect
         x={lAt(edge)}
-        width={WIDTH - lAt(edge)}
-        y={SYMBOL.top}
-        height={SYMBOL.bottom - SYMBOL.top}
+        width={width - lAt(edge)}
+        y={top}
+        height={bottom - top}
         className="fill-control-border/10"
       />
-      <line
-        x1={lAt(edge)}
-        x2={lAt(edge)}
-        y1={SYMBOL.top}
-        y2={SYMBOL.bottom}
-        className="stroke-control-border"
-        strokeWidth={1}
-        vectorEffect="non-scaling-stroke"
-      />
+      <line x1={lAt(edge)} x2={lAt(edge)} y1={top} y2={bottom} className="stroke-control-border" />
       {/* Where every grid's curve ends: 4/π² of the continuous operator. */}
       <line
         x1={0}
-        x2={WIDTH}
+        x2={width}
         y1={ratioAt(EDGE_PERCENT / 100)}
         y2={ratioAt(EDGE_PERCENT / 100)}
         className="stroke-control-border"
-        strokeWidth={1}
         strokeDasharray="2 4"
-        vectorEffect="non-scaling-stroke"
       />
-      {[0, 1].map((value) => (
-        <line
-          key={value}
-          x1={0}
-          x2={WIDTH}
-          y1={ratioAt(value)}
-          y2={ratioAt(value)}
-          className={value === 0 ? "stroke-control-border" : "stroke-muted-foreground"}
-          strokeWidth={value === 0 ? 1 : 1.25}
-          vectorEffect="non-scaling-stroke"
-        />
-      ))}
-      <path
-        d={line}
-        fill="none"
-        className="stroke-primary"
-        strokeWidth={2.5}
-        vectorEffect="non-scaling-stroke"
+      <line x1={0} x2={width} y1={ratioAt(0)} y2={ratioAt(0)} className="stroke-control-border" />
+      <line
+        x1={0}
+        x2={width}
+        y1={ratioAt(1)}
+        y2={ratioAt(1)}
+        className="stroke-muted-foreground"
+        strokeWidth={1.25}
       />
+      <path d={line} fill="none" className="stroke-primary" strokeWidth={2.5} />
       <line
         x1={lAt(WAVES)}
         x2={lAt(WAVES)}
-        y1={SYMBOL.top}
-        y2={SYMBOL.bottom}
+        y1={top}
+        y2={bottom}
         className="stroke-iris"
-        strokeWidth={1}
         strokeDasharray="3 3"
-        vectorEffect="non-scaling-stroke"
       />
       {WAVES <= edge && (
         <circle
@@ -177,15 +241,14 @@ const SymbolPlot = ({ cells }: { cells: number }) => {
  * real one; on a grid whose cells each hold whole oscillations every average
  * is zero. Under it, on the same slider, how the grid's own operator acts on
  * oscillations near its limit of resolution (SymbolPlot). All exact: see
- * lib/gridAverages. The drawing is a fixed viewBox
- * scaled to the column, and its state is the slider's alone, so the page the
+ * lib/gridAverages. Both drawings are drawn in pixels at their measured
+ * width (see Measured), and the state is the slider's alone, so the page the
  * build wrote and the browser's first render are the same. Nothing moves on
  * its own.
  */
 const AliasingFigure = ({ labels }: { labels: AliasingLabels }) => {
   // The slider runs from the finest grid to the coarsest: right is a larger h.
   const [cells, setCells] = useState(CELLS_DEFAULT);
-  const averages = cellAverages(cells);
   const reading = gridReading(WAVES, cells);
   const sentence = (key: GridReading) =>
     fillTemplate(labels.readings[key], {
@@ -193,7 +256,6 @@ const AliasingFigure = ({ labels }: { labels: AliasingLabels }) => {
       f: seenWaves(WAVES, cells),
       p: keptPercent(WAVES, cells),
     });
-  const h = 1 / cells;
   const symbolReading: SymbolReading = WAVES <= bandEdge(cells) ? "within" : "beyond";
   const symbolSentence = (key: SymbolReading) =>
     fillTemplate(labels.symbol.readings[key], {
@@ -203,71 +265,9 @@ const AliasingFigure = ({ labels }: { labels: AliasingLabels }) => {
 
   return (
     <div>
-      <svg
-        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        className="block h-auto w-full overflow-visible"
-        aria-hidden="true"
-      >
-        {averages.map((average, j) => (
-          <rect
-            key={`bar-${j}`}
-            x={xAt(j * h)}
-            width={xAt(h)}
-            y={Math.min(yAt(average), MIDDLE)}
-            height={Math.abs(yAt(average) - MIDDLE)}
-            className="fill-iris/15"
-          />
-        ))}
-        {/* The cell walls: the grid itself, h apart. */}
-        {Array.from({ length: cells + 1 }, (_, j) => (
-          <line
-            key={`wall-${j}`}
-            x1={xAt(j * h)}
-            x2={xAt(j * h)}
-            y1={MIDDLE - AMPLITUDE - 6}
-            y2={MIDDLE + AMPLITUDE + 6}
-            className="stroke-control-border/50"
-            strokeWidth={1}
-            vectorEffect="non-scaling-stroke"
-          />
-        ))}
-        <line
-          x1={0}
-          x2={WIDTH}
-          y1={MIDDLE}
-          y2={MIDDLE}
-          className="stroke-control-border"
-          strokeWidth={1}
-          vectorEffect="non-scaling-stroke"
-        />
-        <path
-          d={WAVE_PATH}
-          fill="none"
-          className="stroke-muted-foreground"
-          strokeWidth={1.25}
-          vectorEffect="non-scaling-stroke"
-        />
-        <path
-          d={curve((x) => seenWave(x, cells))}
-          fill="none"
-          className="stroke-iris"
-          strokeWidth={2}
-          strokeDasharray="6 4"
-          vectorEffect="non-scaling-stroke"
-        />
-        {averages.map((average, j) => (
-          <line
-            key={`average-${j}`}
-            x1={xAt(j * h)}
-            x2={xAt((j + 1) * h)}
-            y1={yAt(average)}
-            y2={yAt(average)}
-            className="stroke-primary"
-            strokeWidth={2.5}
-            vectorEffect="non-scaling-stroke"
-          />
-        ))}
-      </svg>
+      <Measured className={WAVE_BOX}>
+        {({ width, height }) => <WavePlot cells={cells} width={width} height={height} />}
+      </Measured>
 
       <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-1.5 text-sm text-foreground/80">
         <li className="flex items-center gap-3">
@@ -302,7 +302,9 @@ const AliasingFigure = ({ labels }: { labels: AliasingLabels }) => {
         <p className="mb-2 text-xs text-muted-foreground">
           <MathText text={labels.symbol.yAxis} />
         </p>
-        <SymbolPlot cells={cells} />
+        <Measured className={SYMBOL_BOX}>
+          {({ width, height }) => <SymbolPlot cells={cells} width={width} height={height} />}
+        </Measured>
         <p className="mt-1 text-right text-xs text-muted-foreground">
           <MathText text={labels.symbol.xAxis} />
         </p>
