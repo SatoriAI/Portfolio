@@ -213,7 +213,8 @@ const copy = {
         falseHits: "FA",
         searchNote: "{n} expected hits · FA = false alarms",
         heatCaption: "Comparing multiplication before and after diffusion recovers the gradients.",
-        averagesCaption: "On a grid the average of a product is not the product of the averages.",
+        averagesCaption:
+          "Averaged over a cell, a product generally differs from the product of the averages.",
         illustration: "Explanatory example",
         aliasing: {
           wave: "the wave",
@@ -224,10 +225,25 @@ const copy = {
           coarse: "coarser grid",
           readings: {
             follows:
-              "The grid keeps up: {k} oscillations, and the averages keep {p}% of the height.",
+              "The grid keeps up: {k} oscillations, and the averages keep {p}% of the wave’s height.",
             slower:
-              "The grid sees a slower wave: {f} instead of {k} oscillations, at {p}% of the height.",
+              "The grid sees a slower wave: {f} instead of {k} oscillations, with {p}% of the wave’s height.",
             vanished: "Every cell average is zero: the grid does not see the wave at all.",
+          },
+          symbol: {
+            yAxis: "Effect on an oscillation, as a share of the continuous operator’s",
+            xAxis: "oscillations per period, $ℓ$",
+            continuous: "continuous operator (100%)",
+            discrete: "nearest-neighbour operator on the grid",
+            marker: "the wave above",
+            beyond: "beyond the grid’s resolution",
+            edge: "{e}%, where every grid’s curve ends",
+            readings: {
+              within:
+                "On the wave above, the discrete operator acts at {r}% of the continuous one’s strength; at the limit of resolution, {e}%.",
+              beyond:
+                "The wave above lies beyond this grid’s resolution: the grid has no such oscillation.",
+            },
           },
         },
         covariance: {
@@ -907,7 +923,7 @@ const copy = {
         falseHits: "FA",
         searchNote: "{n} oczekiwanych trafień · FA = fałszywe alarmy",
         heatCaption: "Porównując mnożenie przed dyfuzją i po niej, odzyskujemy gradienty.",
-        averagesCaption: "Na siatce średnia iloczynu nie jest iloczynem średnich.",
+        averagesCaption: "Średnia iloczynu w komórce na ogół różni się od iloczynu średnich.",
         illustration: "Przykład objaśniający",
         aliasing: {
           wave: "fala",
@@ -918,8 +934,23 @@ const copy = {
           coarse: "rzadsza siatka",
           readings: {
             follows: "Siatka nadąża: {k} oscylacji, a średnie zachowują {p}% wysokości fali.",
-            slower: "Siatka widzi wolniejszą falę: {f} zamiast {k} oscylacji, o {p}% wysokości.",
+            slower: "Siatka widzi wolniejszą falę: {f} zamiast {k} oscylacji, przy {p}% wysokości.",
             vanished: "Każda średnia w komórce jest równa zeru: siatka w ogóle nie widzi fali.",
+          },
+          symbol: {
+            yAxis: "Działanie na oscylację jako część działania operatora ciągłego",
+            xAxis: "liczba oscylacji na okres, $ℓ$",
+            continuous: "operator ciągły (100%)",
+            discrete: "operator najbliższych sąsiadów na siatce",
+            marker: "fala z wykresu powyżej",
+            beyond: "poza rozdzielczością siatki",
+            edge: "{e}%, na którym kończy się krzywa każdej siatki",
+            readings: {
+              within:
+                "Na fali z wykresu powyżej dyskretny operator działa z {r}% siły ciągłego; na granicy rozdzielczości z {e}%.",
+              beyond:
+                "Fala z wykresu powyżej leży poza rozdzielczością tej siatki: siatka nie ma takiej oscylacji.",
+            },
           },
         },
         covariance: {

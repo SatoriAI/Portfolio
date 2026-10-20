@@ -72,6 +72,29 @@ export const keptPercent = (k: number, n: number) =>
   // A grid that divides k keeps nothing; sin(π·m) is not exactly zero in floating point.
   seenWaves(k, n) === 0 ? 0 : Math.round(Math.abs(keptFactor(k, n)) * 100);
 
+/**
+ * How the periodic Laplacian acts on the Fourier mode e^(2πiℓx): it scales
+ * it by its symbol, 4π²ℓ² for the continuous operator and (4/h²)·sin²(πhℓ)
+ * for the nearest-neighbour operator on a grid of n cells, h = 1/n, which
+ * only has modes up to ℓ = n/2. Textbook facts, not the paper's estimates.
+ */
+export const continuousSymbol = (l: number) => 4 * Math.PI ** 2 * l ** 2;
+
+export const latticeSymbol = (l: number, n: number) =>
+  4 * n ** 2 * Math.sin((Math.PI * l) / n) ** 2;
+
+/**
+ * The lattice symbol as a share of the continuous one: near 1 for slow modes,
+ * falling to 4/π² ≈ 0.41 at the grid's limit of resolution, ℓ = n/2.
+ */
+export const symbolRatio = (l: number, n: number) => {
+  const z = (Math.PI * l) / n;
+  return z === 0 ? 1 : (Math.sin(z) / z) ** 2;
+};
+
+/** The highest frequency an n-cell grid can carry. */
+export const bandEdge = (n: number) => n / 2;
+
 /** The mean of a list of values. */
 export const mean = (values: readonly number[]) =>
   values.reduce((sum, value) => sum + value, 0) / values.length;

@@ -56,7 +56,7 @@ Trudność pojawia się przy operacjach łączących dyfuzję i mnożenie. W nas
 
 Trzeba więc przeanalizować je jako całość.
 
-Przy odpowiednich założeniach pokazujemy, że stabilność obejmuje również te operacje i pełną konstrukcję przybliżającą operator Darcy’ego. Zależność uzyskanego oszacowania od żądanej dokładności rośnie tylko logarytmicznie.
+Przy odpowiednich założeniach pokazujemy, że stabilność obejmuje również te operacje i pełną konstrukcję przybliżającą operator rozwiązania równania Darcy’ego. Zależność uzyskanego oszacowania od żądanej dokładności rośnie tylko logarytmicznie.
 
 To wynik o wrażliwości matematycznego odwzorowania na zaburzenie generatora. Nie rozstrzyga jeszcze o zachowaniu obliczeń w skończonej precyzji.
 
@@ -64,11 +64,11 @@ To wynik o wrażliwości matematycznego odwzorowania na zaburzenie generatora. N
 
 Siatka wprowadza ograniczenie, którego nie można usunąć samą zręcznością dowodu: nie rozróżnia wszystkich zmian obecnych w funkcji ciągłej.
 
-Wyobraźmy sobie falę oscylującą wielokrotnie pomiędzy sąsiednimi węzłami. Po przejściu na siatkę część tych oscylacji może zniknąć, a inne mogą wyglądać jak wolniejsze zmiany. Jest to związane z aliasingiem.
-
-![Fala o pięciu oscylacjach na okresowym odcinku i jej średnie w komórkach siatki; suwak zmienia odstęp siatki h](/figure/aliasing "Fala o pięciu oscylacjach na okresowym odcinku i jej średnie w komórkach o szerokości h. Gdy komórki zbliżają się do skali oscylacji, średnie słabną, a potem układają się w wolniejszą falę. Przy h = 1/5 każda komórka mieści jedną pełną oscylację i wszystkie średnie są równe zeru. Wartości są dokładne, nie z symulacji.")
+Wyobraźmy sobie falę, która między sąsiednimi węzłami wykonuje więcej niż pół oscylacji. Po przejściu na siatkę część tych oscylacji może zniknąć, a inne mogą wyglądać jak wolniejsze zmiany. Jest to związane z aliasingiem.
 
 Dodatkowo dyskretny operator inaczej oddziałuje na oscylacje bliskie granicy rozdzielczości niż operator ciągły.
+
+![Fala o pięciu oscylacjach na okresowym odcinku i jej średnie w komórkach siatki; pod nią działanie operatora dyskretnego na oscylacje względem ciągłego; suwak zmienia odstęp siatki h](/figure/aliasing "Fala o pięciu oscylacjach na okresowym odcinku i jej średnie w komórkach o szerokości h. Gdy komórki zbliżają się do skali oscylacji, średnie słabną, a potem układają się w wolniejszą falę. Przy h = 1/5 każda komórka mieści jedną pełną oscylację i wszystkie średnie są równe zeru. Dolny wykres: siatka słabiej odczuwa szybkie oscylacje; przy granicy rozdzielczości dyskretny operator działa na nie z ok. 41% siły operatora ciągłego. Wartości są dokładne, nie z symulacji.")
 
 Dlatego nie wystarczy wykazać, że oba operatory są bliskie dla każdej ustalonej, dostatecznie regularnej funkcji. Chcemy kontrolować błąd dla całej dopuszczalnej klasy wejść. W takiej klasie mogą występować funkcje o coraz drobniejszych szczegółach.
 
@@ -82,7 +82,7 @@ Błąd rzędu $h$ maleje w oszacowaniu dwukrotnie po zmniejszeniu tej odległoś
 
 W pracy pokazujemy, jak tempo to zależy od regularności wejścia do pierwszej warstwy konstrukcji.
 
-Jeśli zakładamy tylko przynależność do $L^2$, czyli całkowalność kwadratu funkcji, uzyskujemy oszacowanie pierwszego rzędu w normie energetycznej. W określonym zakresie parametrów podajemy również przykłady osiągające ten rząd, już w jednym wymiarze.
+Jeśli zakładamy tylko przynależność do $L^2$, czyli całkowalność kwadratu funkcji, uzyskujemy oszacowanie pierwszego rzędu w dyskretnej normie energetycznej. W określonym zakresie parametrów podajemy również przykłady osiągające ten rząd, już w jednym wymiarze.
 
 Jeżeli wejście ma jedną słabą pochodną należącą do $L^2$, otrzymujemy drugi rząd. To warunek kontrolujący zmiany przestrzenne, znacznie słabszy niż żądanie idealnej gładkości.
 
@@ -112,7 +112,7 @@ Przy przejściu na średnie komórkowe nawet mnożenie przestaje zachowywać si�
 
 Weźmy dwa zestawy wartości: $1, 3$ oraz $3, 1$. Ich średnie wynoszą po $2$, więc iloczyn średnich to $4$. Tymczasem iloczyny odpowiadających sobie wartości wynoszą $3, 3$, a ich średnia to $3$.
 
-![Wartości b równe 1 i 3 oraz u równe 3 i 1 na dwóch połówkach komórki, ich iloczyny i średnie; suwak zmienia u](/figure/covariance "Średnia iloczynu i iloczyn średnich różnią się dokładnie o kowariancję, czyli średnią iloczynu odchyleń b i u od ich średnich. Gdy u rośnie tam, gdzie b maleje, różnica jest ujemna; gdy rosną razem, dodatnia; gdy u jest stałe, znika.")
+![Wartości b równe 1 i 3 oraz u równe 3 i 1 na dwóch połówkach komórki, ich iloczyny i średnie; suwak zmienia u](/figure/covariance "Średnia iloczynu minus iloczyn średnich to dokładnie kowariancja, czyli średnią iloczynu odchyleń b i u od ich średnich. Gdy u rośnie tam, gdzie b maleje, różnica jest ujemna; gdy rosną razem, dodatnia; gdy u jest stałe, znika.")
 
 Różnica opisuje informację o wspólnych zmianach obu funkcji, utraconą podczas uśredniania.
 

@@ -1,15 +1,19 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  bandEdge,
   cellAverages,
   CELLS_DEFAULT,
   CELLS_MAX,
   CELLS_MIN,
+  continuousSymbol,
   gridReading,
   keptPercent,
+  latticeSymbol,
   productExample,
   seenWave,
   seenWaves,
+  symbolRatio,
   wave,
   WAVES,
 } from "./gridAverages";
@@ -103,5 +107,37 @@ describe("productExample", () => {
     }
     expect(productExample(0).covariance).toBe(0);
     expect(productExample(-1).covariance).toBe(1);
+  });
+});
+
+describe("symbolRatio", () => {
+  it("is the lattice symbol over the continuous one", () => {
+    for (const n of [CELLS_MIN, CELLS_DEFAULT, CELLS_MAX]) {
+      for (const l of [1, 2, bandEdge(n)]) {
+        expect(symbolRatio(l, n)).toBeCloseTo(latticeSymbol(l, n) / continuousSymbol(l), 12);
+      }
+    }
+  });
+
+  it("falls to 4/π² at the grid's limit of resolution, whatever the grid", () => {
+    for (const n of [CELLS_MIN, 10, CELLS_MAX]) {
+      expect(symbolRatio(bandEdge(n), n)).toBeCloseTo(4 / Math.PI ** 2, 12);
+    }
+    expect(Math.round((4 / Math.PI ** 2) * 100)).toBe(41);
+  });
+
+  it("tends to 1 for modes slow against the grid", () => {
+    expect(symbolRatio(0, CELLS_DEFAULT)).toBe(1);
+    expect(symbolRatio(1, 1e4)).toBeCloseTo(1, 7);
+    expect(1 - symbolRatio(1, 100)).toBeLessThan(1e-3);
+  });
+
+  it("only falls across the band", () => {
+    let last = 1;
+    for (let l = 0.25; l <= bandEdge(CELLS_MAX); l += 0.25) {
+      const ratio = symbolRatio(l, CELLS_MAX);
+      expect(ratio).toBeLessThan(last);
+      last = ratio;
+    }
   });
 });
