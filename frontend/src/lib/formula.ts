@@ -26,7 +26,7 @@ const NUMBER = /^\d+(?:[.,]\d+)?/;
 // A letter of any script counts as an identifier: Latin, Greek, blackboard,
 // and ∂ and ∇, which set tight against what they differentiate as a letter does.
 const LETTER = /^[\p{L}ℤℝℂℕ∂∇∞]/u;
-const OPERATOR = /^(?:→|←|·|×|±|−|≤|≥|≡|[-+=<>,;:()[\]|/!'.]|⟨|⟩|∑|∫)/u;
+const OPERATOR = /^(?:→|←|·|×|±|−|≤|≥|≠|≡|[-+=<>,;:()[\]|/!'.]|⟨|⟩|∑|∫)/u;
 
 const tokenize = (source: string): Token[] => {
   const tokens: Token[] = [];

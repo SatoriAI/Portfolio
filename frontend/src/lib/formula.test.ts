@@ -27,6 +27,17 @@ describe("parseFormula", () => {
     });
   });
 
+  it("reads ≠ as an operator", () => {
+    expect(parseFormula("3 ≠ 4")).toEqual({
+      type: "row",
+      children: [
+        { type: "num", value: "3" },
+        { type: "op", value: "≠" },
+        { type: "num", value: "4" },
+      ],
+    });
+  });
+
   it("reads ≡ as an operator, for congruences", () => {
     expect(parseFormula("a ≡ b")).toEqual({
       type: "row",

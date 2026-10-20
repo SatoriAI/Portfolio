@@ -4,10 +4,12 @@ import { Link } from "react-router-dom";
 import { Check, Copy } from "lucide-react";
 import remarkGfm from "remark-gfm";
 
+import FigureFrame from "@/components/academic/FigureFrame";
 import CopiedAnnouncement from "@/components/feedback/CopiedAnnouncement";
 import { Formula, MathText } from "@/components/Formula";
 import { EXHIBITS } from "@/components/workshop/exhibitRegistry";
 import type { ExhibitLabels } from "@/components/workshop/exhibits";
+import { ILLUSTRATIONS } from "@/components/workshop/illustrationRegistry";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { fillTemplate } from "@/lib/text";
 import { typeset } from "@/lib/typography";
@@ -25,7 +27,8 @@ import { cn } from "@/lib/utils";
  * markdown title the visible caption and its alt text for screen readers.
  * An image whose address is `/figure/<name>` is one of the site's own
  * drawings instead (see exhibitRegistry), set where the text needs it:
- * `![what it shows](/figure/grokking "Caption")`.
+ * `![what it shows](/figure/grokking "Caption")`. One the reader operates
+ * (see illustrationRegistry) is framed as an illustration, its caption inside.
  * Long words and URLs wrap rather than running out of the column.
  */
 
@@ -211,6 +214,23 @@ const ArticleBody = ({ markdown, labels, figureLabels, language = "en" }: Articl
       ),
       // `![alt](src "caption")`: the alt is read out, the title is shown.
       img: ({ src, alt, title }) => {
+        const illustration = src?.startsWith("/figure/") ? ILLUSTRATIONS[src.slice(8)] : undefined;
+        if (illustration && figureLabels) {
+          return (
+            <div className="my-8">
+              <FigureFrame kind="illustration" label={figureLabels.illustration}>
+                <figure>
+                  {/* The drawing is hidden from assistive technology; the alt says what it shows. */}
+                  {alt && <span className="sr-only">{alt}</span>}
+                  {illustration(figureLabels)}
+                  {title && (
+                    <figcaption className="mt-6 text-sm text-foreground/80">{title}</figcaption>
+                  )}
+                </figure>
+              </FigureFrame>
+            </div>
+          );
+        }
         const drawing = src?.startsWith("/figure/") ? EXHIBITS[src.slice(8)] : undefined;
         if (drawing && figureLabels) {
           return (
