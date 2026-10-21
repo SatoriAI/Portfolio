@@ -84,7 +84,7 @@ It is the mathematical equivalent of the moment in Stark’s workshop when it tu
 
 ## What did we achieve?
 
-In our result we show that a finite number of diffusion operations, combined with pointwise multiplication, is enough to approximate the solution operator of Darcy’s equation for a defined class of problems.
+In [our result](https://arxiv.org/abs/2610.20106) we show that a finite number of diffusion operations, combined with pointwise multiplication, is enough to approximate the solution operator of Darcy’s equation for a defined class of problems.
 
 We work on a torus. The easiest way to picture it is as a space with periodic edges: leave through one side and you come back through the opposite one. This lets us concentrate on the main mechanism without the extra difficulties of boundary conditions.
 

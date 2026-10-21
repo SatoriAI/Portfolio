@@ -84,7 +84,7 @@ To matematyczny odpowiednik chwili w warsztacie Starka, kiedy okazuje się, że 
 
 ## Co udało się uzyskać?
 
-W opracowanym wyniku pokazujemy, że skończona liczba operacji dyfuzji, połączona z mnożeniem punktowym, wystarcza do przybliżania operatora rozwiązania równania Darcy’ego w określonej klasie problemów.
+W [opracowanym wyniku](https://arxiv.org/abs/2610.20106) pokazujemy, że skończona liczba operacji dyfuzji, połączona z mnożeniem punktowym, wystarcza do przybliżania operatora rozwiązania równania Darcy’ego w określonej klasie problemów.
 
 Pracujemy na torusie. Najłatwiej wyobrazić go sobie jako przestrzeń z okresowymi brzegami: wychodząc przez jedną stronę, wracamy przez przeciwną. To pozwala skoncentrować się na głównym mechanizmie bez dodatkowych trudności związanych z warunkami brzegowymi.
 
