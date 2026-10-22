@@ -13,4 +13,11 @@ describe("cn", () => {
     expect(cn("shadow-lift", "shadow-float")).toBe("shadow-float");
     expect(cn("rounded-xl", "rounded-card")).toBe("rounded-card");
   });
+
+  it("keeps a fill colour beside an animation fill mode", () => {
+    expect(cn("fill-primary animate-in fill-mode-both")).toBe(
+      "fill-primary animate-in fill-mode-both",
+    );
+    expect(cn("fill-mode-none", "fill-mode-both")).toBe("fill-mode-both");
+  });
 });

@@ -7,8 +7,12 @@ import { extendTailwindMerge } from "tailwind-merge";
  * text-muted-foreground` lost its size and set the text at 16px, and an
  * unknown `shadow-*` or `rounded-*` never overrode the one before it. Keep
  * these lists in step with fontSize, boxShadow and borderRadius there.
+ *
+ * tailwindcss-animate's `fill-mode-*` is not a fill colour either: read as
+ * one, `fill-primary animate-in fill-mode-both` lost `fill-primary` and a
+ * glyph's dot fell back to black.
  */
-const twMerge = extendTailwindMerge({
+const twMerge = extendTailwindMerge<"fill-mode">({
   extend: {
     classGroups: {
       "font-size": [
@@ -43,6 +47,7 @@ const twMerge = extendTailwindMerge({
         },
       ],
       rounded: [{ rounded: ["card", "motif"] }],
+      "fill-mode": [{ "fill-mode": ["none", "forwards", "backwards", "both"] }],
     },
   },
 });
