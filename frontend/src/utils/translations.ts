@@ -346,7 +346,7 @@ const copy = {
         Konfio: {
           role: "Co-founder and the only person responsible for the technology · since 2025",
         },
-        OpenGrant: { role: "Co-founder, responsible for the technology · since 2025" },
+        OpenGrant: { role: "Co-founder, responsible for the technology · 2024–2026" },
       } as Record<string, { role: string }>,
     },
     contact: {
@@ -1055,7 +1055,7 @@ const copy = {
           role: "Współzałożyciel projektu i jedyna osoba odpowiedzialna za technologię · od 2025",
         },
         OpenGrant: {
-          role: "Współzałożyciel projektu odpowiedzialny za stronę techniczną · od 2025",
+          role: "Współzałożyciel projektu odpowiedzialny za stronę techniczną · 2024–2026",
         },
       } as Record<string, { role: string }>,
     },

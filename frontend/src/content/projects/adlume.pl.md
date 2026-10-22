@@ -1,7 +1,7 @@
 ---
 title: AdLume
 slug: adlume
-period: 2025-03 – 2026-08
+period: 2025-03 – 2026-07
 status: pre-launch
 role: "Współzałożyciel i specjalista AI w trzyosobowym zespole założycielskim; zbudował Lumy, agenta AI do obsługi kont Google Ads"
 context: "Komercyjny: startup, którego Dawid był współzałożycielem"
@@ -15,7 +15,7 @@ summary: Lumy od AdLume to asystent AI dla osób prowadzących płatne kampanie 
 
 ## Okres i status
 
-- Dawid pracował nad AdLume od marca 2025 do sierpnia 2026, kiedy odszedł z zespołu. Repozytorium jest prywatne, więc historii commitów nie da się pokazać.
+- Dawid pracował nad AdLume od marca 2025 do lipca 2026, kiedy odszedł z zespołu. Repozytorium jest prywatne, więc historii commitów nie da się pokazać.
 - Dawid pracował nad wcześniejszą wersją produktu. Obecna wersja jest nowsza i korzysta z części elementów, które zbudował.
 - Regulamin i polityka prywatności obowiązują od 25 czerwca 2026 r. Ostatnio zaktualizowano je 29 września 2026 r.
 - Status: przed startem. Strona zapowiada, że AdLume „wkrótce się otworzy”, i zaprasza na listę oczekujących. Osoby z listy dostaną wcześniejszy dostęp i cenę dla pierwszych klientów.
