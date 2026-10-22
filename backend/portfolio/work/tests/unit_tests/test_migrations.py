@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TransactionTestCase
@@ -96,3 +98,80 @@ class MarkPhoneAppsTestCase(TransactionTestCase):
         Project = executor.loader.project_state(self.AFTER).apps.get_model("work", "Project")
         marked = dict(Project.objects.filter(pk__in=self.pks.values()).values_list("title", "mobile"))
         self.assertDictEqual(marked, {"Slip": True, "Tidebell": False})
+
+
+class FillSkillCategoriesTestCase(TransactionTestCase):
+    """0014 moves the groups, evidence and icons the frontend kept in code into the skills, by id."""
+
+    BEFORE = [("work", "0013_skill_category")]
+    AFTER = [("work", "0014_fill_skill_categories")]
+
+    def setUp(self) -> None:
+        executor = MigrationExecutor(connection)
+        executor.migrate(self.BEFORE)
+        self.addCleanup(
+            lambda: MigrationExecutor(connection).migrate(MigrationExecutor(connection).loader.graph.leaf_nodes())
+        )
+        self.Skill = executor.loader.project_state(self.BEFORE).apps.get_model("work", "Skill")
+
+    def _migrate(self) -> Any:
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()
+        executor.migrate(self.AFTER)
+        return executor.loader.project_state(self.AFTER).apps
+
+    def test_a_database_without_skills_gets_no_categories(self) -> None:
+        apps = self._migrate()
+        self.assertFalse(apps.get_model("work", "SkillCategory").objects.exists())
+
+    def test_each_skill_lands_in_its_group_in_order_with_its_evidence_and_icon(self) -> None:
+        for pk in (*range(1, 14), 40):
+            self.Skill.objects.create(pk=pk)
+        apps = self._migrate()
+        translations = apps.get_model("work", "SkillCategoryTranslation").objects
+        names = {
+            f"{order}:{language}": name
+            for order, language, name in translations.values_list("master__order", "language_code", "name")
+        }
+        self.assertDictEqual(
+            names,
+            {
+                "0:en": "Languages and frameworks",
+                "0:pl": "Języki i frameworki",
+                "1:en": "Databases and architecture",
+                "1:pl": "Bazy danych i architektura",
+                "2:en": "Infrastructure and deployment",
+                "2:pl": "Infrastruktura i wdrażanie",
+                "3:en": "AI and tools",
+                "3:pl": "AI i narzędzia",
+            },
+        )
+        Skill = apps.get_model("work", "Skill")
+        placed = {
+            pk: (group, place)
+            for pk, group, place in Skill.objects.exclude(category=None).values_list("pk", "category__order", "order")
+        }
+        # fmt: off
+        self.assertDictEqual(
+            placed,
+            {
+                9: (0, 0), 1: (0, 1), 13: (0, 2),
+                2: (1, 0), 12: (1, 1), 4: (1, 2),
+                3: (2, 0), 6: (2, 1), 8: (2, 2), 7: (2, 3),
+                5: (3, 0), 10: (3, 1), 11: (3, 2),
+            },
+        )
+        # fmt: on
+        shown = {pk: (icon, proven_by) for pk, icon, proven_by in Skill.objects.values_list("pk", "icon", "proven_by")}
+        self.assertEqual(shown[1], ("Python", ["Python", "FastAPI", "Django"]))
+        self.assertEqual(shown[7], ("Infinity", ["CI", "CI/CD"]))
+        self.assertEqual(shown[13], ("Go", ["Go"]))
+        # A skill the frontend never knew is left as it was.
+        self.assertEqual(shown[40], ("Code", []))
+        self.assertIsNone(Skill.objects.get(pk=40).category_id)
+
+    def test_an_id_the_database_lacks_is_skipped(self) -> None:
+        self.Skill.objects.create(pk=9)
+        apps = self._migrate()
+        self.assertEqual(apps.get_model("work", "SkillCategory").objects.count(), 4)
+        self.assertEqual(apps.get_model("work", "Skill").objects.get().icon, "React")

@@ -4,7 +4,7 @@ import faker
 from django.test import TestCase
 from django.urls import reverse
 
-from work.tests.factories import ExperienceFactory, ProjectFactory, SkillFactory
+from work.tests.factories import ExperienceFactory, ProjectFactory, SkillCategoryFactory, SkillFactory
 
 fake = faker.Faker()
 
@@ -69,6 +69,56 @@ class SkillListViewTestCase(TestCase):
         data = response.json()
         self.assertEqual(len(data), 3)
         self.assertEqual([item["id"] for item in data], [first.id, second.id, third.id])
+
+    def test_a_skill_carries_its_category_with_both_names_and_its_evidence(self) -> None:
+        category = SkillCategoryFactory(name="Languages", order=2, i18n={"pl": {"name": "Języki"}})
+        obj = SkillFactory(category=category, order=1, icon="Python", proven_by=["Python", "FastAPI"])
+
+        item = self.client.get(reverse("work:skills")).json()[0]
+
+        self.assertEqual(item["id"], obj.id)
+        self.assertDictEqual(
+            item["category"],
+            {"id": category.id, "order": 2, "translations": {"en": {"name": "Languages"}, "pl": {"name": "Języki"}}},
+        )
+        self.assertEqual(item["order"], 1)
+        self.assertEqual(item["icon"], "Python")
+        self.assertListEqual(item["proven_by"], ["Python", "FastAPI"])
+
+    def test_a_skill_keeps_every_field_the_current_site_reads(self) -> None:
+        SkillFactory(since=2016)
+        item = self.client.get(reverse("work:skills")).json()[0]
+        self.assertTrue(
+            {"id", "icon", "since", "since_launch", "translations", "created_at", "updated_at"} <= item.keys()
+        )
+        self.assertIsInstance(item["id"], int)
+        self.assertIsInstance(item["icon"], str)
+        self.assertIsNone(item["category"])
+        self.assertEqual(item["order"], 0)
+        self.assertListEqual(item["proven_by"], [])
+
+    def test_skills_come_by_category_then_their_place_with_the_uncategorised_last(self) -> None:
+        second = SkillCategoryFactory(order=1)
+        first = SkillCategoryFactory(order=0)
+        loose = SkillFactory()
+        b2 = SkillFactory(category=second, order=1)
+        a1 = SkillFactory(category=first, order=1)
+        b1 = SkillFactory(category=second, order=0)
+        a0 = SkillFactory(category=first, order=0)
+
+        with self.assertNumQueries(3):
+            data = self.client.get(reverse("work:skills")).json()
+
+        self.assertEqual([item["id"] for item in data], [a0.id, a1.id, b1.id, b2.id, loose.id])
+
+    def test_two_categories_with_one_order_do_not_interleave(self) -> None:
+        older = SkillCategoryFactory(order=0)
+        newer = SkillCategoryFactory(order=0)
+        n0 = SkillFactory(category=newer, order=0)
+        o1 = SkillFactory(category=older, order=1)
+        o0 = SkillFactory(category=older, order=0)
+        data = self.client.get(reverse("work:skills")).json()
+        self.assertEqual([item["id"] for item in data], [o0.id, o1.id, n0.id])
 
 
 class ProjectListViewTestCase(TestCase):

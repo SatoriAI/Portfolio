@@ -4,13 +4,15 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import httpx
+from django.db import connection
 from django.test import SimpleTestCase, TestCase, override_settings
+from django.test.utils import CaptureQueriesContext
 
 from university.tests.factories import PublicationFactory
 from vex.ai import knowledge
 from vex.ai.knowledge import KnowledgeBase, Source, build, knowledge_base, parse_site_bundle, site_sources
 from vex.tests.factories import DocumentFactory
-from work.tests.factories import ExperienceFactory, SkillFactory
+from work.tests.factories import ExperienceFactory, SkillCategoryFactory, SkillFactory
 
 SITE = "https://site.test"
 BUNDLE = {
@@ -57,6 +59,32 @@ class KnowledgeBaseTestCase(TestCase):
         ExperienceFactory(company="Hidden Ltd", visible=False)
         self.assertIn("Shown Ltd", build("en").text)
         self.assertNotIn("Hidden Ltd", build("en").text)
+
+    def test_skills_are_read_by_category_with_its_name_in_a_fixed_number_of_queries(self) -> None:
+        tools = SkillCategoryFactory(name="AI and tools", order=1)
+        languages = SkillCategoryFactory(name="Languages and frameworks", order=0)
+        SkillFactory(name="Cursor", category=tools)
+        SkillFactory(name="Go", category=languages, order=1)
+        with CaptureQueriesContext(connection) as few:
+            build("en")
+        SkillFactory(name="Python", category=languages, order=0)
+        SkillFactory(name="Unsorted")
+        with CaptureQueriesContext(connection) as more:
+            text = build("en").text
+        self.assertEqual(len(more), len(few))
+        skills = [line for line in text.splitlines() if line.startswith(("Skill:", "Category:"))]
+        self.assertListEqual(
+            skills,
+            [
+                "Skill: Python",
+                "Category: Languages and frameworks",
+                "Skill: Go",
+                "Category: Languages and frameworks",
+                "Skill: Cursor",
+                "Category: AI and tools",
+                "Skill: Unsorted",
+            ],
+        )
 
     def test_the_same_content_gives_the_same_text(self) -> None:
         PublicationFactory.create_batch(3)

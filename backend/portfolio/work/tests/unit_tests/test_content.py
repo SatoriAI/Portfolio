@@ -7,7 +7,7 @@ from django.core.management import call_command
 from django.test import TestCase
 
 from work.content import export, import_
-from work.models import Experience, Skill
+from work.models import Experience, Skill, SkillCategory
 
 
 class WorkContentTestCase(TestCase):
@@ -62,6 +62,32 @@ class WorkContentTestCase(TestCase):
         self.assertListEqual(self.role.technologies, ["Python", "Microservices"])
         # The id sequence moved past the imported row, so the admin's next one does not collide.
         self.assertGreater(Skill.objects.create(name="Redis").pk, 50)
+
+    def test_a_new_category_arrives_before_the_skill_placed_in_it(self) -> None:
+        category = SkillCategory.objects.create(name="Languages and frameworks", order=0)
+        category.set_current_language("pl")
+        category.name = "Języki i frameworki"
+        category.save()
+        self.skill.category = category
+        self.skill.order = 2
+        self.skill.proven_by = ["Python", "Django"]
+        self.skill.save()
+        data = json.loads(json.dumps(export()))
+        # Another database, which has neither the category nor the skill's place in it.
+        SkillCategory.objects.all().delete()
+        Skill.objects.filter(pk=self.skill.pk).update(order=0, proven_by=[])
+
+        report = import_(data, apply=True)
+
+        self.assertEqual(len(report.created), 1)
+        imported = SkillCategory.objects.get()
+        self.assertEqual(imported.pk, category.pk)
+        self.assertEqual(imported.safe_translation_getter("name", language_code="pl"), "Języki i frameworki")
+        self.skill.refresh_from_db()
+        self.assertEqual(
+            (self.skill.category_id, self.skill.order, self.skill.proven_by), (category.pk, 2, ["Python", "Django"])
+        )
+        self.assertEqual(import_(export(), apply=True).lines, [])
 
     def test_a_row_the_data_lacks_is_reported_and_kept(self) -> None:
         data = export()
