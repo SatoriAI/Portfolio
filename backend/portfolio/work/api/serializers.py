@@ -1,11 +1,20 @@
 from parler_rest.fields import TranslatedFieldsField
 from parler_rest.serializers import TranslatableModelSerializer
 
-from work.models import Experience, Project, Skill
+from work.models import Experience, Project, Skill, SkillCategory
+
+
+class SkillCategorySerializer(TranslatableModelSerializer):
+    translations = TranslatedFieldsField(shared_model=SkillCategory)
+
+    class Meta:
+        model = SkillCategory
+        fields = ("id", "order", "translations")
 
 
 class SkillSerializer(TranslatableModelSerializer):
     translations = TranslatedFieldsField(shared_model=Skill)
+    category = SkillCategorySerializer(read_only=True, allow_null=True)
 
     class Meta:
         model = Skill

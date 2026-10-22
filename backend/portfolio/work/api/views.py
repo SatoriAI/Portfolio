@@ -1,4 +1,4 @@
-from django.db.models import Case, IntegerField, Value, When
+from django.db.models import Case, F, IntegerField, Value, When
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics
 
@@ -8,7 +8,13 @@ from work.models import Experience, Project, Skill
 
 @extend_schema(summary="List Skills", tags=["Work"])
 class SkillViewSet(generics.ListAPIView):
-    queryset = Skill.objects.all().prefetch_related("translations").order_by("pk")
+    # Grouped as the site shows them: by category (two with one order kept apart by id), then by each skill's place
+    # in it; a skill in no category comes last.
+    queryset = (
+        Skill.objects.select_related("category")
+        .prefetch_related("translations", "category__translations")
+        .order_by(F("category__order").asc(nulls_last=True), "category_id", "order", "pk")
+    )
     serializer_class = SkillSerializer
 
 

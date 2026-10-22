@@ -1,7 +1,8 @@
 """
-The work content (skills and roles, with every translation) as plain data, so
-one database can be made to match another: `export_work` writes it from the
-database the content is edited in, `import_work` makes another one match it.
+The work content (skill categories, skills and roles, with every translation)
+as plain data, so one database can be made to match another: `export_work`
+writes it from the database the content is edited in, `import_work` makes
+another one match it.
 
 A row is matched by its primary key, so the same skill or role keeps its id
 everywhere and nothing that refers to it moves. A row the other database has
@@ -19,10 +20,10 @@ from django.core.management.color import no_style
 from django.db import connection, models, transaction
 from parler.models import TranslatableModel
 
-from work.models import Experience, Skill
+from work.models import Experience, Skill, SkillCategory
 
-# In dependency order; neither refers to the other today.
-MODELS: tuple[type[TranslatableModel], ...] = (Skill, Experience)
+# In dependency order: a skill refers to its category, so the categories come first.
+MODELS: tuple[type[TranslatableModel], ...] = (SkillCategory, Skill, Experience)
 FORMAT = 1
 # Kept by each database for itself.
 SKIPPED = {"id", "created_at", "updated_at"}

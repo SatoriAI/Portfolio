@@ -5,7 +5,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 
-from work.models import Experience, Project, Skill
+from work.models import Experience, Project, Skill, SkillCategory
 
 fake = faker.Faker()
 
@@ -62,6 +62,23 @@ class WorkModelsTestCase(TestCase):
             self.assertIn(line, text)
         self.assertIn("Skill: Python", text)
         self.assertIn("Description: Backends", text)
+
+    def test_skill_representation_names_its_category_in_the_readers_language(self) -> None:
+        category = SkillCategory.objects.create(name="Languages and frameworks", order=0)
+        category.set_current_language("pl")
+        category.name = "Języki i frameworki"
+        category.save()
+        skill = Skill.objects.create(name="Python", category=category)
+        self.assertIn("Category: Języki i frameworki", skill.representation_for("pl"))
+        self.assertIn("Category: Languages and frameworks", skill.representation_for("en"))
+        self.assertNotIn("Category", Skill.objects.create(name="Go").representation_for("en"))
+
+    def test_deleting_a_category_leaves_its_skills_uncategorised(self) -> None:
+        category = SkillCategory.objects.create(name="AI and tools")
+        skill = Skill.objects.create(name="Cursor", category=category)
+        category.delete()
+        skill.refresh_from_db()
+        self.assertIsNone(skill.category)
 
     def test_skill_translations_roundtrip(self) -> None:
         obj = Skill.objects.create(since=2016, name="Python", description="Expert level")

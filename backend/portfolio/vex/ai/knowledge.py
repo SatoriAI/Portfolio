@@ -35,7 +35,7 @@ SITE_MAX_BYTES = 4_000_000
 # and the section's title ({name}: the site owner's first name).
 DATABASE_SECTIONS: tuple[tuple[type[models.Model], str, str, tuple[str, ...]], ...] = (
     (Experience, "/experience", "Work experience", ("-start", "pk")),
-    (Skill, "/experience", "Skills", ("pk",)),
+    (Skill, "/experience", "Skills", ("category__order", "category_id", "order", "pk")),
     (Project, "/#projects", "Projects", ("pk",)),
     (School, "/education", "Education", ("-start", "pk")),
     (Publication, "/research", "Publications", ("-year", "pk")),

@@ -15,6 +15,28 @@ from utils.models import DescriptiveModel, TimestampedModel
 from work.choices import Icons
 
 
+# The type checker cannot build `skills` from Skill's manager, which is parler's and untyped.
+class SkillCategory(TranslatableModel, TimestampedModel):  # type: ignore[django-manager-missing]
+    """A group the site shows skills in, such as the languages and frameworks, in its order."""
+
+    order = models.PositiveSmallIntegerField(_("Order"), default=0, db_default=0)
+
+    translations = TranslatedFields(
+        name=models.CharField(_("Name"), max_length=128),
+    )
+
+    # Managers
+    objects: TranslatableManager = TranslatableManager()
+
+    def __str__(self) -> str:
+        return self.safe_translation_getter("name", any_language=True) or f"{self.pk}"
+
+    class Meta:
+        verbose_name = _("Skill category")
+        verbose_name_plural = _("Skill categories")
+        ordering = ("order", "pk")
+
+
 class Skill(TranslatableModel, TimestampedModel, DescriptiveModel):
     """
     A skill's years are not typed in: the site counts them from the roles that
@@ -41,6 +63,28 @@ class Skill(TranslatableModel, TimestampedModel, DescriptiveModel):
         help_text=_("Used since it came out, in the year above; said instead of a count of years."),
     )
     icon = models.CharField(choices=Icons, default=Icons.CODE, max_length=16)
+    # Each has a default in the database too (no category, place 0, an empty list), so the release before this one
+    # can still add a skill.
+    category = models.ForeignKey(
+        SkillCategory,
+        verbose_name=_("Category"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="skills",
+        help_text=_("The group the site shows it in; without one it is shown after every group."),
+    )
+    order = models.PositiveSmallIntegerField(
+        _("Order"), default=0, db_default=0, help_text=_("Its place within its category.")
+    )
+    proven_by = LinesArrayField(
+        models.CharField(max_length=128),
+        verbose_name=_("Proven by"),
+        default=list,
+        blank=True,
+        db_default=[],
+        help_text=_("A role's technology or tool, or a project's tag, that shows this skill; compared ignoring case."),
+    )
 
     translations = TranslatedFields(
         name=models.CharField(_("Name"), max_length=128),
@@ -50,11 +94,19 @@ class Skill(TranslatableModel, TimestampedModel, DescriptiveModel):
     # Managers
     objects: TranslatableManager = TranslatableManager()
 
+    @classmethod
+    def vex_queryset(cls) -> "models.QuerySet[Skill]":
+        """Every skill, with its category's name at hand for the representation."""
+        return cls.objects.select_related("category").prefetch_related("category__translations")
+
     def representation_for(self, locale: str | None) -> str:
         lang = (locale or get_language() or "").split("-")[0][:2]
         name = self.safe_translation_getter("name", language_code=lang, any_language=True) or ""
         description = self.safe_translation_getter("description", language_code=lang, any_language=True) or ""
         lines = [f"Skill: {name}"]
+        if self.category is not None:
+            category = self.category.safe_translation_getter("name", language_code=lang, any_language=True)
+            lines.append(f"Category: {category or ''}")
         if self.since_launch:
             lines.append(f"Used since: its launch in {self.since}")
         elif self.since:
