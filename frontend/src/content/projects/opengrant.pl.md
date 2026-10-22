@@ -1,9 +1,9 @@
 ---
 title: OpenGrant
 slug: opengrant
-period: 2024-12 – 2026-08 (Grant-Smith: 2026-07 – ongoing)
+period: 2024-12 – 2026-08 jako CTO (Grant-Smith: 2026-07 – ongoing, z udziałem Dawida)
 status: live (open-grant.com: live; Grant-Smith: pre-launch)
-role: CTO firmy OpenGrant; solo przy Grant-Smith: backend, frontend, potoki AI, CI, dokumentacja
+role: CTO firmy OpenGrant do sierpnia 2026; nadal wspiera budowę Grant-Smith, który do tego czasu tworzył sam: backend, frontend, potoki AI, CI, dokumentacja
 context: commercial
 stack: Python, Django, Celery, PostgreSQL, pgvector, Redis, React, Vue.js, TypeScript, Vite, Tailwind CSS, Google Gemini, LangGraph, LangChain, Google Cloud, Docker, Caddy, Vercel
 demo: https://www.open-grant.com
@@ -25,7 +25,7 @@ Plan przepisania powstał 2 czerwca 2026 r. Zakłada stopniowe zastępowanie sta
 
 ## Rola i kontekst
 
-- **OpenGrant to własna firma Dawida.** Według polityki prywatności strony operatorem jest OpenGrant Inc. Rola Dawida w firmie: CTO.
+- **OpenGrant to własna firma Dawida.** Według polityki prywatności strony operatorem jest OpenGrant Inc. Do sierpnia 2026 Dawid był jej CTO. Z tej roli odszedł, ale nadal wspiera budowę Grant-Smith.
 - **Grant-Smith to praca jednej osoby.** Co najmniej 287 z 291 commitów jest autorstwa Dawida. Pozostałe to aktualizacje zależności od Dependabota i kilka commitów zapisanych pod innym kontem.
 - **Zakres Dawida w Grant-Smith:** backend (Django, DRF), frontend (React, TypeScript), potoki AI, bramka CI i dokumentacja. Kod pisał z pomocą asystenta AI do programowania. Plan rozwoju również współtworzył.
 - **Starsze części** (Grant Flow, strona marketingowa, usługa Observo) nie mają historii w gicie. Zbudował je sam Dawid; ich kod był hostowany prywatnie.
