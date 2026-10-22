@@ -682,6 +682,8 @@ const copy = {
           "On a cone, the boundary and the tip change the way heat spreads. How can we estimate how much heating one point affects the temperature at another? In this paper we derive lower and upper estimates, separately for the cone and for its surface.",
         "https://arxiv.org/abs/2411.15793":
           "Imagine two cones touching at their tips. How strongly does heat from one point affect another in such a model? In this paper I derive estimates that answer this. I also study related shapes and point out cases where the method does not yet give a complete answer.",
+        "https://arxiv.org/abs/2610.20106":
+          "Can a model built only from heat spreading and multiplying functions solve equations of physics? In this paper I show that it can, using Darcy’s equation, which describes flow through a material of varying permeability.",
       } as Record<string, string>,
       /** One line worth its own place, keyed by the degree's start date. */
       educationHighlights: {
@@ -1368,6 +1370,8 @@ const copy = {
           "Na stożku brzeg i wierzchołek zmieniają sposób, w jaki rozchodzi się ciepło. Jak oszacować, na ile ogrzanie jednego punktu wpływa na temperaturę w innym? W tej pracy wyznaczamy oszacowania z dołu i z góry, osobno dla stożka i dla jego powierzchni.",
         "https://arxiv.org/abs/2411.15793":
           "Wyobraź sobie dwa stożki zetknięte wierzchołkami. Jak silnie ciepło z jednego punktu wpływa na inny w takim modelu? W tej pracy wyznaczam oszacowania, które na to odpowiadają. Badam też kształty pokrewne i wskazuję przypadki, w których metoda nie daje jeszcze pełnej odpowiedzi.",
+        "https://arxiv.org/abs/2610.20106":
+          "Czy model zbudowany tylko z rozchodzenia się ciepła i mnożenia funkcji może rozwiązywać równania fizyki? W tej pracy pokazuję, że tak, na przykładzie równania Darcy’ego, które opisuje przepływ przez materiał o zmiennej przepuszczalności.",
       } as Record<string, string>,
       educationHighlights: {
         "2016-10-03": {

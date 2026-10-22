@@ -20,4 +20,8 @@ export const publicationDetails: Record<string, PublicationDetails> = {
     authors: ["Dawid Hanrahan"],
     status: "preprint",
   },
+  "https://arxiv.org/abs/2610.20106": {
+    authors: ["Dawid Hanrahan"],
+    status: "preprint",
+  },
 };
