@@ -13,10 +13,21 @@ import type { DomainKind } from "@/components/academic/DomainGlyph";
 export const GLYPH_SCALE = "--glyph-scale";
 
 /**
- * Which domain a paper's title names. The two papers are on conic and double
- * conic domains; a title naming neither gets no glyph rather than a wrong one.
+ * Papers whose domain no word in the title names, keyed by the link the
+ * backend stores for each: the same in every language, unlike the title.
  */
-export const domainFor = (title: string): DomainKind | null => {
+const DOMAIN_BY_LINK: Record<string, DomainKind> = {
+  "https://arxiv.org/abs/2610.20106": "darcy",
+};
+
+/**
+ * Which domain a paper is set on: by its link first, then by what its title
+ * names. Two papers are on conic and double conic domains and say so in the
+ * title; a paper matched by neither gets no glyph rather than a wrong one.
+ */
+export const domainFor = ({ title, link }: { title: string; link: string }): DomainKind | null => {
+  const byLink = DOMAIN_BY_LINK[link];
+  if (byLink) return byLink;
   if (/double|podwójn/i.test(title)) return "double-cone";
   if (/conic|cone|stożk/i.test(title)) return "cone";
   return null;
