@@ -60,6 +60,15 @@ describe("mapApiSkillToUi", () => {
     expect(mapApiSkillToUi({ ...bilingual, category: null }, "en").category).toBeNull();
   });
 
+  // As the copy it replaced was: a one-letter word keeps to the next one.
+  it("typesets the category name for its language", () => {
+    const set = {
+      ...bilingual,
+      category: { id: 1, order: 0, translations: { pl: { name: "Języki i frameworki" } } },
+    };
+    expect(mapApiSkillToUi(set, "pl").category?.name).toBe("Języki i\u00a0frameworki");
+  });
+
   it("carries the order and the proving technologies through", () => {
     expect(mapApiSkillToUi(bilingual, "en")).toMatchObject({
       order: 0,

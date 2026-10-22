@@ -3,6 +3,7 @@ import { endpoints } from "../config/endpoints";
 import { apiClient } from "./apiClient";
 import type { SkillCategory } from "./skillGroups";
 import { type SkillIcon, skillIcon } from "./skillIcon";
+import { typeset } from "./typography";
 
 export type ApiSkill = {
   id: number;
@@ -55,8 +56,10 @@ export function mapApiSkillToUi(skill: ApiSkill, language: string): UiSkill {
       ? {
           id: skill.category.id,
           order: skill.category.order,
-          name:
+          name: typeset(
             (skill.category.translations[lang] || skill.category.translations["en"])?.name || "",
+            lang,
+          ),
         }
       : null,
     provenBy: skill.proven_by ?? [],
