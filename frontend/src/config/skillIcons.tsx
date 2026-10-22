@@ -40,4 +40,5 @@ export const skillIcons: Readonly<Record<number, SkillIcon>> = {
   10: brandMark("Claude"),
   11: brandMark("Cursor"),
   12: brandMark("Redis"),
+  13: brandMark("Go"),
 };
