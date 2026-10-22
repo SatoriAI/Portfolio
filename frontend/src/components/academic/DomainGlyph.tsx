@@ -7,18 +7,24 @@ import { cn } from "@/lib/utils";
 
 /**
  * The domain a piece of work is set on, drawn: a cone or a double cone for
- * the papers; a torus above an interval, a cone, and a solid of revolution
- * for the three degrees. Hairlines in the motif's weight, with the strokes
- * that pass behind drawn fainter.
+ * the papers on heat kernels, and a layered slab with a streamline for the
+ * paper on Darcy flow; a torus above an interval, a cone, and a solid of
+ * revolution for the three degrees. Hairlines in the motif's weight, with the
+ * strokes that pass behind drawn fainter.
  * Each glyph draws itself once as it enters the viewport, and is inert under
  * reduced motion. With `entrance="mount"` it draws as soon as it is mounted
  * instead, whether or not it was already on screen — the publication stack
  * remounts the open sheet's glyph on every selection, so a paper draws its
  * domain each time it is pulled to the front.
  *
- * These are the multidimensional domains the work estimates heat kernels on,
- * shown in the three dimensions a page can hold. `delayMs` holds a glyph
+ * Most are the multidimensional domains the work estimates heat kernels on,
+ * shown in the three dimensions a page can hold; the slab is the ground the
+ * Darcy paper's flow passes through. `delayMs` holds a glyph
  * back, so several side by side can draw one after another.
+ *
+ * `compact` asks for the drawing meant for a glyph a line of text high (a
+ * publication tab). A domain whose full drawing does not survive that size
+ * has a simpler one there; the others draw the same at every size.
  */
 
 /** The drawing's height in its own units; strokes are sized against it. */
@@ -39,10 +45,16 @@ if (typeof CSS !== "undefined" && typeof CSS.registerProperty === "function") {
   }
 }
 
-export type DomainKind = "cone" | "double-cone" | "torus-interval" | "revolution";
+export type DomainKind = "cone" | "double-cone" | "darcy" | "torus-interval" | "revolution";
 
-/** `point`: a dot drawn last, where the papers' estimates are sharpest. */
-const STROKES: Record<DomainKind, { front: string[]; back: string[]; point?: [number, number] }> = {
+type Strokes = { front: string[]; back: string[]; point?: [number, number] };
+
+/**
+ * `point`: a dot drawn last, where the papers' estimates are sharpest, or
+ * where the flow starts. `compact`: the drawing at tab size, where one
+ * differs (see `compact` on the component).
+ */
+const STROKES: Record<DomainKind, Strokes & { compact?: Strokes }> = {
   cone: {
     front: ["M40 12 L8 72", "M40 12 L72 72", "M8 72 A32 10 0 0 0 72 72"],
     back: ["M8 72 A32 10 0 0 1 72 72"],
@@ -59,6 +71,28 @@ const STROKES: Record<DomainKind, { front: string[]; back: string[]; point?: [nu
     ],
     back: ["M8 8 A32 8 0 0 1 72 8", "M8 80 A32 8 0 0 1 72 80"],
     point: [40, 44],
+  },
+  // The paper on Darcy flow: a block of layered ground, the boundaries
+  // between its layers fainter, and one streamline from a source that bends
+  // as it crosses each boundary, as flow does where the permeability changes.
+  // In front, the face, then the depth, then the flow; behind, the hidden
+  // corner and the two boundaries.
+  darcy: {
+    front: [
+      "M8 26 L62 26 L62 78 L8 78 Z",
+      "M8 26 L18 16 L72 16 L72 68 L62 78 M62 26 L72 16",
+      "M14 32 L30 44 L36 61 L56 72",
+    ],
+    back: ["M8 78 L18 68 L72 68 M18 68 L18 16", "M8 44 L62 44 L72 34", "M8 61 L62 61 L72 51"],
+    point: [14, 32],
+    // At tab size the depth closes up into a cube and swallows the layers, so
+    // the tab draws the block's face alone, wider than it is tall: the two
+    // boundaries across it and the streamline bending at each.
+    compact: {
+      front: ["M6 22 L74 22 L74 74 L6 74 Z", "M14 30 L32 40 L42 57 L66 68"],
+      back: ["M6 40 L74 40", "M6 57 L74 57"],
+      point: [14, 30],
+    },
   },
   // The bachelor's thesis: the heat equation on the torus and on the interval.
   // A ring with its hole above; below, the interval with its two endpoints.
@@ -92,13 +126,22 @@ type DomainGlyphProps = {
   delayMs?: number;
   /** When the drawing runs: as the glyph scrolls into view, or as soon as it mounts. */
   entrance?: "reveal" | "mount";
+  /** Drawn a line of text high: the domain's simpler drawing, if it has one. */
+  compact?: boolean;
   className?: string;
 };
 
-const DomainGlyph = ({ kind, delayMs = 0, entrance = "reveal", className }: DomainGlyphProps) => {
+const DomainGlyph = ({
+  kind,
+  delayMs = 0,
+  entrance = "reveal",
+  compact = false,
+  className,
+}: DomainGlyphProps) => {
   const { ref, isRevealed, isInitiallyVisible, isMeasured, prefersReducedMotion } =
     useScrollReveal<HTMLSpanElement>();
-  const { front, back, point } = STROKES[kind];
+  const strokes = STROKES[kind];
+  const { front, back, point } = (compact && strokes.compact) || strokes;
 
   // A hairline at any size. The strokes are drawn in by animating a dash
   // measured along each path (pathLength 1), and a non-scaling stroke would
@@ -185,7 +228,7 @@ const DomainGlyph = ({ kind, delayMs = 0, entrance = "reveal", className }: Doma
             />
           ))}
         </g>
-        {/* The apex: the point the papers' estimates are sharpest about. */}
+        {/* The apex the estimates are sharpest about, or the flow's source. */}
         {point && (
           <circle
             cx={point[0]}

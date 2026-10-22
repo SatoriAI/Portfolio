@@ -716,6 +716,7 @@ const copy = {
         cone: "Cone",
         revolution: "Solid of revolution",
         "double-cone": "Double cone",
+        darcy: "Layered slab",
       },
       // The degree's topic, lifted from its own research paragraph (the
       // bachelor's is its thesis title).
@@ -1398,6 +1399,7 @@ const copy = {
         cone: "Stożek",
         revolution: "Bryła obrotowa",
         "double-cone": "Stożek podwójny",
+        darcy: "Warstwowa płyta",
       },
       educationHeadlines: {
         "2016-10-03": "Równanie ciepła na torusie i odcinku",

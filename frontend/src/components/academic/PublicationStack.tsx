@@ -104,7 +104,7 @@ const Stamp = ({ status, label }: { status: PublicationStatus; label: string }) 
 );
 
 const Sheet = ({ publication, labels, summary, activation, glyphDelayMs = 0 }: SheetProps) => {
-  const domain = domainFor(publication.title);
+  const domain = domainFor(publication);
   const lead = summary ?? publication.summary;
   const details = publicationDetails[publication.link];
   const authors = details?.authors ?? [];
@@ -284,7 +284,7 @@ const PublicationStack = ({
           const id = String(publication.id);
           const d = depthOf.get(id) ?? 0;
           const isOpen = d === 0;
-          const domain = domainFor(publication.title);
+          const domain = domainFor(publication);
           return (
             <TabsPrimitive.Trigger
               key={id}
@@ -306,10 +306,10 @@ const PublicationStack = ({
                   : "text-muted-foreground hover:text-foreground hover:shadow-lift",
               )}
             >
-              {/* The two titles differ by one word; the domain, drawn small,
-                  tells them apart before anyone reads. */}
+              {/* The two heat-kernel titles differ by one word; the domain,
+                  drawn small, tells the papers apart before anyone reads. */}
               {domain ? (
-                <DomainGlyph kind={domain} className="h-6 shrink-0" />
+                <DomainGlyph kind={domain} compact className="h-6 shrink-0" />
               ) : (
                 <span
                   aria-hidden="true"
