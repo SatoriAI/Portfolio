@@ -6,7 +6,8 @@ class Icons(models.TextChoices):  # pylint: disable=too-many-ancestors
     The icon a skill is drawn with: a technology's own mark, named as the
     frontend's config/techIcons names it, or an outline icon from Lucide for a
     practice no one brand stands for. The frontend draws a name it does not
-    know as Code.
+    know as Code. frontend/src/lib/skillIcon.ts draws these: a new Lucide
+    choice needs an entry there, a new brand a mark in config/techIcons.
     """
 
     CODE = "Code", "Code"

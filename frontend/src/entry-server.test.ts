@@ -99,6 +99,13 @@ describe("the page render at build time", () => {
             since: null,
             since_launch: false,
             icon: "Code",
+            order: 0,
+            category: {
+              id: 1,
+              order: 0,
+              translations: { en: { name: "Sample Group" }, pl: { name: "Próbna grupa" } },
+            },
+            proven_by: ["Python"],
           },
         ],
         publications: [

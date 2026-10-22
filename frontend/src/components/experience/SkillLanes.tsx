@@ -10,9 +10,9 @@ import type { TimelineTick } from "@/lib/timeline";
 import { cn } from "@/lib/utils";
 
 /**
- * The skills, group by group (config/skillLayers), as a chart to scan: one
- * thin row per skill, its bar on the career timeline's time axis, reaching
- * further back where a skill was used before its roles.
+ * The skills, group by group (the backend's categories, lib/skillGroups), as
+ * a chart to scan: one thin row per skill, its bar on the career timeline's
+ * time axis, reaching further back where a skill was used before its roles.
  *
  * The bar is solid where a role proves the skill: the months of every role
  * whose technologies name it, merged where roles overlap, gaps kept, and a
@@ -217,7 +217,7 @@ const SkillLanes = ({
       ...layer,
       items: layer.skills.flatMap((id) => byId.get(id) ?? []),
     })),
-    // Skills the layers do not name yet, after them all.
+    // Skills in no category, after them all.
     { key: "other", label: "", items: skills.filter((skill) => !placed.has(skill.id)) },
   ].filter((group) => group.items.length > 0);
 

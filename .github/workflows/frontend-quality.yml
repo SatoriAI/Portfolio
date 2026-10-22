@@ -17,6 +17,8 @@ on:
       - main
     paths:
       - 'frontend/**'
+      # lib/skillIcon.test.ts reads the backend's icon choices.
+      - 'backend/portfolio/work/choices.py'
       - '.github/workflows/frontend-quality.yml'
       - '.github/actions/setup-node/**'
   # Deliberately unfiltered by branch. `branches:` here matches the *base* of the
@@ -26,6 +28,8 @@ on:
   pull_request:
     paths:
       - 'frontend/**'
+      # lib/skillIcon.test.ts reads the backend's icon choices.
+      - 'backend/portfolio/work/choices.py'
       - '.github/workflows/frontend-quality.yml'
       - '.github/actions/setup-node/**'
   # With path filters there is otherwise no way to ask for a run on a ref whose

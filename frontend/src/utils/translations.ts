@@ -162,12 +162,6 @@ const copy = {
     skills: {
       title: "Skills",
       hint: "Choose a technology to see where I used it. Or the other way round.",
-      layers: {
-        languages: "Languages and frameworks",
-        dataArchitecture: "Databases and architecture",
-        infrastructure: "Infrastructure and deployment",
-        ai: "AI and tools",
-      },
       roles: "Roles",
       /** A sidebar circle's name; `{company}` is replaced. */
       showSkills: "{company}: show the skills",
@@ -889,12 +883,6 @@ const copy = {
     skills: {
       title: "Umiejętności",
       hint: "Wybierz technologię, a zobaczysz, gdzie jej używałem. Lub odwrotnie.",
-      layers: {
-        languages: "Języki i frameworki",
-        dataArchitecture: "Bazy danych i architektura",
-        infrastructure: "Infrastruktura i wdrażanie",
-        ai: "AI i narzędzia",
-      },
       roles: "Role",
       showSkills: "{company}: pokaż umiejętności",
       usedHere: "{name} w tej roli",
