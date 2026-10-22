@@ -14,6 +14,13 @@ const skill = (translations: ApiSkill["translations"]): ApiSkill => ({
   since: 2016,
   since_launch: false,
   icon: "Brain",
+  order: 0,
+  category: {
+    id: 1,
+    order: 0,
+    translations: { en: { name: "Languages" }, pl: { name: "Języki" } },
+  },
+  proven_by: ["Python", "Django"],
 });
 
 describe("mapApiSkillToUi", () => {
@@ -47,6 +54,19 @@ describe("mapApiSkillToUi", () => {
     expect(mapApiSkillToUi(launched, "en")).toMatchObject({ since: null, sinceLaunch: true });
   });
 
+  it("names the category in the requested language, falling back to English", () => {
+    expect(mapApiSkillToUi(bilingual, "pl").category).toEqual({ id: 1, order: 0, name: "Języki" });
+    expect(mapApiSkillToUi(bilingual, "de").category?.name).toBe("Languages");
+    expect(mapApiSkillToUi({ ...bilingual, category: null }, "en").category).toBeNull();
+  });
+
+  it("carries the order and the proving technologies through", () => {
+    expect(mapApiSkillToUi(bilingual, "en")).toMatchObject({
+      order: 0,
+      provenBy: ["Python", "Django"],
+    });
+  });
+
   it("maps the icon name to its component", () => {
     expect(mapApiSkillToUi(bilingual, "en").icon).toBe(Brain);
   });
@@ -54,7 +74,7 @@ describe("mapApiSkillToUi", () => {
   // The backend's Icons choices and this map can drift apart; a new choice must
   // not render nothing.
   it("falls back to the Code icon for an unrecognised name", () => {
-    const unknown = { ...bilingual, icon: "Rocket" } as unknown as ApiSkill;
+    const unknown = { ...bilingual, icon: "Rocket" };
     expect(mapApiSkillToUi(unknown, "en").icon).toBe(Code);
   });
 });

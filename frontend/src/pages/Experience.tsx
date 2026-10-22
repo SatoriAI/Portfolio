@@ -16,9 +16,6 @@ import PageClosing from "@/components/layout/PageClosing";
 import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
 import Reveal from "@/components/Reveal";
-import { skillEvidence } from "@/config/skillEvidence";
-import { skillIcons } from "@/config/skillIcons";
-import { skillLayers } from "@/config/skillLayers";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useVex } from "@/contexts/VexContext";
 import { useDismissOutside } from "@/hooks/use-dismiss-outside";
@@ -26,6 +23,7 @@ import { useHydrated } from "@/hooks/use-hydrated";
 import { useIsMobile, usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { useTimelineSelection } from "@/hooks/use-timeline-selection";
 import { useExperiences, useProjects, useSkills } from "@/lib/queries";
+import { groupSkills } from "@/lib/skillGroups";
 import { laneSegments, skillReach } from "@/lib/skillLanes";
 import { rolesForSkill } from "@/lib/skillRoles";
 import { formatYears } from "@/lib/skillYears";
@@ -117,19 +115,13 @@ const Experience = () => {
   const { selectedId, open, select, close } = useTimelineSelection(items);
 
   // The skills, with the roles each was used in: a skill counts as used in a
-  // role when the role's own technologies name one that proves it. Skills
-  // that fail to load leave the section out rather than the page broken;
-  // projects count as evidence too, by their tags, and without them the
-  // lanes simply list none.
+  // role when the role's own technologies name one that proves it (the
+  // backend lists them with the skill). Skills that fail to load leave the
+  // section out rather than the page broken; projects count as evidence too,
+  // by their tags, and without them the lanes simply list none.
   const skillsQuery = useSkills();
-  const skills = useMemo(
-    () =>
-      (skillsQuery.data ?? []).map((skill) => ({
-        ...skill,
-        icon: skillIcons[skill.id] ?? skill.icon,
-      })),
-    [skillsQuery.data],
-  );
+  const skills = useMemo(() => skillsQuery.data ?? [], [skillsQuery.data]);
+  const skillGroups = useMemo(() => groupSkills(skills), [skills]);
   const projectsQuery = useProjects();
   const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data]);
 
@@ -144,13 +136,7 @@ const Experience = () => {
     [experiences],
   );
   const rolesBySkill = useMemo(
-    () =>
-      new Map(
-        skills.map((skill) => [
-          skill.id,
-          rolesForSkill(skillEvidence[skill.id] ?? [], roleEvidence),
-        ]),
-      ),
+    () => new Map(skills.map((skill) => [skill.id, rolesForSkill(skill.provenBy, roleEvidence)])),
     [skills, roleEvidence],
   );
   const highlighted = useMemo(
@@ -208,7 +194,7 @@ const Experience = () => {
           {
             segments,
             ...skillReach(segments, sinceMonth, skillAxis.months),
-            projects: rolesForSkill(skillEvidence[skill.id] ?? [], tagged),
+            projects: rolesForSkill(skill.provenBy, tagged),
             roles: roleIds.flatMap((id) => {
               const experience = experiences.find((candidate) => candidate.id === id);
               return experience
@@ -401,10 +387,7 @@ const Experience = () => {
               skills={skills}
               axis={skillAxis}
               lanes={lanes}
-              layers={skillLayers.map((layer) => ({
-                ...layer,
-                label: t.skills.layers[layer.key],
-              }))}
+              layers={skillGroups}
               labels={{
                 years: (count) => formatYears(count, language),
                 since: (year) => fillTemplate(t.skills.since, { year }),
