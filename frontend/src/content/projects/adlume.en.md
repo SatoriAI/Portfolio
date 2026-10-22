@@ -1,7 +1,7 @@
 ---
 title: AdLume
 slug: adlume
-period: 2025-03 – 2026-08
+period: 2025-03 – 2026-07
 status: pre-launch
 role: "Co-founder and AI specialist in a three-person founding team; built Lumy, the AI agent for Google Ads accounts"
 context: "Commercial: a startup Dawid co-founded"
@@ -15,7 +15,7 @@ summary: Lumy by AdLume is an AI assistant for people running paid ad campaigns.
 
 ## Period and status
 
-- Dawid worked on AdLume from March 2025 to August 2026, when he left the team. The repository is private, so the commit history cannot be shown.
+- Dawid worked on AdLume from March 2025 to July 2026, when he left the team. The repository is private, so the commit history cannot be shown.
 - Dawid worked on an earlier version of the product. The current version is newer and reuses some of the parts he built.
 - The terms and privacy policy took effect on 25 June 2026. They were last updated on 29 September 2026.
 - Status: pre-launch. The site says AdLume is "opening its doors soon" and asks visitors to join a waitlist. People on the list get early access and founding-member pricing.

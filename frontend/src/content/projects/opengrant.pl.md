@@ -1,7 +1,7 @@
 ---
 title: OpenGrant
 slug: opengrant
-period: 2025-02 – ongoing (Grant-Smith: 2026-07 – ongoing)
+period: 2024-12 – 2026-08 (Grant-Smith: 2026-07 – ongoing)
 status: live (open-grant.com: live; Grant-Smith: pre-launch)
 role: CTO firmy OpenGrant; solo przy Grant-Smith: backend, frontend, potoki AI, CI, dokumentacja
 context: commercial
