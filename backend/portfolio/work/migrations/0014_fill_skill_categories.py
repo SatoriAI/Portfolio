@@ -44,10 +44,12 @@ ICONS = {
 
 def fill(apps, schema_editor):
     Skill = apps.get_model("work", "Skill")
-    # A new database (or a test's) has no skills, and gets no categories either.
-    if not Skill.objects.exists():
-        return
     SkillCategory = apps.get_model("work", "SkillCategory")
+    # A new database (or a test's) has no skills, and gets no categories either. One that has categories already
+    # filled them, here or in the admin, on a run before going back to 0013: running again would add four more and
+    # undo every edit since.
+    if not Skill.objects.exists() or SkillCategory.objects.exists():
+        return
     SkillCategoryTranslation = apps.get_model("work", "SkillCategoryTranslation")
     for order, (en, pl, pks) in enumerate(CATEGORIES):
         category = SkillCategory.objects.create(order=order)

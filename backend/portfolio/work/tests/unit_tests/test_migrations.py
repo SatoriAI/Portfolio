@@ -170,6 +170,22 @@ class FillSkillCategoriesTestCase(TransactionTestCase):
         self.assertEqual(shown[40], ("Code", []))
         self.assertIsNone(Skill.objects.get(pk=40).category_id)
 
+    def test_running_it_again_after_going_back_changes_nothing(self) -> None:
+        for pk in range(1, 14):
+            self.Skill.objects.create(pk=pk)
+        Skill = self._migrate().get_model("work", "Skill")
+        # An edit made in the admin between the two runs.
+        Skill.objects.filter(pk=13).update(icon="Code", proven_by=["Go", "Golang"], order=5)
+        before = list(Skill.objects.order_by("pk").values_list("pk", "category_id", "order", "icon", "proven_by"))
+        MigrationExecutor(connection).migrate(self.BEFORE)
+
+        apps = self._migrate()
+
+        self.assertEqual(apps.get_model("work", "SkillCategory").objects.count(), 4)
+        Skill = apps.get_model("work", "Skill")
+        after = list(Skill.objects.order_by("pk").values_list("pk", "category_id", "order", "icon", "proven_by"))
+        self.assertListEqual(after, before)
+
     def test_an_id_the_database_lacks_is_skipped(self) -> None:
         self.Skill.objects.create(pk=9)
         apps = self._migrate()
