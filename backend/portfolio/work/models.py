@@ -1,6 +1,6 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from functools import cached_property
-from typing import Self, cast
+from typing import Any, Self, cast
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
@@ -60,20 +60,24 @@ class TechnologyTerm(TranslatableModel, TimestampedModel):
 
 
 class TermLabels:
-    """Every term's label in each language, read in one query, to show a list of terms in a language."""
+    """
+    Every term's label in each language, to show a list of terms in a
+    language. Read in one query, on the first label asked for, so rows that
+    share one never read the terms twice and rows that show no list never
+    read them at all.
+    """
 
-    def __init__(self, labels: dict[str, dict[str, str]]) -> None:
-        # By the term's name in lower case, then by language.
-        self._labels = labels
-
-    @classmethod
-    def load(cls) -> "TermLabels":
+    @cached_property
+    def _labels(self) -> dict[str, dict[str, str]]:
+        """By the term's name in lower case, then by language."""
         labels: dict[str, dict[str, str]] = {}
-        rows = TechnologyTerm.objects.values_list("name", "translations__language_code", "translations__label")
+        rows = TechnologyTerm.objects.order_by().values_list(
+            "name", "translations__language_code", "translations__label"
+        )
         for name, language, label in rows:
             if language and label:
                 labels.setdefault(name.lower(), {})[language] = label
-        return cls(labels)
+        return labels
 
     def label(self, term: str, language: str) -> str:
         """The term's label in the language, else in another one, else the term as written."""
@@ -93,9 +97,10 @@ class TermLabels:
 
 class TermsQuerySet(TranslatableQuerySet):
     """
-    Rows that show terms. With `with_terms`, the rows a query returns share
-    one read of every term's labels, however many there are; a row read
-    another way reads them itself when first asked.
+    Rows that show terms. With `with_terms`, the rows one evaluation returns,
+    whether fetched whole or through iterator(), share one TermLabels, so
+    they read the terms once between them; a row read without it reads
+    them itself, once per row.
     """
 
     reads_terms = False
@@ -111,14 +116,28 @@ class TermsQuerySet(TranslatableQuerySet):
         return clone
 
     def _fetch_all(self) -> None:
-        # Django calls this on every look at the rows; the terms are read with the rows, once.
+        # Django calls this on every look at the rows; they are given their labels when first fetched.
         fetched = self._result_cache is not None
         super()._fetch_all()
         if self.reads_terms and not fetched and self._result_cache:
-            labels = TermLabels.load()
+            labels = TermLabels()
             for row in self._result_cache:
-                if isinstance(row, ShowsTerms):
-                    row.term_labels = labels
+                _give_labels(row, labels)
+
+    def iterator(self, chunk_size: int | None = None) -> Iterator[Any]:
+        rows = super().iterator(chunk_size)
+        if not self.reads_terms:
+            return rows
+        labels = TermLabels()
+        # A generator, so iterator() stays a stream.
+        return (_give_labels(row, labels) for row in rows)
+
+
+def _give_labels(row: Any, labels: TermLabels) -> Any:
+    """The row, given the shared labels where it shows terms."""
+    if isinstance(row, ShowsTerms):
+        row.term_labels = labels
+    return row
 
 
 class ShowsTerms:
@@ -126,7 +145,7 @@ class ShowsTerms:
 
     @cached_property
     def term_labels(self) -> TermLabels:
-        return TermLabels.load()
+        return TermLabels()
 
 
 # The type checker cannot build `skills` from Skill's manager, which is parler's and untyped.
@@ -315,6 +334,9 @@ class ExperienceManager(TranslatableManager):
 
     def visible(self) -> ExperienceQuerySet:
         return cast(ExperienceQuerySet, self.get_queryset()).visible()
+
+    def with_terms(self) -> ExperienceQuerySet:
+        return cast(ExperienceQuerySet, self.get_queryset()).with_terms()
 
 
 class Experience(TranslatableModel, TimestampedModel, DescriptiveModel, ShowsTerms):

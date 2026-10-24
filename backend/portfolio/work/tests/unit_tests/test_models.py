@@ -306,7 +306,7 @@ class TechnologyTermTestCase(TestCase):
         TechnologyTermFactory(name="Microservices", label="Microservices", i18n={"pl": {"label": "Mikroserwisy"}})
 
     def test_a_term_is_shown_by_its_label_matched_ignoring_case_and_the_rest_as_written(self) -> None:
-        labels = TermLabels.load()
+        labels = TermLabels()
         self.assertListEqual(
             labels.in_language(["Python", "microservices", "gRPC"], "pl"), ["Python", "Mikroserwisy", "gRPC"]
         )
@@ -321,12 +321,12 @@ class TechnologyTermTestCase(TestCase):
         polish_only.set_current_language("pl")
         polish_only.label = "Monorepozytorium"
         polish_only.save()
-        labels = TermLabels.load()
+        labels = TermLabels()
         self.assertEqual(labels.label("event sourcing", "pl"), "Event sourcing")
         self.assertEqual(labels.label("Monorepo", "en"), "Monorepozytorium")
 
     def test_no_list_shows_as_empty_in_every_language(self) -> None:
-        self.assertDictEqual(TermLabels.load().display(None), {"en": [], "pl": []})
+        self.assertDictEqual(TermLabels().display(None), {"en": [], "pl": []})
 
     def test_two_spellings_of_one_term_are_refused(self) -> None:
         with self.assertRaises(ValidationError):
@@ -378,3 +378,18 @@ class TechnologyTermTestCase(TestCase):
         with self.assertNumQueries(2):
             shown = [role.technologies_display["pl"] for role in Experience.objects.visible().with_terms()]
         self.assertListEqual(shown, [["Mikroserwisy"]] * 3)
+        # From either manager, and streamed through iterator() too.
+        with self.assertNumQueries(2):
+            shown = [role.technologies_display["pl"] for role in Experience.objects.with_terms().iterator()]
+        self.assertListEqual(shown, [["Mikroserwisy"]] * 3)
+        Project.objects.create(title="Tidebell", tags=["Microservices"])
+        with self.assertNumQueries(2):
+            shown = [project.tags_display["pl"] for project in Project.objects.with_terms()]
+        self.assertListEqual(shown, [["Mikroserwisy"]])
+
+    def test_rows_that_show_no_list_never_read_the_terms(self) -> None:
+        Experience.objects.create(
+            position="Engineer", start=fake.date_object(), company="Acme", technologies=["Microservices"]
+        )
+        with self.assertNumQueries(1):
+            self.assertEqual(Experience.objects.with_terms().get().company, "Acme")

@@ -3,7 +3,7 @@ import io
 import json
 import tempfile
 
-from django.core.management import call_command
+from django.core.management import CommandError, call_command
 from django.test import TestCase
 
 from work.content import export, import_
@@ -113,6 +113,26 @@ class WorkContentTestCase(TestCase):
         report = import_(data, apply=True)
         self.assertEqual(report.unmatched, [f"Experience {self.role.pk}"])
         self.assertTrue(Experience.objects.filter(pk=self.role.pk).exists())
+
+    def test_a_term_spelled_differently_under_another_id_is_refused_by_name_and_nothing_written(self) -> None:
+        term = TechnologyTerm.objects.create(name="Microservices", label="Microservices")
+        data = json.loads(json.dumps(export()))
+        data["models"]["work.Experience"][0]["fields"]["company"] = "Globex"
+        # Another database, where the same term was added on its own under another id.
+        term.delete()
+        other = TechnologyTerm.objects.create(name="microservices", label="Microservices")
+
+        with self.assertRaisesMessage(ValueError, f"'Microservices' already exists under pk {other.pk}"):
+            import_(data, apply=True)
+
+        self.assertListEqual(list(TechnologyTerm.objects.values_list("pk", flat=True)), [other.pk])
+        self.role.refresh_from_db()
+        self.assertEqual(self.role.company, "Kelvinbrook")
+        with tempfile.NamedTemporaryFile("w+", suffix=".json") as file:
+            json.dump(data, file)
+            file.flush()
+            with self.assertRaisesMessage(CommandError, f"already exists under pk {other.pk}"):
+                call_command("import_work", file.name, stdout=io.StringIO())
 
     def test_an_unknown_format_is_refused(self) -> None:
         with self.assertRaises(ValueError):

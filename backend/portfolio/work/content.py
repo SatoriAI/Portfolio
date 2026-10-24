@@ -130,6 +130,14 @@ def _apply_row(model: type[TranslatableModel], row: dict[str, Any], report: Repo
                 changes.append(f"{f.name}[{language}]: {_short(current)} → {_short(wanted)}")
     if not changes:
         return
+    if isinstance(obj, TechnologyTerm):
+        # Names are unique ignoring case; said here by name, rather than by the constraint failing the transaction.
+        clash = TechnologyTerm.objects.filter(name__iexact=obj.name).exclude(pk=obj.pk).first()
+        if clash is not None:
+            raise ValueError(
+                f"{name}: the term name {obj.name!r} already exists under pk {clash.pk} ({clash.name!r}); "
+                "make the two databases agree on one before importing."
+            )
     # Saves the translations set above too, every language at once.
     obj.save()
     (report.created if created else report.changed).append(f"{name}: " + "; ".join(changes))
