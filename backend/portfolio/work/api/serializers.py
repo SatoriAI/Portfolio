@@ -1,5 +1,6 @@
 from parler_rest.fields import TranslatedFieldsField
 from parler_rest.serializers import TranslatableModelSerializer
+from rest_framework import serializers
 
 from work.models import Experience, Project, Skill, SkillCategory
 
@@ -21,8 +22,14 @@ class SkillSerializer(TranslatableModelSerializer):
         fields = "__all__"
 
 
+def terms_display() -> serializers.DictField:
+    """A list of terms by language, each general term in that language's word."""
+    return serializers.DictField(child=serializers.ListField(child=serializers.CharField()), read_only=True)
+
+
 class ProjectSerializer(TranslatableModelSerializer):
     translations = TranslatedFieldsField(shared_model=Project)
+    tags_display = terms_display()
 
     class Meta:
         model = Project
@@ -31,6 +38,7 @@ class ProjectSerializer(TranslatableModelSerializer):
 
 class ExperienceSerializer(TranslatableModelSerializer):
     translations = TranslatedFieldsField(shared_model=Experience)
+    technologies_display = terms_display()
 
     class Meta:
         model = Experience

@@ -5,7 +5,7 @@ import faker
 from factory.django import DjangoModelFactory
 
 from utils.factories import i18nMixin
-from work.models import Experience, Project, Skill, SkillCategory
+from work.models import Experience, Project, Skill, SkillCategory, TechnologyTerm
 
 fake = faker.Faker()
 
@@ -26,6 +26,16 @@ TECH_STACK = [
 
 def _maybe_url(prob: float = 0.7) -> str | None:
     return fake.url() if random.random() < prob else None
+
+
+class TechnologyTermFactory(DjangoModelFactory, i18nMixin):
+    class Meta:
+        model = TechnologyTerm
+        skip_postgeneration_save = True
+
+    name = factory.Sequence(lambda n: f"Term {n}")
+    # Translated fields (current language)
+    label = factory.SelfAttribute("name")
 
 
 class SkillCategoryFactory(DjangoModelFactory, i18nMixin):
@@ -94,6 +104,7 @@ class ExperienceFactory(DjangoModelFactory, i18nMixin):
 
 
 __all__ = [
+    "TechnologyTermFactory",
     "SkillCategoryFactory",
     "SkillFactory",
     "ProjectFactory",

@@ -1,10 +1,18 @@
 from datetime import date
 
 import faker
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
-from work.tests.factories import ExperienceFactory, ProjectFactory, SkillCategoryFactory, SkillFactory
+from work.tests.factories import (
+    ExperienceFactory,
+    ProjectFactory,
+    SkillCategoryFactory,
+    SkillFactory,
+    TechnologyTermFactory,
+)
 
 fake = faker.Faker()
 
@@ -168,6 +176,49 @@ class ProjectListViewTestCase(TestCase):
         ProjectFactory()
         item = self.client.get(reverse("work:projects")).json()[0]
         self.assertEqual(item["translations"]["en"]["vex_question"], "")
+
+
+class TermsDisplayTestCase(TestCase):
+    """Roles and projects give their lists in each language, beside the lists as written."""
+
+    def setUp(self) -> None:
+        TechnologyTermFactory(name="Microservices", label="Microservices", i18n={"pl": {"label": "Mikroserwisy"}})
+
+    def test_a_role_gives_its_technologies_in_each_language_and_as_written(self) -> None:
+        ExperienceFactory(technologies=["Python", "microservices"], tools=["Microservices"])
+        item = self.client.get(reverse("work:experiences")).json()[0]
+        self.assertListEqual(item["technologies"], ["Python", "microservices"])
+        self.assertDictEqual(
+            item["technologies_display"], {"en": ["Python", "Microservices"], "pl": ["Python", "Mikroserwisy"]}
+        )
+        # Tools are product names, given only as written.
+        self.assertListEqual(item["tools"], ["Microservices"])
+        self.assertNotIn("tools_display", item)
+
+    def test_a_project_gives_its_tags_in_each_language_and_as_written(self) -> None:
+        ProjectFactory(tags=["Go", "Microservices"])
+        item = self.client.get(reverse("work:projects")).json()[0]
+        self.assertListEqual(item["tags"], ["Go", "Microservices"])
+        self.assertDictEqual(item["tags_display"], {"en": ["Go", "Microservices"], "pl": ["Go", "Mikroserwisy"]})
+
+    def test_a_role_without_technologies_keeps_null_and_shows_empty_lists(self) -> None:
+        ExperienceFactory(technologies=None)
+        item = self.client.get(reverse("work:experiences")).json()[0]
+        self.assertIsNone(item["technologies"])
+        self.assertDictEqual(item["technologies_display"], {"en": [], "pl": []})
+
+    def test_the_terms_are_read_once_however_many_rows_are_listed(self) -> None:
+        for name, factory in (("experiences", ExperienceFactory), ("projects", ProjectFactory)):
+            with self.subTest(name):
+                factory()
+                with CaptureQueriesContext(connection) as few:
+                    self.client.get(reverse(f"work:{name}"))
+                factory.create_batch(4)
+                TechnologyTermFactory.create_batch(3)
+                with CaptureQueriesContext(connection) as more:
+                    data = self.client.get(reverse(f"work:{name}")).json()
+                self.assertEqual(len(data), 5)
+                self.assertEqual(len(more), len(few))
 
 
 class ExperienceListViewTestCase(TestCase):

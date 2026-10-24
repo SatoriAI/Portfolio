@@ -12,7 +12,13 @@ from university.tests.factories import PublicationFactory
 from vex.ai import knowledge
 from vex.ai.knowledge import KnowledgeBase, Source, build, knowledge_base, parse_site_bundle, site_sources
 from vex.tests.factories import DocumentFactory
-from work.tests.factories import ExperienceFactory, SkillCategoryFactory, SkillFactory
+from work.tests.factories import (
+    ExperienceFactory,
+    ProjectFactory,
+    SkillCategoryFactory,
+    SkillFactory,
+    TechnologyTermFactory,
+)
 
 SITE = "https://site.test"
 BUNDLE = {
@@ -85,6 +91,21 @@ class KnowledgeBaseTestCase(TestCase):
                 "Skill: Unsorted",
             ],
         )
+
+    def test_roles_and_projects_read_their_terms_in_the_language_in_a_fixed_number_of_queries(self) -> None:
+        TechnologyTermFactory(name="Microservices", label="Microservices", i18n={"pl": {"label": "Mikroserwisy"}})
+        ExperienceFactory(technologies=["Microservices"])
+        ProjectFactory(tags=["Microservices"])
+        with CaptureQueriesContext(connection) as few:
+            build("pl")
+        ExperienceFactory.create_batch(3, technologies=["Go", "Microservices"])
+        ProjectFactory.create_batch(3, tags=["Microservices"])
+        with CaptureQueriesContext(connection) as more:
+            text = build("pl").text
+        self.assertEqual(len(more), len(few))
+        self.assertEqual(text.count("Technologies: Go, Mikroserwisy"), 3)
+        self.assertEqual(text.count("Tags: Mikroserwisy"), 4)
+        self.assertNotIn("Microservices", text)
 
     def test_the_same_content_gives_the_same_text(self) -> None:
         PublicationFactory.create_batch(3)

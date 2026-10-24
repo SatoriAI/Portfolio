@@ -191,3 +191,63 @@ class FillSkillCategoriesTestCase(TransactionTestCase):
         apps = self._migrate()
         self.assertEqual(apps.get_model("work", "SkillCategory").objects.count(), 4)
         self.assertEqual(apps.get_model("work", "Skill").objects.get().icon, "React")
+
+
+class SeedTechnologyTermsTestCase(TransactionTestCase):
+    """0016 gives Microservices its Polish word, once, in a database that has roles or projects."""
+
+    BEFORE = [("work", "0015_technology_term")]
+    AFTER = [("work", "0016_seed_technology_terms")]
+
+    def setUp(self) -> None:
+        executor = MigrationExecutor(connection)
+        executor.migrate(self.BEFORE)
+        self.addCleanup(
+            lambda: MigrationExecutor(connection).migrate(MigrationExecutor(connection).loader.graph.leaf_nodes())
+        )
+        self.apps = executor.loader.project_state(self.BEFORE).apps
+
+    def _migrate(self) -> Any:
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()
+        executor.migrate(self.AFTER)
+        return executor.loader.project_state(self.AFTER).apps
+
+    def _labels(self, apps: Any) -> list[tuple[str, str, str]]:
+        translations = apps.get_model("work", "TechnologyTermTranslation").objects
+        return list(translations.order_by("language_code").values_list("master__name", "language_code", "label"))
+
+    def test_a_database_without_roles_or_projects_gets_no_terms(self) -> None:
+        apps = self._migrate()
+        self.assertFalse(apps.get_model("work", "TechnologyTerm").objects.exists())
+
+    def test_a_database_with_a_project_gets_microservices_in_both_languages(self) -> None:
+        self.apps.get_model("work", "Project").objects.create(title="Tidebell", tags=["Microservices"])
+        apps = self._migrate()
+        self.assertListEqual(
+            self._labels(apps), [("Microservices", "en", "Microservices"), ("Microservices", "pl", "Mikroserwisy")]
+        )
+
+    def test_running_it_again_after_going_back_keeps_an_edited_label(self) -> None:
+        self.apps.get_model("work", "Experience").objects.create(
+            position="Engineer", start="2022-09-01", company="Kelvinbrook", technologies=["Microservices"]
+        )
+        apps = self._migrate()
+        apps.get_model("work", "TechnologyTermTranslation").objects.filter(language_code="pl").update(
+            label="Mikrousługi"
+        )
+        MigrationExecutor(connection).migrate(self.BEFORE)
+
+        apps = self._migrate()
+
+        self.assertListEqual(
+            self._labels(apps), [("Microservices", "en", "Microservices"), ("Microservices", "pl", "Mikrousługi")]
+        )
+
+    def test_a_term_added_in_another_spelling_is_left_alone(self) -> None:
+        self.apps.get_model("work", "Project").objects.create(title="Tidebell")
+        self.apps.get_model("work", "TechnologyTerm").objects.create(name="microservices")
+        apps = self._migrate()
+        names = apps.get_model("work", "TechnologyTerm").objects.values_list("name", flat=True)
+        self.assertListEqual(list(names), ["microservices"])
+        self.assertListEqual(self._labels(apps), [])

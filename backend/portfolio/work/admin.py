@@ -1,10 +1,27 @@
 from typing import Any
 
+from django.conf import settings
 from django.contrib import admin
+from django.db.models import QuerySet
 from django.http import HttpRequest
+from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 
-from work.models import Experience, Project, Skill, SkillCategory
+from work.models import Experience, Project, Skill, SkillCategory, TechnologyTerm
+
+
+@admin.register(TechnologyTerm)
+class TechnologyTermAdmin(TranslatableAdmin):
+    list_display = ("name", "labels")
+    search_fields = ("name",)
+
+    def get_queryset(self, request: HttpRequest) -> QuerySet[TechnologyTerm]:
+        return super().get_queryset(request).prefetch_related("translations")
+
+    @admin.display(description=_("Labels"))
+    def labels(self, obj: TechnologyTerm) -> str:
+        labels = {translation.language_code: translation.label for translation in obj.translations.all()}
+        return ", ".join(f"{code}: {labels[code]}" for code, _name in settings.LANGUAGES if code in labels)
 
 
 @admin.register(SkillCategory)

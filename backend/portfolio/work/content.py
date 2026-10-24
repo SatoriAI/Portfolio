@@ -1,5 +1,5 @@
 """
-The work content (skill categories, skills and roles, with every translation)
+The work content (technology terms, skill categories, skills and roles, with every translation)
 as plain data, so one database can be made to match another: `export_work`
 writes it from the database the content is edited in, `import_work` makes
 another one match it.
@@ -20,10 +20,11 @@ from django.core.management.color import no_style
 from django.db import connection, models, transaction
 from parler.models import TranslatableModel
 
-from work.models import Experience, Skill, SkillCategory
+from work.models import Experience, Skill, SkillCategory, TechnologyTerm
 
-# In dependency order: a skill refers to its category, so the categories come first.
-MODELS: tuple[type[TranslatableModel], ...] = (SkillCategory, Skill, Experience)
+# In dependency order: a skill refers to its category, so the categories come first. Nothing refers to a term by key,
+# but the terms come first too, so a role never arrives before the word it is shown with.
+MODELS: tuple[type[TranslatableModel], ...] = (TechnologyTerm, SkillCategory, Skill, Experience)
 FORMAT = 1
 # Kept by each database for itself.
 SKIPPED = {"id", "created_at", "updated_at"}

@@ -1,9 +1,13 @@
-from typing import cast
+from collections.abc import Iterable
+from functools import cached_property
+from typing import Self, cast
 
+from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models.functions import Lower
 from django.utils import timezone
 from django.utils.translation import get_language, pgettext_lazy
 from django.utils.translation import gettext_lazy as _
@@ -13,6 +17,116 @@ from parler.models import TranslatableModel, TranslatedFields
 from utils.fields import LinesArrayField
 from utils.models import DescriptiveModel, TimestampedModel
 from work.choices import Icons
+
+
+class TechnologyTerm(TranslatableModel, TimestampedModel):
+    """
+    A general term in the roles' technologies or the projects' tags, such as
+    Microservices, with its word in each language. Proper names (Python,
+    gRPC) read the same in every language and need no term.
+    """
+
+    name = models.CharField(
+        _("Name"),
+        max_length=128,
+        help_text=_(
+            "A term as it is written in a role's technologies or a project's tags; shown as this label in each "
+            "language. Terms not listed are shown as written."
+        ),
+    )
+
+    translations = TranslatedFields(
+        label=models.CharField(_("Label"), max_length=128),
+    )
+
+    # Managers
+    objects: TranslatableManager = TranslatableManager()
+
+    def __str__(self) -> str:
+        return self.name
+
+    class Meta:
+        verbose_name = _("Technology term")
+        verbose_name_plural = _("Technology terms")
+        ordering = (Lower("name"),)
+        constraints = [
+            # Matched ignoring case, so two spellings of one term would leave which label shows to chance.
+            models.UniqueConstraint(
+                Lower("name"),
+                name="technology_term_name_unique_ignoring_case",
+                violation_error_message=_("A term with this name already exists."),
+            )
+        ]
+
+
+class TermLabels:
+    """Every term's label in each language, read in one query, to show a list of terms in a language."""
+
+    def __init__(self, labels: dict[str, dict[str, str]]) -> None:
+        # By the term's name in lower case, then by language.
+        self._labels = labels
+
+    @classmethod
+    def load(cls) -> "TermLabels":
+        labels: dict[str, dict[str, str]] = {}
+        rows = TechnologyTerm.objects.values_list("name", "translations__language_code", "translations__label")
+        for name, language, label in rows:
+            if language and label:
+                labels.setdefault(name.lower(), {})[language] = label
+        return cls(labels)
+
+    def label(self, term: str, language: str) -> str:
+        """The term's label in the language, else in another one, else the term as written."""
+        labels = self._labels.get(term.lower(), {})
+        if language in labels:
+            return labels[language]
+        return next((labels[code] for code, _name in settings.LANGUAGES if code in labels), term)
+
+    def in_language(self, terms: Iterable[str] | None, language: str) -> list[str]:
+        return [self.label(term, language) for term in terms or []]
+
+    def display(self, terms: Iterable[str] | None) -> dict[str, list[str]]:
+        """The list in every language the site has."""
+        terms = list(terms or [])
+        return {code: self.in_language(terms, code) for code, _name in settings.LANGUAGES}
+
+
+class TermsQuerySet(TranslatableQuerySet):
+    """
+    Rows that show terms. With `with_terms`, the rows a query returns share
+    one read of every term's labels, however many there are; a row read
+    another way reads them itself when first asked.
+    """
+
+    reads_terms = False
+
+    def with_terms(self) -> Self:
+        clone = self._chain()
+        clone.reads_terms = True
+        return clone
+
+    def _clone(self) -> Self:
+        clone = super()._clone()
+        clone.reads_terms = self.reads_terms
+        return clone
+
+    def _fetch_all(self) -> None:
+        # Django calls this on every look at the rows; the terms are read with the rows, once.
+        fetched = self._result_cache is not None
+        super()._fetch_all()
+        if self.reads_terms and not fetched and self._result_cache:
+            labels = TermLabels.load()
+            for row in self._result_cache:
+                if isinstance(row, ShowsTerms):
+                    row.term_labels = labels
+
+
+class ShowsTerms:
+    """A model whose lists hold terms, shown in each language through their labels."""
+
+    @cached_property
+    def term_labels(self) -> TermLabels:
+        return TermLabels.load()
 
 
 # The type checker cannot build `skills` from Skill's manager, which is parler's and untyped.
@@ -131,7 +245,14 @@ class Skill(TranslatableModel, TimestampedModel, DescriptiveModel):
         ]
 
 
-class Project(TranslatableModel, TimestampedModel, DescriptiveModel):
+class ProjectManager(TranslatableManager):
+    _queryset_class = TermsQuerySet
+
+    def with_terms(self) -> TermsQuerySet:
+        return cast(TermsQuerySet, self.get_queryset()).with_terms()
+
+
+class Project(TranslatableModel, TimestampedModel, DescriptiveModel, ShowsTerms):
     title = models.CharField(_("Title"), max_length=128)
     image = models.URLField(_("Image URL"), null=True, blank=True)
     tags = ArrayField(models.CharField(_("Tags"), max_length=128), null=True, blank=True)
@@ -157,12 +278,21 @@ class Project(TranslatableModel, TimestampedModel, DescriptiveModel):
     )
 
     # Managers
-    objects: TranslatableManager = TranslatableManager()
+    objects: ProjectManager = ProjectManager()
+
+    @property
+    def tags_display(self) -> dict[str, list[str]]:
+        """The tags in each language, a general term by its label there."""
+        return self.term_labels.display(self.tags)
+
+    @classmethod
+    def vex_queryset(cls) -> TermsQuerySet:
+        return cls.objects.with_terms()
 
     def representation_for(self, locale: str | None) -> str:
         lang = (locale or get_language() or "").split("-")[0][:2]
         description = self.safe_translation_getter("description", language_code=lang, any_language=True) or ""
-        tags = ", ".join(self.tags or [])
+        tags = ", ".join(self.term_labels.in_language(self.tags, lang))
         return (
             f"Project: {self.title}\nTags: {tags}\nDescription: {description}\n"
             f"Demo: {self.demo or ''}\nRepository: {self.repository or ''}"
@@ -173,7 +303,7 @@ class Project(TranslatableModel, TimestampedModel, DescriptiveModel):
         verbose_name_plural = _("Projects")
 
 
-class ExperienceQuerySet(TranslatableQuerySet):
+class ExperienceQuerySet(TermsQuerySet):
     def visible(self) -> "ExperienceQuerySet":
         """The roles shown on the site and given to Vex; a hidden one is kept but not shown."""
         return self.filter(visible=True)
@@ -187,7 +317,7 @@ class ExperienceManager(TranslatableManager):
         return cast(ExperienceQuerySet, self.get_queryset()).visible()
 
 
-class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
+class Experience(TranslatableModel, TimestampedModel, DescriptiveModel, ShowsTerms):
     # `position` is the shared, untranslated title the current site reads; `role`
     # (translated) replaces it, and `position` goes once the site reads `role`.
     position = models.CharField(_("Position"), max_length=128)
@@ -260,10 +390,15 @@ class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
     def period(self) -> str:
         return f"{self.start.year} - {self.end.year if self.end is not None else ''}"
 
+    @property
+    def technologies_display(self) -> dict[str, list[str]]:
+        """The technologies in each language, a general term by its label there."""
+        return self.term_labels.display(self.technologies)
+
     @classmethod
     def vex_queryset(cls) -> ExperienceQuerySet:
         """Hidden roles stay out of Vex's context, as they do off the site."""
-        return cls.objects.visible()
+        return cls.objects.visible().with_terms()
 
     def representation_for(self, locale: str | None) -> str:
         """
@@ -287,7 +422,7 @@ class Experience(TranslatableModel, TimestampedModel, DescriptiveModel):
         parts = [
             ("Period", self.period),
             ("Location", text("location")),
-            ("Technologies", ", ".join(self.technologies or [])),
+            ("Technologies", ", ".join(self.term_labels.in_language(self.technologies, lang))),
             ("Tools", ", ".join(self.tools or [])),
             ("Topics", ", ".join(self.topics or [])),
             ("Product", text("product")),

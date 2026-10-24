@@ -7,7 +7,7 @@ from django.core.management import call_command
 from django.test import TestCase
 
 from work.content import export, import_
-from work.models import Experience, Skill, SkillCategory
+from work.models import Experience, Skill, SkillCategory, TechnologyTerm
 
 
 class WorkContentTestCase(TestCase):
@@ -87,6 +87,24 @@ class WorkContentTestCase(TestCase):
         self.assertEqual(
             (self.skill.category_id, self.skill.order, self.skill.proven_by), (category.pk, 2, ["Python", "Django"])
         )
+        self.assertEqual(import_(export(), apply=True).lines, [])
+
+    def test_a_term_travels_with_its_id_and_labels_ahead_of_the_roles(self) -> None:
+        term = TechnologyTerm.objects.create(name="Microservices", label="Microservices")
+        term.set_current_language("pl")
+        term.label = "Mikroserwisy"
+        term.save()
+        data = json.loads(json.dumps(export()))
+        self.assertEqual(list(data["models"])[0], "work.TechnologyTerm")
+        # Another database, which has not got the term.
+        TechnologyTerm.objects.all().delete()
+
+        report = import_(data, apply=True)
+
+        self.assertEqual(len(report.created), 1)
+        imported = TechnologyTerm.objects.get()
+        self.assertEqual(imported.pk, term.pk)
+        self.assertEqual(imported.safe_translation_getter("label", language_code="pl"), "Mikroserwisy")
         self.assertEqual(import_(export(), apply=True).lines, [])
 
     def test_a_row_the_data_lacks_is_reported_and_kept(self) -> None:

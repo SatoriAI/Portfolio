@@ -20,7 +20,8 @@ class SkillViewSet(generics.ListAPIView):
 
 @extend_schema(summary="List Projects", tags=["Work"])
 class ProjectViewSet(generics.ListAPIView):
-    queryset = Project.objects.all().prefetch_related("translations")
+    # Every term's labels are read once for the whole list.
+    queryset = Project.objects.with_terms().prefetch_related("translations")
     serializer_class = ProjectSerializer
 
 
@@ -28,6 +29,8 @@ class ProjectViewSet(generics.ListAPIView):
 class ExperienceViewSet(generics.ListAPIView):
     queryset = (
         Experience.objects.visible()
+        # Every term's labels are read once for the whole list.
+        .with_terms()
         .annotate(
             is_current=Case(
                 When(end__isnull=True, then=Value(1)),
