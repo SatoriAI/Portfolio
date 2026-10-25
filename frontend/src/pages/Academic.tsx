@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Link } from "react-router-dom";
 
 import ClockExample from "@/components/academic/ClockExample";
@@ -7,8 +7,12 @@ import CyclicShiftFigure, {
   K_DEFAULT,
 } from "@/components/academic/CyclicShiftFigure";
 import DemoStage from "@/components/academic/DemoStage";
+import FigureFrame from "@/components/academic/FigureFrame";
 import GrokkingChart from "@/components/academic/GrokkingChart";
 import HeatRodFigure from "@/components/academic/HeatRodFigure";
+import HiddenGradientFigure, {
+  HiddenGradientControls,
+} from "@/components/academic/HiddenGradientFigure";
 import InfluenceMapFigure, { InfluenceMapControls } from "@/components/academic/InfluenceMapFigure";
 import PublicationStack from "@/components/academic/PublicationStack";
 import SharpBoundsFigure, { SharpBoundsControls } from "@/components/academic/SharpBoundsFigure";
@@ -22,8 +26,10 @@ import PageClosing from "@/components/layout/PageClosing";
 import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
 import Reveal from "@/components/Reveal";
+import AliasingFigure from "@/components/workshop/AliasingFigure";
 import { useSettings } from "@/contexts/SettingsContext";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { GRADIENT_REST } from "@/lib/hiddenGradient";
 import { BOUNDS_START, INFLUENCE_START } from "@/lib/kernelFigures";
 import type { UiPublication } from "@/lib/publicationsService";
 import { usePublications } from "@/lib/queries";
@@ -52,6 +58,10 @@ const BOUNDS_DEMO = demoTo(BOUNDS_START);
 /** The circle the wave rides: 0 to 112, and 113 is 0 again. */
 const CYCLE = 113;
 const SHIFT_DEMO = { from: 0, to: CYCLE, durationMs: 3000, delayMs: 1000 };
+/** The hidden gradient's time: run from long to short, then back to where the curves meet. */
+const GRADIENT_DEMO = demoTo(GRADIENT_REST);
+/** The paragraph of "What the second paper asks" that the grid figure follows: the obstruction. */
+const GRID_PARAGRAPH = 3;
 const eyebrow = (index: number) => formatCounter(index, SECTION_COUNT);
 
 /**
@@ -358,25 +368,77 @@ const Academic = () => {
           leadLine={story.neuralOperators.leadLine}
         />
         {story.neuralOperators.stages.map((stage) => (
-          <div key={stage.title} className="mb-10">
+          <div key={stage.id} className="mb-10">
             <StageHeading title={stage.title} />
-            <div className="space-y-4 text-base text-foreground/80 md:text-body-lg">
-              {stage.paragraphs.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
-              {stage.preprint && (
-                <p>
-                  <a
-                    className={LINK}
-                    href="https://arxiv.org/abs/2610.20106"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {story.neuralOperators.preprint}
-                  </a>
-                </p>
-              )}
-            </div>
+            {stage.id === "gradient" ? (
+              // The mechanism, drawn: prose and the time slider in columns
+              // 1–6, the figure in 7–12, as the heat-kernel stages are. A
+              // phone keeps the markup's order: prose, figure, control.
+              <DemoStage
+                placement="right"
+                initial={prefersReducedMotion ? GRADIENT_REST : 0}
+                demo={GRADIENT_DEMO}
+                prose={
+                  <div className="space-y-4">
+                    {stage.paragraphs.map((paragraph) => (
+                      <p key={paragraph} className={STORY_PROSE}>
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                }
+                figure={(position) => (
+                  <HiddenGradientFigure
+                    labels={story.neuralOperators.gradient}
+                    position={position}
+                  />
+                )}
+                controls={(position, setPosition) => (
+                  <HiddenGradientControls
+                    figureLabels={story.neuralOperators.gradient}
+                    labels={story.neuralOperators.gradientControls}
+                    locale={language}
+                    position={position}
+                    onPositionChange={setPosition}
+                  />
+                )}
+              />
+            ) : (
+              <div className="space-y-4 text-base text-foreground/80 md:text-body-lg">
+                {stage.paragraphs.map((paragraph, index) => (
+                  <Fragment key={paragraph}>
+                    <p>{paragraph}</p>
+                    {/* The grid's obstruction, drawn with the workshop's own
+                      figure, after the paragraph that names it. */}
+                    {stage.id === "second" && index === GRID_PARAGRAPH && (
+                      <Reveal className="!my-8">
+                        <FigureFrame kind="illustration" label={t.workshop.figure.illustration}>
+                          <figure>
+                            <span className="sr-only">{story.neuralOperators.grid.alt}</span>
+                            <AliasingFigure labels={t.workshop.figure.aliasing} />
+                            <figcaption className="mt-6 text-sm text-foreground/80">
+                              {story.neuralOperators.grid.caption}
+                            </figcaption>
+                          </figure>
+                        </FigureFrame>
+                      </Reveal>
+                    )}
+                  </Fragment>
+                ))}
+                {stage.preprint && (
+                  <p>
+                    <a
+                      className={LINK}
+                      href="https://arxiv.org/abs/2610.20106"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {story.neuralOperators.preprint}
+                    </a>
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         ))}
         <p className="text-base text-foreground/80 md:text-body-lg">
