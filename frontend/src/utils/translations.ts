@@ -607,6 +607,7 @@ const copy = {
             "Can the spreading of heat and the multiplication of functions be built into a model that solves an equation of physics, with every parameter taken from a proof rather than learned from data?",
           stages: [
             {
+              id: "idea",
               title: "The idea",
               paragraphs: [
                 "Neural operators are meant to learn maps between functions — for example, the map that turns the coefficients and forcing of a differential equation into its solution. This project asks how much of that map can instead be built directly from the mathematics of the equation.",
@@ -614,6 +615,7 @@ const copy = {
               ],
             },
             {
+              id: "gradient",
               title: "Two operations, one hidden gradient",
               paragraphs: [
                 "Diffusion spreads information through space, as heat does. Pointwise multiplication combines two pieces of information. Neither computes a gradient.",
@@ -622,6 +624,7 @@ const copy = {
               ],
             },
             {
+              id: "first",
               title: "What the first paper proves",
               paragraphs: [
                 "Darcy's equation describes flow through a material whose permeability changes from place to place. Its solution depends not on a finite list of numbers but on whole functions: the material coefficient and the forcing.",
@@ -633,6 +636,7 @@ const copy = {
               preprint: true,
             },
             {
+              id: "second",
               title: "What the second paper asks",
               paragraphs: [
                 "The next question is whether the same construction survives a change of representation.",
@@ -644,6 +648,7 @@ const copy = {
               ],
             },
             {
+              id: "next",
               title: "What comes next",
               paragraphs: [
                 "The first two papers suggest that the essential structure is larger than the particular Darcy equation or the regular grid used in the second analysis.",
@@ -668,6 +673,35 @@ const copy = {
               part: "part 2",
             },
           ],
+          gradient: {
+            label: "Explanatory example",
+            figure:
+              "Two functions on a loop and, below them, the difference between multiplying before and after diffusion, drawn over the product of their derivatives",
+            b: "b, the material",
+            u: "u, the current state",
+            defect: "the difference of the two orders, divided by 2t",
+            target: "b′·u′, the gradient interaction",
+            gap: "the gap between them",
+            readings: {
+              far: "Over a long time diffusion washes the difference out: it misses b′·u′ by {p}%.",
+              closer: "A shorter time brings the difference closer to b′·u′: they are {p}% apart.",
+              matches:
+                "Over a short time the difference is b′·u′ to within {p}%: diffusion and multiplication have recovered the gradients.",
+            },
+            caption:
+              "Multiply b and u and diffuse the product, or diffuse each and then multiply: the difference between the two, divided by 2t, approaches b′·u′ as the diffusion time t shrinks. The values are exact, computed from the functions’ Fourier modes, not simulated.",
+          },
+          gradientControls: {
+            time: "Diffusion time $t$ = {t}",
+            timeName: "Diffusion time t",
+            longer: "longer",
+            shorter: "shorter",
+          },
+          grid: {
+            alt: "A wave with five oscillations on a periodic interval and its averages over the cells of a grid; below, how strongly the discrete operator acts on each oscillation compared with the continuous one; a slider changes the grid spacing h",
+            caption:
+              "A wave with five oscillations on a periodic interval and its averages over cells of width h. As the cells approach the scale of the oscillations, the averages weaken, then line up into a slower wave. At h = 1/5 each cell holds one whole oscillation and every average is zero. Lower plot: the grid feels fast oscillations more weakly; at the limit of resolution the discrete operator acts on them with about 41% of the continuous operator’s strength. The values are exact, not simulated.",
+          },
         },
         teaching: {
           title: "Teaching",
@@ -1364,6 +1398,7 @@ const copy = {
             "Czy z rozchodzenia się ciepła i mnożenia funkcji da się zbudować model, który rozwiązuje równanie fizyki, a wszystkie jego parametry wynikają z dowodu, a nie z uczenia na danych?",
           stages: [
             {
+              id: "idea",
               title: "Pomysł",
               paragraphs: [
                 "Operatory neuronowe mają uczyć się przekształceń między funkcjami — na przykład reguły, która z parametrów i wymuszenia równania różniczkowego wyznacza jego rozwiązanie. W tym projekcie pytam, jak dużą część takiej reguły można zamiast tego zbudować bezpośrednio z matematyki równania.",
@@ -1371,6 +1406,7 @@ const copy = {
               ],
             },
             {
+              id: "gradient",
               title: "Dwie operacje, jeden ukryty gradient",
               paragraphs: [
                 "Dyfuzja rozprowadza informację w przestrzeni, tak jak rozchodzi się ciepło. Mnożenie punktowe łączy dwie informacje. Żadna z tych operacji nie liczy gradientu.",
@@ -1379,6 +1415,7 @@ const copy = {
               ],
             },
             {
+              id: "first",
               title: "Co dowodzi pierwsza praca",
               paragraphs: [
                 "Równanie Darcy’ego opisuje przepływ przez materiał, którego przepuszczalność zmienia się z miejsca na miejsce. Jego rozwiązanie zależy nie od skończonej listy liczb, lecz od całych funkcji: współczynnika opisującego materiał i wymuszenia.",
@@ -1390,6 +1427,7 @@ const copy = {
               preprint: true,
             },
             {
+              id: "second",
               title: "O co pyta druga praca",
               paragraphs: [
                 "Kolejne pytanie dotyczy tego, czy ta sama konstrukcja przetrwa zmianę reprezentacji problemu.",
@@ -1401,6 +1439,7 @@ const copy = {
               ],
             },
             {
+              id: "next",
               title: "Co dalej",
               paragraphs: [
                 "Pierwsze dwie prace sugerują, że odkryty mechanizm jest bardziej ogólny niż konkretne równanie Darcy’ego czy regularna siatka wykorzystana w drugiej analizie.",
@@ -1425,6 +1464,35 @@ const copy = {
               part: "część 2",
             },
           ],
+          gradient: {
+            label: "Przykład objaśniający",
+            figure:
+              "Dwie funkcje na okręgu, a pod nimi różnica między mnożeniem przed dyfuzją i po niej, narysowana na tle iloczynu ich pochodnych",
+            b: "b — materiał",
+            u: "u — bieżący stan",
+            defect: "różnica dwóch kolejności podzielona przez 2t",
+            target: "b′·u′ — oddziaływanie gradientów",
+            gap: "odstęp między nimi",
+            readings: {
+              far: "Przy długim czasie dyfuzja wygładza różnicę: odbiega ona od b′·u′ o {p}%.",
+              closer: "Krótszy czas przybliża różnicę do b′·u′: dzieli je {p}%.",
+              matches:
+                "Przy krótkim czasie różnica pokrywa się z b′·u′ z dokładnością do {p}%: dyfuzja i mnożenie odzyskały gradienty.",
+            },
+            caption:
+              "Pomnóż b i u, a iloczyn poddaj dyfuzji, albo najpierw poddaj dyfuzji każdą z funkcji, a potem je pomnóż: różnica między wynikami podzielona przez 2t zbliża się do b′·u′, gdy czas dyfuzji t maleje. Wartości są dokładne, wyliczone z modów Fouriera funkcji, nie z symulacji.",
+          },
+          gradientControls: {
+            time: "Czas dyfuzji $t$ = {t}",
+            timeName: "Czas dyfuzji t",
+            longer: "dłużej",
+            shorter: "krócej",
+          },
+          grid: {
+            alt: "Fala o pięciu oscylacjach na okresowym odcinku i jej średnie w komórkach siatki; pod nią działanie operatora dyskretnego na oscylacje względem ciągłego; suwak zmienia odstęp siatki h",
+            caption:
+              "Fala o pięciu oscylacjach na okresowym odcinku i jej średnie w komórkach o szerokości h. Gdy komórki zbliżają się do skali oscylacji, średnie słabną, a potem układają się w wolniejszą falę. Przy h = 1/5 każda komórka mieści jedną pełną oscylację i wszystkie średnie są równe zeru. Dolny wykres: siatka słabiej odczuwa szybkie oscylacje; przy granicy rozdzielczości dyskretny operator działa na nie z ok. 41% siły operatora ciągłego. Wartości są dokładne, nie z symulacji.",
+          },
         },
         teaching: {
           title: "Dydaktyka",
