@@ -30,6 +30,12 @@ export type ApiExperience = {
   end: string;
   company: string;
   technologies: string[] | null;
+  /**
+   * The same technologies as each language names them ("Mikroserwisy" for
+   * "Microservices"), in the same order; absent from an API older than the
+   * field.
+   */
+  technologies_display?: Record<string, string[]>;
   /** Programming tools used in the role (Copilot, Claude Code). */
   tools?: string[] | null;
   /** Subjects taught, for a training role. */
@@ -64,7 +70,10 @@ export type UiExperience = {
   achievements: string[];
   /** The question its Vex prompt offers, or empty for a general one. */
   vexQuestion: string;
+  /** As the role names them: what skills are matched against. */
   technologies: string[];
+  /** As the reader's language names them: what the role card shows. */
+  technologyLabels: string[];
   tools: string[];
   topics: string[];
 };
@@ -112,6 +121,11 @@ export function mapApiExperienceToUi(experience: ApiExperience, language: string
     achievements: listed ? [] : (localized.achievements || []).map(set),
     vexQuestion: localized.vex_question || "",
     technologies: experience.technologies || [],
+    // By position, each falling back to its own name, so a short or empty list
+    // of labels never drops a technology from the card.
+    technologyLabels: (experience.technologies || []).map(
+      (name, index) => experience.technologies_display?.[lang]?.[index] || name,
+    ),
     tools: experience.tools || [],
     topics: experience.topics || [],
   };

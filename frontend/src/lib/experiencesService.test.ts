@@ -53,6 +53,40 @@ describe("mapApiExperienceToUi", () => {
     expect(ui.product).toBe("Dane z\u00a0obserwacji Ziemi, w\u00a0tym zdjęcia");
   });
 
+  it("shows the technologies as the reader's language names them, and keeps the names for matching", () => {
+    const ui = mapApiExperienceToUi(
+      role(
+        { pl: { location: "Online" } },
+        {
+          technologies: ["Python", "Microservices"],
+          technologies_display: { en: ["Python", "Microservices"], pl: ["Python", "Mikroserwisy"] },
+        },
+      ),
+      "pl",
+    );
+    expect(ui.technologyLabels).toEqual(["Python", "Mikroserwisy"]);
+    expect(ui.technologies).toEqual(["Python", "Microservices"]);
+  });
+
+  it("shows the technologies as named when the API has no labels", () => {
+    const ui = mapApiExperienceToUi(
+      role({ pl: { location: "Online" } }, { technologies: ["Python", "Microservices"] }),
+      "pl",
+    );
+    expect(ui.technologyLabels).toEqual(["Python", "Microservices"]);
+  });
+
+  it("keeps every technology when the labels fall short", () => {
+    const ui = mapApiExperienceToUi(
+      role(
+        { pl: { location: "Online" } },
+        { technologies: ["Python", "Microservices"], technologies_display: { pl: ["Python"] } },
+      ),
+      "pl",
+    );
+    expect(ui.technologyLabels).toEqual(["Python", "Microservices"]);
+  });
+
   it("falls back to the shared position while the role is empty", () => {
     const ui = mapApiExperienceToUi(role({ en: { role: "", location: "Warsaw" } }), "en");
     expect(ui.role).toBe("Python Developer");
