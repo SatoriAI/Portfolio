@@ -76,6 +76,17 @@ describe("mapApiExperienceToUi", () => {
     expect(ui.technologyLabels).toEqual(["Python", "Microservices"]);
   });
 
+  it("keeps every technology when the labels fall short", () => {
+    const ui = mapApiExperienceToUi(
+      role(
+        { pl: { location: "Online" } },
+        { technologies: ["Python", "Microservices"], technologies_display: { pl: ["Python"] } },
+      ),
+      "pl",
+    );
+    expect(ui.technologyLabels).toEqual(["Python", "Microservices"]);
+  });
+
   it("falls back to the shared position while the role is empty", () => {
     const ui = mapApiExperienceToUi(role({ en: { role: "", location: "Warsaw" } }), "en");
     expect(ui.role).toBe("Python Developer");

@@ -121,7 +121,11 @@ export function mapApiExperienceToUi(experience: ApiExperience, language: string
     achievements: listed ? [] : (localized.achievements || []).map(set),
     vexQuestion: localized.vex_question || "",
     technologies: experience.technologies || [],
-    technologyLabels: experience.technologies_display?.[lang] || experience.technologies || [],
+    // By position, each falling back to its own name, so a short or empty list
+    // of labels never drops a technology from the card.
+    technologyLabels: (experience.technologies || []).map(
+      (name, index) => experience.technologies_display?.[lang]?.[index] || name,
+    ),
     tools: experience.tools || [],
     topics: experience.topics || [],
   };
