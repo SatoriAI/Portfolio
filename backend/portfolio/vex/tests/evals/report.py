@@ -14,9 +14,10 @@ from vex.ai.prompt import PROMPT_VERSION
 from vex.ai.provider import Usage
 from vex.tests.evals.golden import Case
 
-# The judge: a stronger model than the one it grades, and one that does not take the effort "none".
-JUDGE_MODEL = os.environ.get("VEX_EVAL_JUDGE_MODEL", "gpt-6.1-sol")
-JUDGE_REASONING_EFFORT = "low"
+# The judge: Vex's own model by default, at more effort than Vex answers with, given the knowledge and a rubric
+# rather than a visitor. claude-fable-5-1 is the stronger judge, at two and a half times the price.
+JUDGE_MODEL = os.environ.get("VEX_EVAL_JUDGE_MODEL", "claude-opus-5-5")
+JUDGE_EFFORT = "medium"
 
 
 @dataclass(frozen=True)
@@ -26,7 +27,7 @@ class Call:
 
     @property
     def cost(self) -> Decimal:
-        return self.usage.cost(self.model)
+        return self.usage.cost()
 
 
 @dataclass
@@ -103,7 +104,7 @@ class Report:
             "model": settings.VEX_MODEL,
             "reasoning_effort": settings.VEX_REASONING_EFFORT,
             "judge": JUDGE_MODEL,
-            "judge_reasoning_effort": JUDGE_REASONING_EFFORT,
+            "judge_reasoning_effort": JUDGE_EFFORT,
             "knowledge_digests": self.digests,
             "repeats": self.repeats,
             "threshold": self.threshold,
@@ -122,11 +123,12 @@ class Report:
         return [*lines, f"{self.headline()}; {self.tokens()}"]
 
     def tokens(self) -> str:
-        """The input tokens of every call, and how many of them the provider served from its cache (billed at the
-        cached price; the rest at the full one)."""
+        """The input tokens of every call, and how many of them the provider read from its cache (billed at a twentieth
+        of the full price) or wrote to it (at a quarter more); the rest at the full price."""
         total = sum(call.usage.input_tokens for call in self.calls)
         cached = sum(call.usage.cached_tokens for call in self.calls)
-        return f"{total} input tokens, {cached} of them cached and {total - cached} uncached"
+        written = sum(call.usage.cache_write_tokens for call in self.calls)
+        return f"{total} input tokens, {cached} of them read from the cache and {written} written to it"
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -153,6 +155,7 @@ class Report:
                                     "model": call.model,
                                     "input_tokens": call.usage.input_tokens,
                                     "cached_tokens": call.usage.cached_tokens,
+                                    "cache_write_tokens": call.usage.cache_write_tokens,
                                     "output_tokens": call.usage.output_tokens,
                                     "reasoning_tokens": call.usage.reasoning_tokens,
                                 }

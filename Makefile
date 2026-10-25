@@ -44,7 +44,7 @@ test-backend:  ## Run the backend suite with its coverage gate
 	# both files are gitignored.
 	cd backend && uv run pytest --cov-report xml --junitxml=report.xml
 
-eval-vex:  ## Run Vex's golden set against the real model (costs money; needs OPENAI_API_KEY)
+eval-vex:  ## Run Vex's golden set against the real model (costs money; needs ANTHROPIC_API_KEY)
 	# Options go in EVAL_ARGS, e.g. EVAL_ARGS="--eval-repeats 3"; see
 	# backend/portfolio/vex/tests/evals.
 	cd backend && uv run pytest -m eval --no-cov portfolio/vex/tests/evals $(EVAL_ARGS)

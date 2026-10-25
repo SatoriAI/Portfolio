@@ -77,16 +77,16 @@ jobs:
       present: ${{ steps.check.outputs.present }}
 
     steps:
-      - name: Look for VEX_EVALS_OPENAI_API_KEY
+      - name: Look for VEX_EVALS_ANTHROPIC_API_KEY
         id: check
         env:
-          OPENAI_API_KEY: ${{ secrets.VEX_EVALS_OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.VEX_EVALS_ANTHROPIC_API_KEY }}
         run: |
-          if [ -n "${OPENAI_API_KEY}" ]; then
+          if [ -n "${ANTHROPIC_API_KEY}" ]; then
             echo "present=true" >> "${GITHUB_OUTPUT}"
           else
             echo "present=false" >> "${GITHUB_OUTPUT}"
-            message="VEX_EVALS_OPENAI_API_KEY is not set for this run (a fork, or the secret is not added yet), so Vex's evals were skipped."
+            message="VEX_EVALS_ANTHROPIC_API_KEY is not set for this run (a fork, or the secret is not added yet), so Vex's evals were skipped."
             echo "::notice title=Vex evals skipped::${message}"
             echo "${message}" >> "${GITHUB_STEP_SUMMARY}"
           fi
@@ -138,7 +138,7 @@ jobs:
         env:
           SECRET_KEY: "0m(b5ytsmyyq9al$uulhdvb(hw^jge298(11pm49c!^6se&)ht"
           DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/vex_evals"
-          OPENAI_API_KEY: ${{ secrets.VEX_EVALS_OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.VEX_EVALS_ANTHROPIC_API_KEY }}
           USE_S3: "False"
           # As given to Run workflow, 0 included, so the harness can refuse a
           # value out of range. Empty on a pull request or a scheduled run,

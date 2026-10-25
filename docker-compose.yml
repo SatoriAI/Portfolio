@@ -5,7 +5,7 @@
 # uses the extension, but a volume created before that still holds the old
 # embeddings table, whose vector column a plain postgres image cannot read.
 #
-# First run: cp backend/.env.example backend/.env, fill in OPENAI_API_KEY, then
+# First run: cp backend/.env.example backend/.env, fill in ANTHROPIC_API_KEY, then
 # `docker compose up`.
 
 services:
@@ -36,7 +36,7 @@ services:
       - "8000:8000"
     volumes:
       - ./backend/portfolio:/source/portfolio
-    # Secrets and the OpenAI key come from the file; everything below it is
+    # Secrets and the Anthropic key come from the file; everything below it is
     # overridden here so a .env pointing at Railway cannot reach production by
     # accident.
     env_file: ./backend/.env

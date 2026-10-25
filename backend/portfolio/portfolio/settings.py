@@ -278,27 +278,28 @@ REST_FRAMEWORK = {
 TRUSTED_CLIENT_IP_HEADER = env("TRUSTED_CLIENT_IP_HEADER", default="" if DEBUG else "X-Real-IP")
 
 # Own Variables
-OPENAI_API_KEY = env("OPENAI_API_KEY")
+ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY")
 
-# Vex. The model and its reasoning effort are read per request, so switching (say, to gpt-6.1-sol, which does not
-# take the effort "none") is an environment change on Railway, not a code change.
-VEX_MODEL = env("VEX_MODEL", default="gpt-6-luna")
+# Vex. The model and its effort are read per request, so switching (say, to claude-sonnet-5-5) is an environment
+# change on Railway, not a code change. Claude Opus 5.5 always thinks; effort is how much (its own default is medium).
+VEX_MODEL = env("VEX_MODEL", default="claude-opus-5-5")
 VEX_REASONING_EFFORT = env("VEX_REASONING_EFFORT", default="low")
-if VEX_REASONING_EFFORT not in ("none", "minimal", "low", "medium", "high", "xhigh", "max"):
-    raise ImproperlyConfigured(
-        f"VEX_REASONING_EFFORT={VEX_REASONING_EFFORT!r}: use none, minimal, low, medium, high, xhigh or max."
-    )
-# The cap on one answer, reasoning included: a long answer is cut here rather than billed. An answer that reaches it
-# is logged (finish_reason "length"), so a cap that cuts real answers shows.
-VEX_MAX_OUTPUT_TOKENS = env.int("VEX_MAX_OUTPUT_TOKENS", default=1200)
-# Each model's price in dollars per million tokens (input, cached input, output; reasoning is billed as output), for
-# the cost of every call Vex makes (vex.models.Usage), and so for the daily budget below: OpenAI's Standard tier, for
-# prompts under 272K tokens (writing to the prompt cache is not billed). A VEX_MODEL missing here refuses to start,
-# since its calls could not be counted and the budget would never be reached.
-VEX_PRICES: dict[str, tuple[float, float, float]] = {
-    "gpt-6-luna": (0.10, 0.01, 0.50),
-    "gpt-6-sol": (2.00, 0.20, 10.00),
-    "gpt-6.1-sol": (2.00, 0.10, 10.00),
+if VEX_REASONING_EFFORT not in ("low", "medium", "high", "xhigh", "max"):
+    raise ImproperlyConfigured(f"VEX_REASONING_EFFORT={VEX_REASONING_EFFORT!r}: use low, medium, high, xhigh or max.")
+# The cap on one answer, thinking included: a long answer is cut here rather than billed. An answer that reaches it
+# is logged (finish_reason "max_tokens"), so a cap that cuts real answers shows.
+VEX_MAX_OUTPUT_TOKENS = env.int("VEX_MAX_OUTPUT_TOKENS", default=2000)
+# Each model's price in dollars per million tokens (input, input read from the prompt cache, input written to it for
+# five minutes, output; thinking is billed as output), for the cost of every call Vex makes (vex.models.Usage), and so
+# for the daily budget below: Anthropic's standard prices (Claude Haiku 5.5's for prompts under 100K tokens). Claude
+# Opus 5 and 4.8 are where the API may fall back after a decline (vex.ai.provider). A VEX_MODEL missing here refuses
+# to start, since its calls could not be counted and the budget would never be reached.
+VEX_PRICES: dict[str, tuple[float, float, float, float]] = {
+    "claude-opus-5-5": (4.00, 0.20, 5.00, 20.00),
+    "claude-sonnet-5-5": (2.00, 0.20, 2.50, 10.00),
+    "claude-haiku-5-5": (0.10, 0.01, 0.125, 0.50),
+    "claude-opus-5": (5.00, 0.50, 6.25, 25.00),
+    "claude-opus-4-8": (5.00, 0.50, 6.25, 25.00),
 }
 if VEX_MODEL not in VEX_PRICES:
     raise ImproperlyConfigured(
