@@ -3,7 +3,7 @@ import sys
 from argparse import ArgumentParser
 from typing import Any
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from work.content import import_
 
@@ -24,7 +24,11 @@ class Command(BaseCommand):
         else:
             with open(options["path"], encoding="utf-8") as file:
                 data = json.load(file)
-        report = import_(data, apply=options["apply"])
+        try:
+            report = import_(data, apply=options["apply"])
+        except ValueError as error:
+            # Nothing was written: the import runs in one transaction.
+            raise CommandError(str(error)) from error
         for line in report.lines:
             self.stdout.write(line)
         verb = "Applied" if options["apply"] else "Would apply (dry run, nothing written)"

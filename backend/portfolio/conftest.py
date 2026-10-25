@@ -2,6 +2,7 @@ from collections.abc import Iterator
 
 import pytest
 from _pytest.config.argparsing import Parser
+from django.core.cache import caches
 from django.test import override_settings
 
 from vex.tests.evals import options
@@ -15,6 +16,15 @@ def in_memory_caches() -> Iterator[None]:
     local = "django.core.cache.backends.locmem.LocMemCache"
     with override_settings(CACHES={"default": {"BACKEND": local}, "vex": {"BACKEND": local, "LOCATION": "vex"}}):
         yield
+
+
+@pytest.fixture(autouse=True)
+def empty_default_cache() -> Iterator[None]:
+    """Parler keeps translations in the default cache by row id, and a test's rows are rolled back while the cache
+    keeps them. import_work resets the id sequences, so a later test's row can take a rolled-back row's id and be
+    given its cached translations, which a save then writes nowhere."""
+    caches["default"].clear()
+    yield
 
 
 @pytest.fixture(autouse=True)

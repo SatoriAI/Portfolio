@@ -1,9 +1,11 @@
 from datetime import date
 
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 
 from vex.ai.context import resolve_context
-from work.tests.factories import ExperienceFactory, ProjectFactory
+from work.tests.factories import ExperienceFactory, ProjectFactory, TechnologyTermFactory
 
 
 class AskedFromTestCase(TestCase):
@@ -21,6 +23,16 @@ class AskedFromTestCase(TestCase):
             'The visitor asked this from the role "Python Web Developer at Gridwhistle Power Networks (2020–2024)" '
             "on the Experience page (/experience).",
         )
+
+    def test_naming_a_role_or_a_project_reads_no_technology_terms(self) -> None:
+        TechnologyTermFactory(name="Microservices")
+        role = ExperienceFactory(technologies=["Microservices"])
+        project = ProjectFactory(tags=["Microservices"])
+        with CaptureQueriesContext(connection) as queries:
+            self.assertIn("Experience page", resolve_context({"kind": "experience", "id": role.pk}))
+            self.assertIn("Projects section", resolve_context({"kind": "project", "id": project.pk}))
+        self.assertTrue(queries.captured_queries)
+        self.assertFalse([query for query in queries.captured_queries if "work_technologyterm" in query["sql"]])
 
     def test_a_current_role_runs_to_the_present(self) -> None:
         role = ExperienceFactory(role="AI Engineer", company="Kelvinbrook", start=date(2025, 1, 1), end=None)

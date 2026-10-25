@@ -7,8 +7,8 @@ from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
 from work.admin import ExperienceAdmin, SkillAdmin
-from work.models import Experience, Skill
-from work.tests.factories import SkillCategoryFactory, SkillFactory
+from work.models import Experience, Skill, TechnologyTerm
+from work.tests.factories import SkillCategoryFactory, SkillFactory, TechnologyTermFactory
 
 
 # Without DEBUG the admin's CSS is looked up in collectstatic's manifest, which a test run has not built.
@@ -64,6 +64,41 @@ class SkillChangelistsTestCase(TestCase):
         page = self.client.get(reverse("admin:work_skillcategory_changelist")).content.decode()
         self.assertLess(page.index("Languages and frameworks"), page.index("AI and tools"))
         self.assertIn('name="form-0-order"', page)
+
+
+@override_settings(
+    STORAGES={
+        **settings.STORAGES,
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
+)
+class TechnologyTermAdminTestCase(TestCase):
+    def setUp(self) -> None:
+        self.client.force_login(get_user_model().objects.create_superuser("admin", "admin@example.com", "pw"))
+        TechnologyTermFactory(name="Microservices", label="Microservices", i18n={"pl": {"label": "Mikroserwisy"}})
+        self.url = reverse("admin:work_technologyterm_changelist")
+
+    def test_the_list_shows_each_term_with_its_labels_in_one_query_for_them_all(self) -> None:
+        with CaptureQueriesContext(connection) as few:
+            page = self.client.get(self.url)
+        self.assertContains(page, "en: Microservices, pl: Mikroserwisy")
+        TechnologyTermFactory.create_batch(4)
+        with CaptureQueriesContext(connection) as more:
+            self.client.get(self.url)
+        self.assertEqual(len(more), len(few))
+
+    def test_the_list_is_searched_by_name(self) -> None:
+        TechnologyTermFactory(name="Event sourcing")
+        page = self.client.get(self.url, {"q": "event"})
+        self.assertContains(page, "Event sourcing")
+        self.assertNotContains(page, "Mikroserwisy")
+
+    def test_a_second_spelling_of_a_term_is_refused(self) -> None:
+        response = self.client.post(
+            reverse("admin:work_technologyterm_add"), {"name": "microservices", "label": "Microservices"}
+        )
+        self.assertContains(response, "A term with this name already exists.")
+        self.assertEqual(TechnologyTerm.objects.count(), 1)
 
 
 class SkillAdminFormTestCase(TestCase):

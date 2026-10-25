@@ -1,11 +1,12 @@
 import faker
 from ddt import data, ddt
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.utils import timezone
 
-from work.models import Experience, Project, Skill, SkillCategory
+from work.models import Experience, Project, Skill, SkillCategory, TechnologyTerm, TermLabels
+from work.tests.factories import TechnologyTermFactory
 
 fake = faker.Faker()
 
@@ -298,3 +299,97 @@ class WorkModelsTestCase(TestCase):
         self.assertEqual(en.location, "Berlin")
         self.assertEqual(en.description, "Platform engineering")
         self.assertListEqual(en.achievements, ["Migrated to k8s"])
+
+
+class TechnologyTermTestCase(TestCase):
+    def setUp(self) -> None:
+        TechnologyTermFactory(name="Microservices", label="Microservices", i18n={"pl": {"label": "Mikroserwisy"}})
+
+    def test_a_term_is_shown_by_its_label_matched_ignoring_case_and_the_rest_as_written(self) -> None:
+        labels = TermLabels()
+        self.assertListEqual(
+            labels.in_language(["Python", "microservices", "gRPC"], "pl"), ["Python", "Mikroserwisy", "gRPC"]
+        )
+        self.assertDictEqual(
+            labels.display(["Microservices", "Go"]),
+            {"en": ["Microservices", "Go"], "pl": ["Mikroserwisy", "Go"]},
+        )
+
+    def test_a_label_missing_in_a_language_falls_back_to_the_other_one(self) -> None:
+        TechnologyTermFactory(name="Event sourcing", label="Event sourcing")
+        polish_only = TechnologyTerm(name="Monorepo")
+        polish_only.set_current_language("pl")
+        polish_only.label = "Monorepozytorium"
+        polish_only.save()
+        labels = TermLabels()
+        self.assertEqual(labels.label("event sourcing", "pl"), "Event sourcing")
+        self.assertEqual(labels.label("Monorepo", "en"), "Monorepozytorium")
+
+    def test_no_list_shows_as_empty_in_every_language(self) -> None:
+        self.assertDictEqual(TermLabels().display(None), {"en": [], "pl": []})
+
+    def test_two_spellings_of_one_term_are_refused(self) -> None:
+        with self.assertRaises(ValidationError):
+            TechnologyTerm(name="MICROSERVICES").full_clean()
+        with transaction.atomic(), self.assertRaises(IntegrityError):
+            TechnologyTerm.objects.create(name="microservices")
+
+    def test_a_role_and_a_project_show_their_lists_in_each_language(self) -> None:
+        role = Experience.objects.create(
+            position="Engineer",
+            start=fake.date_object(),
+            company="Acme",
+            location="Online",
+            technologies=["Python", "Microservices"],
+        )
+        project = Project.objects.create(title="Tidebell", tags=["Microservices"])
+        self.assertDictEqual(
+            role.technologies_display, {"en": ["Python", "Microservices"], "pl": ["Python", "Mikroserwisy"]}
+        )
+        self.assertDictEqual(project.tags_display, {"en": ["Microservices"], "pl": ["Mikroserwisy"]})
+        # The stored list, which the site matches skills against, keeps the term as written.
+        self.assertListEqual(role.technologies, ["Python", "Microservices"])
+
+    def test_vex_reads_a_role_and_a_project_with_the_terms_in_its_language(self) -> None:
+        role = Experience.objects.create(
+            position="Engineer",
+            start=fake.date_object(),
+            company="Acme",
+            location="Online",
+            technologies=["Python", "Microservices"],
+            tools=["Microservices"],
+        )
+        project = Project.objects.create(title="Tidebell", tags=["Go", "Microservices"])
+        self.assertIn("Technologies: Python, Mikroserwisy", role.representation_for("pl"))
+        self.assertIn("Technologies: Python, Microservices", role.representation_for("en"))
+        # Tools are product names, read as written.
+        self.assertIn("Tools: Microservices", role.representation_for("pl"))
+        self.assertIn("Tags: Go, Mikroserwisy", project.representation_for("pl-PL"))
+
+    def test_rows_read_together_share_one_read_of_the_terms(self) -> None:
+        for company in ("Acme", "Globex", "Initrode"):
+            Experience.objects.create(
+                position="Engineer",
+                start=fake.date_object(),
+                company=company,
+                location="Online",
+                technologies=["Microservices"],
+            )
+        with self.assertNumQueries(2):
+            shown = [role.technologies_display["pl"] for role in Experience.objects.visible().with_terms()]
+        self.assertListEqual(shown, [["Mikroserwisy"]] * 3)
+        # From either manager, and streamed through iterator() too.
+        with self.assertNumQueries(2):
+            shown = [role.technologies_display["pl"] for role in Experience.objects.with_terms().iterator()]
+        self.assertListEqual(shown, [["Mikroserwisy"]] * 3)
+        Project.objects.create(title="Tidebell", tags=["Microservices"])
+        with self.assertNumQueries(2):
+            shown = [project.tags_display["pl"] for project in Project.objects.with_terms()]
+        self.assertListEqual(shown, [["Mikroserwisy"]])
+
+    def test_rows_that_show_no_list_never_read_the_terms(self) -> None:
+        Experience.objects.create(
+            position="Engineer", start=fake.date_object(), company="Acme", technologies=["Microservices"]
+        )
+        with self.assertNumQueries(1):
+            self.assertEqual(Experience.objects.with_terms().get().company, "Acme")

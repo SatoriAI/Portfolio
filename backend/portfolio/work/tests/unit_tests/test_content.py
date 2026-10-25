@@ -3,11 +3,11 @@ import io
 import json
 import tempfile
 
-from django.core.management import call_command
+from django.core.management import CommandError, call_command
 from django.test import TestCase
 
 from work.content import export, import_
-from work.models import Experience, Skill, SkillCategory
+from work.models import Experience, Skill, SkillCategory, TechnologyTerm
 
 
 class WorkContentTestCase(TestCase):
@@ -89,12 +89,50 @@ class WorkContentTestCase(TestCase):
         )
         self.assertEqual(import_(export(), apply=True).lines, [])
 
+    def test_a_term_travels_with_its_id_and_labels_ahead_of_the_roles(self) -> None:
+        term = TechnologyTerm.objects.create(name="Microservices", label="Microservices")
+        term.set_current_language("pl")
+        term.label = "Mikroserwisy"
+        term.save()
+        data = json.loads(json.dumps(export()))
+        self.assertEqual(list(data["models"])[0], "work.TechnologyTerm")
+        # Another database, which has not got the term.
+        TechnologyTerm.objects.all().delete()
+
+        report = import_(data, apply=True)
+
+        self.assertEqual(len(report.created), 1)
+        imported = TechnologyTerm.objects.get()
+        self.assertEqual(imported.pk, term.pk)
+        self.assertEqual(imported.safe_translation_getter("label", language_code="pl"), "Mikroserwisy")
+        self.assertEqual(import_(export(), apply=True).lines, [])
+
     def test_a_row_the_data_lacks_is_reported_and_kept(self) -> None:
         data = export()
         data["models"]["work.Experience"] = []
         report = import_(data, apply=True)
         self.assertEqual(report.unmatched, [f"Experience {self.role.pk}"])
         self.assertTrue(Experience.objects.filter(pk=self.role.pk).exists())
+
+    def test_a_term_spelled_differently_under_another_id_is_refused_by_name_and_nothing_written(self) -> None:
+        term = TechnologyTerm.objects.create(name="Microservices", label="Microservices")
+        data = json.loads(json.dumps(export()))
+        data["models"]["work.Experience"][0]["fields"]["company"] = "Globex"
+        # Another database, where the same term was added on its own under another id.
+        term.delete()
+        other = TechnologyTerm.objects.create(name="microservices", label="Microservices")
+
+        with self.assertRaisesMessage(ValueError, f"'Microservices' already exists under pk {other.pk}"):
+            import_(data, apply=True)
+
+        self.assertListEqual(list(TechnologyTerm.objects.values_list("pk", flat=True)), [other.pk])
+        self.role.refresh_from_db()
+        self.assertEqual(self.role.company, "Kelvinbrook")
+        with tempfile.NamedTemporaryFile("w+", suffix=".json") as file:
+            json.dump(data, file)
+            file.flush()
+            with self.assertRaisesMessage(CommandError, f"already exists under pk {other.pk}"):
+                call_command("import_work", file.name, stdout=io.StringIO())
 
     def test_an_unknown_format_is_refused(self) -> None:
         with self.assertRaises(ValueError):
