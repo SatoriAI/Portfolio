@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 import ClockExample from "@/components/academic/ClockExample";
 import CyclicShiftFigure, {
@@ -35,7 +36,11 @@ import { translations } from "@/utils/translations";
  */
 const STORY_PROSE = "max-w-[52ch] text-base text-muted-foreground md:text-body-lg";
 
-const SECTION_COUNT = 4;
+const SECTION_COUNT = 5;
+
+/** A link inside the story's prose: iris, underlined, ink on hover. */
+const LINK =
+  "text-iris underline decoration-1 underline-offset-4 transition-colors hover:text-foreground";
 
 /**
  * A kernel figure's slider run once, from the start of time to its end, then
@@ -51,8 +56,9 @@ const eyebrow = (index: number) => formatCounter(index, SECTION_COUNT);
 
 /**
  * Research, told in the order of the work's standing: the established work
- * on heat kernels; the current investigation; a developing interest,
- * smaller; and the papers. The degrees and the teaching have a page of
+ * on heat kernels; the current investigations, generalisation in models and
+ * neural operators built from heat; a developing interest, smaller; and the
+ * papers. The degrees and the teaching have a page of
  * their own.
  */
 const Academic = () => {
@@ -338,14 +344,60 @@ const Academic = () => {
         </div>
       </Section>
 
+      {/* The neural-operator papers, told as the sections above are told:
+          stages a reader without the mathematics can follow, all prose, no
+          figure. The first paper's preprint closes its stage; both workshop
+          pieces close the section for the full read. */}
+      <Section id="neural-operators" tone="surface">
+        <SectionHeading
+          eyebrow={eyebrow(3)}
+          title={story.neuralOperators.title}
+          leadLine={story.neuralOperators.leadLine}
+        />
+        {story.neuralOperators.stages.map((stage) => (
+          <div key={stage.title} className="mb-10">
+            <StageHeading title={stage.title} />
+            <div className="space-y-4 text-base text-foreground/80 md:text-body-lg">
+              {stage.paragraphs.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+              {stage.preprint && (
+                <p>
+                  <a
+                    className={LINK}
+                    href="https://arxiv.org/abs/2610.20106"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {story.neuralOperators.preprint}
+                  </a>
+                </p>
+              )}
+            </div>
+          </div>
+        ))}
+        <p className="text-base text-foreground/80 md:text-body-lg">
+          {story.neuralOperators.workshopLabel}{" "}
+          {story.neuralOperators.workshopParts.map((part, index) => (
+            <span key={part.slug}>
+              {index > 0 && " · "}
+              <Link className={LINK} to={`/workshop/${part.slug}`}>
+                {part.title}
+              </Link>{" "}
+              ({part.part})
+            </span>
+          ))}
+        </p>
+      </Section>
+
       {/* A proposed research programme, after the established kernel result
           and current AI investigation. The illustration is the text's rod
           and nothing more: one process, never a Jacobi kernel or a proved
           truncation. Text separates the observable, the analytic obstacle
           and the still-open end-to-end complexity comparison. */}
-      <Section id="jacobi-quantum" tone="surface">
+      <Section id="jacobi-quantum" className="py-12 md:py-16">
         <SectionHeading
-          eyebrow={eyebrow(3)}
+          eyebrow={eyebrow(4)}
           title={story.jacobiQuantum.title}
           leadLine={story.jacobiQuantum.leadLine}
         />
@@ -357,7 +409,7 @@ const Academic = () => {
         <p className="mb-10 text-base text-foreground/80 md:text-body-lg">
           {story.jacobiQuantum.clueBeforePaper}
           <a
-            className="text-iris underline decoration-1 underline-offset-4 transition-colors hover:text-foreground"
+            className={LINK}
             href="https://arxiv.org/abs/1905.10581"
             target="_blank"
             rel="noopener noreferrer"
@@ -382,8 +434,8 @@ const Academic = () => {
 
       {/* All the papers, with their links and details, at the end of the page:
           the sections above tell the story, this is the record. */}
-      <Section id="publications" className="py-12 md:py-16">
-        <SectionHeading eyebrow={eyebrow(4)} title={t.academic.publications} />
+      <Section id="publications" tone="surface">
+        <SectionHeading eyebrow={eyebrow(5)} title={t.academic.publications} />
         {status ??
           (publications.length === 0 ? (
             <StatusMessage variant="empty" message={t.academic.noPublications} />
