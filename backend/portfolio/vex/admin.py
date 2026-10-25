@@ -166,6 +166,7 @@ class UsageAdmin(admin.ModelAdmin):
         "finish_reason",
         "input_tokens",
         "cached_tokens",
+        "cache_write_tokens",
         "output_tokens",
         "reasoning_tokens",
         "estimated",

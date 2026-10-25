@@ -48,7 +48,7 @@ def stream_answer(question: str, locale: str, session_key: str, asked_from: str 
     first: float | None = None
     outcome = Outcomes.FAILED
     try:
-        with closing(provider.stream_completion(messages, cache_key=f"vex-{locale}", usage=usage)) as chunks:
+        with closing(provider.stream_completion(messages, usage=usage)) as chunks:
             for chunk in chunks:
                 if chunk:
                     first = first or time.monotonic()
@@ -64,15 +64,16 @@ def stream_answer(question: str, locale: str, session_key: str, asked_from: str 
         raise EmptyAnswer(f"{settings.VEX_MODEL} returned no text ({usage.output_tokens} output tokens)")
     # Counts and timings only: what the visitor asked and what Vex said stay in the database, out of the logs.
     logger.info(
-        "Vex answered: model=%s prompt=%s locale=%s first_token=%.2fs total=%.2fs input=%d cached=%d output=%d "
-        "reasoning=%d finish=%s",
-        settings.VEX_MODEL,
+        "Vex answered: model=%s prompt=%s locale=%s first_token=%.2fs total=%.2fs input=%d cached=%d cache_write=%d "
+        "output=%d reasoning=%d finish=%s",
+        usage.model,
         PROMPT_VERSION,
         locale,
         (first or started) - started,
         time.monotonic() - started,
         usage.input_tokens,
         usage.cached_tokens,
+        usage.cache_write_tokens,
         usage.output_tokens,
         usage.reasoning_tokens,
         usage.finish_reason,
@@ -91,22 +92,27 @@ def record_usage(
     messages: Sequence[provider.ChatMessage],
     answer: str,
 ) -> None:
-    """Writes what one call cost. Counts the provider never reported are estimated from the text: the whole prompt
-    as input, none of it cached, and the text received as output."""
+    """Writes what one call cost. On a call cut short the provider reported the prompt's counts as the stream opened
+    (where it opened at all; otherwise they are estimated from the text, none of it cached), but never the answer's.
+    The model thinks before and between what it writes, unseen and billed as output, so the text received says little
+    about the output paid for: it is counted at VEX_MAX_OUTPUT_TOKENS, the most it can be, so the budget errs towards
+    resting early."""
     if not usage.reported:
-        usage.input_tokens = sum(estimate_tokens(message["content"]) for message in messages)
-        usage.output_tokens = estimate_tokens(answer)
+        if not usage.input_tokens:
+            usage.input_tokens = sum(estimate_tokens(message["content"]) for message in messages)
+        usage.output_tokens = max(settings.VEX_MAX_OUTPUT_TOKENS, estimate_tokens(answer))
     record = UsageRecord.objects.create(
         conversation=conversation,
-        model=settings.VEX_MODEL,
+        model=usage.model or settings.VEX_MODEL,
         prompt_version=PROMPT_VERSION,
         outcome=outcome,
         finish_reason=usage.finish_reason,
         input_tokens=usage.input_tokens,
         cached_tokens=usage.cached_tokens,
+        cache_write_tokens=usage.cache_write_tokens,
         output_tokens=usage.output_tokens,
         reasoning_tokens=usage.reasoning_tokens,
         estimated=not usage.reported,
-        cost=usage.cost(settings.VEX_MODEL),
+        cost=usage.cost(),
     )
     spend.add(record.cost, record.created_at.astimezone(UTC).date())

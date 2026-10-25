@@ -2,7 +2,7 @@
 knowledge base, then the recent conversation and the question.
 
 The system message is the same for every question in a language until the persona or the knowledge changes, which is
-what lets OpenAI's prompt cache serve it: the rules come first because they change least."""
+what lets the prompt cache serve it: the rules come first because they change least."""
 
 import re
 

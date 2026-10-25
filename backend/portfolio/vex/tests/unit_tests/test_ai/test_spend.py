@@ -26,7 +26,7 @@ from vex.tests.factories import ConfigurationFactory, ConversationFactory
 from vex.tests.unit_tests.test_api.test_sse import STREAM, FakeModel, parse_events, session_key
 from vex.utils.cache import cache
 
-PRICES = {"gpt-6-luna": (0.10, 0.01, 0.50)}
+PRICES = {"claude-haiku-5-5": (0.10, 0.01, 0.125, 0.50)}
 # Django's own Redis cache, talking to an in-process fake rather than a server.
 FAKE_REDIS = {
     "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
@@ -53,7 +53,7 @@ CONNECT = redis.connection.Connection.connect
 
 def usage_row(cost: str | None, *, created_at: datetime | None = None, **fields: Any) -> Usage:
     row = Usage.objects.create(
-        model="gpt-6-luna",
+        model="claude-haiku-5-5",
         prompt_version="test",
         outcome=fields.pop("outcome", Outcomes.ANSWERED),
         input_tokens=fields.pop("input_tokens", 1000),
@@ -72,7 +72,7 @@ def record(usage: ProviderUsage, outcome: str = Outcomes.ANSWERED, answer: str =
     record_usage(ConversationFactory(), usage, outcome, [{"role": "user", "content": "Q"}], answer)
 
 
-@override_settings(VEX_MODEL="gpt-6-luna", VEX_PRICES=PRICES, VEX_DAILY_BUDGET_USD=Decimal("5.00"))
+@override_settings(VEX_MODEL="claude-haiku-5-5", VEX_PRICES=PRICES, VEX_DAILY_BUDGET_USD=Decimal("5.00"))
 class SpendTestCase(TestCase):
     def setUp(self) -> None:
         cache.clear()

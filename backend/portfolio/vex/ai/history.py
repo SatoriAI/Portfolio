@@ -62,10 +62,10 @@ class MessageHistory:
             conversation=self.conversation,
             role=Roles.ASSISTANT,
             content=answer,
-            model=settings.VEX_MODEL,
+            model=usage.model or settings.VEX_MODEL,
             prompt_version=prompt_version,
             input_tokens=usage.input_tokens,
             cached_tokens=usage.cached_tokens,
             output_tokens=usage.output_tokens,
-            truncated=usage.finish_reason == "length",
+            truncated=usage.finish_reason == "max_tokens",
         )

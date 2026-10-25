@@ -228,6 +228,10 @@ msgstr "Tokeny wejściowe"
 msgid "Cached input tokens"
 msgstr "Tokeny wejściowe z cache"
 
+#: vex/models.py:67
+msgid "Cache write tokens"
+msgstr "Tokeny zapisane do cache"
+
 #: vex/models.py:36 vex/models.py:66
 msgid "Output tokens"
 msgstr "Tokeny wyjściowe"
