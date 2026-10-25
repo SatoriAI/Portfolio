@@ -28,7 +28,7 @@ class FakeClaude(ThreadingHTTPServer):  # pylint: disable=too-many-instance-attr
     and its headers, how far it got and whether the client hung up. `final` adds fields to the closing usage, as
     a call that fell back reports its attempts."""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         *,
         chunks: int = 50,
