@@ -347,7 +347,10 @@ const Academic = () => {
       {/* The neural-operator papers, told as the sections above are told:
           stages a reader without the mathematics can follow, all prose, no
           figure. The first paper's preprint closes its stage; both workshop
-          pieces close the section for the full read. */}
+          pieces close the section for the full read. Lavender, as the quantum
+          thread below it is: the two "from heat kernels" threads read as one
+          band, and the publications keep their white page, which their cards
+          need to stand out. */}
       <Section id="neural-operators" tone="surface">
         <SectionHeading
           eyebrow={eyebrow(3)}
@@ -395,7 +398,7 @@ const Academic = () => {
           and nothing more: one process, never a Jacobi kernel or a proved
           truncation. Text separates the observable, the analytic obstacle
           and the still-open end-to-end complexity comparison. */}
-      <Section id="jacobi-quantum" className="py-12 md:py-16">
+      <Section id="jacobi-quantum" tone="surface">
         <SectionHeading
           eyebrow={eyebrow(4)}
           title={story.jacobiQuantum.title}
@@ -434,7 +437,7 @@ const Academic = () => {
 
       {/* All the papers, with their links and details, at the end of the page:
           the sections above tell the story, this is the record. */}
-      <Section id="publications" tone="surface">
+      <Section id="publications" className="py-12 md:py-16">
         <SectionHeading eyebrow={eyebrow(5)} title={t.academic.publications} />
         {status ??
           (publications.length === 0 ? (
