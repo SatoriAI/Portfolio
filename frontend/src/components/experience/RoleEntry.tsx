@@ -191,7 +191,7 @@ const RoleEntry = ({ experience, order, labels, onAsk, Heading = "h2" }: RoleEnt
           <p className="mt-1 text-base text-muted-foreground">{experience.role}</p>
         </div>
         <Results title={labels.results} points={experience.results} />
-        <Names title={labels.technologies} names={experience.technologies} />
+        <Names title={labels.technologies} names={experience.technologyLabels} />
         <Names title={labels.tools} names={experience.tools} />
         <Names title={labels.topics} names={experience.topics} />
         <AskVexPrompt
