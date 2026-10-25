@@ -68,11 +68,13 @@ def usage_row(cost: str | None, *, created_at: datetime | None = None, **fields:
     return row
 
 
-def record(usage: ProviderUsage, outcome: str = Outcomes.ANSWERED, answer: str = "An answer") -> None:
-    record_usage(ConversationFactory(), usage, outcome, [{"role": "user", "content": "Q"}], answer)
+def record(usage: ProviderUsage, outcome: str = Outcomes.ANSWERED) -> None:
+    record_usage(ConversationFactory(), usage, outcome)
 
 
-@override_settings(VEX_MODEL="claude-haiku-5-5", VEX_PRICES=PRICES, VEX_DAILY_BUDGET_USD=Decimal("5.00"))
+@override_settings(
+    VEX_MODEL="claude-haiku-5-5", VEX_PRICES=PRICES, VEX_DAILY_BUDGET_USD=Decimal("5.00"), VEX_MAX_OUTPUT_TOKENS=2000
+)
 class SpendTestCase(TestCase):
     def setUp(self) -> None:
         cache.clear()
@@ -98,12 +100,22 @@ class SpendTestCase(TestCase):
         spend.spent(spend.today())  # seeds the counter
         record(ProviderUsage(input_tokens=1000, cached_tokens=900, output_tokens=3, reported=True))
         self.assertEqual(self.counter(), 10002050)  # $0.10 + $0.0000205
-        # An abandoned answer the provider never reported is estimated, and counts all the same.
-        record(ProviderUsage(), Outcomes.ABANDONED, answer="Half of it")
+        # An answer abandoned once its stream opened has its prompt counted and its output estimated at the cap, unseen
+        # thinking included, and counts all the same: 1000 in at $0.10 and 2000 out at $0.50 per million.
+        record(ProviderUsage(model="claude-haiku-5-5", input_tokens=1000), Outcomes.ABANDONED)
         abandoned = Usage.objects.get(outcome=Outcomes.ABANDONED)
-        self.assertTrue(abandoned.estimated)
-        self.assertGreater(abandoned.cost, 0)
-        self.assertEqual(spend.spent(spend.today()), Decimal("0.1000205") + abandoned.cost)
+        self.assertEqual((abandoned.estimated, abandoned.output_tokens), (True, 2000))
+        self.assertEqual(abandoned.cost, Decimal("0.0011"))
+        self.assertEqual(spend.spent(spend.today()), Decimal("0.1011205"))
+        self.assertEqual(spend.spent(spend.today()), spend.day_spend(spend.today()).dollars)
+
+    def test_a_call_that_never_opened_a_stream_is_recorded_at_no_cost(self) -> None:
+        # A rejected key, a rate limit or an overloaded API bills nothing, so an outage cannot spend the day's budget.
+        record(ProviderUsage(), Outcomes.FAILED)
+        failed = Usage.objects.get()
+        self.assertEqual((failed.estimated, failed.input_tokens, failed.output_tokens), (True, 0, 0))
+        self.assertEqual(failed.cost, Decimal(0))
+        self.assertEqual(spend.spent(spend.today()), Decimal(0))
         self.assertEqual(spend.spent(spend.today()), spend.day_spend(spend.today()).dollars)
 
     def test_a_call_that_finds_no_counter_leaves_it_to_the_next_check(self) -> None:

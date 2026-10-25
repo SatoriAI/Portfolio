@@ -12,7 +12,6 @@ from typing import Any
 from unittest.mock import patch
 
 import anthropic
-import httpx2
 from django.conf import settings
 from django.test import SimpleTestCase, override_settings
 
@@ -26,7 +25,8 @@ class FakeClaude(ThreadingHTTPServer):  # pylint: disable=too-many-instance-attr
     """A local stand-in for Claude's streaming Messages endpoint: streams `chunks` tokens, one every `interval`
     seconds, then the stop reason and usage, or stalls after the first when `stall` is set. It records the request
     and its headers, how far it got and whether the client hung up. `final` adds fields to the closing usage, as
-    a call that fell back reports its attempts."""
+    a call that fell back reports its attempts; `fall_back_after` hands the answer to Claude Opus 4.8 after that many
+    tokens, as the API does when the model declines mid-answer."""
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -37,11 +37,12 @@ class FakeClaude(ThreadingHTTPServer):  # pylint: disable=too-many-instance-attr
         stop_reason: str = "end_turn",
         model: str = "claude-opus-5-5",
         final: dict[str, Any] | None = None,
+        fall_back_after: int | None = None,
     ) -> None:
         super().__init__(("127.0.0.1", 0), FakeClaudeHandler)
         self.daemon_threads = True
         self.chunks, self.interval, self.stall, self.stop_reason = chunks, interval, stall, stop_reason
-        self.model, self.final = model, final or {}
+        self.model, self.final, self.fall_back_after = model, final or {}, fall_back_after
         self.sent = 0
         self.request: dict[str, Any] = {}
         self.headers: dict[str, str] = {}
@@ -81,15 +82,30 @@ class FakeClaudeHandler(BaseHTTPRequestHandler):
                 "usage": {**PROMPT_USAGE, "output_tokens": 1},
             }
             self.write_event(type="message_start", message=message)
-            self.write_event(type="content_block_start", index=0, content_block={"type": "text", "text": ""})
+            index = 0
+            self.write_event(type="content_block_start", index=index, content_block={"type": "text", "text": ""})
             for i in range(self.server.chunks):
-                self.write_event(type="content_block_delta", index=0, delta={"type": "text_delta", "text": f"t{i} "})
+                if i == self.server.fall_back_after:
+                    self.write_event(type="content_block_stop", index=index)
+                    boundary = {
+                        "type": "fallback",
+                        "from": {"model": "claude-opus-5-5"},
+                        "to": {"model": "claude-opus-4-8"},
+                        "trigger": {"type": "refusal", "category": "cyber"},
+                    }
+                    self.write_event(type="content_block_start", index=index + 1, content_block=boundary)
+                    self.write_event(type="content_block_stop", index=index + 1)
+                    index += 2
+                    text = {"type": "text", "text": ""}
+                    self.write_event(type="content_block_start", index=index, content_block=text)
+                delta = {"type": "text_delta", "text": f"t{i} "}
+                self.write_event(type="content_block_delta", index=index, delta=delta)
                 self.server.sent += 1
                 if self.server.stall:
                     self.server.release.wait(10)
                     return
                 time.sleep(self.server.interval)
-            self.write_event(type="content_block_stop", index=0)
+            self.write_event(type="content_block_stop", index=index)
             stop_details = {"type": "refusal", "category": "bio"} if self.server.stop_reason == "refusal" else None
             self.write_event(
                 type="message_delta",
@@ -196,6 +212,18 @@ class StreamCompletionTestCase(SimpleTestCase):
         # 1224 in and 5 out at Opus 5.5's $4/$20, then 1224 in and 30 out at Opus 4.8's $5/$25
         self.assertEqual(usage.cost(), Decimal("0.011866"))
 
+    def test_a_fallback_mid_answer_continues_the_text_so_far(self) -> None:
+        usage = Usage()
+        with (
+            fake_claude(chunks=4, interval=0, fall_back_after=2),
+            self.assertLogs("vex.ai.provider", "WARNING") as logs,
+        ):
+            chunks = list(stream(usage))
+        # The boundary carries no text: the visitor reads one answer, the second model's continuing the first's.
+        self.assertEqual("".join(chunks), "t0 t1 t2 t3 ")
+        self.assertIn("fell back from claude-opus-5-5 to claude-opus-4-8 mid-answer (category: cyber)", logs.output[0])
+        self.assertEqual(usage.finish_reason, "end_turn")
+
     def test_closing_the_stream_hangs_up_on_the_provider_with_the_prompt_counted(self) -> None:
         usage = Usage()
         with fake_claude(chunks=50, interval=0.05) as server:
@@ -222,8 +250,9 @@ class StreamCompletionTestCase(SimpleTestCase):
             self.assertEqual(next(chunks), "t0 ")
             started = time.monotonic()
             # Mid-stream the SDK lets its HTTP client's error through rather than its own APITimeoutError.
-            with self.assertRaises(httpx2.ReadTimeout):
+            with self.assertRaises(Exception) as raised:
                 next(chunks)
+            self.assertEqual(type(raised.exception).__name__, "ReadTimeout")
         self.assertLess(time.monotonic() - started, 2)
 
 

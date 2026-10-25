@@ -18,7 +18,6 @@ from dataclasses import replace
 from typing import Literal, cast
 from unittest.mock import patch
 
-import httpx2
 import pytest
 from anthropic import AnthropicError
 from django.conf import settings
@@ -156,10 +155,11 @@ def run(case: Case, messages: list[ChatMessage], knowledge: KnowledgeBase) -> Ru
     calls = [Call(settings.VEX_MODEL, usage)]
     try:
         answer = "".join(stream_completion(messages, usage=usage))
-    except (AnthropicError, httpx2.TransportError) as error:  # the latter, a connection lost mid-answer
-        return Run("", time.monotonic() - started, [f"answer failed: {failure(error)}"], calls)
     except Refused:
         return Run("", time.monotonic() - started, [f"answer refused ({usage.model})"], calls)
+    except Exception as error:  # pylint: disable=broad-exception-caught
+        # Mid-answer the SDK lets its HTTP client's errors through as they are, not as an AnthropicError.
+        return Run("", time.monotonic() - started, [f"answer failed: {failure(error)}"], calls)
     seconds = time.monotonic() - started
     problems = failures(case, answer)
     if case.rubric:

@@ -1,6 +1,6 @@
 import logging
 import time
-from collections.abc import Generator, Sequence
+from collections.abc import Generator
 from contextlib import closing
 from datetime import UTC
 
@@ -9,7 +9,6 @@ from django.db import transaction
 
 from vex.ai import provider, spend
 from vex.ai.history import MessageHistory, Turn
-from vex.ai.knowledge import estimate_tokens
 from vex.ai.prompt import PROMPT_VERSION, build_messages
 from vex.choices import Outcomes
 from vex.models import Conversation, Message
@@ -59,7 +58,7 @@ def stream_answer(question: str, locale: str, session_key: str, asked_from: str 
         outcome = Outcomes.ABANDONED
         raise
     finally:
-        record_usage(history.conversation, usage, outcome, messages, "".join(answer))
+        record_usage(history.conversation, usage, outcome)
     if not answer:
         raise EmptyAnswer(f"{settings.VEX_MODEL} returned no text ({usage.output_tokens} output tokens)")
     # Counts and timings only: what the visitor asked and what Vex said stay in the database, out of the logs.
@@ -85,22 +84,14 @@ def stream_answer(question: str, locale: str, session_key: str, asked_from: str 
     return saved
 
 
-def record_usage(
-    conversation: Conversation,
-    usage: provider.Usage,
-    outcome: str,
-    messages: Sequence[provider.ChatMessage],
-    answer: str,
-) -> None:
-    """Writes what one call cost. On a call cut short the provider reported the prompt's counts as the stream opened
-    (where it opened at all; otherwise they are estimated from the text, none of it cached), but never the answer's.
-    The model thinks before and between what it writes, unseen and billed as output, so the text received says little
-    about the output paid for: it is counted at VEX_MAX_OUTPUT_TOKENS, the most it can be, so the budget errs towards
-    resting early."""
-    if not usage.reported:
-        if not usage.input_tokens:
-            usage.input_tokens = sum(estimate_tokens(message["content"]) for message in messages)
-        usage.output_tokens = max(settings.VEX_MAX_OUTPUT_TOKENS, estimate_tokens(answer))
+def record_usage(conversation: Conversation, usage: provider.Usage, outcome: str) -> None:
+    """Writes what one call cost. A call that never opened a stream (a rejected key, a rate limit, an overloaded or
+    unreachable API) is not billed, and costs nothing here. On one cut short after it opened, the provider reported
+    the prompt's counts as the stream opened, but never the answer's. The model thinks before and between what it
+    writes, unseen and billed as output, so the text received says little about the output paid for: it is counted at
+    VEX_MAX_OUTPUT_TOKENS, the most it can be, so the budget errs towards resting early."""
+    if not usage.reported and usage.model:
+        usage.output_tokens = settings.VEX_MAX_OUTPUT_TOKENS
     record = UsageRecord.objects.create(
         conversation=conversation,
         model=usage.model or settings.VEX_MODEL,

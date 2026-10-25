@@ -168,6 +168,14 @@ def stream_completion(messages: Sequence[ChatMessage], *, usage: Usage) -> Gener
                 usage.read_prompt(event.message)
             elif event.type == "text":
                 yield event.text
+            elif event.type == "content_block_start" and event.content_block.type == "fallback":
+                # The model declined mid-answer and another takes over from the text so far, which it continues.
+                logger.warning(
+                    "Vex fell back from %s to %s mid-answer (category: %s)",
+                    event.content_block.from_.model,
+                    event.content_block.to.model,
+                    event.content_block.trigger.category or "none",
+                )
         message = stream.get_final_message()
     usage.read(message, settings.VEX_MODEL)
     if usage.finish_reason == "refusal":

@@ -12,7 +12,6 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from vex.ai.context import resolve_context
-from vex.ai.knowledge import estimate_tokens
 from vex.ai.provider import ChatMessage
 from vex.ai.provider import Usage as ProviderUsage
 from vex.api.limits import QUESTION_MAX_LENGTH, VexThrottle
@@ -185,7 +184,8 @@ class ChatStreamViewTestCase(StreamViewTestCase):
         produced: list[str] = []
         closed: list[bool] = []
 
-        def model(_messages: list[ChatMessage], **_kwargs: Any) -> Iterator[str]:
+        def model(_messages: list[ChatMessage], *, usage: ProviderUsage) -> Iterator[str]:
+            usage.model, usage.input_tokens = settings.VEX_MODEL, 1200  # the stream opened with the prompt's counts
             try:
                 for token in ("one ", "two ", "three"):
                     produced.append(token)
@@ -209,14 +209,15 @@ class ChatStreamViewTestCase(StreamViewTestCase):
         self.assertEqual(closed, [True])
         self.assertFalse(Message.objects.filter(conversation__session=session).exists())
         self.assertIn("client went away", "\n".join(logs.output))
-        # The stream never opened, so the counts are estimated: the prompt in, and the most the answer could be out.
+        # The answer's counts never came, so its output is the most it could be; the prompt's came as the stream opened.
         record = Usage.objects.get(conversation__session=session)
         self.assertEqual((record.outcome, record.estimated), (Outcomes.ABANDONED, True))
-        self.assertEqual(record.input_tokens, estimate_tokens("system prompt in en") + estimate_tokens("Q"))
-        self.assertEqual(record.output_tokens, settings.VEX_MAX_OUTPUT_TOKENS)
+        self.assertEqual((record.input_tokens, record.output_tokens), (1200, settings.VEX_MAX_OUTPUT_TOKENS))
+        self.assertGreater(record.cost, 0)
 
     def test_an_error_sends_only_a_code_and_saves_nothing(self) -> None:
-        def boom(_messages: list[ChatMessage], **_kwargs: Any) -> Iterator[str]:
+        def boom(_messages: list[ChatMessage], *, usage: ProviderUsage) -> Iterator[str]:
+            usage.model = settings.VEX_MODEL
             yield "partial"
             raise RuntimeError("You exceeded your current quota")
 
