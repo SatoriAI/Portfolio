@@ -41,6 +41,7 @@ const GROUP_OF: Readonly<Record<string, TechGroup>> = {
   "Tailwind CSS": "frontend",
   "shadcn/ui": "frontend",
   OpenAI: "ai",
+  Claude: "ai",
   "Google Gemini": "ai",
   LangChain: "ai",
   LangGraph: "ai",
