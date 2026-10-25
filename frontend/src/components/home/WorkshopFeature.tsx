@@ -59,10 +59,13 @@ const WorkshopFeature = ({ articles, locale, labels }: WorkshopFeatureProps) => 
 
       <Col as={Reveal} spanLg={7} className="lg:col-start-6 lg:row-span-2 lg:row-start-1">
         {/* The whole card is the link, so it lifts on hover, as the kit
-            allows only for wholly actionable cards. */}
+            allows only for wholly actionable cards. From lg it shares its
+            rows with the left column, so when it is the shorter of the two
+            it is stretched, and its content is centred in that height
+            rather than leaving the room under a short figure empty. */}
         <Link
           to={`/workshop/${newest.slug}`}
-          className="group block rounded-card border border-border bg-card p-6 transition-shadow duration-200 hover:shadow-lift md:p-8 lg:h-full"
+          className="group block rounded-card border border-border bg-card p-6 transition-shadow duration-200 hover:shadow-lift md:p-8 lg:flex lg:h-full lg:flex-col lg:justify-center"
         >
           {figure && <div className="mb-6">{figure(labels.figure)}</div>}
           <MetaLine date={newest.date} locale={locale} />
