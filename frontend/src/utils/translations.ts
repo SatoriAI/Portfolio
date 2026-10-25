@@ -681,8 +681,9 @@ const copy = {
             u: "u, the current state",
             defect: "the difference of the two orders, divided by 2t",
             target: "b′·u′, the gradient interaction",
+            gap: "the gap between them",
             readings: {
-              far: "Over a long time the two orders differ by much more than the gradients: the curves are {p}% apart.",
+              far: "Over a long time diffusion washes the difference out: it misses b′·u′ by {p}%.",
               closer: "A shorter time brings the difference closer to b′·u′: they are {p}% apart.",
               matches:
                 "Over a short time the difference is b′·u′ to within {p}%: diffusion and multiplication have recovered the gradients.",
@@ -1471,8 +1472,9 @@ const copy = {
             u: "u — bieżący stan",
             defect: "różnica dwóch kolejności podzielona przez 2t",
             target: "b′·u′ — oddziaływanie gradientów",
+            gap: "odstęp między nimi",
             readings: {
-              far: "Przy długim czasie obie kolejności różnią się o znacznie więcej niż gradienty: krzywe dzieli {p}%.",
+              far: "Przy długim czasie dyfuzja wygładza różnicę: odbiega ona od b′·u′ o {p}%.",
               closer: "Krótszy czas przybliża różnicę do b′·u′: dzieli je {p}%.",
               matches:
                 "Przy krótkim czasie różnica pokrywa się z b′·u′ z dokładnością do {p}%: dyfuzja i mnożenie odzyskały gradienty.",

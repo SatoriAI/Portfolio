@@ -22,6 +22,8 @@ export type HiddenGradientLabels = {
   b: string;
   u: string;
   target: string;
+  /** The shaded band between the two curves. */
+  gap: string;
   defect: string;
   /** One sentence per reading; `{p}` is the gap in percent. */
   readings: Record<GradientReading, string>;
@@ -44,7 +46,7 @@ const RESULT = { top: 8, bottom: 152 };
 const SAMPLES = 200;
 
 const TARGET = gradientProduct();
-/** The result plot's scale: b′·u′'s largest value, with room for the defect's overshoot. */
+/** The result plot's scale: b′·u′'s largest value; the defect never exceeds it. */
 const SCALE = Math.max(
   ...Array.from({ length: SAMPLES + 1 }, (_, i) => Math.abs(evaluate(TARGET, i / SAMPLES))),
 );
@@ -161,6 +163,10 @@ const HiddenGradientFigure = ({
               className="h-[1.5px] w-6 shrink-0 bg-[repeating-linear-gradient(90deg,hsl(var(--muted-foreground))_0_5px,transparent_5px_9px)]"
             />
             <MathText text={labels.target} />
+          </li>
+          <li className="flex basis-full items-center gap-3">
+            <span aria-hidden="true" className="h-3 w-6 shrink-0 bg-iris/15" />
+            {labels.gap}
           </li>
         </ul>
 
