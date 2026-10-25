@@ -19,8 +19,8 @@ summary: My bilingual (PL/EN) site, for people considering me for a backend or A
 - The frontend lived in its own repository for about a year. On 9 September 2026 its history was moved into `frontend/` and merged into one repository with the backend.
 - Milestones on `main`: the Vex RAG pipeline (13 November 2025), Stanza removed (20 November 2025), media moved to S3-compatible storage (26 August 2026), the repositories merged and CI reworked (9 September 2026), Vex moved from OpenAI to Claude (25 October 2026).
 - Status: live and maintained. Both halves deploy to Railway.
-- dawidhanrahan.com still serves the previous version. A redesign is in progress on `feature/memorable-portfolio`: 25 commits ahead of `main`, plus many uncommitted changes. Last commit: 25 September 2026.
-- First production deploy: 16 November 2025, for the backend and the frontend together (per GitHub's deployment records). Before that, both went only to staging: the backend from 5 September 2025, the frontend from 20 September 2025. dawidhanrahan.com most likely started serving the site on 16 November 2025. The redesign is due to ship as soon as possible, with November 2026 as the target.
+- The redesign reached `main` on 7 October 2026 (#22), and `main` deploys to dawidhanrahan.com. The dark theme, Night Ink, followed on 15 October 2026 (#68).
+- First production deploy: 16 November 2025, for the backend and the frontend together (per GitHub's deployment records). Before that, both went only to staging: the backend from 5 September 2025, the frontend from 20 September 2025. dawidhanrahan.com most likely started serving the site on 16 November 2025.
 
 ## Role and context
 
@@ -41,17 +41,18 @@ The site's own copy names its audience: people looking at a backend or AI role, 
 
 ## How it works for the user
 
-This describes the redesign, which is not deployed yet. The version on dawidhanrahan.com has only three pages: Home, Experience and Academic.
+Every page is in English at the site's root and in Polish under `/pl`.
 
 1. **Home.** The opening is written as a theorem: "Mathematician by training, engineer by trade". Three proof lines lead to Education, Experience and Projects. Next to them is a box for asking Vex a question.
 2. **Projects.** Each project runs at its own address and shows a screenshot, its stack, and a code link or a "private code" note. "Check it live" makes the visitor's own browser contact the project's address. The result is "answers · N ms" or "no answer", and the check gives up after 8 seconds. It shows only whether the server replied, not whether the page works. Each project also has an "Ask Vex about {title}" button.
-3. **From the workshop.** Short articles of three kinds: figure, from production, proof. Each shows a reading time. A piece written in one language appears in the other with a note, not a machine translation. The only piece in the repository is a draft, and drafts never reach the live site, so the section is empty for now.
+3. **From the workshop.** Short articles of three kinds: figure, from production, proof. Each shows a reading time. A piece written in one language appears in the other with a note, not a machine translation. Four pieces are published, each in both languages.
 4. **About and contact.** The about text links to the three subpages. Contact offers email, GitHub and a chat with Vex.
 5. **Experience.** A to-scale timeline of roles at Nokia, PeakData, Xperi and CloudFerro, with achievements and technologies for each. Visitors can ask Vex about each company.
 6. **Research.** Interactive figures with sliders and a play control: heat spreading along a segment over time, a "map of influence" on a cone, a chart of a model's accuracy (the visitor first guesses the training step at which it starts handling new examples, then checks), a clock example, and a wave on a circle that can be shifted. The page also lists published papers.
 7. **Education.** Degrees, plus students' quotes about Dawid's teaching.
 8. **Vex.** A chat on every page. She answers from the site's content, and the reply appears as it is written. She offers starter questions, such as one about the PhD. After 30 seconds of silence the chat shows an error and suggests email instead.
 9. **Language.** A PL/EN switch; the browser remembers the choice.
+10. **Theme.** Light, or dark (Night Ink). The site follows the reader's machine until they choose with one button, and remembers the choice.
 
 ## Technical description
 
@@ -75,11 +76,11 @@ One repository with two halves, each with its own toolchain, Dockerfile and Rail
 
 **Frontend** (React 18, TypeScript, Vite, Tailwind, shadcn/ui, Vitest):
 
-- Routes in the redesign: `/`, `/experience`, `/research` (the old `/academic` redirects there), `/education`, `/workshop`, `/workshop/:slug`. All except home are lazy-loaded.
+- Routes: `/`, `/experience`, `/research` (the old `/academic` redirects there), `/education`, `/workshop`, `/workshop/:slug`. All except home are lazy-loaded.
 - The chat widget closes a code fence the stream has not closed yet on every render, treats 30 seconds of silence as a failure, and aborts the request when the chat closes.
 - Workshop articles are Markdown files read at build time. Drafts (`*.draft.md`) are read only by the dev server.
 - The research figures keep their maths in separate, tested modules. The HeatField motif is a sum of heat kernels drawn on a canvas. It responds to the pointer and stays still under `prefers-reduced-motion`.
-- The look follows the "Binary Axis" visual identity kit, v5.1, versioned in the repository: one light palette, Manrope and IBM Plex Mono, a 1160 px column, and writing rules.
+- The look follows the "Binary Axis" visual identity kit, v5.2, versioned in the repository: a light palette and a dark one, Night Ink, from the same tokens, Manrope and IBM Plex Mono, a 1160 px column, and writing rules.
 - Project documents in `frontend/src/content/projects/` feed the home page's project cards, and the build publishes them, with the workshop pieces, as `/vex-kb/<pl|en>.json` for Vex to read.
 
 ## Engineering decisions
@@ -100,7 +101,7 @@ One repository with two halves, each with its own toolchain, Dockerfile and Rail
 - **Lovable leftovers removed**, and the `vex` app linted for the first time. A pylint `ignore-paths` pattern had been read as a regex and excluded nothing.
 - **Live checks run in the visitor's browser**, with `no-cors`. The page says plainly what it measures: reachability and timing only, from whose browser. What matters is the visitor's own experience, not the server's.
 - **Drafts excluded from builds** at import time, so an unpublished piece cannot leak in the bundle. Publishing means renaming the file.
-- **No dark theme**, because the visual kit defines none.
+- **A dark theme from the same tokens.** Night Ink swaps the tokens' values and keeps their names and roles, so the interface switches theme by switching values alone. Its contrast is measured, not carried over from the light theme. A script in the page's head sets the theme before the first paint, so a reader in dark never sees a light flash. A three-way System, Light and Dark control was built and dropped for one button: with two looks and three states, one click in three changed nothing on screen.
 - **HeatField breaks the kit's motion rule on purpose** (the kit allows only an 8 px rise on entrance). The exception is documented.
 
 ## Running it in production
@@ -123,6 +124,5 @@ Vex conversations number in the hundreds. Dawid tracks visits but does not give 
 - Vex does not answer without an Anthropic API key that has credit.
 - Content lives in the database, not the repository. A fresh install shows an empty site, since there is no seed data.
 - Frontend tests cover logic only. There are no component or end-to-end tests.
-- No dark theme, and no success or error colours. The visual kit leaves both for later.
-- The redesign is unreleased: 25 commits off `main`, many uncommitted changes, and the only workshop piece is a draft.
+- No success or error colours. The visual kit leaves them for when forms need them.
 - Next steps: Dawid wants to focus on the Workshop section and use it to make science, mostly mathematics, more popular.

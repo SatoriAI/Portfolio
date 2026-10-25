@@ -19,8 +19,8 @@ summary: Moja dwujęzyczna (PL/EN) strona dla osób, które rozważają mnie do 
 - Przez mniej więcej rok frontend miał osobne repozytorium. 9 września 2026 r. jego historię przeniesiono do katalogu `frontend/` i połączono z backendem w jednym repozytorium.
 - Najważniejsze daty na gałęzi `main`: potok RAG dla Vex (13 listopada 2025 r.), usunięcie biblioteki Stanza (20 listopada 2025 r.), przeniesienie plików do magazynu zgodnego z S3 (26 sierpnia 2026 r.), połączenie repozytoriów i przebudowa CI (9 września 2026 r.), przejście Vex z OpenAI na Claude (25 października 2026 r.).
 - Status: działa i jest utrzymywana. Obie części wdrażane są na Railway.
-- Pod dawidhanrahan.com działa wciąż poprzednia wersja. Nowa odsłona powstaje na gałęzi `feature/memorable-portfolio`: 25 commitów, których nie ma w `main`, i wiele niezatwierdzonych zmian. Ostatni commit: 25 września 2026 r.
-- Pierwsze wdrożenie produkcyjne: 16 listopada 2025 r., jednocześnie backendu i frontendu (według rejestru wdrożeń na GitHubie). Wcześniej obie części trafiały tylko na środowisko testowe: backend od 5 września 2025 r., frontend od 20 września 2025 r. Najpewniej właśnie od 16 listopada 2025 r. strona działa pod adresem dawidhanrahan.com. Nową odsłonę Dawid chce wdrożyć jak najszybciej, docelowo w listopadzie 2026 r.
+- Nowa odsłona trafiła do `main` 7 października 2026 r. (#22), a `main` wdraża się pod dawidhanrahan.com. Ciemny motyw, Night Ink, doszedł 15 października 2026 r. (#68).
+- Pierwsze wdrożenie produkcyjne: 16 listopada 2025 r., jednocześnie backendu i frontendu (według rejestru wdrożeń na GitHubie). Wcześniej obie części trafiały tylko na środowisko testowe: backend od 5 września 2025 r., frontend od 20 września 2025 r. Najpewniej właśnie od 16 listopada 2025 r. strona działa pod adresem dawidhanrahan.com.
 
 ## Rola i kontekst
 
@@ -41,17 +41,18 @@ Treść strony wskazuje odbiorców: osoby, które szukają kogoś do roli backen
 
 ## Jak to działa dla użytkownika
 
-Poniższy opis dotyczy nowej odsłony, która nie jest jeszcze wdrożona. Obecna wersja na dawidhanrahan.com ma tylko trzy podstrony: stronę główną, doświadczenie i część akademicką.
+Każda podstrona istnieje po angielsku pod głównym adresem i po polsku pod `/pl`.
 
 1. **Strona główna.** Otwiera ją zdanie sformułowane jak twierdzenie: „Mathematician by training, engineer by trade”. Trzy linijki „dowodu” prowadzą do wykształcenia, doświadczenia i projektów. Obok jest pole, w którym można od razu zadać pytanie Vex.
 2. **Projekty.** Każdy projekt działa pod własnym adresem i ma zrzut ekranu, listę technologii oraz link do kodu albo informację, że kod jest prywatny. Przycisk „Sprawdź na żywo” sprawia, że przeglądarka odwiedzającego łączy się z adresem projektu. Wynik to czas odpowiedzi w milisekundach albo brak odpowiedzi. Po 8 sekundach sprawdzanie się kończy. Pokazuje ono tylko, czy serwer odpowiedział, a nie czy strona działa poprawnie. Przy każdym projekcie można też zapytać o niego Vex.
-3. **Z warsztatu.** Krótkie teksty trzech rodzajów: ilustracja, z produkcji, dowód. Każdy ma szacowany czas czytania. Tekst dostępny w jednym języku wyświetla się w drugim z adnotacją, bez tłumaczenia maszynowego. Jedyny tekst w repozytorium to szkic, a szkice nie trafiają na stronę, więc ta sekcja jest na razie pusta.
+3. **Z warsztatu.** Krótkie teksty trzech rodzajów: ilustracja, z produkcji, dowód. Każdy ma szacowany czas czytania. Tekst dostępny w jednym języku wyświetla się w drugim z adnotacją, bez tłumaczenia maszynowego. Opublikowane są cztery teksty, każdy w obu językach.
 4. **O mnie i kontakt.** Tekst o Dawidzie prowadzi do trzech podstron. W kontakcie jest e-mail, link do GitHuba i rozmowa z Vex.
 5. **Doświadczenie.** Oś czasu w skali z rolami w firmach Nokia, PeakData, Xperi i CloudFerro, z osiągnięciami i technologiami dla każdej. O każdą firmę można zapytać Vex.
 6. **Badania.** Interaktywne ilustracje z suwakami i przyciskiem odtwarzania: rozchodzenie się ciepła na odcinku w czasie, „mapa wpływu” na stożku, wykres dokładności modelu (odwiedzający najpierw zgaduje, w którym kroku treningu model zaczyna radzić sobie z nowymi przykładami, a potem to sprawdza), przykład z zegarem i fala na okręgu, którą można przesuwać. Na tej stronie jest też lista opublikowanych prac.
 7. **Wykształcenie.** Ukończone studia i cytaty studentów o zajęciach prowadzonych przez Dawida.
 8. **Vex.** Czat dostępny na każdej podstronie. Odpowiada na podstawie treści strony, a odpowiedź pojawia się w miarę pisania. Proponuje pytania na start, na przykład o doktorat. Jeśli przez 30 sekund nic nie odpowie, pokazuje błąd i podsuwa kontakt mailowy.
 9. **Język.** Przełącznik PL/EN; przeglądarka zapamiętuje wybór.
+10. **Motyw.** Jasny albo ciemny (Night Ink). Strona idzie za ustawieniem komputera, dopóki odwiedzający nie wybierze motywu jednym przyciskiem, i zapamiętuje ten wybór.
 
 ## Opis techniczny
 
@@ -75,11 +76,11 @@ Jedno repozytorium, dwie części. Każda ma własne narzędzia, Dockerfile i ko
 
 **Frontend** (React 18, TypeScript, Vite, Tailwind, shadcn/ui, Vitest):
 
-- Trasy w nowej odsłonie: `/`, `/experience`, `/research` (stary adres `/academic` przekierowuje), `/education`, `/workshop`, `/workshop/:slug`. Wszystkie poza stroną główną ładują się leniwie.
+- Trasy: `/`, `/experience`, `/research` (stary adres `/academic` przekierowuje), `/education`, `/workshop`, `/workshop/:slug`. Wszystkie poza stroną główną ładują się leniwie.
 - Widżet czatu przy każdym renderowaniu domyka blok kodu, którego strumień jeszcze nie zamknął, 30 sekund ciszy traktuje jako awarię, a po zamknięciu czatu przerywa żądanie.
 - Teksty z warsztatu to pliki Markdown wczytywane przy budowaniu. Szkice (`*.draft.md`) czyta tylko serwer deweloperski.
 - Ilustracje do badań mają czystą matematykę wydzieloną do modułów z testami. Motyw HeatField to suma jąder ciepła liczona na canvasie. Reaguje na kursor i zatrzymuje się przy `prefers-reduced-motion`.
-- Wygląd wyznacza system identyfikacji „Binary Axis” w wersji 5.1, wersjonowany w repozytorium: jedna jasna paleta, fonty Manrope i IBM Plex Mono, kolumna 1160 px i zasady pisania.
+- Wygląd wyznacza system identyfikacji „Binary Axis” w wersji 5.2, wersjonowany w repozytorium: jasna paleta i ciemna, Night Ink, z tych samych tokenów, fonty Manrope i IBM Plex Mono, kolumna 1160 px i zasady pisania.
 - Dokumenty projektów w `frontend/src/content/projects/` zasilają karty projektów na stronie głównej, a build publikuje je razem z tekstami z warsztatu jako `/vex-kb/<pl|en>.json`, skąd czyta je Vex.
 
 ## Decyzje inżynierskie
@@ -100,7 +101,7 @@ Jedno repozytorium, dwie części. Każda ma własne narzędzia, Dockerfile i ko
 - **Porządki po Lovable** i pierwsze lintowanie aplikacji `vex`. Wzorzec `ignore-paths` w pylint był odczytywany jako wyrażenie regularne i niczego nie wykluczał.
 - **Sprawdzanie na żywo z przeglądarki odwiedzającego**, w trybie `no-cors`. Strona mówi wprost, co sprawdza: tylko osiągalność i czas, i z czyjej przeglądarki. Liczy się to, jak stronę widzi odwiedzający, a nie serwer.
 - **Szkice wykluczone z builda** już przy imporcie, więc nieopublikowany tekst nie wycieknie w paczce. Publikacja to zmiana nazwy pliku.
-- **Bez ciemnego motywu**, bo system identyfikacji go nie definiuje.
+- **Ciemny motyw z tych samych tokenów.** Night Ink zmienia wartości tokenów, a zostawia ich nazwy i role, więc interfejs zmienia motyw samą zmianą wartości. Kontrast jest zmierzony, a nie przeniesiony z jasnego motywu. Skrypt w nagłówku strony ustawia motyw przed pierwszym wyświetleniem, więc osoba z ciemnym motywem nie widzi jasnego błysku. Przełącznik z trzema stanami (systemowy, jasny, ciemny) powstał i został zastąpiony jednym przyciskiem: przy dwóch wyglądach i trzech stanach co trzecie kliknięcie niczego na ekranie nie zmieniało.
 - **HeatField świadomie łamie zasadę ruchu** z systemu identyfikacji (dozwolone jest tylko uniesienie o 8 px przy wejściu). Wyjątek jest opisany w dokumentacji.
 
 ## Działanie na produkcji
@@ -123,6 +124,5 @@ Rozmów z Vex są już setki. Dawid śledzi liczbę wejść na stronę, ale jej 
 - Vex nie odpowiada bez klucza API Anthropic ze środkami na koncie.
 - Treść jest w bazie danych, a nie w repozytorium. Nowa instalacja pokazuje pustą stronę, bo nie ma danych startowych.
 - Testy frontendu sprawdzają tylko logikę. Brak testów komponentów i testów end-to-end.
-- Brak ciemnego motywu oraz kolorów dla sukcesu i błędu. System identyfikacji odkłada je na później.
-- Nowa odsłona nie jest wydana: 25 commitów poza `main`, wiele niezatwierdzonych zmian, a jedyny tekst z warsztatu to szkic.
+- Brak kolorów dla sukcesu i błędu. System identyfikacji odkłada je do czasu, gdy będą potrzebne formularzom.
 - Dalsze plany: Dawid chce skupić się na sekcji „Z warsztatu” i wykorzystać ją do popularyzowania nauki, przede wszystkim matematyki.
