@@ -34,8 +34,8 @@ class Message(TimestampedModel):
     input_tokens = models.PositiveIntegerField(_("Input tokens"), null=True, blank=True)
     cached_tokens = models.PositiveIntegerField(_("Cached input tokens"), null=True, blank=True)
     output_tokens = models.PositiveIntegerField(_("Output tokens"), null=True, blank=True)
-    # On an answer the model stopped at VEX_MAX_OUTPUT_TOKENS (finish_reason "length"): it ends mid-thought, and the
-    # chat says so and offers to continue, also once the conversation is loaded again.
+    # On an answer the model stopped at VEX_MAX_OUTPUT_TOKENS (finish_reason "max_tokens", "length" before Claude): it
+    # ends mid-thought, and the chat says so and offers to continue, also once the conversation is loaded again.
     truncated = models.BooleanField(_("Truncated"), db_default=False)
     # The visitor's thumbs up or down on an answer, empty until rated (or once the rating is taken back).
     feedback = models.CharField(_("Feedback"), choices=Feedback, max_length=4, blank=True, db_default="")
@@ -49,7 +49,7 @@ class Usage(models.Model):
     """One call to the model and what it cost, whether or not it ended in a saved answer: a visitor who leaves, a
     provider that fails mid-answer and an answer with no text are all billed, and none of them leaves a Message.
 
-    Where the provider never reported the counts (the stream ended before its last chunk), they are estimated from
+    Where the provider never reported the counts (the stream ended before its final message), they are estimated from
     the text sent and received, and marked so; reasoning tokens are then unknown and left at zero."""
 
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True, db_index=True)
@@ -63,6 +63,9 @@ class Usage(models.Model):
     finish_reason = models.CharField(_("Finish reason"), max_length=32, blank=True)
     input_tokens = models.PositiveIntegerField(_("Input tokens"))
     cached_tokens = models.PositiveIntegerField(_("Cached input tokens"))
+    # Input written to the prompt cache, billed above the input price; zero on calls made before Claude. A database
+    # default, so the release still running while this one migrates can go on writing rows without it.
+    cache_write_tokens = models.PositiveIntegerField(_("Cache write tokens"), db_default=0)
     output_tokens = models.PositiveIntegerField(_("Output tokens"))
     reasoning_tokens = models.PositiveIntegerField(_("Reasoning tokens"))
     estimated = models.BooleanField(_("Estimated"))

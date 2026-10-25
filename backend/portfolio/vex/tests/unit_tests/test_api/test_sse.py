@@ -12,7 +12,6 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from vex.ai.context import resolve_context
-from vex.ai.knowledge import estimate_tokens
 from vex.ai.provider import ChatMessage
 from vex.ai.provider import Usage as ProviderUsage
 from vex.api.limits import QUESTION_MAX_LENGTH, VexThrottle
@@ -60,13 +59,12 @@ class FakeModel:
     """Stands in for the provider's stream: records what it was sent, then yields the given chunks and reports the
     usage, as the model's stream would."""
 
-    def __init__(self, chunks: list[str], finish_reason: str = "stop") -> None:
+    def __init__(self, chunks: list[str], finish_reason: str = "end_turn") -> None:
         self.chunks, self.finish_reason = chunks, finish_reason
         self.messages: list[ChatMessage] = []
-        self.cache_key = ""
 
-    def __call__(self, messages: list[ChatMessage], *, cache_key: str, usage: ProviderUsage) -> Iterator[str]:
-        self.messages, self.cache_key = messages, cache_key
+    def __call__(self, messages: list[ChatMessage], *, usage: ProviderUsage) -> Iterator[str]:
+        self.messages = messages
         yield from self.chunks
         usage.input_tokens, usage.cached_tokens, usage.output_tokens = 1000, 900, len(self.chunks)
         usage.finish_reason, usage.reported = self.finish_reason, True
@@ -127,7 +125,7 @@ class ChatStreamViewTestCase(StreamViewTestCase):
 
     def test_an_answer_cut_at_the_token_cap_says_so_and_is_kept_as_cut(self) -> None:
         session = session_key()
-        with patch(STREAM, FakeModel(["The first part, and then", ""], finish_reason="length")):
+        with patch(STREAM, FakeModel(["The first part, and then", ""], finish_reason="max_tokens")):
             resp = self.post({"question": "Tell me everything"}, session)
             events = parse_events(b"".join(resp.streaming_content).decode("utf-8"))
         answer = Message.objects.get(conversation__session=session, role=Roles.ASSISTANT)
@@ -137,7 +135,7 @@ class ChatStreamViewTestCase(StreamViewTestCase):
         resp = self.client.get(reverse("vex:messages"), headers={"X-Vex-Session": session})
         self.assertEqual([item["truncated"] for item in resp.json()], [False, True])
 
-    @override_settings(VEX_MODEL="gpt-6-luna", VEX_PRICES={"gpt-6-luna": (0.10, 0.01, 0.50)})
+    @override_settings(VEX_MODEL="claude-haiku-5-5", VEX_PRICES={"claude-haiku-5-5": (0.10, 0.01, 0.125, 0.50)})
     def test_a_complete_answer_is_saved_after_the_conversation_so_far(self) -> None:
         session = session_key()
         earlier = MessageFactory(conversation__session=session, role=Roles.USER, content="Earlier")
@@ -150,7 +148,6 @@ class ChatStreamViewTestCase(StreamViewTestCase):
                 {"role": "user", "content": "Q"},
             ],
         )
-        self.assertEqual(model.cache_key, "vex-pl")
         saved = Message.objects.filter(conversation__session=session).exclude(pk=earlier.pk).order_by("created_at")
         self.assertEqual(
             [(m.role, m.content) for m in saved], [(Roles.USER, "Q"), (Roles.ASSISTANT, "Hi and\n\nthere")]
@@ -165,7 +162,7 @@ class ChatStreamViewTestCase(StreamViewTestCase):
         record = Usage.objects.get(conversation__session=session)
         self.assertEqual(
             (record.outcome, record.finish_reason, record.input_tokens, record.cached_tokens, record.estimated),
-            (Outcomes.ANSWERED, "stop", 1000, 900, False),
+            (Outcomes.ANSWERED, "end_turn", 1000, 900, False),
         )
         # 100 fresh input tokens at 0.10 a million, 900 cached at 0.01, 3 output at 0.50
         self.assertEqual(record.cost, Decimal("0.0000205"))
@@ -187,7 +184,8 @@ class ChatStreamViewTestCase(StreamViewTestCase):
         produced: list[str] = []
         closed: list[bool] = []
 
-        def model(_messages: list[ChatMessage], **_kwargs: Any) -> Iterator[str]:
+        def model(_messages: list[ChatMessage], *, usage: ProviderUsage) -> Iterator[str]:
+            usage.model, usage.input_tokens = settings.VEX_MODEL, 1200  # the stream opened with the prompt's counts
             try:
                 for token in ("one ", "two ", "three"):
                     produced.append(token)
@@ -211,14 +209,15 @@ class ChatStreamViewTestCase(StreamViewTestCase):
         self.assertEqual(closed, [True])
         self.assertFalse(Message.objects.filter(conversation__session=session).exists())
         self.assertIn("client went away", "\n".join(logs.output))
-        # The provider never reported its counts, so they are estimated: the prompt in, the text that came out.
+        # The answer's counts never came, so its output is the most it could be; the prompt's came as the stream opened.
         record = Usage.objects.get(conversation__session=session)
         self.assertEqual((record.outcome, record.estimated), (Outcomes.ABANDONED, True))
-        self.assertEqual(record.input_tokens, estimate_tokens("system prompt in en") + estimate_tokens("Q"))
-        self.assertEqual(record.output_tokens, estimate_tokens("one "))
+        self.assertEqual((record.input_tokens, record.output_tokens), (1200, settings.VEX_MAX_OUTPUT_TOKENS))
+        self.assertGreater(record.cost, 0)
 
     def test_an_error_sends_only_a_code_and_saves_nothing(self) -> None:
-        def boom(_messages: list[ChatMessage], **_kwargs: Any) -> Iterator[str]:
+        def boom(_messages: list[ChatMessage], *, usage: ProviderUsage) -> Iterator[str]:
+            usage.model = settings.VEX_MODEL
             yield "partial"
             raise RuntimeError("You exceeded your current quota")
 
@@ -234,9 +233,10 @@ class ChatStreamViewTestCase(StreamViewTestCase):
         self.assertIn("quota", "\n".join(logs.output))  # the provider's message goes to the log
         self.assertFalse(Message.objects.filter(conversation__session=session).exists())
         record = Usage.objects.get(conversation__session=session)
-        self.assertEqual((record.outcome, record.estimated, record.output_tokens), (Outcomes.FAILED, True, 2))
+        self.assertEqual((record.outcome, record.estimated), (Outcomes.FAILED, True))
+        self.assertEqual(record.output_tokens, settings.VEX_MAX_OUTPUT_TOKENS)
 
-    @override_settings(VEX_MODEL="gpt-6-luna", VEX_PRICES={"gpt-6-luna": (0.10, 0.01, 0.50)})
+    @override_settings(VEX_MODEL="claude-haiku-5-5", VEX_PRICES={"claude-haiku-5-5": (0.10, 0.01, 0.125, 0.50)})
     def test_once_the_days_budget_is_spent_vex_rests_and_calls_nothing(self) -> None:
         session = session_key()
         with override_settings(VEX_DAILY_BUDGET_USD=Decimal("0.00001")):

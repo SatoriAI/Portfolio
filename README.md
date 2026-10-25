@@ -33,10 +33,10 @@ The repository has two root commits. That is deliberate: the frontend was develo
 
 ## Quick start
 
-Requires Docker and an [OpenAI API key](https://platform.openai.com/api-keys) if you want Vex to answer; everything else runs without one.
+Requires Docker and an [Anthropic API key](https://console.anthropic.com/settings/keys) if you want Vex to answer; everything else runs without one.
 
 ```bash
-cp backend/.env.example backend/.env   # then fill in SECRET_KEY and OPENAI_API_KEY
+cp backend/.env.example backend/.env   # then fill in SECRET_KEY and ANTHROPIC_API_KEY
 docker compose up -d
 docker compose exec backend python portfolio/manage.py migrate
 ```
@@ -77,9 +77,9 @@ The backend reads `backend/.env`; every key is listed with its default in [`back
 | --- | --- | --- |
 | `SECRET_KEY` | Yes | Django signing; no default |
 | `DATABASE_URL` | Yes | Application database; compose supplies a local one |
-| `OPENAI_API_KEY` | Yes | Vex only; Django will not start without it, but nothing else uses it |
+| `ANTHROPIC_API_KEY` | Yes | Vex only; Django will not start without it, but nothing else uses it |
 | `USE_S3` | No | Media to object storage. Defaults to the inverse of `DEBUG` |
-| `VEX_MODEL`, `VEX_REASONING_EFFORT` | No | Vex's OpenAI model and its reasoning effort; `gpt-6-luna` and `low` by default |
+| `VEX_MODEL`, `VEX_REASONING_EFFORT`, `VEX_MAX_OUTPUT_TOKENS` | No | Vex's Claude model, its effort and the cap on one answer, thinking included; `claude-opus-5-5`, `low` and `2000` by default |
 | `VEX_DAILY_BUDGET_USD` | No | What Vex may spend on the model per UTC day; `5.00` by default. Once reached, Vex rests until midnight UTC and offers Dawid's email instead |
 | `VEX_CONVERSATION_RETENTION_DAYS` | No | How long Vex keeps a conversation after its last question; `730` (24 months) by default, which the chat's notice promises. Under 1 refuses to start |
 | `REDIS_URL` | No | Where Vex keeps its rate-limit counts and the day's spend, shared by every worker; without it they live in each process's memory |
@@ -92,7 +92,7 @@ The frontend takes `VITE_API_BASE_URL` (see [`frontend/.env.example`](./frontend
 
 ## Limitations and assumptions
 
-- **Vex needs an OpenAI key with credit on it.** Without one the SSE stream opens and then delivers an error event rather than an answer — `401` for a bad key, `429 insufficient_quota` when the account is out of credit. The rest of the site is unaffected.
+- **Vex needs an Anthropic API key with credit on it.** API usage is billed on its own, not by a Claude subscription. Without one the SSE stream opens and then delivers an error event rather than an answer — `401` for a bad key, `400` when the account is out of credit. The rest of the site is unaffected.
 - **Vex reads the site's Markdown from the deployed frontend.** The frontend's build publishes it as `/vex-kb/<pl|en>.json`; without `VEX_SITE_CONTENT_URL`, or with the site down, Vex answers from the database alone.
 - **Content lives in the database, not in the repository**, so a fresh checkout has an empty site and there is no seed fixture.
 - **Media requires object storage in production.** With `USE_S3` on, the `BUCKET_*` variables are all required.

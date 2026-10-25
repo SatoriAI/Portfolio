@@ -60,11 +60,12 @@ class LanguageTestCase(SimpleTestCase):
 
 
 class ReportTestCase(SimpleTestCase):
-    def test_cached_input_is_counted_apart_from_the_rest(self) -> None:
+    def test_input_read_from_and_written_to_the_cache_is_counted_apart(self) -> None:
         calls = [
             Call(settings.VEX_MODEL, Usage(input_tokens=1000, cached_tokens=800)),
-            Call(settings.VEX_MODEL, Usage(input_tokens=500, cached_tokens=0)),
+            Call(settings.VEX_MODEL, Usage(input_tokens=500, cached_tokens=0, cache_write_tokens=450)),
         ]
         report = Report(results=[CaseResult(Case("case", "question", "en"), [Run("answer", 1.0, [], calls)])])
-        self.assertEqual(report.tokens(), "1500 input tokens, 800 of them cached and 700 uncached")
-        self.assertTrue(report.lines()[-1].endswith("; 1500 input tokens, 800 of them cached and 700 uncached"))
+        line = "1500 input tokens, 800 of them read from the cache and 450 written to it"
+        self.assertEqual(report.tokens(), line)
+        self.assertTrue(report.lines()[-1].endswith(f"; {line}"))

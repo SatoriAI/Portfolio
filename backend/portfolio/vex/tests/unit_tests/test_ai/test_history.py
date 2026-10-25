@@ -46,7 +46,7 @@ class MessageHistoryTestCase(TestCase):
         self.assertEqual([turn.role for turn in history.recent(budget=10)], ["assistant"])
         self.assertEqual(len(history.recent(budget=200)), 2)
 
-    @override_settings(VEX_MODEL="gpt-6.1-sol")
+    @override_settings(VEX_MODEL="claude-opus-5-5")
     def test_add_exchange_saves_the_question_and_the_answer_with_its_cost(self) -> None:
         history = MessageHistory(session_key())
         usage = Usage(input_tokens=40000, cached_tokens=39000, output_tokens=120, reasoning_tokens=20)
@@ -57,7 +57,7 @@ class MessageHistoryTestCase(TestCase):
         self.assertIsNone(question.input_tokens)
         self.assertEqual(
             (answer.role, answer.content, answer.model, answer.prompt_version),
-            (Roles.ASSISTANT, "Hello", "gpt-6.1-sol", "v1"),
+            (Roles.ASSISTANT, "Hello", "claude-opus-5-5", "v1"),
         )
         self.assertEqual((answer.input_tokens, answer.cached_tokens, answer.output_tokens), (40000, 39000, 120))
         self.assertFalse(answer.truncated)
@@ -65,7 +65,7 @@ class MessageHistoryTestCase(TestCase):
     def test_an_answer_cut_at_the_token_cap_is_saved_as_truncated(self) -> None:
         history = MessageHistory(session_key())
         saved = history.add_exchange(
-            Turn("user", "Tell me everything"), "First,", usage=Usage(finish_reason="length"), prompt_version="v1"
+            Turn("user", "Tell me everything"), "First,", usage=Usage(finish_reason="max_tokens"), prompt_version="v1"
         )
         saved.refresh_from_db()
         self.assertTrue(saved.truncated)

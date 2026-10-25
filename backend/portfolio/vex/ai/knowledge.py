@@ -1,7 +1,7 @@
 """Everything Vex knows, as one text per language, given to the model whole on every question.
 
 All of it fits in the prompt (tens of thousands of tokens), so nothing is retrieved: the model reads the lot, and
-OpenAI's prompt cache makes the repeat cheap. That holds only while the text is identical from one question to the
+the prompt cache makes the repeat cheap. That holds only while the text is identical from one question to the
 next, so it is assembled deterministically, in a fixed order with what changes least first: the uploaded documents,
 then the site's own pages, then the database rows the admin edits."""
 

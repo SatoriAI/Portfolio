@@ -44,6 +44,7 @@ export default defineRailway(() => {
     },
     env: onRailway(
       'ALLOWED_HOSTS',
+      'ANTHROPIC_API_KEY',
       'BUCKET_ACCESS_KEY_ID',
       'BUCKET_ENDPOINT',
       'BUCKET_NAME',
@@ -53,7 +54,6 @@ export default defineRailway(() => {
       'CSRF_TRUSTED_ORIGINS',
       'DATABASE_URL',
       'DEBUG',
-      'OPENAI_API_KEY',
       'PORT',
       'REDIS_URL',
       'SECRET_KEY',

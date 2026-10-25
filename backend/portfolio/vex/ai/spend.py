@@ -52,7 +52,7 @@ class DaySpend:
 
     @property
     def cached_share(self) -> float:
-        """The share of input tokens served from OpenAI's prompt cache."""
+        """The share of input tokens read from the prompt cache."""
         return self.cached_tokens / self.input_tokens if self.input_tokens else 0.0
 
 
