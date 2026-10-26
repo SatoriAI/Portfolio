@@ -18,7 +18,7 @@ import NotFound from "./NotFound";
  * leads back to all the threads and on to the next. An address naming no
  * thread is not-found.
  */
-const ResearchThread = () => {
+const ResearchThreadPage = () => {
   const { thread: slug } = useParams();
   const { language } = useSettings();
   const t = translations[language];
@@ -37,7 +37,10 @@ const ResearchThread = () => {
       <Section className="relative isolate overflow-hidden md:py-10">
         <HeaderShapes variant="research" />
         {/* The way back and the way on, at the top as well as the foot. */}
-        <nav className="relative mb-8 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 text-base">
+        <nav
+          aria-label={threads.title}
+          className="relative mb-8 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 text-base"
+        >
           <Link to="/research" className="text-foreground transition-colors hover:text-iris">
             ← {threads.back}
           </Link>
@@ -63,7 +66,8 @@ const ResearchThread = () => {
 
       {/* The way on: the next thread by name, and back to all of them. */}
       <Section>
-        <nav className="flex flex-col gap-4 border-t border-border pt-6 sm:flex-row sm:items-baseline sm:justify-between">
+        {/* The header's links again, so not a second landmark. */}
+        <div className="flex flex-col gap-4 border-t border-border pt-6 sm:flex-row sm:items-baseline sm:justify-between">
           <Link
             to="/research"
             className="text-base text-muted-foreground transition-colors hover:text-foreground"
@@ -79,7 +83,7 @@ const ResearchThread = () => {
             </span>{" "}
             {threadCopy(t, next.slug).title} →
           </Link>
-        </nav>
+        </div>
       </Section>
 
       <PageClosing
@@ -90,4 +94,4 @@ const ResearchThread = () => {
   );
 };
 
-export default ResearchThread;
+export default ResearchThreadPage;

@@ -105,11 +105,11 @@ const Academic = () => {
 
       {/* The threads, one row each: the glimpse in columns 1–4, the status,
           title, question and papers in 5–12. The whole row opens the thread
-          (its title's link covers it), and says so under the pointer or focus:
-          the row takes a faint tint, the glimpse its hover lavender and the
-          arrow steps on. The papers' own links sit above that cover, each
-          named as a journal article or a preprint, and a thread with none yet
-          says so. On a phone the glimpse is a strip above the text, so the
+          (its title's link covers it), and says so under the pointer or the
+          title's keyboard focus: the row takes a faint tint, the glimpse its
+          hover lavender and the arrow steps on. The papers' own links sit
+          above that cover, each named as a journal article or a preprint, and
+          focusing one does not light the row; a thread with none yet says so. On a phone the glimpse is a strip above the text, so the
           text keeps the full width. */}
       <Section id="threads" tone="surface">
         <SectionHeading eyebrow={eyebrow(1)} title={threads.title} />
@@ -123,9 +123,9 @@ const Academic = () => {
               <Reveal
                 as="li"
                 key={thread.slug}
-                className="group relative -mx-4 grid gap-3 rounded-card border-t border-border px-4 py-6 transition-colors duration-200 focus-within:bg-lavender/30 hover:bg-lavender/30 motion-reduce:transition-none md:-mx-6 md:grid-cols-12 md:items-center md:gap-6 md:px-6 md:py-8"
+                className="group relative -mx-4 grid gap-3 rounded-card border-t border-border px-4 py-6 transition-colors duration-200 hover:bg-lavender/30 has-[h3_a:focus-visible]:bg-lavender/30 motion-reduce:transition-none md:-mx-6 md:grid-cols-12 md:items-center md:gap-6 md:px-6 md:py-8"
               >
-                <div className="h-24 overflow-hidden rounded-card bg-lavender px-4 py-2 transition-colors duration-200 group-focus-within:bg-lavender-hover group-hover:bg-lavender-hover motion-reduce:transition-none md:col-span-4 md:h-32 md:py-3">
+                <div className="h-24 overflow-hidden rounded-card bg-lavender px-4 py-2 transition-colors duration-200 group-hover:bg-lavender-hover group-has-[h3_a:focus-visible]:bg-lavender-hover motion-reduce:transition-none md:col-span-4 md:h-32 md:py-3">
                   <ThreadGlimpse slug={thread.slug} />
                 </div>
                 <div className="md:col-span-8">
@@ -144,14 +144,14 @@ const Academic = () => {
                       {title}{" "}
                       <span
                         aria-hidden="true"
-                        className="inline-block transition-transform duration-200 group-focus-within:translate-x-1 group-hover:translate-x-1 motion-reduce:transition-none"
+                        className="inline-block transition-transform duration-200 group-hover:translate-x-1 group-has-[h3_a:focus-visible]:translate-x-1 motion-reduce:transition-none"
                       >
                         →
                       </span>
                     </Link>
                   </h3>
                   <p className="mt-2 text-base text-muted-foreground md:text-body-lg">{lead}</p>
-                  <p className="relative z-10 mt-3 text-sm text-muted-foreground">
+                  <p className="mt-3 text-sm text-muted-foreground">
                     {threads.papers}:{" "}
                     {papers.length === 0
                       ? threads.noPapers
@@ -165,7 +165,7 @@ const Academic = () => {
                               href={paper.link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={LINK}
+                              className={`relative z-10 ${LINK}`}
                             >
                               {paper.journal} {paper.year}
                             </a>
