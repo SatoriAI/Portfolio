@@ -1,107 +1,50 @@
-import { Fragment, type ReactNode, useState } from "react";
+import { useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import ClockExample from "@/components/academic/ClockExample";
-import CyclicShiftFigure, {
-  CyclicShiftControls,
-  K_DEFAULT,
-} from "@/components/academic/CyclicShiftFigure";
-import DemoStage from "@/components/academic/DemoStage";
-import FigureFrame from "@/components/academic/FigureFrame";
-import GrokkingChart from "@/components/academic/GrokkingChart";
-import HeatRodFigure from "@/components/academic/HeatRodFigure";
-import HiddenGradientFigure from "@/components/academic/HiddenGradientFigure";
-import InfluenceMapFigure, { InfluenceMapControls } from "@/components/academic/InfluenceMapFigure";
 import PublicationStack from "@/components/academic/PublicationStack";
-import SharpBoundsFigure, { SharpBoundsControls } from "@/components/academic/SharpBoundsFigure";
-import StageHeading from "@/components/academic/StageHeading";
 import HeaderShapes from "@/components/brand/HeaderShapes";
 import { queryStatus } from "@/components/feedback/queryStatus";
 import StatusMessage from "@/components/feedback/StatusMessage";
-import { MathText } from "@/components/Formula";
-import { Col, Grid } from "@/components/layout/Grid";
 import PageClosing from "@/components/layout/PageClosing";
 import Section from "@/components/layout/Section";
 import SectionHeading from "@/components/layout/SectionHeading";
+import { LINK } from "@/components/research/prose";
+import ThreadGlimpse from "@/components/research/ThreadGlimpse";
 import Reveal from "@/components/Reveal";
-import AliasingFigure from "@/components/workshop/AliasingFigure";
 import { useSettings } from "@/contexts/SettingsContext";
-import { usePrefersReducedMotion } from "@/hooks/use-media-query";
-import { BOUNDS_START, INFLUENCE_START } from "@/lib/kernelFigures";
 import type { UiPublication } from "@/lib/publicationsService";
 import { usePublications } from "@/lib/queries";
-import { formatCounter } from "@/lib/text";
+import { RESEARCH_THREADS, threadCopy, threadForAnchor } from "@/lib/researchThreads";
+import { fillTemplate, formatCounter } from "@/lib/text";
 import { translations } from "@/utils/translations";
 
-/**
- * The research story's paragraphs, set as the site's prose is on the home
- * page: 16px on phones, 18/29 from md, at most 52ch.
- */
-const STORY_PROSE = "max-w-[52ch] text-base text-muted-foreground md:text-body-lg";
-
-const SECTION_COUNT = 5;
-
-/** The first neural-operator paper, linked from the words that name it in the prose. */
-const OPERATOR_PAPER = "https://arxiv.org/abs/2610.20106";
-
-/**
- * A paragraph with the words that name the paper, where it has them, as a link
- * to the paper: the way the quantum thread links its estimates in passing.
- */
-const withPaper = (paragraph: string, paper?: string): ReactNode => {
-  const at = paper ? paragraph.indexOf(paper) : -1;
-  if (!paper || at < 0) return paragraph;
-  return (
-    <>
-      {paragraph.slice(0, at)}
-      <a className={LINK} href={OPERATOR_PAPER} target="_blank" rel="noopener noreferrer">
-        {paper}
-      </a>
-      {paragraph.slice(at + paper.length)}
-    </>
-  );
-};
-
-/** A link inside the story's prose: iris, underlined, ink on hover. */
-const LINK =
-  "text-iris underline decoration-1 underline-offset-4 transition-colors hover:text-foreground";
-
-/**
- * A kernel figure's slider run once, from the start of time to its end, then
- * back to where the figure reads clearest; the two figures set theirs.
- */
-const demoTo = (rest: number) => ({ from: 0, to: 1, durationMs: 2600, rest });
-const INFLUENCE_DEMO = demoTo(INFLUENCE_START);
-const BOUNDS_DEMO = demoTo(BOUNDS_START);
-/** The circle the wave rides: 0 to 112, and 113 is 0 again. */
-const CYCLE = 113;
-const SHIFT_DEMO = { from: 0, to: CYCLE, durationMs: 3000, delayMs: 1000 };
-/** The paragraph of "When the rules change" that the grid figure follows: the obstruction. */
-const GRID_PARAGRAPH = 3;
+/** The index's two sections: the threads, then the papers. */
+const SECTION_COUNT = 2;
 const eyebrow = (index: number) => formatCounter(index, SECTION_COUNT);
 
 /**
- * Research, told in the order of the work's standing: the established work
- * on heat kernels; the current investigations, generalisation in models and
- * neural operators built from heat; a developing interest, smaller; and the
- * papers. The degrees and the teaching have a page of
- * their own.
+ * Research, as an index: one row per thread, each opening the thread's own
+ * page, then the papers. The rows are read down one column, a still glimpse
+ * of the thread's figure beside its status, title and question; the header
+ * names how many papers there are and jumps to them, so the record is never
+ * behind a long scroll. The degrees and the teaching have a page of their own.
  */
 const Academic = () => {
-  // The shift figure's number of waves: the reader's choice, kept here.
-  // Each figure's own value, which its demo moves frame by frame, lives in
-  // its DemoStage, so a run renders that stage alone. The heat-kernel
-  // figures start at the start of time where their slider will run; with
-  // reduced motion nothing runs and they rest where they are clearest.
-  const [waveK, setWaveK] = useState(K_DEFAULT);
-  const prefersReducedMotion = usePrefersReducedMotion();
   const { language } = useSettings();
   const t = translations[language];
   const story = t.academic.story;
-  const kernels = story.kernels;
-  const transformers = t.academic.interests.transformers;
-  const [hook, clue, limits, outlook] = transformers.paragraphs;
+  const threads = t.academic.threads;
   const publicationsQuery = usePublications();
   const publications = publicationsQuery.data ?? [];
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // A link from before each thread had a page (`/research#kernels`) opens
+  // the thread's page in its place.
+  useEffect(() => {
+    const thread = threadForAnchor(location.hash);
+    if (thread) navigate(`/research/${thread.slug}`, { replace: true });
+  }, [location.hash, navigate]);
 
   const publicationLabels = {
     view: t.academic.view,
@@ -117,6 +60,17 @@ const Academic = () => {
   const papersInOrder = [...publications].sort(
     (a, b) => Number(isPreprint(a)) - Number(isPreprint(b)) || (b.year ?? 0) - (a.year ?? 0),
   );
+  const paperByLink = new Map(publications.map((paper) => [paper.link, paper]));
+  // Journal articles and preprints counted apart, so the header never
+  // passes a preprint off as a publication.
+  const plural = new Intl.PluralRules(language);
+  const count = (forms: Record<string, string>, n: number) =>
+    fillTemplate(forms[plural.select(n)] ?? forms.other, { n });
+  const preprints = publications.filter(isPreprint).length;
+  const papersLink = [
+    count(threads.journalCount, publications.length - preprints),
+    count(threads.preprintCount, preprints),
+  ].join(" · ");
 
   const status = queryStatus([publicationsQuery], {
     loading: t.common.loading,
@@ -140,362 +94,96 @@ const Academic = () => {
           // under the lead that the band's padding already gives.
           className="mb-0 md:mb-0"
         />
+        {publications.length > 0 && (
+          <p className="relative mt-5 text-base md:text-body-lg">
+            <a href="#publications" className={LINK}>
+              {papersLink} ↓
+            </a>
+          </p>
+        )}
       </Section>
 
-      {/* Heat kernels, in four short stages a reader without the
-          mathematics can follow: what a heat kernel is, drawn as a map of
-          influence; why geometry complicates it; what a sharp estimate is,
-          drawn as two bounds of one shape; and what the bounds are for, which
-          leads on to the quantum section. The papers themselves are listed
-          with the others at the end of the page. */}
-      <Section id="kernels" tone="surface">
-        <SectionHeading eyebrow={eyebrow(1)} title={kernels.title} leadLine={kernels.leadLine} />
-        <div className="space-y-12 md:space-y-16">
-          <div>
-            <StageHeading title={kernels.stages.map} />
-            {/* Prose and controls in columns 1–6, centred on the figure's
-                height by the flexible rows around them; the figure in 7–12.
-                The figure comes second in the markup, so on a phone it sits
-                between the prose and the controls it answers to. */}
-            <DemoStage
-              placement="right"
-              initial={prefersReducedMotion ? INFLUENCE_START : 0}
-              demo={INFLUENCE_DEMO}
-              prose={<p className={STORY_PROSE}>{kernels.map}</p>}
-              figure={(time) => <InfluenceMapFigure labels={kernels.influence} position={time} />}
-              controls={(time, setTime) => (
-                <InfluenceMapControls
-                  labels={kernels.influence}
-                  position={time}
-                  onPositionChange={setTime}
-                />
-              )}
-            />
-          </div>
-
-          <div>
-            <StageHeading title={kernels.stages.geometry} />
-            <p className="text-base text-foreground/80 md:text-body-lg">{kernels.geometry}</p>
-          </div>
-
-          <div>
-            <StageHeading title={kernels.stages.sharp} />
-            {/* Mirrored from the first stage: the figure on the left from lg,
-                the prose and its control on the right. A phone keeps the
-                markup's order: prose, figure, control. */}
-            <DemoStage
-              placement="left"
-              initial={prefersReducedMotion ? BOUNDS_START : 0}
-              demo={BOUNDS_DEMO}
-              prose={
-                <p className={STORY_PROSE}>
-                  <MathText text={kernels.sharp} />
-                </p>
-              }
-              figure={(time) => <SharpBoundsFigure labels={kernels.bounds} position={time} />}
-              controls={(time, setTime) => (
-                <SharpBoundsControls
-                  labels={kernels.bounds}
-                  position={time}
-                  onPositionChange={setTime}
-                />
-              )}
-            />
-          </div>
-
-          <div>
-            <StageHeading title={kernels.stages.why} />
-            <p className="text-base text-foreground/80 md:text-body-lg">
-              {kernels.whyBefore}
-              <a
-                href="#jacobi-quantum"
-                className="text-iris underline decoration-1 underline-offset-4 transition-colors hover:text-foreground"
+      {/* The threads, one row each: the glimpse in columns 1–4, the status,
+          title, question and papers in 5–12. The whole row opens the thread
+          (its title's link covers it), and says so under the pointer or the
+          title's keyboard focus: the row takes a faint tint, the glimpse its
+          hover lavender and the arrow steps on. The papers' own links sit
+          above that cover, each named as a journal article or a preprint,
+          and focusing one does not light the row; a thread with none yet
+          says so. On a phone the glimpse is a strip above the text, so the
+          text keeps the full width. */}
+      <Section id="threads" tone="surface">
+        <SectionHeading eyebrow={eyebrow(1)} title={threads.title} />
+        <ol>
+          {RESEARCH_THREADS.map((thread, index) => {
+            const { title, lead } = threadCopy(t, thread.slug);
+            const papers = thread.papers
+              .map((link) => paperByLink.get(link))
+              .filter((paper) => paper !== undefined);
+            return (
+              <Reveal
+                as="li"
+                key={thread.slug}
+                className="group relative -mx-4 grid gap-3 rounded-card border-t border-border px-4 py-6 transition-colors duration-200 hover:bg-lavender/30 has-[h3_a:focus-visible]:bg-lavender/30 motion-reduce:transition-none md:-mx-6 md:grid-cols-12 md:items-center md:gap-6 md:px-6 md:py-8"
               >
-                {kernels.whyLink}
-              </a>
-              {kernels.whyAfter}
-            </p>
-          </div>
-        </div>
-      </Section>
-
-      {/* The current investigation, told down the page in three stages a
-          reader without the mathematics can follow: the task, the measured
-          result, the mathematical clue, whose right column closes on what is
-          not yet established. From lg the task's prose takes columns 1–6
-          and its clock 7–12. The chart runs the full width, and so does
-          the introduction over it: the delay between the two rises is the
-          finding, and width is what shows a delay. On a phone the parts
-          stack in reading order. The measurement sits on white, the
-          illustrations on lavender, so the two are never mistaken. */}
-      <Section id="transformers" className="py-12 md:py-16">
-        <SectionHeading
-          eyebrow={eyebrow(2)}
-          title={transformers.title}
-          leadLine={story.transformers.question}
-        />
-        <div className="space-y-12 md:space-y-16">
-          <div>
-            <StageHeading title={transformers.stages.task} />
-            {/* The paragraph is centred on the card as it is seen. A frame's
-                visible edge runs through the middle of its label, half the
-                label's 1.25rem line below the box, so the paragraph is pushed
-                down by that half: 0.625rem of padding moves its centre by the
-                5px the card's centre sits lower. */}
-            <Grid gapY={32} className="lg:items-center">
-              <Col spanLg={6} className="lg:pt-[0.625rem]">
-                <p className={STORY_PROSE}>
-                  <MathText text={hook} />
-                </p>
-              </Col>
-              <Col as={Reveal} spanLg={6}>
-                <ClockExample labels={transformers.clock} />
-              </Col>
-            </Grid>
-          </div>
-
-          {/* Each text has one job. Above the chart, a fixed introduction
-              that tells the story without tying a value to a step; in the
-              panel, the selected step in words, which follows the chart,
-              and under the plot how the runs were made; below the panel,
-              what the result shows and the question the next stage takes up.
-              Nothing repeats. */}
-          <div>
-            <StageHeading title={transformers.stages.result} />
-            {/* The one stage that asks before it answers: the question over
-                the chart, which shows the new examples once the reader has
-                guessed, and the finding under it. Nothing here changes size. */}
-            <p className={`mb-8 ${STORY_PROSE} lg:max-w-none`}>{transformers.predictQuestion}</p>
-            <Reveal>
-              <GrokkingChart labels={transformers.chart} locale={language} />
-            </Reveal>
-            <p className={`mt-8 ${STORY_PROSE} lg:max-w-none`}>
-              <MathText text={transformers.resultLead} /> {transformers.resultCredit.before}
-              <a
-                href="https://arxiv.org/abs/2301.05217"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-iris underline decoration-1 underline-offset-4 transition-colors hover:text-foreground"
-              >
-                {transformers.resultCredit.setup}
-              </a>
-              {transformers.resultCredit.between}
-              <a
-                href="https://arxiv.org/abs/2201.02177"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-iris underline decoration-1 underline-offset-4 transition-colors hover:text-foreground"
-              >
-                {transformers.resultCredit.term}
-              </a>
-              {transformers.resultCredit.after}
-            </p>
-            {/* What the result shows and the question the next stage takes up, set
-                as a quotation so it reads as the stage's conclusion: a rule
-                in iris, the text in italic at full strength, at the prose's
-                own size. A paragraph rather than a blockquote: the words are
-                the page's own, not quoted from anyone. */}
-            <p className="mt-8 max-w-[52ch] border-l-2 border-iris py-1 pl-6 text-base italic text-foreground md:text-body-lg lg:max-w-none">
-              {transformers.resultQuestion}
-            </p>
-          </div>
-
-          {/* The clue opens the stage across the full width. Under it the
-            illustration takes columns 1–7, its panel holding the drawing
-            and its caption, as the other figures do; columns 8–12 hold what
-            to look for, the two sliders and the short explanation, centred
-            on the panel's height by two flexible rows around them. The prompt
-            comes first in the markup, so on a phone it precedes the
-            drawing.
-            What is not yet established closes the section on its own row. */}
-          <div>
-            <StageHeading title={transformers.stages.clue} />
-            <p className="mb-8 text-base text-foreground/80">
-              <MathText text={clue} />
-            </p>
-            <DemoStage
-              placement="left-wide"
-              initial={0}
-              demo={SHIFT_DEMO}
-              fromDemo={(value) => Math.round(value) % CYCLE}
-              prose={
-                <p
-                  id="shift-prompt"
-                  className="text-base font-medium text-foreground md:text-body-lg"
-                >
-                  {transformers.figure.prompt}
-                </p>
-              }
-              figure={(add) => (
-                <CyclicShiftFigure
-                  labels={transformers.figure}
-                  k={waveK}
-                  add={add}
-                  describedBy="shift-prompt"
-                />
-              )}
-              controls={(add, setAdd) => (
-                <>
-                  <CyclicShiftControls
-                    labels={transformers.figure}
-                    k={waveK}
-                    add={add}
-                    onKChange={setWaveK}
-                    onAddChange={setAdd}
-                  />
-                  <div className="mt-8 border-t border-border pt-6">
-                    <p className="mb-2 font-mono text-meta font-medium uppercase tracking-widest text-muted-foreground">
-                      {transformers.figure.curious}
-                    </p>
-                    <p className="text-base text-foreground/80">
-                      <MathText text={transformers.figure.detail} />
-                    </p>
-                  </div>
-                </>
-              )}
-            />
-          </div>
-
-          {/* The limits of the conclusion close the section across its full
-            width under the same dotted stage heading, in one paragraph
-            set as the clue's is: what is not yet established, and what the
-            experiment is for. */}
-          <div>
-            <StageHeading title={transformers.stages.open} />
-            <p className="text-base text-foreground/80">
-              <MathText text={`${limits} ${outlook}`} />
-            </p>
-          </div>
-        </div>
-      </Section>
-
-      {/* The neural-operator papers, told as the sections above are told:
-          stages a reader without the mathematics can follow, with the first
-          paper linked from the words that name it. Its two figures draw the
-          hidden gradient and the grid's obstruction. On the surface, as the
-          quantum thread after it is: on lavender the figures' own lavender
-          panels would sink into the band, and the publications keep their
-          white page, which their cards need to stand out. */}
-      <Section id="neural-operators" tone="surface">
-        <SectionHeading
-          eyebrow={eyebrow(3)}
-          title={story.neuralOperators.title}
-          leadLine={story.neuralOperators.leadLine}
-        />
-        {story.neuralOperators.stages.map((stage, index, stages) => {
-          // The stage after the figure's is drawn beside the figure, below.
-          if (stages[index - 1]?.id === "gradient") return null;
-          const paragraphs = stage.paragraphs.map((paragraph) => withPaper(paragraph, stage.paper));
-          const next = stages[index + 1];
-          return (
-            <div key={stage.id} className="mb-10">
-              <StageHeading title={stage.title} />
-              {stage.id === "gradient" ? (
-                // The mechanism, drawn: from lg the figure, with its own
-                // slider, floats in columns 6–12, and the prose runs beside it
-                // and on into the next stage, so the column beside the tall
-                // figure holds text rather than a gap; past the figure the text
-                // takes the full width. A phone reads the stage's prose, the
-                // figure, then the next stage.
-                <div className="flex flex-col gap-4 text-base text-foreground/80 md:text-body-lg lg:block lg:flow-root">
-                  <Reveal className="order-2 my-4 lg:float-right lg:my-0 lg:mb-6 lg:ml-6 lg:w-[calc((100%_-_264px)_*_7_/_12_+_144px)]">
-                    <HiddenGradientFigure
-                      labels={story.neuralOperators.gradient}
-                      controls={story.neuralOperators.gradientControls}
-                      locale={language}
-                    />
-                  </Reveal>
-                  {paragraphs.map((paragraph, at) => (
-                    <p key={at} className="order-1 lg:mb-4">
-                      {paragraph}
-                    </p>
-                  ))}
-                  {next && (
-                    <div className="order-3 mt-6 lg:mt-10">
-                      <StageHeading title={next.title} />
-                      {next.paragraphs.map((paragraph, at) => (
-                        <p key={at} className="mt-4 first-of-type:mt-0">
-                          {withPaper(paragraph, next.paper)}
-                        </p>
-                      ))}
-                    </div>
-                  )}
+                <div className="h-24 overflow-hidden rounded-card bg-lavender px-4 py-2 transition-colors duration-200 group-hover:bg-lavender-hover group-has-[h3_a:focus-visible]:bg-lavender-hover motion-reduce:transition-none md:col-span-4 md:h-32 md:py-3">
+                  <ThreadGlimpse slug={thread.slug} />
                 </div>
-              ) : (
-                <div className="space-y-4 text-base text-foreground/80 md:text-body-lg">
-                  {paragraphs.map((paragraph, index) => (
-                    <Fragment key={index}>
-                      <p>{paragraph}</p>
-                      {/* The grid's obstruction, drawn with the workshop's own
-                          figure, after the paragraph that names it. */}
-                      {stage.id === "second" && index === GRID_PARAGRAPH && (
-                        <Reveal className="!my-8">
-                          <FigureFrame kind="illustration" label={t.workshop.figure.illustration}>
-                            <figure>
-                              <span className="sr-only">{story.neuralOperators.grid.alt}</span>
-                              <AliasingFigure labels={t.workshop.figure.aliasing} />
-                              <figcaption className="mt-6 text-sm text-foreground/80">
-                                {story.neuralOperators.grid.caption}
-                              </figcaption>
-                            </figure>
-                          </FigureFrame>
-                        </Reveal>
-                      )}
-                    </Fragment>
-                  ))}
+                <div className="md:col-span-8">
+                  <p className="font-mono text-meta uppercase tracking-widest text-iris">
+                    {formatCounter(index + 1, RESEARCH_THREADS.length)}
+                    <span className="text-muted-foreground">
+                      {" "}
+                      · {threads.statuses[thread.status]}
+                    </span>
+                  </p>
+                  <h3 className="mt-2 text-card-title-sm font-semibold md:text-card-title">
+                    <Link
+                      to={`/research/${thread.slug}`}
+                      className="transition-colors after:absolute after:inset-0 after:content-[''] group-hover:text-iris"
+                    >
+                      {title}{" "}
+                      <span
+                        aria-hidden="true"
+                        className="inline-block transition-transform duration-200 group-hover:translate-x-1 group-has-[h3_a:focus-visible]:translate-x-1 motion-reduce:transition-none"
+                      >
+                        →
+                      </span>
+                    </Link>
+                  </h3>
+                  <p className="mt-2 text-base text-muted-foreground md:text-body-lg">{lead}</p>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {threads.papers}:{" "}
+                    {papers.length === 0
+                      ? threads.noPapers
+                      : papers.map((paper, at) => (
+                          <span key={paper.link}>
+                            {at > 0 && " · "}
+                            <span className="font-mono text-meta uppercase tracking-wide">
+                              {isPreprint(paper) ? threads.kinds.preprint : threads.kinds.journal}
+                            </span>{" "}
+                            <a
+                              href={paper.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`relative z-10 ${LINK}`}
+                            >
+                              {paper.journal} {paper.year}
+                            </a>
+                          </span>
+                        ))}
+                  </p>
                 </div>
-              )}
-            </div>
-          );
-        })}
+              </Reveal>
+            );
+          })}
+        </ol>
       </Section>
 
-      {/* A proposed research programme, after the established kernel result
-          and current AI investigation. The illustration is the text's rod
-          and nothing more: one process, never a Jacobi kernel or a proved
-          truncation. Text separates the observable, the analytic obstacle
-          and the still-open end-to-end complexity comparison. */}
-      <Section id="jacobi-quantum" tone="surface">
-        <SectionHeading
-          eyebrow={eyebrow(4)}
-          title={story.jacobiQuantum.title}
-          leadLine={story.jacobiQuantum.leadLine}
-        />
-        <StageHeading title={story.jacobiQuantum.introTitle} />
-        <p className="mb-10 text-base text-foreground/80 md:text-body-lg">
-          {story.jacobiQuantum.intro}
-        </p>
-        <StageHeading title={story.jacobiQuantum.clueTitle} />
-        <p className="mb-10 text-base text-foreground/80 md:text-body-lg">
-          {story.jacobiQuantum.clueBeforePaper}
-          <a
-            className={LINK}
-            href="https://arxiv.org/abs/1905.10581"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {story.jacobiQuantum.paper}
-          </a>
-          {story.jacobiQuantum.clueAfterPaper}
-        </p>
-        <Grid gapY={32} className="lg:items-center">
-          {/* The figure leads on phones, sits right of the text from lg. */}
-          <Col as={Reveal} spanLg={7} className="lg:order-last">
-            <HeatRodFigure labels={story.jacobiQuantum.figure} />
-          </Col>
-          <Col spanLg={5} className="lg:pr-6">
-            <StageHeading title={story.jacobiQuantum.proofTitle} />
-            <p className="text-base text-muted-foreground md:text-body-lg">
-              {story.jacobiQuantum.proof}
-            </p>
-          </Col>
-        </Grid>
-      </Section>
-
-      {/* All the papers, with their links and details, at the end of the page:
-          the sections above tell the story, this is the record. */}
+      {/* All the papers, with their links and details: the threads tell the
+          story, this is the record. */}
       <Section id="publications" className="py-12 md:py-16">
-        <SectionHeading eyebrow={eyebrow(5)} title={t.academic.publications} />
+        <SectionHeading eyebrow={eyebrow(2)} title={t.academic.publications} />
         {status ??
           (publications.length === 0 ? (
             <StatusMessage variant="empty" message={t.academic.noPublications} />

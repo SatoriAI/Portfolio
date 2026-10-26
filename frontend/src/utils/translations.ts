@@ -753,6 +753,36 @@ const copy = {
       },
       /** Over the research page's headline: what the work is. */
       eyebrow: "Research · PhD",
+      /** The index of research threads, each opening a page of its own. */
+      threads: {
+        title: "Research directions",
+        statuses: {
+          published: "Published",
+          ongoing: "Ongoing study",
+          preprint: "Preprint · next paper in preparation",
+          plan: "Research plan",
+        },
+        /** Before the papers a thread rests on. */
+        papers: "Papers",
+        noPapers: "none yet",
+        /**
+         * The header's way to the papers, journal articles and preprints counted
+         * apart, by each count's plural category, `{n}` filled.
+         */
+        journalCount: {
+          one: "{n} journal article",
+          other: "{n} journal articles",
+        } as Record<string, string>,
+        preprintCount: {
+          one: "{n} preprint",
+          other: "{n} preprints",
+        } as Record<string, string>,
+        /** What kind of paper a thread's link names. */
+        kinds: { journal: "journal", preprint: "preprint" },
+        /** On a thread's page: back to the index, and on to the next thread. */
+        back: "All research directions",
+        next: "Next",
+      },
       stack: "Publications, as a stack of files",
       established: "What it shows",
       author: "Author",
@@ -1525,6 +1555,40 @@ const copy = {
         },
       },
       eyebrow: "Badania · doktorat",
+      /** The index of research threads, each opening a page of its own. */
+      threads: {
+        title: "Kierunki badań",
+        statuses: {
+          published: "Opublikowane",
+          ongoing: "Badanie w toku",
+          preprint: "Preprint · kolejna praca w przygotowaniu",
+          plan: "Plan badań",
+        },
+        /** Before the papers a thread rests on. */
+        papers: "Prace",
+        noPapers: "jeszcze brak",
+        /**
+         * The header's way to the papers, journal articles and preprints counted
+         * apart, by each count's plural category, `{n}` filled.
+         */
+        journalCount: {
+          one: "{n} artykuł w czasopiśmie",
+          few: "{n} artykuły w czasopismach",
+          many: "{n} artykułów w czasopismach",
+          other: "{n} artykułu w czasopismach",
+        } as Record<string, string>,
+        preprintCount: {
+          one: "{n} preprint",
+          few: "{n} preprinty",
+          many: "{n} preprintów",
+          other: "{n} preprintu",
+        } as Record<string, string>,
+        /** What kind of paper a thread's link names. */
+        kinds: { journal: "czasopismo", preprint: "preprint" },
+        /** On a thread's page: back to the index, and on to the next thread. */
+        back: "Wszystkie kierunki badań",
+        next: "Dalej",
+      },
       stack: "Publikacje ułożone w stos",
       established: "Co pokazuje",
       author: "Autor",

@@ -17,6 +17,7 @@ import Index from "./Index";
 const LOADERS = import.meta.glob<{ default: ComponentType }>([
   "./Experience.tsx",
   "./Academic.tsx",
+  "./ResearchThreadPage.tsx",
   "./Education.tsx",
   "./Workshop.tsx",
   "./WorkshopArticle.tsx",
@@ -64,6 +65,7 @@ export const PAGES: readonly {
     lists: ["experiences", "skills", "projects"],
   },
   { path: "/research", Page: chunk("./Academic.tsx"), lists: ["publications"] },
+  { path: "/research/:thread", Page: chunk("./ResearchThreadPage.tsx") },
   { path: "/education", Page: chunk("./Education.tsx"), lists: ["schools", "testimonials"] },
   { path: "/workshop", Page: chunk("./Workshop.tsx") },
   { path: "/workshop/:slug", Page: chunk("./WorkshopArticle.tsx") },

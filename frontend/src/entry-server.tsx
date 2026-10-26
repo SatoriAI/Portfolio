@@ -9,6 +9,7 @@ import { pageHtml } from "@/lib/headTags";
 import { languageBasename, languageOf, stripLanguage } from "@/lib/locale";
 import { pageMeta } from "@/lib/pageMeta";
 import { createQueryClient } from "@/lib/queries";
+import { researchThreadPaths } from "@/lib/researchThreads";
 import {
   localizedRedirects,
   notFoundHtml,
@@ -92,7 +93,7 @@ export const buildSnapshot = (previousSiteUrl = SITE_URL) =>
  */
 export const sitePages = pageAddresses(
   sitePaths(
-    navigationPages.map((page) => page.to),
+    [...navigationPages.map((page) => page.to), ...researchThreadPaths],
     publishedPieceSlugs(workshopArticles),
   ),
 ).map(({ language, path, address }) => ({
