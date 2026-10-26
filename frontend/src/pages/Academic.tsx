@@ -108,8 +108,9 @@ const Academic = () => {
           (its title's link covers it), and says so under the pointer or the
           title's keyboard focus: the row takes a faint tint, the glimpse its
           hover lavender and the arrow steps on. The papers' own links sit
-          above that cover, each named as a journal article or a preprint, and
-          focusing one does not light the row; a thread with none yet says so. On a phone the glimpse is a strip above the text, so the
+          above that cover, each named as a journal article or a preprint,
+          and focusing one does not light the row; a thread with none yet
+          says so. On a phone the glimpse is a strip above the text, so the
           text keeps the full width. */}
       <Section id="threads" tone="surface">
         <SectionHeading eyebrow={eyebrow(1)} title={threads.title} />
