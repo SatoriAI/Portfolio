@@ -75,7 +75,7 @@ const BOUNDS_DEMO = demoTo(BOUNDS_START);
 /** The circle the wave rides: 0 to 112, and 113 is 0 again. */
 const CYCLE = 113;
 const SHIFT_DEMO = { from: 0, to: CYCLE, durationMs: 3000, delayMs: 1000 };
-/** The paragraph of "What the second paper asks" that the grid figure follows: the obstruction. */
+/** The paragraph of "When the rules change" that the grid figure follows: the obstruction. */
 const GRID_PARAGRAPH = 3;
 const eyebrow = (index: number) => formatCounter(index, SECTION_COUNT);
 

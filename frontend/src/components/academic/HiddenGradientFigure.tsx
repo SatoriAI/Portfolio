@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import FigureFrame from "@/components/academic/FigureFrame";
 import { MathText } from "@/components/Formula";
@@ -115,8 +115,10 @@ const HiddenGradientFigure = ({
   // The prerendered page cannot know the preference; once it is known, an
   // untouched figure starts where the curves meet rather than where they part.
   const reducedMotion = usePrefersReducedMotion();
+  // A position the reader chose stays theirs, whatever they ask of motion later.
+  const touched = useRef(false);
   useEffect(() => {
-    if (reducedMotion) setPosition((current) => (current === 0 ? GRADIENT_REST : current));
+    if (reducedMotion && !touched.current) setPosition(GRADIENT_REST);
   }, [reducedMotion]);
   const time = new Intl.NumberFormat(locale, {
     minimumSignificantDigits: 2,
@@ -224,6 +226,7 @@ const HiddenGradientFigure = ({
             step={0.005}
             value={position}
             onChange={(event) => {
+              touched.current = true;
               demo.stop();
               setPosition(Number(event.target.value));
             }}
