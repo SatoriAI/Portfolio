@@ -1,5 +1,4 @@
-import { Fragment, useState } from "react";
-import { Link } from "react-router-dom";
+import { Fragment, type ReactNode, useState } from "react";
 
 import ClockExample from "@/components/academic/ClockExample";
 import CyclicShiftFigure, {
@@ -10,9 +9,7 @@ import DemoStage from "@/components/academic/DemoStage";
 import FigureFrame from "@/components/academic/FigureFrame";
 import GrokkingChart from "@/components/academic/GrokkingChart";
 import HeatRodFigure from "@/components/academic/HeatRodFigure";
-import HiddenGradientFigure, {
-  HiddenGradientControls,
-} from "@/components/academic/HiddenGradientFigure";
+import HiddenGradientFigure from "@/components/academic/HiddenGradientFigure";
 import InfluenceMapFigure, { InfluenceMapControls } from "@/components/academic/InfluenceMapFigure";
 import PublicationStack from "@/components/academic/PublicationStack";
 import SharpBoundsFigure, { SharpBoundsControls } from "@/components/academic/SharpBoundsFigure";
@@ -29,7 +26,6 @@ import Reveal from "@/components/Reveal";
 import AliasingFigure from "@/components/workshop/AliasingFigure";
 import { useSettings } from "@/contexts/SettingsContext";
 import { usePrefersReducedMotion } from "@/hooks/use-media-query";
-import { GRADIENT_REST } from "@/lib/hiddenGradient";
 import { BOUNDS_START, INFLUENCE_START } from "@/lib/kernelFigures";
 import type { UiPublication } from "@/lib/publicationsService";
 import { usePublications } from "@/lib/queries";
@@ -43,6 +39,27 @@ import { translations } from "@/utils/translations";
 const STORY_PROSE = "max-w-[52ch] text-base text-muted-foreground md:text-body-lg";
 
 const SECTION_COUNT = 5;
+
+/** The first neural-operator paper, linked from the words that name it in the prose. */
+const OPERATOR_PAPER = "https://arxiv.org/abs/2610.20106";
+
+/**
+ * A paragraph with the words that name the paper, where it has them, as a link
+ * to the paper: the way the quantum thread links its estimates in passing.
+ */
+const withPaper = (paragraph: string, paper?: string): ReactNode => {
+  const at = paper ? paragraph.indexOf(paper) : -1;
+  if (!paper || at < 0) return paragraph;
+  return (
+    <>
+      {paragraph.slice(0, at)}
+      <a className={LINK} href={OPERATOR_PAPER} target="_blank" rel="noopener noreferrer">
+        {paper}
+      </a>
+      {paragraph.slice(at + paper.length)}
+    </>
+  );
+};
 
 /** A link inside the story's prose: iris, underlined, ink on hover. */
 const LINK =
@@ -58,9 +75,7 @@ const BOUNDS_DEMO = demoTo(BOUNDS_START);
 /** The circle the wave rides: 0 to 112, and 113 is 0 again. */
 const CYCLE = 113;
 const SHIFT_DEMO = { from: 0, to: CYCLE, durationMs: 3000, delayMs: 1000 };
-/** The hidden gradient's time: run from long to short, then back to where the curves meet. */
-const GRADIENT_DEMO = demoTo(GRADIENT_REST);
-/** The paragraph of "What the second paper asks" that the grid figure follows: the obstruction. */
+/** The paragraph of "When the rules change" that the grid figure follows: the obstruction. */
 const GRID_PARAGRAPH = 3;
 const eyebrow = (index: number) => formatCounter(index, SECTION_COUNT);
 
@@ -355,104 +370,84 @@ const Academic = () => {
       </Section>
 
       {/* The neural-operator papers, told as the sections above are told:
-          stages a reader without the mathematics can follow, all prose, no
-          figure. The first paper's preprint closes its stage; both workshop
-          pieces close the section for the full read. Lavender, as the quantum
-          thread below it is: the two "from heat kernels" threads read as one
-          band, and the publications keep their white page, which their cards
-          need to stand out. */}
+          stages a reader without the mathematics can follow, with the first
+          paper linked from the words that name it. Its two figures draw the
+          hidden gradient and the grid's obstruction. On the surface, as the
+          quantum thread after it is: on lavender the figures' own lavender
+          panels would sink into the band, and the publications keep their
+          white page, which their cards need to stand out. */}
       <Section id="neural-operators" tone="surface">
         <SectionHeading
           eyebrow={eyebrow(3)}
           title={story.neuralOperators.title}
           leadLine={story.neuralOperators.leadLine}
         />
-        {story.neuralOperators.stages.map((stage) => (
-          <div key={stage.id} className="mb-10">
-            <StageHeading title={stage.title} />
-            {stage.id === "gradient" ? (
-              // The mechanism, drawn: prose and the time slider in columns
-              // 1–6, the figure in 7–12, as the heat-kernel stages are. A
-              // phone keeps the markup's order: prose, figure, control.
-              <DemoStage
-                placement="right"
-                initial={prefersReducedMotion ? GRADIENT_REST : 0}
-                demo={GRADIENT_DEMO}
-                prose={
-                  <div className="space-y-4">
-                    {stage.paragraphs.map((paragraph) => (
-                      <p key={paragraph} className={STORY_PROSE}>
-                        {paragraph}
-                      </p>
-                    ))}
-                  </div>
-                }
-                figure={(position) => (
-                  <HiddenGradientFigure
-                    labels={story.neuralOperators.gradient}
-                    position={position}
-                  />
-                )}
-                controls={(position, setPosition) => (
-                  <HiddenGradientControls
-                    figureLabels={story.neuralOperators.gradient}
-                    labels={story.neuralOperators.gradientControls}
-                    locale={language}
-                    position={position}
-                    onPositionChange={setPosition}
-                  />
-                )}
-              />
-            ) : (
-              <div className="space-y-4 text-base text-foreground/80 md:text-body-lg">
-                {stage.paragraphs.map((paragraph, index) => (
-                  <Fragment key={paragraph}>
-                    <p>{paragraph}</p>
-                    {/* The grid's obstruction, drawn with the workshop's own
-                      figure, after the paragraph that names it. */}
-                    {stage.id === "second" && index === GRID_PARAGRAPH && (
-                      <Reveal className="!my-8">
-                        <FigureFrame kind="illustration" label={t.workshop.figure.illustration}>
-                          <figure>
-                            <span className="sr-only">{story.neuralOperators.grid.alt}</span>
-                            <AliasingFigure labels={t.workshop.figure.aliasing} />
-                            <figcaption className="mt-6 text-sm text-foreground/80">
-                              {story.neuralOperators.grid.caption}
-                            </figcaption>
-                          </figure>
-                        </FigureFrame>
-                      </Reveal>
-                    )}
-                  </Fragment>
-                ))}
-                {stage.preprint && (
-                  <p>
-                    <a
-                      className={LINK}
-                      href="https://arxiv.org/abs/2610.20106"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {story.neuralOperators.preprint}
-                    </a>
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
-        <p className="text-base text-foreground/80 md:text-body-lg">
-          {story.neuralOperators.workshopLabel}{" "}
-          {story.neuralOperators.workshopParts.map((part, index) => (
-            <span key={part.slug}>
-              {index > 0 && " · "}
-              <Link className={LINK} to={`/workshop/${part.slug}`}>
-                {part.title}
-              </Link>{" "}
-              ({part.part})
-            </span>
-          ))}
-        </p>
+        {story.neuralOperators.stages.map((stage, index, stages) => {
+          // The stage after the figure's is drawn beside the figure, below.
+          if (stages[index - 1]?.id === "gradient") return null;
+          const paragraphs = stage.paragraphs.map((paragraph) => withPaper(paragraph, stage.paper));
+          const next = stages[index + 1];
+          return (
+            <div key={stage.id} className="mb-10">
+              <StageHeading title={stage.title} />
+              {stage.id === "gradient" ? (
+                // The mechanism, drawn: from lg the figure, with its own
+                // slider, floats in columns 6–12, and the prose runs beside it
+                // and on into the next stage, so the column beside the tall
+                // figure holds text rather than a gap; past the figure the text
+                // takes the full width. A phone reads the stage's prose, the
+                // figure, then the next stage.
+                <div className="flex flex-col gap-4 text-base text-foreground/80 md:text-body-lg lg:block lg:flow-root">
+                  <Reveal className="order-2 my-4 lg:float-right lg:my-0 lg:mb-6 lg:ml-6 lg:w-[calc((100%_-_264px)_*_7_/_12_+_144px)]">
+                    <HiddenGradientFigure
+                      labels={story.neuralOperators.gradient}
+                      controls={story.neuralOperators.gradientControls}
+                      locale={language}
+                    />
+                  </Reveal>
+                  {paragraphs.map((paragraph, at) => (
+                    <p key={at} className="order-1 lg:mb-4">
+                      {paragraph}
+                    </p>
+                  ))}
+                  {next && (
+                    <div className="order-3 mt-6 lg:mt-10">
+                      <StageHeading title={next.title} />
+                      {next.paragraphs.map((paragraph, at) => (
+                        <p key={at} className="mt-4 first-of-type:mt-0">
+                          {withPaper(paragraph, next.paper)}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4 text-base text-foreground/80 md:text-body-lg">
+                  {paragraphs.map((paragraph, index) => (
+                    <Fragment key={index}>
+                      <p>{paragraph}</p>
+                      {/* The grid's obstruction, drawn with the workshop's own
+                          figure, after the paragraph that names it. */}
+                      {stage.id === "second" && index === GRID_PARAGRAPH && (
+                        <Reveal className="!my-8">
+                          <FigureFrame kind="illustration" label={t.workshop.figure.illustration}>
+                            <figure>
+                              <span className="sr-only">{story.neuralOperators.grid.alt}</span>
+                              <AliasingFigure labels={t.workshop.figure.aliasing} />
+                              <figcaption className="mt-6 text-sm text-foreground/80">
+                                {story.neuralOperators.grid.caption}
+                              </figcaption>
+                            </figure>
+                          </FigureFrame>
+                        </Reveal>
+                      )}
+                    </Fragment>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </Section>
 
       {/* A proposed research programme, after the established kernel result

@@ -625,19 +625,19 @@ const copy = {
             },
             {
               id: "first",
-              title: "What the first paper proves",
+              title: "Where it began",
               paragraphs: [
                 "Darcy's equation describes flow through a material whose permeability changes from place to place. Its solution depends not on a finite list of numbers but on whole functions: the material coefficient and the forcing.",
                 "The first paper shows that a finite construction made from heat-semigroup layers and pointwise products can approximate the entire Darcy solution operator to any prescribed accuracy — the rule that turns a material and its sources into a pressure field, not merely one solution for one input.",
-                "The proof is quantitative. The architecture comes from an unrolled Laplacian-preconditioned Richardson iteration, and the interaction between the variable coefficient and the evolving state is reconstructed through the short-time diffusion defect above. The result is proved in an abstract Dirichlet-space setting, with a concrete torus version in which the approximation parameters can be chosen independently of the dimension under the stated regularity assumptions.",
+                "The proof is quantitative. The architecture comes from unrolling a classical iterative method for solving equations (the Richardson iteration), preconditioned by the Laplacian, and the interaction between the variable coefficient and the evolving state is reconstructed through the short-time diffusion defect above. The result is proved in an abstract Dirichlet-space setting, with a concrete torus version in which the approximation parameters can be chosen independently of the dimension under the stated regularity assumptions.",
                 "Every parameter is determined by the analysis; nothing is trained.",
                 "There is also a numerical warning hidden in the proof. At very short diffusion times, the construction subtracts two nearly equal quantities. Mathematically this reveals a derivative; computationally it can amplify finite-precision error. The theorem therefore establishes approximation, but not yet an efficient numerical solver.",
               ],
-              preprint: true,
+              paper: "The first paper",
             },
             {
               id: "second",
-              title: "What the second paper asks",
+              title: "When the rules change",
               paragraphs: [
                 "The next question is whether the same construction survives a change of representation.",
                 "Suppose the diffusion operator changes slightly, or continuous space is replaced by a discrete grid. If we keep the architecture and its parameters fixed, do we still obtain essentially the same operator?",
@@ -657,20 +657,6 @@ const copy = {
                 "That means asking a different set of questions: can the theoretically prescribed diffusion times be replaced by optimized or learned ones? Can the architecture serve as a preconditioner rather than a standalone solver? Can it be combined with multilevel methods, finite elements or finite volumes? And, ultimately, can it compete with classical solvers in iteration count, runtime and robustness?",
                 "The long-term aim is therefore not to replace numerical analysis with a black-box neural model. It is almost the opposite: to see how far the structure of a learning architecture can be dictated by the PDE, its semigroup and its geometry — and then learn only what the analysis leaves open.",
               ],
-            },
-          ],
-          preprint: "Read the preprint (arXiv:2610.20106)",
-          workshopLabel: "In the workshop:",
-          workshopParts: [
-            {
-              title: "Can intelligence be built from heat?",
-              slug: "intelligence-from-heat",
-              part: "part 1",
-            },
-            {
-              title: "Does diffusion keep its character?",
-              slug: "does-diffusion-keep-its-character",
-              part: "part 2",
             },
           ],
           gradient: {
@@ -1416,19 +1402,19 @@ const copy = {
             },
             {
               id: "first",
-              title: "Co dowodzi pierwsza praca",
+              title: "Co było na początku",
               paragraphs: [
                 "Równanie Darcy’ego opisuje przepływ przez materiał, którego przepuszczalność zmienia się z miejsca na miejsce. Jego rozwiązanie zależy nie od skończonej listy liczb, lecz od całych funkcji: współczynnika opisującego materiał i wymuszenia.",
                 "Pierwsza praca pokazuje, że skończona konstrukcja złożona z warstw semigrupy ciepła i mnożenia punktowego może przybliżać cały operator rozwiązania równania Darcy’ego z dowolną zadaną dokładnością — całą regułę, która z opisu materiału i źródeł tworzy pole ciśnienia, a nie tylko jedno rozwiązanie dla jednego zestawu danych.",
-                "Dowód jest ilościowy. Architektura powstaje przez rozwinięcie w kolejne kroki iteracji Richardsona z preconditionerem opartym na Laplasjanie, a oddziaływanie zmiennego współczynnika z aktualnym stanem jest rekonstruowane za pomocą opisanego wyżej krótkoczasowego defektu dyfuzji. Wynik jest udowodniony w abstrakcyjnym środowisku przestrzeni Dirichleta, a dla torusa otrzymujemy konkretną wersję, w której — przy odpowiednich założeniach regularności — parametry aproksymacji można dobrać niezależnie od wymiaru.",
+                "Dowód jest ilościowy. Architektura powstaje przez rozwinięcie klasycznej metody iteracyjnej rozwiązywania równań (iteracji Richardsona) z preconditionerem opartym na Laplasjanie, a oddziaływanie zmiennego współczynnika z aktualnym stanem jest rekonstruowane za pomocą opisanego wyżej krótkoczasowego defektu dyfuzji. Wynik jest udowodniony w abstrakcyjnym środowisku przestrzeni Dirichleta, a dla torusa otrzymujemy konkretną wersję, w której — przy odpowiednich założeniach regularności — parametry aproksymacji można dobrać niezależnie od wymiaru.",
                 "Każdy parametr wynika z analizy; niczego nie trenujemy.",
                 "W dowodzie kryje się również ostrzeżenie numeryczne. Przy bardzo krótkich czasach dyfuzji konstrukcja odejmuje dwie prawie równe wielkości. Matematycznie ujawnia to pochodną, ale obliczeniowo może wzmacniać błędy skończonej precyzji. Twierdzenie daje więc wynik aproksymacyjny, ale jeszcze nie gotowy, efektywny solver numeryczny.",
               ],
-              preprint: true,
+              paper: "Pierwsza praca",
             },
             {
               id: "second",
-              title: "O co pyta druga praca",
+              title: "Gdy zmieniają się reguły",
               paragraphs: [
                 "Kolejne pytanie dotyczy tego, czy ta sama konstrukcja przetrwa zmianę reprezentacji problemu.",
                 "Załóżmy, że nieznacznie zmienimy operator odpowiedzialny za dyfuzję albo zastąpimy przestrzeń ciągłą dyskretną siatką. Jeśli pozostawimy architekturę i jej parametry bez zmian, czy nadal otrzymamy zasadniczo ten sam operator?",
@@ -1445,23 +1431,9 @@ const copy = {
                 "Pierwsze dwie prace sugerują, że odkryty mechanizm jest bardziej ogólny niż konkretne równanie Darcy’ego czy regularna siatka wykorzystana w drugiej analizie.",
                 "Następnym krokiem teoretycznym jest zrozumienie, które elementy tego mechanizmu przetrwają dla bardziej ogólnych dyskretyzacji i zmieniających się przestrzeni, bez korzystania z analizy Fouriera i dokładnej niezmienniczości względem przesunięć. Najtrudniejszym elementem przestaje być wtedy sama liniowa warstwa dyfuzyjna, a staje się transfer nieliniowych warstw mnożących i oddziaływań typu carré du champ.",
                 "Dopiero po zrozumieniu tej teorii chcę spróbować zamienić konstrukcję w praktyczną metodę numeryczną.",
-                "Wtedy pytania będą już inne: czy czasy dyfuzji wynikające z dowodu można zastąpić parametrami optymalizowanymi albo uczonymi? Czy architektura może działać jako preconditioner zamiast samodzielnego solvera? Czy da się połączyć ją z metodami wielopoziomowymi, elementami skończonymi albo metodami objętości skończonych? I wreszcie: czy może konkurować z klasycznymi solverami pod względem liczby iteracji, czasu obliczeń i odporności numerycznej?",
+                "Wtedy pytania będą już inne: czy czasy dyfuzji wynikające z dowodu można zastąpić parametrami optymalizowanymi albo uczonymi? Czy architektura może działać jako element przyspieszający klasyczny solver? Czy da się połączyć ją z metodami wielopoziomowymi, elementami skończonymi albo metodami objętości skończonych? I wreszcie: czy może konkurować z klasycznymi solverami pod względem liczby iteracji, czasu obliczeń i odporności numerycznej?",
                 "Długoterminowym celem nie jest więc zastąpienie analizy numerycznej czarną skrzynką neuronową. W pewnym sensie jest odwrotnie: chcę sprawdzić, jak dużą część architektury uczącej się można narzucić z góry poprzez PDE, jego semigrupę i geometrię — a uczyć tylko to, czego analiza nie potrafi już wyznaczyć.",
               ],
-            },
-          ],
-          preprint: "Preprint (arXiv:2610.20106)",
-          workshopLabel: "Na warsztacie:",
-          workshopParts: [
-            {
-              title: "Czy z ciepła można zbudować inteligencję?",
-              slug: "intelligence-from-heat",
-              part: "część 1",
-            },
-            {
-              title: "Czy dyfuzja zachowuje swój charakter?",
-              slug: "does-diffusion-keep-its-character",
-              part: "część 2",
             },
           ],
           gradient: {

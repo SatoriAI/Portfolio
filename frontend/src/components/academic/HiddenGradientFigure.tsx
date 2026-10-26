@@ -1,10 +1,15 @@
+import { useEffect, useRef, useState } from "react";
+
 import FigureFrame from "@/components/academic/FigureFrame";
 import { MathText } from "@/components/Formula";
 import { RangeInput } from "@/components/ui/range-input";
+import { useDemoRun } from "@/hooks/use-demo-run";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import {
   B,
   defect,
   evaluate,
+  GRADIENT_REST,
   gradientProduct,
   type GradientReading,
   gradientReading,
@@ -44,6 +49,8 @@ const WIDTH = 400;
 const INPUTS = { top: 8, bottom: 92 };
 const RESULT = { top: 8, bottom: 152 };
 const SAMPLES = 200;
+/** The slider's one run: long to short, then back to where the curves meet. */
+const DEMO = { from: 0, to: 1, durationMs: 2600, rest: GRADIENT_REST };
 
 const TARGET = gradientProduct();
 /** The result plot's scale: b′·u′'s largest value; the defect never exceeds it. */
@@ -87,21 +94,41 @@ const sentence = (labels: HiddenGradientLabels, position: number) => {
  * multiply. The difference, divided by 2t, is drawn over b′·u′ with the gap
  * between them shaded; as the diffusion time t shrinks the gap closes. Every
  * curve is computed exactly from the functions' Fourier modes (see
- * lib/hiddenGradient). Everything follows the slider, set beside the prose;
- * nothing moves on its own.
+ * lib/hiddenGradient). Everything follows the slider inside the frame, as in
+ * the other figures; the first time the figure is seen the slider runs once
+ * from the longest time to the shortest and back to where the curves meet,
+ * so the reader sees what it does before taking it. Under reduced motion it
+ * does not run and the figure opens where the curves meet.
  */
 const HiddenGradientFigure = ({
   labels,
-  position,
+  controls,
+  locale,
 }: {
   labels: HiddenGradientLabels;
-  position: number;
+  controls: HiddenGradientControlLabels;
+  /** The page's language, for the time's decimal separator. */
+  locale: string;
 }) => {
+  const [position, setPosition] = useState(0);
+  const demo = useDemoRun<HTMLElement>(setPosition, DEMO);
+  // The prerendered page cannot know the preference; once it is known, an
+  // untouched figure starts where the curves meet rather than where they part.
+  const reducedMotion = usePrefersReducedMotion();
+  // A position the reader chose stays theirs, whatever they ask of motion later.
+  const touched = useRef(false);
+  useEffect(() => {
+    if (reducedMotion && !touched.current) setPosition(GRADIENT_REST);
+  }, [reducedMotion]);
+  const time = new Intl.NumberFormat(locale, {
+    minimumSignificantDigits: 2,
+    maximumSignificantDigits: 2,
+  }).format(timeAt(position));
   const approximation = defect(timeAt(position));
   const reading = gradientReading(relativeGap(timeAt(position)));
   return (
     <FigureFrame kind="illustration" label={labels.label}>
-      <figure aria-label={labels.figure}>
+      <figure ref={demo.ref} aria-label={labels.figure}>
         <svg viewBox={`0 0 ${WIDTH} 100`} className="block h-auto w-full" aria-hidden="true">
           <line
             x1={0}
@@ -188,54 +215,34 @@ const HiddenGradientFigure = ({
           ))}
         </div>
 
+        <label className="mt-6 block">
+          <span className="font-mono text-meta tracking-wide text-foreground">
+            <MathText text={fillTemplate(controls.time, { t: time })} />
+          </span>
+          <RangeInput
+            aria-label={controls.timeName}
+            min={0}
+            max={1}
+            step={0.005}
+            value={position}
+            onChange={(event) => {
+              touched.current = true;
+              demo.stop();
+              setPosition(Number(event.target.value));
+            }}
+            valueText={`t = ${time}. ${sentence(labels, position)}`}
+          />
+          <span className="flex justify-between text-xs text-muted-foreground">
+            <span>{controls.longer}</span>
+            <span>{controls.shorter}</span>
+          </span>
+        </label>
+
         <figcaption className="mt-6 text-sm text-foreground/80">
           <MathText text={labels.caption} />
         </figcaption>
       </figure>
     </FigureFrame>
-  );
-};
-
-type ControlsProps = {
-  figureLabels: HiddenGradientLabels;
-  labels: HiddenGradientControlLabels;
-  /** The page's language, for the time's decimal separator. */
-  locale: string;
-  position: number;
-  onPositionChange: (position: number) => void;
-};
-
-/** The diffusion time, from long on the left to short on the right. */
-export const HiddenGradientControls = ({
-  figureLabels,
-  labels,
-  locale,
-  position,
-  onPositionChange,
-}: ControlsProps) => {
-  const time = new Intl.NumberFormat(locale, {
-    minimumSignificantDigits: 2,
-    maximumSignificantDigits: 2,
-  }).format(timeAt(position));
-  return (
-    <label className="block">
-      <span className="font-mono text-meta tracking-wide text-foreground">
-        <MathText text={fillTemplate(labels.time, { t: time })} />
-      </span>
-      <RangeInput
-        aria-label={labels.timeName}
-        min={0}
-        max={1}
-        step={0.005}
-        value={position}
-        onChange={(event) => onPositionChange(Number(event.target.value))}
-        valueText={`t = ${time}. ${sentence(figureLabels, position)}`}
-      />
-      <span className="flex justify-between text-xs text-muted-foreground">
-        <span>{labels.longer}</span>
-        <span>{labels.shorter}</span>
-      </span>
-    </label>
   );
 };
 
