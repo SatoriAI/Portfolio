@@ -7,6 +7,7 @@ import { workshopArticles } from "@/content/workshop";
 import { PAGES } from "@/pages/routes";
 
 import { pageMeta } from "./pageMeta";
+import { researchThreadPaths } from "./researchThreads";
 import {
   absoluteUrl,
   canonicalPath,
@@ -108,8 +109,9 @@ describe("the site's addresses", () => {
       [],
     );
     // A route with a parameter must be listed here, with how its addresses
-    // reach the server; /workshop/:slug from the published pieces.
-    const parameterRoutes = ["/workshop/:slug"];
+    // reach the server: /workshop/:slug from the published pieces,
+    // /research/:thread from the research threads (lib/researchThreads.ts).
+    const parameterRoutes = ["/workshop/:slug", "/research/:thread"];
     for (const { path } of PAGES) {
       expect(path.includes(":") ? parameterRoutes : known).toContain(path);
     }
@@ -165,5 +167,20 @@ describe("notFoundHtml", () => {
 
   it("refuses an index.html whose tags it cannot find", () => {
     expect(() => notFoundHtml("<html></html>")).toThrow();
+  });
+});
+
+describe("the research threads' pages", () => {
+  it("are each an address in both languages, with a head of its own", () => {
+    const addresses = pageAddresses(researchThreadPaths).map(({ address }) => address);
+    expect(addresses).toContain("/research/neural-operators");
+    expect(addresses).toContain("/pl/research/neural-operators");
+    for (const path of researchThreadPaths) {
+      const head = pageMeta(path, "pl", []);
+      expect(head.canonical).toBe(`https://www.dawidhanrahan.com/pl${path}`);
+      expect(head.title).toMatch(/ · Dawid Hanrahan$/);
+      expect(head.alternates).toHaveLength(3);
+    }
+    expect(pageMeta("/research/no-such-thread", "en", []).canonical).toBeNull();
   });
 });

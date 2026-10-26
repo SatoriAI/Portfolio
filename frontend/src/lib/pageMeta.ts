@@ -1,6 +1,7 @@
 import { translations } from "../utils/translations";
 
 import { DEFAULT_LANGUAGE, type Language, LANGUAGES, localizedPath } from "./locale";
+import { findThread, threadCopy } from "./researchThreads";
 import { absoluteUrl, canonicalPath } from "./siteMap";
 import { type ArticleHeader, articlesFor } from "./workshop";
 
@@ -58,6 +59,19 @@ export const pageMeta = (
     return {
       language,
       ...meta[key],
+      canonical: urlIn(language, page),
+      alternates: everyLanguage(page),
+    };
+  }
+
+  // A research thread's page, titled by the thread, its question for the description.
+  const thread = findThread(/^\/research\/([^/]+)$/.exec(page)?.[1]);
+  if (thread) {
+    const { title, lead } = threadCopy(translations[language], thread.slug);
+    return {
+      language,
+      title: `${title} · Dawid Hanrahan`,
+      description: lead,
       canonical: urlIn(language, page),
       alternates: everyLanguage(page),
     };
