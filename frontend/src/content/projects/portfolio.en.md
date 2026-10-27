@@ -107,7 +107,7 @@ One repository with two halves, each with its own toolchain, Dockerfile and Rail
 ## Running it in production
 
 - **Hosting.** Backend and frontend run as separate services in one Railway project, built from this repository.
-- **Backend.** Built from a Dockerfile. Migrations run before each deploy. Start-up: compile translations, `collectstatic`, then gunicorn with 2 workers and a 120 s timeout. Railway checks `/healthcheck/`.
+- **Backend.** Built from a Dockerfile. Migrations run before each deploy. Start-up: compile translations, `collectstatic`, then gunicorn with one worker of 16 threads and a 120 s timeout. Railway checks `/healthcheck/`.
 - **Frontend.** Multi-stage Node 24 build. The API address is baked in at build time, so changing it needs a rebuild. `serve` serves the bundle.
 - **Files.** Media goes to a private Railway bucket (Tigris), served through presigned URLs. Whitenoise serves static files.
 - **CI.** Four GitHub Actions workflows: three run only for the half that changed, backend (lint, type checks, tests on pgvector with an 85% coverage gate), frontend (format, test, lint, build) and hygiene (Lefthook); the fourth runs Vex's golden set against Claude. Coverage goes to Codecov.
