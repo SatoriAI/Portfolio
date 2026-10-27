@@ -107,7 +107,7 @@ Jedno repozytorium, dwie części. Każda ma własne narzędzia, Dockerfile i ko
 ## Działanie na produkcji
 
 - **Hosting.** Backend i frontend to osobne usługi w jednym projekcie Railway, budowane z tego repozytorium.
-- **Backend.** Budowany z Dockerfile. Przed wdrożeniem uruchamiane są migracje. Start: kompilacja tłumaczeń, `collectstatic`, potem gunicorn z 2 workerami i limitem 120 s. Railway sprawdza `/healthcheck/`.
+- **Backend.** Budowany z Dockerfile. Przed wdrożeniem uruchamiane są migracje. Start: kompilacja tłumaczeń, `collectstatic`, potem gunicorn z jednym workerem o 16 wątkach i limitem 120 s. Railway sprawdza `/healthcheck/`.
 - **Frontend.** Wieloetapowy build na Node 24. Adres API jest wpisywany przy budowaniu, więc jego zmiana wymaga przebudowy. Paczkę serwuje `serve`.
 - **Pliki.** Media trafiają do prywatnego bucketu Railway (Tigris) i są udostępniane przez podpisane adresy URL. Pliki statyczne serwuje Whitenoise.
 - **CI.** Cztery workflowy GitHub Actions: trzy uruchamiane tylko dla zmienionej części, backend (lint, typy, testy na pgvector z progiem pokrycia 85%), frontend (formatowanie, testy, lint, build) i higiena (Lefthook); czwarty uruchamia złoty zestaw pytań Vex na modelu Claude. Pokrycie trafia do Codecov.
