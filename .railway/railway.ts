@@ -27,13 +27,14 @@ export default defineRailway(() => {
     source: portfolio('backend'),
     build: dockerfile,
     // Collectstatic runs here rather than in the pre-deploy step, whose container's disk is
-    // gone before a request arrives.
+    // gone before a request arrives. One worker: the second held another ~150 MB for traffic
+    // eight threads already absorb.
     start: [
       "sh -c 'cd portfolio",
       '&& uv run --no-sync --no-dev python manage.py compilemessages',
       '&& uv run --no-sync --no-dev python manage.py collectstatic --no-input',
       '&& gunicorn portfolio.wsgi:application --bind 0.0.0.0:$PORT',
-      "--workers 2 --worker-class gthread --threads 8 --timeout 120 --preload'",
+      "--workers 1 --worker-class gthread --threads 8 --timeout 120 --preload'",
     ].join(' '),
     preDeploy: 'uv run --no-sync --no-dev python portfolio/manage.py migrate',
     healthcheck: '/healthcheck/',
