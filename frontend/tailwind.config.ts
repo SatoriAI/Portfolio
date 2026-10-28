@@ -15,6 +15,9 @@ export default {
   // paint), for markup that must be right before the script runs: a page's
   // HTML is rendered at build time, without a reader or a theme.
   darkMode: ["selector", '[data-theme="dark"]'],
+  // hover: only where the device can hover, so a tap does not leave a
+  // control looking pressed (the kit's rule for every hover state).
+  future: { hoverOnlyWhenSupported: true },
   theme: {
     extend: {
       colors: {

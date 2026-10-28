@@ -3,6 +3,7 @@ import {
   type KeyboardEvent,
   type PointerEvent,
   type RefObject,
+  useRef,
   useState,
 } from "react";
 
@@ -25,6 +26,9 @@ import { GROKKING_STEPS, type GuessPhase, nearestStep, STEP_MAX } from "@/lib/gr
  * handling; the chart draws it, and the plot draws the new examples in,
  * calling `drawn` when they are.
  */
+
+/** How far a finger must go sideways before its move is a drag, in px. */
+const TOUCH_SLOP = 8;
 
 /** The guess moves in half-thousands: finer than the measurements, no finer. */
 const GUESS_STEP = 500;
@@ -52,6 +56,8 @@ export function useGuessAndRead({
   // stays quiet, so the grade is heard first.
   const [moved, setMoved] = useState(false);
   const guessing = phase === "guess";
+  // Where a finger or pen came down, and whether it has since dragged sideways.
+  const touch = useRef<{ x: number; y: number; dragging: boolean } | null>(null);
 
   const drawn = () => setPhase("drawn");
 
@@ -77,13 +83,41 @@ export function useGuessAndRead({
   };
 
   const onPointer = (event: PointerEvent<HTMLDivElement>) => {
+    // A finger's press waits to be a tap (it lifts) or a drag across the
+    // plot (it goes sideways): a swipe up or down is the page scrolling past.
+    // The browser cancels that swipe, but only after its first move, so a
+    // move counts once it has gone clearly sideways from the press. A pen
+    // scrolls the page the same way. A mouse acts on its press, and so
+    // ignores a lift, which may end a drag begun elsewhere on the page.
+    if (event.pointerType === "mouse") {
+      if (event.type === "pointerup") return;
+    } else {
+      const start = touch.current;
+      if (event.type === "pointerdown") {
+        touch.current = { x: event.clientX, y: event.clientY, dragging: false };
+        return;
+      }
+      if (!start) return;
+      if (event.type === "pointerup") touch.current = null;
+      else if (!start.dragging) {
+        const across = Math.abs(event.clientX - start.x);
+        if (across < TOUCH_SLOP || across <= Math.abs(event.clientY - start.y)) return;
+        start.dragging = true;
+      }
+    }
     const bounds = event.currentTarget.getBoundingClientRect();
     const at = stepAt(event.clientX - bounds.left);
     if (guessing) {
       // A press or a drag moves the marker; a mouse only hovering leaves it.
       // The press captures the pointer, so the drag goes on off the plot.
       if (event.type === "pointerdown") event.currentTarget.setPointerCapture(event.pointerId);
-      if (event.type === "pointerdown" || event.buttons === 1) {
+      // A mouse drags only from a press on the plot, which holds its capture;
+      // one begun elsewhere on the page and carried over the plot does not.
+      const dragging =
+        event.pointerType === "mouse"
+          ? event.currentTarget.hasPointerCapture(event.pointerId)
+          : event.buttons === 1;
+      if (event.type !== "pointermove" || dragging) {
         setGuess(toGuess(at));
         setPicked(true);
       }
@@ -158,6 +192,11 @@ export function useGuessAndRead({
     plotHandlers: {
       onPointerMove: onPointer,
       onPointerDown: onPointer,
+      onPointerUp: onPointer,
+      // A swipe the page took for a scroll: the finger set nothing.
+      onPointerCancel: () => {
+        touch.current = null;
+      },
       onPointerLeave,
       onFocus,
       onBlur,

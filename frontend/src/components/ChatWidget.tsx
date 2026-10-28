@@ -12,7 +12,7 @@ import { EMAIL } from "@/config/contact";
 import { endpoints } from "@/config/endpoints";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useLatest } from "@/hooks/use-latest";
-import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { useMediaQuery, usePrefersReducedMotion } from "@/hooks/use-media-query";
 import { apiFetch } from "@/lib/apiClient";
 import { copyText } from "@/lib/clipboard";
 import { matchesMedia, MEDIA } from "@/lib/media";
@@ -132,6 +132,7 @@ const ChatWidget = ({
   const { language } = useSettings();
   const t = translations[language];
   const prefersReducedMotion = usePrefersReducedMotion();
+  const wideScreen = useMediaQuery(MEDIA.sm);
   const [chat, dispatch] = useReducer(chatReducer, initialChatState);
   const { messages } = chat;
   // A reply is in flight from the question until its stream ends.
@@ -531,7 +532,9 @@ const ChatWidget = ({
     >
       <SheetContent
         side="right"
-        lockScroll={false}
+        // Below sm the panel covers the page, so the page behind it holds
+        // still rather than scrolling under the reader's finger.
+        lockScroll={!wideScreen}
         closeLabel={t.common.close}
         // A side panel: the page behind stays readable and clickable, and a
         // click outside must not dismiss a conversation in progress.

@@ -1,19 +1,29 @@
 import { useEffect } from "react";
 
+// Locks held at once (the menu and Vex can both be open): the first saves
+// html's own overflow, the last puts it back, in whatever order they let go.
+let locks = 0;
+let saved = "";
+
 /**
- * Locks body scrolling while `active` is true, compensating for the scrollbar
- * width so the page does not shift sideways when the bar disappears.
+ * Locks page scrolling while `active` is true. The lock goes on html, the
+ * page's scroller: html clips its overflow (index.css), so body's overflow no
+ * longer reaches the viewport, and hidden on body would stop nothing. The
+ * scrollbar needs no stand-in: html keeps its gutter (scrollbar-gutter:
+ * stable), so nothing shifts when the bar goes.
  */
 export function useBodyScrollLock(active: boolean) {
   useEffect(() => {
     if (!active) return;
-    const { overflow, paddingRight } = document.body.style;
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = "hidden";
-    if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
+    const root = document.documentElement;
+    if (locks === 0) {
+      saved = root.style.overflow;
+      root.style.overflow = "hidden";
+    }
+    locks += 1;
     return () => {
-      document.body.style.overflow = overflow;
-      document.body.style.paddingRight = paddingRight;
+      locks -= 1;
+      if (locks === 0) root.style.overflow = saved;
     };
   }, [active]);
 }
