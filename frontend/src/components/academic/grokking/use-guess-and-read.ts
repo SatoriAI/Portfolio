@@ -56,7 +56,7 @@ export function useGuessAndRead({
   // stays quiet, so the grade is heard first.
   const [moved, setMoved] = useState(false);
   const guessing = phase === "guess";
-  // Where a finger came down, and whether it has since dragged sideways.
+  // Where a finger or pen came down, and whether it has since dragged sideways.
   const touch = useRef<{ x: number; y: number; dragging: boolean } | null>(null);
 
   const drawn = () => setPhase("drawn");
@@ -86,8 +86,12 @@ export function useGuessAndRead({
     // A finger's press waits to be a tap (it lifts) or a drag across the
     // plot (it goes sideways): a swipe up or down is the page scrolling past.
     // The browser cancels that swipe, but only after its first move, so a
-    // move counts once it has gone clearly sideways from the press.
-    if (event.pointerType === "touch") {
+    // move counts once it has gone clearly sideways from the press. A pen
+    // scrolls the page the same way. A mouse acts on its press, and so
+    // ignores a lift, which may end a drag begun elsewhere on the page.
+    if (event.pointerType === "mouse") {
+      if (event.type === "pointerup") return;
+    } else {
       const start = touch.current;
       if (event.type === "pointerdown") {
         touch.current = { x: event.clientX, y: event.clientY, dragging: false };
@@ -107,7 +111,13 @@ export function useGuessAndRead({
       // A press or a drag moves the marker; a mouse only hovering leaves it.
       // The press captures the pointer, so the drag goes on off the plot.
       if (event.type === "pointerdown") event.currentTarget.setPointerCapture(event.pointerId);
-      if (event.type !== "pointermove" || event.buttons === 1) {
+      // A mouse drags only from a press on the plot, which holds its capture;
+      // one begun elsewhere on the page and carried over the plot does not.
+      const dragging =
+        event.pointerType === "mouse"
+          ? event.currentTarget.hasPointerCapture(event.pointerId)
+          : event.buttons === 1;
+      if (event.type !== "pointermove" || dragging) {
         setGuess(toGuess(at));
         setPicked(true);
       }
