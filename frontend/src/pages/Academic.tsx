@@ -15,7 +15,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import type { UiPublication } from "@/lib/publicationsService";
 import { usePublications } from "@/lib/queries";
 import { RESEARCH_THREADS, threadCopy, threadForAnchor } from "@/lib/researchThreads";
-import { fillTemplate, formatCounter } from "@/lib/text";
+import { formatCounter } from "@/lib/text";
 import { translations } from "@/utils/translations";
 
 /** The index's two sections: the threads, then the papers. */
@@ -25,9 +25,8 @@ const eyebrow = (index: number) => formatCounter(index, SECTION_COUNT);
 /**
  * Research, as an index: one row per thread, each opening the thread's own
  * page, then the papers. The rows are read down one column, a still glimpse
- * of the thread's figure beside its status, title and question; the header
- * names how many papers there are and jumps to them, so the record is never
- * behind a long scroll. The degrees and the teaching have a page of their own.
+ * of the thread's figure beside its status, title and question. The degrees
+ * and the teaching have a page of their own.
  */
 const Academic = () => {
   const { language } = useSettings();
@@ -61,16 +60,6 @@ const Academic = () => {
     (a, b) => Number(isPreprint(a)) - Number(isPreprint(b)) || (b.year ?? 0) - (a.year ?? 0),
   );
   const paperByLink = new Map(publications.map((paper) => [paper.link, paper]));
-  // Journal articles and preprints counted apart, so the header never
-  // passes a preprint off as a publication.
-  const plural = new Intl.PluralRules(language);
-  const count = (forms: Record<string, string>, n: number) =>
-    fillTemplate(forms[plural.select(n)] ?? forms.other, { n });
-  const preprints = publications.filter(isPreprint).length;
-  const papersLink = [
-    count(threads.journalCount, publications.length - preprints),
-    count(threads.preprintCount, preprints),
-  ].join(" · ");
 
   const status = queryStatus([publicationsQuery], {
     loading: t.common.loading,
@@ -94,13 +83,6 @@ const Academic = () => {
           // under the lead that the band's padding already gives.
           className="mb-0 md:mb-0"
         />
-        {publications.length > 0 && (
-          <p className="relative mt-5 text-base md:text-body-lg">
-            <a href="#publications" className={LINK}>
-              {papersLink} ↓
-            </a>
-          </p>
-        )}
       </Section>
 
       {/* The threads, one row each: the glimpse in columns 1–4, the status,

@@ -765,18 +765,6 @@ const copy = {
         /** Before the papers a thread rests on. */
         papers: "Papers",
         noPapers: "none yet",
-        /**
-         * The header's way to the papers, journal articles and preprints counted
-         * apart, by each count's plural category, `{n}` filled.
-         */
-        journalCount: {
-          one: "{n} journal article",
-          other: "{n} journal articles",
-        } as Record<string, string>,
-        preprintCount: {
-          one: "{n} preprint",
-          other: "{n} preprints",
-        } as Record<string, string>,
         /** What kind of paper a thread's link names. */
         kinds: { journal: "journal", preprint: "preprint" },
         /** On a thread's page: back to the index, and on to the next thread. */
@@ -1567,22 +1555,6 @@ const copy = {
         /** Before the papers a thread rests on. */
         papers: "Prace",
         noPapers: "jeszcze brak",
-        /**
-         * The header's way to the papers, journal articles and preprints counted
-         * apart, by each count's plural category, `{n}` filled.
-         */
-        journalCount: {
-          one: "{n} artykuł w czasopiśmie",
-          few: "{n} artykuły w czasopismach",
-          many: "{n} artykułów w czasopismach",
-          other: "{n} artykułu w czasopismach",
-        } as Record<string, string>,
-        preprintCount: {
-          one: "{n} preprint",
-          few: "{n} preprinty",
-          many: "{n} preprintów",
-          other: "{n} preprintu",
-        } as Record<string, string>,
         /** What kind of paper a thread's link names. */
         kinds: { journal: "czasopismo", preprint: "preprint" },
         /** On a thread's page: back to the index, and on to the next thread. */
