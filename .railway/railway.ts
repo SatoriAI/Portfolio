@@ -27,16 +27,17 @@ export default defineRailway(() => {
     source: portfolio('backend'),
     build: dockerfile,
     // Collectstatic runs here rather than in the pre-deploy step, whose container's disk is
-    // gone before a request arrives. One worker, because a second preloaded Django held
-    // ~150 MB for traffic that never needed it. Sixteen threads, because a Vex answer streams
-    // for up to two minutes on one, and eight streams would otherwise starve every other
-    // request; a thread costs almost nothing beside a process.
+    // gone before a request arrives. One worker, because a second Django held ~150 MB for
+    // traffic that never needed it. Sixteen threads, because a Vex answer streams for up to
+    // two minutes on one, and eight streams would otherwise starve every other request; a
+    // thread costs almost nothing beside a process. No `--preload`: with one worker it only
+    // makes the master hold a second copy of the app (~40 MB) that nothing ever shares.
     start: [
       "sh -c 'cd portfolio",
       '&& uv run --no-sync --no-dev python manage.py compilemessages',
       '&& uv run --no-sync --no-dev python manage.py collectstatic --no-input',
       '&& gunicorn portfolio.wsgi:application --bind 0.0.0.0:$PORT',
-      "--workers 1 --worker-class gthread --threads 16 --timeout 120 --preload'",
+      "--workers 1 --worker-class gthread --threads 16 --timeout 120'",
     ].join(' '),
     preDeploy: 'uv run --no-sync --no-dev python portfolio/manage.py migrate',
     healthcheck: '/healthcheck/',
