@@ -3,9 +3,11 @@ import { type RefObject, useEffect } from "react";
 import { useLatest } from "@/hooks/use-latest";
 
 /**
- * While `active`, a press anywhere outside `ref`, or Escape, calls
+ * While `active`, a click anywhere outside `ref`, or Escape, calls
  * `onDismiss`: how a chosen filter lets go when the reader presses elsewhere
- * on the page. Escape inside a dialog is the dialog's own, to close it, and
+ * on the page. A click, not a press: on a phone every scroll begins as a
+ * press, and the reader scrolls on to read what the filter chose; a scroll
+ * ends without a click, a tap with one. Escape inside a dialog is the dialog's own, to close it, and
  * leaves the choice alone. The listeners exist only while there is something
  * to dismiss.
  */
@@ -19,17 +21,17 @@ export function useDismissOutside(
 
   useEffect(() => {
     if (!active) return;
-    const onPointerDown = (event: PointerEvent) => {
+    const onClick = (event: MouseEvent) => {
       if (!ref.current?.contains(event.target as Node)) dismiss.current();
     };
     const onKeyDown = (event: KeyboardEvent) => {
       const inDialog = (event.target as Element | null)?.closest?.('[role="dialog"]');
       if (event.key === "Escape" && !inDialog) dismiss.current();
     };
-    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("click", onClick);
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("click", onClick);
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [active, ref, dismiss]);
