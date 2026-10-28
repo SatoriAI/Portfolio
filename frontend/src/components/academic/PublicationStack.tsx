@@ -112,9 +112,10 @@ const Sheet = ({ publication, labels, summary, activation, glyphDelayMs = 0 }: S
   return (
     <article className="grid gap-6 md:grid-cols-[96px_minmax(0,1fr)] md:gap-10">
       {details && <Stamp status={details.status} label={labels.status[details.status]} />}
-      {/* The glyph, and under it the way to the paper. Venue and year are on
-          the tab above, so the sheet does not repeat them. */}
-      <div className="flex w-fit flex-col items-center gap-4">
+      {/* The glyph, and under it the way to the paper, centred beside the
+          text from md. Venue and year are on the tab above, so the sheet
+          does not repeat them. */}
+      <div className="flex w-fit flex-col items-center gap-4 md:self-center">
         {domain ? (
           <DomainGlyph
             key={activation}
