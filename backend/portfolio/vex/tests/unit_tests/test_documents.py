@@ -1,5 +1,7 @@
 import importlib
 import shutil
+import subprocess  # nosec B404 - runs this interpreter on a fixed script
+import sys
 import tempfile
 from io import StringIO
 from types import SimpleNamespace
@@ -7,6 +9,7 @@ from unittest.mock import patch
 
 import pymupdf
 from django.apps import apps
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -59,6 +62,15 @@ class ExtractTextTestCase(TestCase):
         for name, data in (("broken.pdf", b"not a pdf"), ("scan.pdf", pdf_bytes("")), ("empty.txt", b"  \n")):
             with self.subTest(name=name), self.assertRaises(UnreadableDocument):
                 extract_text(name, data)
+
+    def test_loading_the_admin_does_not_load_pymupdf(self) -> None:
+        # PyMuPDF is 83 MB resident, a third of the process, and only a PDF upload needs it. This suite has already
+        # imported it, so the check runs in a fresh interpreter that loads Django and the admin the way a worker does.
+        script = "import sys, django; django.setup(); import vex.admin; print('pymupdf' in sys.modules)"
+        result = subprocess.run(  # nosec B603 - no shell, fixed arguments
+            [sys.executable, "-c", script], cwd=settings.BASE_DIR, capture_output=True, text=True, check=True
+        )
+        self.assertEqual(result.stdout.strip(), "False")
 
 
 class DocumentAdminTestCase(MediaRootMixin):
