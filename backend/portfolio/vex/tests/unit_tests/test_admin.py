@@ -32,3 +32,7 @@ class MessageAdminTestCase(TestCase):
         self.assertEqual(resp.status_code, 302)
         self.assertFalse(Conversation.objects.exists())
         self.assertFalse(Message.objects.exists())
+
+    def test_a_conversation_opens_with_its_messages(self) -> None:
+        resp = self.client.get(reverse("admin:vex_conversation_change", args=[self.conversation.pk]))
+        self.assertContains(resp, "Hi")

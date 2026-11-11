@@ -31,6 +31,11 @@ class MessageInline(admin.TabularInline):
     readonly_fields = fields
     extra = 0
 
+    def has_add_permission(self, request: HttpRequest, obj: Conversation | None = None) -> bool:
+        """Messages come from Vex, not the admin. A blank row to add one would also be rendered from an unsaved
+        message, whose db_default fields hold no value yet, and the read-only display of them fails."""
+        return False
+
 
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
