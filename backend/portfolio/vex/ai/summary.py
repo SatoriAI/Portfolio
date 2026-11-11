@@ -63,7 +63,6 @@ def summarise(conversation: Conversation) -> str:
     failure = "the call raised"
     text = ""
     prompt = transcript(conversation)
-    attempts = 1
     try:
         text = provider.complete(SYSTEM, prompt, usage=usage, max_tokens=MAX_TOKENS)
         if usage.finish_reason == "max_tokens":
@@ -78,20 +77,14 @@ def summarise(conversation: Conversation) -> str:
         if isinstance(exc, APITimeoutError):
             # Sent, and maybe answered and billed before the wait ran out, on every attempt the client made. Without
             # streaming nothing was reported, so each attempt is counted at its whole prompt, estimated from its
-            # length, and at the most it could write (vex.ai.engine.record_usage): the budget errs high.
+            # length, and at the most it could write: the budget errs high.
             attempts = provider.MAX_RETRIES + 1
             usage.model = settings.VEX_MODEL
             usage.input_tokens = estimate_tokens(SYSTEM + prompt) * attempts
+            usage.output_tokens = MAX_TOKENS * attempts
         failure = f"{type(exc).__name__}: {exc}"
     finally:
-        record_usage(
-            conversation,
-            usage,
-            outcome,
-            purpose=Purposes.SUMMARY,
-            prompt_version=SUMMARY_PROMPT_VERSION,
-            max_output_tokens=MAX_TOKENS * attempts,
-        )
+        record_usage(conversation, usage, outcome, purpose=Purposes.SUMMARY, prompt_version=SUMMARY_PROMPT_VERSION)
         # Marked here, so an error nobody foresaw sends the conversation to the back of the queue as well.
         if failure:
             Conversation.objects.filter(pk=conversation.pk).update(summary_failed=True)
