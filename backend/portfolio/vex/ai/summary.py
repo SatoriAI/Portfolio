@@ -33,6 +33,12 @@ class Unsummarised(Exception):
     """No summary was written: the model declined, failed or returned no text. The call is recorded all the same."""
 
 
+def estimate_tokens(text: str) -> int:
+    """More tokens than `text` is likely to hold: about four characters make a token in English and fewer in
+    Polish, so three a token errs high in both."""
+    return len(text) // 3 + 1
+
+
 def transcript(conversation: Conversation) -> str:
     lines = (
         f"{SPEAKERS[message.role]}: {message.content}"
@@ -56,8 +62,10 @@ def summarise(conversation: Conversation) -> str:
     outcome = Outcomes.FAILED
     failure = "the call raised"
     text = ""
+    prompt = transcript(conversation)
+    attempts = 1
     try:
-        text = provider.complete(SYSTEM, transcript(conversation), usage=usage, max_tokens=MAX_TOKENS)
+        text = provider.complete(SYSTEM, prompt, usage=usage, max_tokens=MAX_TOKENS)
         if usage.finish_reason == "max_tokens":
             failure = f"{usage.model} ran out of tokens at {MAX_TOKENS}"
         elif not text.strip():
@@ -68,14 +76,26 @@ def summarise(conversation: Conversation) -> str:
         failure = str(exc)
     except APIError as exc:
         if isinstance(exc, APITimeoutError):
-            # Sent, and maybe answered and billed before the wait ran out: naming the model has it counted at the
-            # most an answer can cost, as one cut short is (vex.ai.engine.record_usage), so the budget errs high.
+            # Sent, and maybe answered and billed before the wait ran out, on every attempt the client made. Without
+            # streaming nothing was reported, so each attempt is counted at its whole prompt, estimated from its
+            # length, and at the most it could write (vex.ai.engine.record_usage): the budget errs high.
+            attempts = provider.MAX_RETRIES + 1
             usage.model = settings.VEX_MODEL
+            usage.input_tokens = estimate_tokens(SYSTEM + prompt) * attempts
         failure = f"{type(exc).__name__}: {exc}"
     finally:
-        record_usage(conversation, usage, outcome, purpose=Purposes.SUMMARY, prompt_version=SUMMARY_PROMPT_VERSION)
+        record_usage(
+            conversation,
+            usage,
+            outcome,
+            purpose=Purposes.SUMMARY,
+            prompt_version=SUMMARY_PROMPT_VERSION,
+            max_output_tokens=MAX_TOKENS * attempts,
+        )
+        # Marked here, so an error nobody foresaw sends the conversation to the back of the queue as well.
+        if failure:
+            Conversation.objects.filter(pk=conversation.pk).update(summary_failed=True)
     if failure:
-        Conversation.objects.filter(pk=conversation.pk).update(summary_failed=True)
         raise Unsummarised(failure)
     line = " ".join(text.split())
     summary = line if len(line) <= 200 else f"{line[:199]}…"

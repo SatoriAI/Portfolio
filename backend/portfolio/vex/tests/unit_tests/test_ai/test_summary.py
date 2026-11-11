@@ -4,10 +4,19 @@ from unittest.mock import patch
 
 import anthropic
 import httpx2
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from vex.ai import provider, spend
-from vex.ai.summary import SUMMARY_PROMPT_VERSION, Unsummarised, needing_summary, summarise, transcript
+from vex.ai.summary import (
+    MAX_TOKENS,
+    SUMMARY_PROMPT_VERSION,
+    SYSTEM,
+    Unsummarised,
+    estimate_tokens,
+    needing_summary,
+    summarise,
+    transcript,
+)
 from vex.choices import Outcomes, Purposes, Roles
 from vex.models import Conversation, Usage
 from vex.tests.factories import ConversationFactory, MessageFactory
@@ -83,21 +92,37 @@ class SummariseTestCase(TestCase):
                     summarise(self.conversation)
                 saved = Conversation.objects.get(pk=self.conversation.pk)
                 self.assertEqual((saved.summary, saved.summary_failed), ("", True))
+                self.assertEqual(saved.updated_at, self.conversation.updated_at)
                 self.assertEqual(Usage.objects.get().outcome, outcome)
 
-    def test_a_call_that_timed_out_is_counted_at_the_most_it_can_cost(self) -> None:
-        # A refused connection was never billed; a request that timed out may have been, and is counted high.
-        for error, billed in (
-            (anthropic.APIConnectionError(request=REQUEST), False),
-            (anthropic.APITimeoutError(request=REQUEST), True),
-        ):
-            with self.subTest(type(error).__name__):
-                Usage.objects.all().delete()
-                with patch("vex.ai.summary.provider.complete", side_effect=error), self.assertRaises(Unsummarised):
-                    summarise(self.conversation)
-                usage = Usage.objects.get()
-                self.assertEqual(usage.output_tokens > 0, billed)
-                self.assertEqual(usage.cost > 0, billed)
+    def test_an_error_nobody_foresaw_is_recorded_marked_and_raised(self) -> None:
+        with patch("vex.ai.summary.provider.complete", side_effect=AttributeError("odd reply")):
+            with self.assertRaises(AttributeError):
+                summarise(self.conversation)
+        self.assertTrue(Conversation.objects.get(pk=self.conversation.pk).summary_failed)
+        self.assertEqual(Usage.objects.get().outcome, Outcomes.FAILED)
+
+    def test_a_refused_connection_costs_nothing(self) -> None:
+        error = anthropic.APIConnectionError(request=REQUEST)
+        with patch("vex.ai.summary.provider.complete", side_effect=error), self.assertRaises(Unsummarised):
+            summarise(self.conversation)
+        usage = Usage.objects.get()
+        self.assertEqual((usage.input_tokens, usage.output_tokens, usage.cost), (0, 0, Decimal(0)))
+
+    @override_settings(VEX_MODEL="claude-opus-5-5", VEX_PRICES={"claude-opus-5-5": (4.00, 0.20, 5.00, 20.00)})
+    def test_a_call_that_timed_out_is_counted_whole_on_every_attempt(self) -> None:
+        # Sent, and maybe billed, once for each attempt the client made; nothing was reported, so all is estimated.
+        MessageFactory(conversation=self.conversation, role=Roles.USER, content="A long question. " * 3000)
+        error = anthropic.APITimeoutError(request=REQUEST)
+        with patch("vex.ai.summary.provider.complete", side_effect=error), self.assertRaises(Unsummarised):
+            summarise(self.conversation)
+        usage = Usage.objects.get()
+        attempts = provider.MAX_RETRIES + 1
+        prompt = estimate_tokens(SYSTEM + transcript(self.conversation))
+        self.assertGreater(prompt, 15_000)  # chars / 3 for ~51k characters
+        self.assertTrue(usage.estimated)
+        self.assertEqual((usage.input_tokens, usage.output_tokens), (prompt * attempts, MAX_TOKENS * attempts))
+        self.assertEqual(usage.cost, (Decimal(prompt) * 4 + MAX_TOKENS * 20) * attempts / 1_000_000)
 
 
 class NeedingSummaryTestCase(TestCase):

@@ -101,6 +101,7 @@ class ConversationAdmin(admin.ModelAdmin):
     search_fields = ("summary", "messages__content", "session")
     readonly_fields = (
         "summary",
+        "summary_failed",
         "session",
         "total_cost",
         "created_at",
@@ -169,6 +170,10 @@ class ConversationAdmin(admin.ModelAdmin):
                 break
             except Unsummarised as error:
                 logger.warning("Vex could not summarise conversation %d: %s", conversation.pk, error)
+                failed += 1
+            except Exception:  # pylint: disable=broad-exception-caught
+                # One conversation's surprise is no reason to lose the rest of the run; it is recorded and marked.
+                logger.exception("Vex failed unexpectedly summarising conversation %d", conversation.pk)
                 failed += 1
         left = len(pending) - done - failed
         self.message_user(

@@ -91,14 +91,16 @@ def record_usage(
     *,
     purpose: str = Purposes.ANSWER,
     prompt_version: str = PROMPT_VERSION,
+    max_output_tokens: int | None = None,
 ) -> None:
     """Writes what one call cost. A call that never opened a stream (a rejected key, a rate limit, an overloaded or
     unreachable API) is not billed, and costs nothing here. On one cut short after it opened, the provider reported
     the prompt's counts as the stream opened, but never the answer's. The model thinks before and between what it
     writes, unseen and billed as output, so the text received says little about the output paid for: it is counted at
-    VEX_MAX_OUTPUT_TOKENS, the most it can be, so the budget errs towards resting early."""
+    VEX_MAX_OUTPUT_TOKENS, the most it can be, so the budget errs towards resting early; `max_output_tokens` is that
+    most for a call with a cap of its own."""
     if not usage.reported and usage.model:
-        usage.output_tokens = settings.VEX_MAX_OUTPUT_TOKENS
+        usage.output_tokens = max_output_tokens or settings.VEX_MAX_OUTPUT_TOKENS
     record = UsageRecord.objects.create(
         conversation=conversation,
         model=usage.model or settings.VEX_MODEL,

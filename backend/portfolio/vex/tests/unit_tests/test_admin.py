@@ -72,6 +72,8 @@ class ConversationAdminTestCase(TestCase):
     def test_a_conversation_opens_with_its_messages(self) -> None:
         resp = self.client.get(reverse("admin:vex_conversation_change", args=[self.conversation.pk]))
         self.assertContains(resp, "Hi")
+        self.assertContains(resp, "Summary failed")  # the only sign of a failed summary outside the logs
+        self.assertNotContains(resp, 'name="summary_failed"')  # shown, not set by hand
 
     def test_a_conversation_shows_its_usage_and_what_it_cost(self) -> None:
         resp = self.client.get(reverse("admin:vex_conversation_change", args=[self.conversation.pk]))
@@ -124,13 +126,16 @@ class ConversationSummaryAdminTestCase(TestCase):
         self.assertContains(resp, ">Student asking about teaching</span> (+)</span>")  # messages came after it
 
     def test_a_long_line_is_whole_on_hover_and_escaped(self) -> None:
-        question = "Can you <b>tell</b> me " + "about Dawid's research " * 40
+        question = 'Can you <b>tell</b> me" onmouseover="alert(1) ' + "about Dawid's research " * 40
         self.conversation(question)
         resp = self.client.get(self.url)
-        escaped = question.strip().replace("<", "&lt;").replace(">", "&gt;").replace("'", "&#x27;")
+        escaped = (
+            question.strip().replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;").replace("'", "&#x27;")
+        )
         self.assertContains(resp, f'title="{escaped}"')
         self.assertContains(resp, "text-overflow: ellipsis")
         self.assertNotContains(resp, "<b>tell</b>")
+        self.assertNotContains(resp, '" onmouseover="')
 
     def test_the_list_is_searched_by_what_was_said(self) -> None:
         self.conversation("Tell me about heat kernels")
@@ -160,6 +165,9 @@ class ConversationSummaryAdminTestCase(TestCase):
             summarise.side_effect = [None, Unsummarised("declined")]
             resp = self.summarise(*conversations)
         self.assertContains(resp, "Summarised 1, 1 failed, 1 left to summarise.")
+        with patch("vex.admin.summarise", side_effect=[None, RuntimeError("surprise"), None]):
+            resp = self.summarise(*conversations)
+        self.assertContains(resp, "Summarised 2, 1 failed, 0 left to summarise.")  # the run went on past it
         with patch("vex.admin.summarise", side_effect=spend.Resting("spent")):
             resp = self.summarise(*conversations)
         self.assertContains(resp, "budget is spent")
