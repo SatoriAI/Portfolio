@@ -18,7 +18,7 @@ class ConversationAdminTestCase(TestCase):
     def setUp(self) -> None:
         self.client.force_login(get_user_model().objects.create_superuser("admin", "admin@example.com", "pw"))
         self.conversation = Conversation.objects.create(session="s" * 32)
-        Message.objects.create(conversation=self.conversation, role=Roles.ASSISTANT, content="Hi")
+        self.message = Message.objects.create(conversation=self.conversation, role=Roles.ASSISTANT, content="Hi")
         Usage.objects.create(
             conversation=self.conversation,
             model="claude-opus-5-5",
@@ -36,6 +36,25 @@ class ConversationAdminTestCase(TestCase):
         for name in ("admin:vex_message_changelist", "admin:vex_usage_changelist"):
             with self.assertRaises(NoReverseMatch):
                 reverse(name)
+
+    def test_a_message_cannot_be_deleted_from_its_conversation(self) -> None:
+        url = reverse("admin:vex_conversation_change", args=[self.conversation.pk])
+        self.assertNotContains(self.client.get(url), "messages-0-DELETE")
+        self.client.post(
+            url,
+            {
+                "messages-TOTAL_FORMS": "1",
+                "messages-INITIAL_FORMS": "1",
+                "messages-0-id": str(self.message.pk),
+                "messages-0-conversation": str(self.conversation.pk),
+                "messages-0-DELETE": "on",
+                "usage-TOTAL_FORMS": "1",
+                "usage-INITIAL_FORMS": "1",
+                "usage-0-id": str(Usage.objects.get().pk),
+                "usage-0-conversation": str(self.conversation.pk),
+            },
+        )
+        self.assertTrue(Message.objects.filter(pk=self.message.pk).exists())
 
     def test_a_conversation_is_deleted_with_its_messages(self) -> None:
         url = reverse("admin:vex_conversation_delete", args=[self.conversation.pk])

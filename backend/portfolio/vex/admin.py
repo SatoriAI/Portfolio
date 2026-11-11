@@ -29,6 +29,7 @@ class MessageInline(admin.TabularInline):
     )
     readonly_fields = fields
     extra = 0
+    can_delete = False  # a message goes only with its conversation, and its visitor's rating with it
 
     def has_add_permission(self, request: HttpRequest, obj: Conversation | None = None) -> bool:
         """Messages come from Vex, not the admin. A blank row to add one would also be rendered from an unsaved
@@ -54,6 +55,7 @@ class UsageInline(admin.TabularInline):
         "cost",
     )
     readonly_fields = fields
+    ordering = ("created_at",)
     extra = 0
     can_delete = False
 
