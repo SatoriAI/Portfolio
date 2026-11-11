@@ -289,7 +289,6 @@ class StreamCompletionTestCase(SimpleTestCase):
         self.assertLess(time.monotonic() - started, 2)
 
 
-@override_settings(VEX_MODEL="claude-opus-5-5", VEX_PRICES={"claude-opus-5-5": (4.00, 0.20, 5.00, 20.00)})
 @override_settings(VEX_MODEL="claude-opus-5-5", VEX_REASONING_EFFORT="low")
 class CompleteTestCase(SimpleTestCase):
     def test_returns_the_whole_reply_and_reads_its_usage(self) -> None:
@@ -314,6 +313,7 @@ class CompleteTestCase(SimpleTestCase):
         self.assertTrue(usage.reported)
 
 
+@override_settings(VEX_MODEL="claude-opus-5-5", VEX_PRICES={"claude-opus-5-5": (4.00, 0.20, 5.00, 20.00)})
 class UsageCostTestCase(SimpleTestCase):
     def test_fresh_cached_and_written_input_and_output_each_at_their_price(self) -> None:
         usage = Usage(

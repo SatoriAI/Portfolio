@@ -1,3 +1,4 @@
+import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from django import forms
@@ -13,6 +14,8 @@ from vex.ai.summary import Unsummarised, needing_summary, summarise
 from vex.choices import Purposes, Roles
 from vex.models import Configuration, Conversation, Document, Message, Usage
 from vex.utils.document_text import UnreadableDocument, extract_text
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from django_stubs_ext import WithAnnotations
@@ -141,7 +144,7 @@ class ConversationAdmin(admin.ModelAdmin):
     def summarise_conversations(self, request: HttpRequest, queryset: QuerySet[Conversation]) -> None:
         """Summarises those with no summary, or one written before their latest messages, up to SUMMARISE_PER_RUN."""
         selected = Conversation.objects.filter(pk__in=queryset.values("pk"))
-        pending = list(needing_summary(selected).order_by("pk"))
+        pending = list(needing_summary(selected))
         done = failed = 0
         for conversation in pending[: self.SUMMARISE_PER_RUN]:
             try:
@@ -152,7 +155,8 @@ class ConversationAdmin(admin.ModelAdmin):
                     request, _("Today's budget is spent: nothing more is summarised today."), messages.ERROR
                 )
                 break
-            except Unsummarised:
+            except Unsummarised as error:
+                logger.warning("Vex could not summarise conversation %d: %s", conversation.pk, error)
                 failed += 1
         left = len(pending) - done - failed
         self.message_user(

@@ -14,6 +14,8 @@ class Conversation(TimestampedModel):
     # how many messages it had then: once it has more, the summary is behind and is written again on the next request.
     summary = models.CharField(_("Summary"), max_length=200, blank=True, db_default="")
     summarised_messages = models.PositiveIntegerField(_("Messages summarised"), db_default=0)
+    # Whether the last attempt at a summary failed (a decline, an error, no text), so the next attempts go to others.
+    summary_failed = models.BooleanField(_("Summary failed"), db_default=False)
 
     def __str__(self) -> str:
         return f"{_('Conversation')}: {self.session}"

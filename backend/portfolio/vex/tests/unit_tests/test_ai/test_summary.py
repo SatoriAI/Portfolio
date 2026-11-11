@@ -2,6 +2,8 @@ from decimal import Decimal
 from typing import Any
 from unittest.mock import patch
 
+import anthropic
+import httpx2
 from django.test import TestCase
 
 from vex.ai import provider, spend
@@ -11,15 +13,18 @@ from vex.models import Conversation, Usage
 from vex.tests.factories import ConversationFactory, MessageFactory
 
 
-def replying(text: str) -> Any:
+def replying(text: str, finish_reason: str = "end_turn") -> Any:
     """A stand-in for provider.complete that bills a small call and returns `text`."""
 
     def complete(_system: str, _prompt: str, *, usage: provider.Usage, **_options: int) -> str:
         usage.model, usage.input_tokens, usage.output_tokens, usage.reported = "claude-opus-5-5", 400, 20, True
-        usage.finish_reason = "end_turn"
+        usage.finish_reason = finish_reason
         return text
 
     return complete
+
+
+REQUEST = httpx2.Request("POST", "https://api.anthropic.com/v1/messages")
 
 
 class SummariseTestCase(TestCase):
@@ -43,7 +48,7 @@ class SummariseTestCase(TestCase):
             summary = summarise(self.conversation)
         self.assertEqual(summary, "Recruiter asking about Django roles")
         saved = Conversation.objects.get(pk=self.conversation.pk)
-        self.assertEqual((saved.summary, saved.summarised_messages), (summary, 2))
+        self.assertEqual((saved.summary, saved.summarised_messages, saved.summary_failed), (summary, 2, False))
         self.assertEqual(saved.updated_at, updated_at)  # retention reads it as the visitor's last activity
         usage = Usage.objects.get()
         self.assertEqual((usage.purpose, usage.outcome), (Purposes.SUMMARY, Outcomes.ANSWERED))
@@ -64,17 +69,35 @@ class SummariseTestCase(TestCase):
         complete.assert_not_called()
         self.assertFalse(Usage.objects.exists())
 
-    def test_a_decline_or_an_empty_reply_saves_no_summary_but_records_the_call(self) -> None:
-        for reply, outcome in (
-            ({"side_effect": provider.Refused("declined")}, Outcomes.FAILED),
-            ({"side_effect": replying("  ")}, Outcomes.EMPTY),
+    def test_a_failed_attempt_saves_no_summary_marks_it_and_records_the_call(self) -> None:
+        for name, reply, outcome in (
+            ("declined", {"side_effect": provider.Refused("declined")}, Outcomes.FAILED),
+            ("empty", {"side_effect": replying("  ")}, Outcomes.EMPTY),
+            ("cut off", {"side_effect": replying("Recruiter asking about", "max_tokens")}, Outcomes.FAILED),
+            ("failed", {"side_effect": anthropic.APIConnectionError(request=REQUEST)}, Outcomes.FAILED),
         ):
-            with self.subTest(outcome=outcome):
+            with self.subTest(name):
                 Usage.objects.all().delete()
+                Conversation.objects.filter(pk=self.conversation.pk).update(summary_failed=False)
                 with patch("vex.ai.summary.provider.complete", **reply), self.assertRaises(Unsummarised):
                     summarise(self.conversation)
-                self.assertEqual(Conversation.objects.get(pk=self.conversation.pk).summary, "")
+                saved = Conversation.objects.get(pk=self.conversation.pk)
+                self.assertEqual((saved.summary, saved.summary_failed), ("", True))
                 self.assertEqual(Usage.objects.get().outcome, outcome)
+
+    def test_a_call_that_timed_out_is_counted_at_the_most_it_can_cost(self) -> None:
+        # A refused connection was never billed; a request that timed out may have been, and is counted high.
+        for error, billed in (
+            (anthropic.APIConnectionError(request=REQUEST), False),
+            (anthropic.APITimeoutError(request=REQUEST), True),
+        ):
+            with self.subTest(type(error).__name__):
+                Usage.objects.all().delete()
+                with patch("vex.ai.summary.provider.complete", side_effect=error), self.assertRaises(Unsummarised):
+                    summarise(self.conversation)
+                usage = Usage.objects.get()
+                self.assertEqual(usage.output_tokens > 0, billed)
+                self.assertEqual(usage.cost > 0, billed)
 
 
 class NeedingSummaryTestCase(TestCase):
@@ -86,3 +109,10 @@ class NeedingSummaryTestCase(TestCase):
         Conversation.objects.filter(pk=behind.pk).update(summary="Old", summarised_messages=1)
         Conversation.objects.filter(pk=current.pk).update(summary="Current", summarised_messages=2)
         self.assertCountEqual(needing_summary(Conversation.objects.all()), [unsummarised, behind])
+
+    def test_those_that_failed_last_time_come_last(self) -> None:
+        failed, untried = ConversationFactory(), ConversationFactory()
+        for conversation in (failed, untried):
+            MessageFactory(conversation=conversation)
+        Conversation.objects.filter(pk=failed.pk).update(summary_failed=True)
+        self.assertEqual(list(needing_summary(Conversation.objects.all())), [untried, failed])
