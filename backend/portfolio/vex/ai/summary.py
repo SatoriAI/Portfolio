@@ -4,6 +4,7 @@ on request in the admin, never while a visitor waits, and counted towards the da
 from anthropic import APIError, APITimeoutError
 from django.conf import settings
 from django.db.models import Count, F, QuerySet
+from django.utils import timezone
 
 from vex.ai import provider, spend
 from vex.ai.engine import record_usage
@@ -89,24 +90,26 @@ def summarise(conversation: Conversation) -> str:
         record_usage(conversation, usage, outcome, purpose=Purposes.SUMMARY, prompt_version=SUMMARY_PROMPT_VERSION)
         # Marked here, so an error nobody foresaw sends the conversation to the back of the queue as well.
         if failure:
-            Conversation.objects.filter(pk=conversation.pk).update(summary_failed=True)
+            Conversation.objects.filter(pk=conversation.pk).update(
+                summary_failed=True, summary_attempted_at=timezone.now()
+            )
     if failure:
         raise Unsummarised(failure)
     line = " ".join(text.split())
     summary = line if len(line) <= 200 else f"{line[:199]}…"
     Conversation.objects.filter(pk=conversation.pk).update(
-        summary=summary, summarised_messages=count, summary_failed=False
+        summary=summary, summarised_messages=count, summary_failed=False, summary_attempted_at=timezone.now()
     )
     conversation.summary, conversation.summarised_messages, conversation.summary_failed = summary, count, False
     return summary
 
 
-def needing_summary(conversations: QuerySet[Conversation]) -> QuerySet[Conversation]:
-    """Those with messages and no summary, or a summary written before their latest messages; the ones whose last
-    attempt failed come last, so a few that always fail cannot take every run's turn."""
+def to_summarise(conversations: QuerySet[Conversation]) -> QuerySet[Conversation]:
+    """Those with messages, whether or not they have a summary: asked again, the action writes a fresh one. Never tried
+    first, then the one tried longest ago, so runs over more than one run can do go round them all, and a few that
+    always fail cannot take every run's turn."""
     return (
         conversations.annotate(message_count=Count("messages"))
         .filter(message_count__gt=0)
-        .exclude(summary__gt="", summarised_messages=F("message_count"))
-        .order_by("summary_failed", "pk")
+        .order_by(F("summary_attempted_at").asc(nulls_first=True), "pk")
     )

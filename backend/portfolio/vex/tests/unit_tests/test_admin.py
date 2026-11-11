@@ -165,13 +165,13 @@ class ConversationSummaryAdminTestCase(TestCase):
             follow=True,
         )
 
-    def test_the_action_summarises_those_that_need_it(self) -> None:
+    def test_the_action_writes_a_fresh_summary_even_of_a_current_one(self) -> None:
         current = self.conversation("Hi", summary="Current", summarised_messages=2)
-        pending = self.conversation("Who is Dawid?")
+        unsummarised = self.conversation("Who is Dawid?")
         with patch("vex.admin.summarise") as summarise:
-            resp = self.summarise(current, pending)
-        summarise.assert_called_once_with(pending)
-        self.assertContains(resp, "Summarised 1, 0 failed, 0 left to summarise.")
+            resp = self.summarise(current, unsummarised)
+        self.assertCountEqual([call.args[0] for call in summarise.call_args_list], [current, unsummarised])
+        self.assertContains(resp, "Summarised 2, 0 failed, 0 left to summarise.")
 
     def test_the_action_stops_at_its_limit_and_on_a_spent_budget(self) -> None:
         conversations = [self.conversation(f"Question {i}") for i in range(3)]

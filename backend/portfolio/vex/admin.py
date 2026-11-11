@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 
 from vex.ai import spend
-from vex.ai.summary import Unsummarised, needing_summary, summarise
+from vex.ai.summary import Unsummarised, summarise, to_summarise
 from vex.choices import Purposes, Roles
 from vex.models import Configuration, Conversation, Document, Message, Usage
 from vex.utils.document_text import UnreadableDocument, extract_text
@@ -102,6 +102,7 @@ class ConversationAdmin(admin.ModelAdmin):
     readonly_fields = (
         "summary",
         "summary_failed",
+        "summary_attempted_at",
         "session",
         "total_cost",
         "created_at",
@@ -114,7 +115,7 @@ class ConversationAdmin(admin.ModelAdmin):
     ]
 
     # How many conversations one run of the action summarises: a call takes a few seconds, and the admin waits for
-    # them all. The rest are left for the next run, which skips those already summarised.
+    # them all. The rest are left for the next run, which starts from those tried longest ago.
     SUMMARISE_PER_RUN = 10
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[Conversation]:
@@ -155,9 +156,9 @@ class ConversationAdmin(admin.ModelAdmin):
 
     @admin.action(description=_("Summarise selected conversations"))
     def summarise_conversations(self, request: HttpRequest, queryset: QuerySet[Conversation]) -> None:
-        """Summarises those with no summary, or one written before their latest messages, up to SUMMARISE_PER_RUN."""
+        """Writes a fresh summary of each selected conversation, up to SUMMARISE_PER_RUN, whether or not it has one."""
         selected = Conversation.objects.filter(pk__in=queryset.values("pk"))
-        pending = list(needing_summary(selected))
+        pending = list(to_summarise(selected))
         done = failed = 0
         for conversation in pending[: self.SUMMARISE_PER_RUN]:
             try:

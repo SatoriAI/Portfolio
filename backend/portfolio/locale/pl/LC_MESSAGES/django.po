@@ -610,6 +610,10 @@ msgstr "Podsumowanie nieudane"
 msgid "Purpose"
 msgstr "Cel"
 
+#: vex/models.py
+msgid "Summary last attempted"
+msgstr "Ostatnia próba podsumowania"
+
 #~ msgid "Inject Document(s) to Vector Database"
 #~ msgstr "Wstrzyknij Dokument(y) do Wektorowej Bazy Danych"
 

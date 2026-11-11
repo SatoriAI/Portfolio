@@ -1,3 +1,4 @@
+from datetime import timedelta
 from decimal import Decimal
 from typing import Any
 from unittest.mock import patch
@@ -5,6 +6,7 @@ from unittest.mock import patch
 import anthropic
 import httpx2
 from django.test import TestCase, override_settings
+from django.utils import timezone
 
 from vex.ai import provider, spend
 from vex.ai.summary import (
@@ -13,8 +15,8 @@ from vex.ai.summary import (
     SYSTEM,
     Unsummarised,
     estimate_tokens,
-    needing_summary,
     summarise,
+    to_summarise,
     transcript,
 )
 from vex.choices import Outcomes, Purposes, Roles
@@ -58,6 +60,7 @@ class SummariseTestCase(TestCase):
         self.assertEqual(summary, "Recruiter asking about Django roles")
         saved = Conversation.objects.get(pk=self.conversation.pk)
         self.assertEqual((saved.summary, saved.summarised_messages, saved.summary_failed), (summary, 2, False))
+        self.assertIsNotNone(saved.summary_attempted_at)
         self.assertEqual(saved.updated_at, updated_at)  # retention reads it as the visitor's last activity
         usage = Usage.objects.get()
         self.assertEqual((usage.purpose, usage.outcome), (Purposes.SUMMARY, Outcomes.ANSWERED))
@@ -92,6 +95,7 @@ class SummariseTestCase(TestCase):
                     summarise(self.conversation)
                 saved = Conversation.objects.get(pk=self.conversation.pk)
                 self.assertEqual((saved.summary, saved.summary_failed), ("", True))
+                self.assertIsNotNone(saved.summary_attempted_at)  # tried, so it waits behind the others next time
                 self.assertEqual(saved.updated_at, self.conversation.updated_at)
                 self.assertEqual(Usage.objects.get().outcome, outcome)
 
@@ -125,19 +129,16 @@ class SummariseTestCase(TestCase):
         self.assertEqual(usage.cost, (Decimal(prompt) * 4 + MAX_TOKENS * 20) * attempts / 1_000_000)
 
 
-class NeedingSummaryTestCase(TestCase):
-    def test_skips_empty_and_up_to_date_conversations(self) -> None:
-        unsummarised, behind, current = ConversationFactory(), ConversationFactory(), ConversationFactory()
+class ToSummariseTestCase(TestCase):
+    def test_every_conversation_with_messages_untried_first_then_the_longest_ago(self) -> None:
+        recent, untried, current, long_ago = (ConversationFactory() for _ in range(4))
         ConversationFactory()  # no messages
-        for conversation in (unsummarised, behind, current):
+        for conversation in (recent, untried, current, long_ago):
             MessageFactory.create_batch(2, conversation=conversation)
-        Conversation.objects.filter(pk=behind.pk).update(summary="Old", summarised_messages=1)
-        Conversation.objects.filter(pk=current.pk).update(summary="Current", summarised_messages=2)
-        self.assertCountEqual(needing_summary(Conversation.objects.all()), [unsummarised, behind])
-
-    def test_those_that_failed_last_time_come_last(self) -> None:
-        failed, untried = ConversationFactory(), ConversationFactory()
-        for conversation in (failed, untried):
-            MessageFactory(conversation=conversation)
-        Conversation.objects.filter(pk=failed.pk).update(summary_failed=True)
-        self.assertEqual(list(needing_summary(Conversation.objects.all())), [untried, failed])
+        now = timezone.now()
+        Conversation.objects.filter(pk=recent.pk).update(summary_failed=True, summary_attempted_at=now)
+        Conversation.objects.filter(pk=current.pk).update(
+            summary="Current", summarised_messages=2, summary_attempted_at=now - timedelta(hours=1)
+        )
+        Conversation.objects.filter(pk=long_ago.pk).update(summary_attempted_at=now - timedelta(days=1))
+        self.assertEqual(list(to_summarise(Conversation.objects.all())), [untried, long_ago, current, recent])
