@@ -18,22 +18,32 @@ const CLOSES: Record<string, string> = { "(": ")", "[": "]" };
 const holdsFraction = (node: FormulaNode): boolean =>
   node.type === "frac" || (node.type === "row" && node.children.some(holdsFraction));
 
+/** The fence a node stands for: itself, or the base a script hangs on, as in `)^2`. */
+const fenceOf = (node: FormulaNode): string | undefined =>
+  node.type === "op"
+    ? node.value
+    : (node.type === "sub" || node.type === "sup") && node.base.type === "op"
+      ? node.base.value
+      : undefined;
+
 /**
- * The brackets of a row that enclose a fraction, by position. Those grow to
- * the fraction's height; every other fence keeps the height of the line.
+ * The round and square brackets of a row that enclose a fraction, by
+ * position. Those grow to the fraction's height; every other fence keeps the
+ * height of the line. A closing bracket may carry a script.
  */
 const tallFences = (children: FormulaNode[]): Set<number> => {
   const tall = new Set<number>();
   const open: number[] = [];
   children.forEach((child, index) => {
-    if (child.type !== "op") return;
-    if (child.value in CLOSES) {
+    const fence = fenceOf(child);
+    if (fence === undefined) return;
+    if (child.type === "op" && fence in CLOSES) {
       open.push(index);
       return;
     }
     const from = open[open.length - 1];
-    const opener = from === undefined ? undefined : children[from];
-    if (opener?.type !== "op" || CLOSES[opener.value] !== child.value) return;
+    const opener = from === undefined ? undefined : fenceOf(children[from]);
+    if (opener === undefined || CLOSES[opener] !== fence) return;
     open.pop();
     if (children.slice(from + 1, index).some(holdsFraction)) tall.add(from).add(index);
   });
@@ -74,14 +84,14 @@ const render = (node: FormulaNode, key = 0, tall = false): JSX.Element => {
     case "sub":
       return (
         <msub key={key}>
-          {render(node.base, 0)}
+          {render(node.base, 0, tall)}
           {render(node.sub, 1)}
         </msub>
       );
     case "sup":
       return (
         <msup key={key}>
-          {render(node.base, 0)}
+          {render(node.base, 0, tall)}
           {render(node.sup, 1)}
         </msup>
       );
@@ -143,9 +153,10 @@ export const MathText = ({ text }: MathTextProps) => {
   return (
     <>
       {segments.map((segment, index) => {
-        const trailing = segment.math
-          ? (TRAILING.exec(segments[index + 1]?.value ?? "")?.[0] ?? "")
-          : "";
+        // Only prose gives up its punctuation: a second formula keeps its own.
+        const after = segments[index + 1];
+        const trailing =
+          segment.math && after && !after.math ? (TRAILING.exec(after.value)?.[0] ?? "") : "";
         const value =
           !segment.math && segments[index - 1]?.math
             ? segment.value.replace(TRAILING, "")

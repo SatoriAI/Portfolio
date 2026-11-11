@@ -12,6 +12,7 @@ import {
   type GridReading,
   gridReading,
   keptPercent,
+  PHASE,
   seenWave,
   seenWaves,
   symbolRatio,
@@ -101,14 +102,24 @@ const Measured = ({
 };
 
 /** The wave, its cell averages on an n-cell grid, and the wave the grid sees. */
-const WavePlot = ({ cells, width, height }: { cells: number; width: number; height: number }) => {
+const WavePlot = ({
+  cells,
+  width,
+  height,
+  phase = PHASE,
+}: {
+  cells: number;
+  width: number;
+  height: number;
+  phase?: number;
+}) => {
   const middle = height / 2;
   const amplitude = middle - WAVE_INSET;
   const xAt = (x: number) => x * width;
   const yAt = (value: number) => middle - value * amplitude;
   const curve = (f: (x: number) => number) =>
     path(Array.from({ length: SAMPLES + 1 }, (_, i) => [xAt(i / SAMPLES), yAt(f(i / SAMPLES))]));
-  const averages = cellAverages(cells);
+  const averages = cellAverages(cells, WAVES, phase);
   const h = 1 / cells;
   return (
     <svg width={width} height={height} className="block overflow-visible">
@@ -136,13 +147,13 @@ const WavePlot = ({ cells, width, height }: { cells: number; width: number; heig
       ))}
       <line x1={0} x2={width} y1={middle} y2={middle} className="stroke-control-border" />
       <path
-        d={curve((x) => wave(x))}
+        d={curve((x) => wave(x, WAVES, phase))}
         fill="none"
         className="stroke-muted-foreground"
         strokeWidth={1.25}
       />
       <path
-        d={curve((x) => seenWave(x, cells))}
+        d={curve((x) => seenWave(x, cells, WAVES, phase))}
         fill="none"
         className="stroke-iris"
         strokeWidth={2}
@@ -309,7 +320,12 @@ const SymbolPanel = ({ labels, cells }: { labels: SymbolLabels; cells: number })
 export const WaveDrawing = ({ labels }: { labels: AliasingLabels }) => (
   <div>
     <Measured className={WAVE_BOX}>
-      {({ width, height }) => <WavePlot cells={CELLS_DEFAULT} width={width} height={height} />}
+      {({ width, height }) => (
+        // In phase with the grid, each cell holds exactly half an oscillation
+        // and every average is the 2/π of the height the piece's text names;
+        // the interactive figure's phase would draw them lower.
+        <WavePlot cells={CELLS_DEFAULT} width={width} height={height} phase={0} />
+      )}
     </Measured>
     <WaveLegend labels={labels} />
   </div>
