@@ -1,149 +1,98 @@
 ---
-title: Czy dyfuzja zachowuje swój charakter?
+title: Jedna fala przeciw twierdzeniu
 date: 2026-10-20
 format: proof
-summary: O stabilności, dyskretyzacji i kolejnym kroku od konstrukcji matematycznej do testowalnego algorytmu.
+summary: Jak jedna fala przy granicy rozdzielczości siatki obaliła nasze twierdzenie i co zostało po naprawie.
 related: /research
 tags: Matematyka, Nauka, AI
-figure: averages
+figure: bandedge
 ---
 
-W Tonym Starku fascynuje mnie również to, czego filmy pokazują niewiele: rozumowanie poprzedzające eksperyment. Zanim pojawi się kolejny test, trzeba zdecydować, które zależności są istotne, jakie uproszczenia można przyjąć i gdzie model może zawieść.
+W warsztacie Tony’ego Starka najwięcej uczą próby, które kończą się na ścianie. W matematyce taką próbą jest kontrprzykład. Ten trafił w twierdzenie, które 14 października uważaliśmy za główny wynik drugiej pracy o modelach budowanych z dyfuzji.
 
-W matematyce ten etap potrafi zająć całą pracę naukową.
+## Co twierdziliśmy
 
-Tak jest z drugą pracą z naszego cyklu poszukiwania inteligencji w cieple. W [poprzednim artykule](/workshop/intelligence-from-heat) opisywałem, jak z dyfuzji i mnożenia funkcji można zbudować konstrukcję przybliżającą rozwiązania równania fizyki. Teraz pytamy, jak zmienia się jej wynik, gdy zmieniamy regułę dyfuzji lub przechodzimy z przestrzeni ciągłej na siatkę.
+W [poprzedniej notatce](/workshop/intelligence-from-heat) opisywałem konstrukcję, która z dyfuzji i mnożenia funkcji składa przybliżone rozwiązanie równania Darcy’ego. Ma budowę warstwową: pierwsza warstwa rozwiązuje równanie dla materiału jednorodnego, kolejne poprawiają wynik o to, czym prawdziwy materiał się od niego różni.
 
-To nadal badania teoretyczne. Ich celem jest ustalenie warunków i ograniczeń, które pozwolą później sensownie zaprojektować eksperyment obliczeniowy.
+Druga praca pyta, co się z tą konstrukcją dzieje po przeniesieniu z przestrzeni ciągłej na siatkę o oczku $h$. Funkcje zastępujemy średnimi w komórkach. Operator z równania, który mierzy, jak mocno funkcja się wygina, zastępujemy jego siatkowym odpowiednikiem, porównującym wartości w sąsiednich komórkach. Parametry zostawiamy bez zmian.
 
-## Gdzie skończyła się pierwsza historia?
+W notatkach roboczych mieliśmy na to twierdzenie, w dowolnym wymiarze: dla każdego wejścia z $L^2$, czyli bez żadnych założeń o gładkości, wynik na siatce różni się od wyniku ciągłego, uśrednionego w tych samych komórkach, o wielkość rzędu $h^2$. To zbieżność drugiego rzędu: dwa razy gęstsza siatka, cztery razy mniejszy błąd. Obietnica była mocna, bo obejmowała także dane poszarpane, na przykład zaszumiony pomiar albo źródło o ostrych krawędziach.
 
-W poprzednim artykule opisywałem pomysł oparty na dwóch operacjach.
+Błąd mierzyliśmy w normie energetycznej. Liczy się w niej nie tylko to, o ile wynik się myli, ale i to, o ile myli się jego nachylenie.
 
-Pierwsza to dyfuzja, czyli rozprowadzanie informacji w przestrzeni, podobnie jak rozchodzi się ciepło. Druga to mnożenie funkcji punkt po punkcie, pozwalające łączyć różne informacje o problemie.
+Przed spisaniem manuskryptu komplet twierdzeń dostał do recenzji model językowy. Nie brał udziału w budowaniu dowodów i miał traktować każde stwierdzenie jako niesprawdzone.
 
-Pokazaliśmy, że odpowiednie złożenia tych operacji mogą przybliżać operator rozwiązania równania Darcy’ego. Równanie to opisuje między innymi przepływ przez ośrodek o zmiennej przepuszczalności. Podajemy opis materiału oraz źródeł, a szukamy wynikającego z nich rozkładu ciśnienia.
+Werdykt: narzędzia dowodu są poprawne, główne twierdzenie jest fałszywe.
 
-Ciekawy mechanizm pojawiał się przy porównaniu dwóch kolejności: mnożenia przed dyfuzją i mnożenia po dyfuzji. Różnica między wynikami pozwala odzyskać informację o współdziałaniu zmian przestrzennych obu funkcji.
+## Jedna fala
 
-Pierwsza praca dawała konstrukcję matematyczną oraz oszacowanie jej błędu. Parametry wynikały z dowodu, a nie z treningu na danych.
+Kontrprzykład mieści się w kilku linijkach i w jednym wymiarze: na odcinku długości jeden z okresowymi brzegami, podzielonym na $n$ komórek o szerokości $h = 1/n$.
 
-Pozostało jednak pytanie: jak silnie cała konstrukcja zależy od operatora, na którym ją oparto?
+Bierzemy materiał jednorodny. Poprawki nie mają wtedy czego poprawiać i z całej konstrukcji zostaje pierwsza warstwa. Rozwiązać równanie to odwrócić operator, więc ta warstwa jest jego przybliżoną odwrotnością. Na wejście podajemy jedną falę tuż poniżej granicy rozdzielczości: ma ona $n/2 − 1$ oscylacji, o jedną mniej, niż siatka jest w stanie pomieścić.
 
-## Ten sam wzór, inna dyfuzja
+Siatka robi z taką falą dwie rzeczy.
 
-Za dyfuzją stoi operator nazywany generatorem. Określa on regułę rozchodzenia się informacji.
+Najpierw ją uśrednia. W każdej komórce mieści się prawie pół oscylacji, więc średnia wypada niżej niż grzbiet fali. Przy samej granicy rozdzielczości zostaje $2/π$ jej wysokości, czyli około 64%.
 
-W nowej pracy zachowujemy parametry konstrukcji, w tym czasy dyfuzji, współczynniki i liczbę iteracji. Zmieniamy generator i porównujemy wyniki dwóch tak określonych odwzorowań.
+![Fala o pięciu oscylacjach na okresowym odcinku podzielonym na dziesięć komórek i jej średnie w komórkach](/figure/wave "Fala o pięciu oscylacjach na dziesięciu komórkach, czyli dokładnie na granicy rozdzielczości. Grube odcinki to średnie w komórkach, linia przerywana to fala, jaką widzi siatka: zostaje 64% wysokości. Kontrprzykład bierze falę o jedną oscylację rzadszą, żeby siatka nie myliła jej z lustrzanym odbiciem; na gęstej siatce ta jedna oscylacja nie robi różnicy.")
 
-Rozpatrujemy dwa przypadki.
+Potem działa na nią operatorem siatkowym. Na pojedynczej fali każdy z obu operatorów robi rzecz prostą: mnoży ją przez liczbę, tym większą, im fala krótsza. Na długich falach obie liczby są prawie równe. Im krótsza fala, tym bardziej operator siatkowy zostaje w tyle, a przy granicy rozdzielczości oddaje już tylko $4/π^2$ tego, co ciągły, czyli około 41%.
 
-W pierwszym oba operatory działają w tej samej przestrzeni. Ich reguły dyfuzji są bliskie w precyzyjnie określonym sensie. Może to odpowiadać zmianie geometrii lub wag.
+![Działanie operatora siatkowego na falę jako część działania operatora ciągłego, w zależności od liczby oscylacji; krzywa kończy się na 41%](/figure/symbol "Jaką część działania operatora ciągłego oddaje operator siatkowy na coraz krótszych falach, tu na siatce o dziesięciu komórkach. Na każdej siatce krzywa kończy się na 41%; tam leży kontrprzykład.")
 
-W drugim porównujemy przestrzeń ciągłą z regularną siatką. Funkcjom przypisujemy średnie w komórkach, a ciągły operator zastępujemy jego dyskretnym odpowiednikiem, łączącym sąsiednie węzły.
+Z tych dwóch liczb składa się cały rachunek. Naszą falę operator ciągły mnoży przez $π^2/h^2$, a siatkowy przez $4/h^2$. Odwrotności mnożą przez odwrotności tych liczb, więc różnią się o $(1/4 − 1/π^2) h^2$, czyli około $0,149 h^2$. To drugi rząd, zgodnie z twierdzeniem.
 
-Na poziomie intuicji oba pytania brzmią podobnie: czy mała zmiana opisu daje małą zmianę wyniku?
+Norma energetyczna liczy jednak także nachylenie, a ta fala zmienia się prawie tak szybko, jak siatka pozwala. Na siatce nachylenie mierzy pierwiastek z $4/h^2$, czyli $2/h$, i przez tyle trzeba różnicę pomnożyć. Uśrednianie zostawia z fali $2/π$. Razem
 
-Analiza pokazuje jednak, że wymagają różnych argumentów.
+$$\frac{4}{π}(\frac{1}{4} − \frac{1}{π^2}) h,$$
 
-## Stabilność ma własne wymagania
+czyli około $0,189 h$. To pierwszy rząd: dwa razy gęstsza siatka, błąd tylko dwa razy mniejszy. I to dla wejścia o normie jeden, w zakresie parametrów, w którym twierdzenie miało obowiązywać.
 
-Na tej samej przestrzeni wielkość zaburzenia mierzymy przez porównanie form energetycznych obu operatorów. Opisują one koszt przestrzennych zmian funkcji.
+## Policz, żeby uwierzyć
 
-Dla pojedynczej operacji dyfuzji otrzymujemy oszacowanie stabilności jednolite względem czasu. Oznacza to, że przejście do bardzo krótkiego czasu nie pogarsza samego tego oszacowania.
+Nie przyjęliśmy tego na słowo. Odtworzyliśmy rachunek niezależnie, a potem policzyliśmy tę samą wielkość z parametrami wziętymi z pierwszej pracy dla dokładności $ε = 0,01$. Warstwa odwracająca jest wtedy sumą 94 dyfuzji o różnych czasach, z których najkrótszy jest rzędu $10^{−13}$.
 
-Trudność pojawia się przy operacjach łączących dyfuzję i mnożenie. W naszej konstrukcji odejmujemy pewne wyniki, a następnie dzielimy różnicę przez mały czas. Oszacowanie każdego składnika osobno może zgubić zależność, dzięki której całe wyrażenie pozostaje kontrolowane.
+| Komórek siatki, n | Błąd podzielony przez h |
+| ----------------: | ----------------------: |
+|                64 |                  0,1870 |
+|               128 |                  0,1882 |
+|               256 |                  0,1888 |
+|               512 |                  0,1890 |
+|              1024 |                  0,1892 |
+|              2048 |                  0,1892 |
 
-Trzeba więc przeanalizować je jako całość.
+Gdyby twierdzenie było prawdziwe, liczby w prawej kolumnie malałyby o połowę z każdym wierszem. Stoją w miejscu, a dokładniej podchodzą od dołu do 0,1893, bo nasza fala leży o jedną oscylację poniżej granicy i ta jedna oscylacja znaczy coraz mniej.
 
-Przy odpowiednich założeniach pokazujemy, że stabilność obejmuje również te operacje i pełną konstrukcję przybliżającą operator rozwiązania równania Darcy’ego. Zależność uzyskanego oszacowania od żądanej dokładności rośnie tylko logarytmicznie.
+To nie jest symulacja obarczona błędem pomiaru. Dla jednej fali wszystko sprowadza się do sumy 94 składników, którą liczy się wprost.
 
-To wynik o wrażliwości matematycznego odwzorowania na zaburzenie generatora. Nie rozstrzyga jeszcze o zachowaniu obliczeń w skończonej precyzji.
+## Gdzie dowód przepuścił tę falę
 
-## Co zmienia przejście na siatkę?
+W dwóch miejscach.
 
-Siatka wprowadza ograniczenie, którego nie można usunąć samą zręcznością dowodu: nie rozróżnia wszystkich zmian obecnych w funkcji ciągłej.
+Pierwsze to parametr. Dyfuzja o czasie $t$ wygładza wszystko, co drobniejsze niż pierwiastek z $t$. Przyjęliśmy, że najkrótszy czas w warstwie odwracającej jest dłuższy niż $h^2$, czyli że każda z jej dyfuzji stłumi fale przy granicy rozdzielczości. Wartość pochodziła z naszego streszczenia pierwszej pracy, a nie z jej tekstu. W tekście ten czas jest rzędu $10^{−13}$, o sześć rzędów wielkości mniej niż $h^2$ na najgęstszej siatce z tabeli. Tych fal nic nie tłumi.
 
-Wyobraźmy sobie falę, która między sąsiednimi węzłami wykonuje więcej niż pół oscylacji. Po przejściu na siatkę część tych oscylacji może zniknąć, a inne mogą wyglądać jak wolniejsze zmiany. Jest to związane z aliasingiem.
+Drugie to poprawny argument użyty o krok za wcześnie. Wszystko, co konstrukcja wytwarza po drodze, jest gładkie, bo pierwsza warstwa wygładza dane, więc drobnych oscylacji tam nie ma. To prawda dla wszystkiego, co dzieje się po pierwszej warstwie. Sama pierwsza warstwa dostaje jednak surowe wejście.
 
-Dodatkowo dyskretny operator inaczej oddziałuje na oscylacje bliskie granicy rozdzielczości niż operator ciągły.
+Reszta wyszła z recenzji cało, także warstwy mnożące, które wymagały osobnego dowodu, bo średnia iloczynu to nie iloczyn średnich. Błąd siedział wyłącznie na wejściu.
 
-![Fala o pięciu oscylacjach na okresowym odcinku i jej średnie w komórkach siatki; pod nią działanie operatora dyskretnego na oscylacje względem ciągłego; suwak zmienia odstęp siatki h](/figure/aliasing "Fala o pięciu oscylacjach na okresowym odcinku i jej średnie w komórkach o szerokości h. Gdy komórki zbliżają się do skali oscylacji, średnie słabną, a potem układają się w wolniejszą falę. Przy h = 1/5 każda komórka mieści jedną pełną oscylację i wszystkie średnie są równe zeru. Dolny wykres: siatka słabiej odczuwa szybkie oscylacje; przy granicy rozdzielczości dyskretny operator działa na nie z ok. 41% siły operatora ciągłego. Wartości są dokładne, nie z symulacji.")
+## Co zostało po naprawie
 
-Dlatego nie wystarczy wykazać, że oba operatory są bliskie dla każdej ustalonej, dostatecznie regularnej funkcji. Chcemy kontrolować błąd dla całej dopuszczalnej klasy wejść. W takiej klasie mogą występować funkcje o coraz drobniejszych szczegółach.
-
-To właśnie one ujawniają granice możliwego oszacowania.
-
-## Jedna pochodna robi różnicę
-
-Niech $h$ oznacza odległość między węzłami siatki.
-
-Błąd rzędu $h$ maleje w oszacowaniu dwukrotnie po zmniejszeniu tej odległości o połowę. Błąd rzędu $h^2$ maleje czterokrotnie.
-
-W pracy pokazujemy, jak tempo to zależy od regularności wejścia do pierwszej warstwy konstrukcji.
-
-Jeśli zakładamy tylko przynależność do $L^2$, czyli całkowalność kwadratu funkcji, uzyskujemy oszacowanie pierwszego rzędu w dyskretnej normie energetycznej. W określonym zakresie parametrów podajemy również przykłady osiągające ten rząd, już w jednym wymiarze.
-
-Jeżeli wejście ma jedną słabą pochodną należącą do $L^2$, otrzymujemy drugi rząd. To warunek kontrolujący zmiany przestrzenne, znacznie słabszy niż żądanie idealnej gładkości.
-
-Pomiędzy tymi przypadkami istnieje skala pośrednia. Dla regularności opisanej parametrem $s$, od zera do jedności, otrzymujemy tempo:
+Naprawa to jedno założenie: wejście nie może być dowolnie poszarpane. Jego pochodna też ma należeć do $L^2$ (jedna słaba pochodna). Norma energetyczna kosztuje czynnik $1/h$, a ta pochodna go spłaca, i wraca drugi rząd. Pomiędzy jest cała skala. Jeśli gładkość wejścia mierzyć liczbą $s$ od zera (surowe dane) do jedności (jedna pochodna), błąd maleje jak
 
 $$h^{1+s}.$$
 
-Ten wynik dotyczy warstwy przybliżającej odwrotność operatora. Wyjaśnia, jak regularność danych ogranicza dokładność jej przeniesienia na siatkę.
+Kontrprzykład nie trafił do kosza. Jest w pracy jako twierdzenie: dla surowych danych lepszego rzędu niż pierwszy udowodnić się nie da, i widać to już w jednym wymiarze. Dowód daje ostrożniejszą stałą, $0,08$ zamiast $0,189$, bo ma obowiązywać na każdej dopuszczalnej siatce, a nie tylko na bardzo gęstych.
 
-## Skąd wziąć regularność dalej?
+Druga runda recenzji znalazła jeszcze dziurę w samej naprawie. Twierdzenie ma działać w każdym wymiarze, a nasze sumowanie po falach, które siatka myli ze sobą, rozbiegało się od wymiaru czwartego. Tym razem wystarczyło poprawić dowód; teza się utrzymała.
 
-Dla całej konstrukcji trzeba jeszcze przeanalizować kolejne warstwy, w których mnożymy funkcje.
+Fałszywe twierdzenie przeżyło jeden dzień, w notatkach roboczych; do manuskryptu nie trafiło. Co praca mówi dzisiaj, opisuję w [Badaniach](/research).
 
-Tutaj pojawia się ważna własność badanego schematu: część potrzebnej regularności wynika z jego budowy.
+## Co z tego zabieram
 
-Operacja przybliżająca odwrotność operatora wygładza dane. Dowodzimy następnie, że stany powstające podczas iteracji zachowują kontrolę dwóch pochodnych w sensie odpowiedniej normy Sobolewa. Oszacowanie nie pogarsza się wraz z liczbą iteracji.
+„Dla każdego wejścia” to najdroższe słowa w twierdzeniu. Zbieżność na gładkich danych ich nie sprawdza; sprawdza je dopiero najgorsza fala, jaką siatka potrafi pomieścić.
 
-Ta własność pozwala zastosować mocniejsze oszacowania dla warstw iloczynowych.
+Parametry poprzedniej pracy czyta się z jej tekstu, także wtedy, gdy samemu się ją napisało.
 
-Zamiast zakładać dowolnie dużą gładkość wszystkich pośrednich funkcji, wyprowadzamy potrzebną regularność z samej konstrukcji. To jeden z elementów łączących analizę pojedynczych operacji z twierdzeniem o ich złożeniu.
+Recenzent, który nie budował dowodu, ma jedną przewagę: nie wie, które kroki „na pewno działają”. Jego kontrprzykład był na tyle mały, że dało się go sprawdzić ręcznie, i dopiero wtedy wycofaliśmy twierdzenie.
 
-## Dlaczego mnożenie wymaga osobnego dowodu?
-
-Przy przejściu na średnie komórkowe nawet mnożenie przestaje zachowywać się dokładnie tak samo.
-
-Średnia z iloczynu na ogół różni się od iloczynu średnich.
-
-Weźmy dwa zestawy wartości: $1, 3$ oraz $3, 1$. Ich średnie wynoszą po $2$, więc iloczyn średnich to $4$. Tymczasem iloczyny odpowiadających sobie wartości wynoszą $3, 3$, a ich średnia to $3$.
-
-![Wartości b równe 1 i 3 oraz u równe 3 i 1 na dwóch połówkach komórki, ich iloczyny i średnie; suwak zmienia u](/figure/covariance "Średnia iloczynu minus iloczyn średnich to dokładnie kowariancja, czyli średnia iloczynu odchyleń b i u od ich średnich. Gdy u rośnie tam, gdzie b maleje, różnica jest ujemna; gdy rosną razem, dodatnia; gdy u jest stałe, znika.")
-
-Różnica opisuje informację o wspólnych zmianach obu funkcji, utraconą podczas uśredniania.
-
-W pracy zapisujemy ten błąd dokładnie za pomocą kowariancji. Następnie łączymy jego oszacowanie z analizą operatorów dyfuzji.
-
-Kontrola tej interakcji jest istotną częścią nowej pracy. Samo przeniesienie wyników dla warstw liniowych nie wystarczyłoby do uzasadnienia zachowania całego schematu.
-
-## Co mówi główne twierdzenie?
-
-Przy ustalonej dokładności konstrukcji $ε$, odpowiedniej regularności współczynnika materiałowego i wejściu z jedną pochodną dowodzimy drugiego rzędu zbieżności realizacji siatkowej do ciągłej.
-
-Błąd mierzymy w dyskretnej normie energetycznej, uwzględniającej przestrzenne zmiany wyniku.
-
-Główne oszacowanie zawiera czynnik:
-
-$$\frac{h^2}{ε}.$$
-
-Obowiązuje również jawny warunek wiążący rozmiar siatki ze skalami konstrukcji. Nie można zatem niezależnie zwiększać wymaganej dokładności i pozostawiać dowolnie rzadkiej siatki.
-
-Porównujemy tutaj dwie realizacje tej samej konstrukcji matematycznej. Pierwsza praca kontrolowała jej odległość od operatora rozwiązania równania. Druga kontroluje dodatkową różnicę wynikającą z dyskretyzacji.
-
-To dwa osobne składniki analizy, potrzebne do późniejszej oceny algorytmu.
-
-## Co przybliża nas do eksperymentu?
-
-Nie mamy jeszcze na tej podstawie odpowiedzi, czy konstrukcja będzie szybka, numerycznie stabilna i konkurencyjna wobec klasycznych metod. Teoretyczna stabilność względem zmiany operatora nie zastępuje analizy błędów zaokrągleń.
-
-Wyniki dyskretne dotyczą też konkretnej regularnej siatki okresowej i operatora łączącego najbliższych sąsiadów. Dalszych badań wymagają bardziej ogólne geometrie oraz praktyczny dobór parametrów.
-
-Mamy natomiast lepiej określone pytania do przyszłych testów. Wiemy, jaką rolę odgrywa regularność wejścia, dlaczego warstwy iloczynowe wymagają osobnej kontroli i jak rozdzielić błąd konstrukcji od błędu jej dyskretnej realizacji.
-
-Dla mnie właśnie na tym polega wartość tego etapu. Zanim zaczniemy mierzyć czas obliczeń i oglądać wykresy, ustalamy, czego powinniśmy oczekiwać oraz w jakich warunkach te oczekiwania mają matematyczne uzasadnienie.
-
-Do testowalnego algorytmu prowadzi jeszcze droga. Ta praca pomaga dokładniej ją wyznaczyć.
+U Starka test, który kończy się na ścianie, też jest wynikiem. Nasza ściana stoi dziś w pracy jako twierdzenie o tym, czego siatka dla surowych danych dać nie może.

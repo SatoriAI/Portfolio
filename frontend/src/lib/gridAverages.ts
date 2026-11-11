@@ -1,6 +1,6 @@
 /**
- * The arithmetic behind the two figures in "Does diffusion keep its
- * character?": what a periodic grid of cell averages keeps of a fine wave,
+ * The arithmetic behind the grid figures of the counterexample piece and the
+ * Research thread: what a periodic grid of cell averages keeps of a fine wave,
  * and why the average of a product is not the product of the averages. Kept
  * out of the components so it can be tested in node.
  *

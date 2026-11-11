@@ -102,7 +102,7 @@ In the experiments we describe, the construction reached the target accuracy at 
 
 The reason is visible in our key formula. For a very small diffusion time we subtract two almost identical values and then divide the difference by a small number. A computer stores numbers with finite precision, so some of the information we need can vanish in the subtraction.
 
-On top of that comes the cost of resolution. A short description of the construction may need a very detailed representation of the functions to actually reach the guaranteed accuracy.
+Resolution is a different matter. Internally the construction works with very fine scales, but a grid does not have to resolve them. For band-limited inputs the scheme is computed exactly on a grid whose number of points in each direction grows like the inverse of the required accuracy, up to a logarithmic factor.
 
 That is an important lesson from this research: the number of parameters that describe a model and the cost of running it answer two different questions. Our result gives a mathematical guarantee of representation. Practical speed, stability and the possibility of effective training need further work.
 
@@ -110,7 +110,7 @@ That is an important lesson from this research: the number of parameters that de
 
 What draws me most is the prospect of carrying this mechanism over to more complex geometries. Diffusion is natural on curved surfaces and in broader mathematical structures too. It might let us build models that use the geometry of the problem directly.
 
-In our materials we have a candidate argument for such an extension, but it needs further verification. I treat it as an open line of research.
+The first step is already in the paper: the theorem also holds on abstract spaces with a diffusion, under assumptions of a spectral gap and a lower bound on curvature. Carrying the construction over to discretisations of such spaces remains open.
 
 The next questions are just as concrete: how can the loss of precision be limited? How should diffusion times be chosen for computation? Can the mechanism be used in a trained model while keeping useful guarantees?
 

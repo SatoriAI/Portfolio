@@ -12,6 +12,7 @@ import {
   type GridReading,
   gridReading,
   keptPercent,
+  PHASE,
   seenWave,
   seenWaves,
   symbolRatio,
@@ -101,14 +102,24 @@ const Measured = ({
 };
 
 /** The wave, its cell averages on an n-cell grid, and the wave the grid sees. */
-const WavePlot = ({ cells, width, height }: { cells: number; width: number; height: number }) => {
+const WavePlot = ({
+  cells,
+  width,
+  height,
+  phase = PHASE,
+}: {
+  cells: number;
+  width: number;
+  height: number;
+  phase?: number;
+}) => {
   const middle = height / 2;
   const amplitude = middle - WAVE_INSET;
   const xAt = (x: number) => x * width;
   const yAt = (value: number) => middle - value * amplitude;
   const curve = (f: (x: number) => number) =>
     path(Array.from({ length: SAMPLES + 1 }, (_, i) => [xAt(i / SAMPLES), yAt(f(i / SAMPLES))]));
-  const averages = cellAverages(cells);
+  const averages = cellAverages(cells, WAVES, phase);
   const h = 1 / cells;
   return (
     <svg width={width} height={height} className="block overflow-visible">
@@ -136,13 +147,13 @@ const WavePlot = ({ cells, width, height }: { cells: number; width: number; heig
       ))}
       <line x1={0} x2={width} y1={middle} y2={middle} className="stroke-control-border" />
       <path
-        d={curve((x) => wave(x))}
+        d={curve((x) => wave(x, WAVES, phase))}
         fill="none"
         className="stroke-muted-foreground"
         strokeWidth={1.25}
       />
       <path
-        d={curve((x) => seenWave(x, cells))}
+        d={curve((x) => seenWave(x, cells, WAVES, phase))}
         fill="none"
         className="stroke-iris"
         strokeWidth={2}
@@ -235,6 +246,95 @@ const SymbolPlot = ({ cells, width, height }: { cells: number; width: number; he
   );
 };
 
+/** The wave plot's key: the wave, its cell averages, and the wave the grid sees. */
+const WaveLegend = ({ labels }: { labels: AliasingLabels }) => (
+  <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-1.5 text-sm text-foreground/80">
+    <li className="flex items-center gap-3">
+      <span aria-hidden="true" className="h-px w-6 shrink-0 bg-muted-foreground" />
+      {labels.wave}
+    </li>
+    <li className="flex items-center gap-3">
+      <span aria-hidden="true" className="h-[2.5px] w-6 shrink-0 bg-primary" />
+      {labels.averages}
+    </li>
+    <li className="flex items-center gap-3">
+      <span
+        aria-hidden="true"
+        className="h-0.5 w-6 shrink-0 bg-[repeating-linear-gradient(90deg,hsl(var(--iris))_0_6px,transparent_6px_10px)]"
+      />
+      {labels.seen}
+    </li>
+  </ul>
+);
+
+/**
+ * How the grid's operator acts on each oscillation, as a share of the
+ * continuous one, with its axes and key.
+ */
+const SymbolPanel = ({ labels, cells }: { labels: SymbolLabels; cells: number }) => (
+  <>
+    <p className="mb-2 text-xs text-muted-foreground">
+      <MathText text={labels.yAxis} />
+    </p>
+    <Measured className={SYMBOL_BOX}>
+      {({ width, height }) => <SymbolPlot cells={cells} width={width} height={height} />}
+    </Measured>
+    <p className="mt-1 text-right text-xs text-muted-foreground">
+      <MathText text={labels.xAxis} />
+    </p>
+    <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-1.5 text-sm text-foreground/80">
+      <li className="flex items-center gap-3">
+        <span aria-hidden="true" className="h-px w-6 shrink-0 bg-muted-foreground" />
+        {labels.continuous}
+      </li>
+      <li className="flex items-center gap-3">
+        <span aria-hidden="true" className="h-[2.5px] w-6 shrink-0 bg-primary" />
+        {labels.discrete}
+      </li>
+      <li className="flex items-center gap-3">
+        <span aria-hidden="true" className="flex w-6 shrink-0 justify-center">
+          <span className="size-2.5 rounded-full bg-iris" />
+        </span>
+        {labels.marker}
+      </li>
+      <li className="flex items-center gap-3">
+        <span aria-hidden="true" className="h-3 w-6 shrink-0 bg-control-border/10" />
+        {labels.beyond}
+      </li>
+      <li className="flex items-center gap-3">
+        <span
+          aria-hidden="true"
+          className="h-px w-6 shrink-0 bg-[repeating-linear-gradient(90deg,hsl(var(--control-border))_0_2px,transparent_2px_6px)]"
+        />
+        {fillTemplate(labels.edge, { e: EDGE_PERCENT })}
+      </li>
+    </ul>
+  </>
+);
+
+/**
+ * The two drawings on their own and at rest, on the grid where the wave sits
+ * on the limit of resolution: a workshop piece sets each where its text
+ * reaches it and says in prose what the interactive figure's readouts say.
+ */
+export const WaveDrawing = ({ labels }: { labels: AliasingLabels }) => (
+  <div>
+    <Measured className={WAVE_BOX}>
+      {({ width, height }) => (
+        // In phase with the grid, each cell holds exactly half an oscillation
+        // and every average is the 2/π of the height the piece's text names;
+        // the interactive figure's phase would draw them lower.
+        <WavePlot cells={CELLS_DEFAULT} width={width} height={height} phase={0} />
+      )}
+    </Measured>
+    <WaveLegend labels={labels} />
+  </div>
+);
+
+export const SymbolDrawing = ({ labels }: { labels: AliasingLabels }) => (
+  <SymbolPanel labels={labels.symbol} cells={CELLS_DEFAULT} />
+);
+
 /**
  * A fine wave on a periodic grid of cell averages, with the grid's spacing h
  * as the reader's control. On a fine grid the averages follow the wave; as
@@ -273,23 +373,7 @@ const AliasingFigure = ({ labels }: { labels: AliasingLabels }) => {
         {({ width, height }) => <WavePlot cells={cells} width={width} height={height} />}
       </Measured>
 
-      <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-1.5 text-sm text-foreground/80">
-        <li className="flex items-center gap-3">
-          <span aria-hidden="true" className="h-px w-6 shrink-0 bg-muted-foreground" />
-          {labels.wave}
-        </li>
-        <li className="flex items-center gap-3">
-          <span aria-hidden="true" className="h-[2.5px] w-6 shrink-0 bg-primary" />
-          {labels.averages}
-        </li>
-        <li className="flex items-center gap-3">
-          <span
-            aria-hidden="true"
-            className="h-0.5 w-6 shrink-0 bg-[repeating-linear-gradient(90deg,hsl(var(--iris))_0_6px,transparent_6px_10px)]"
-          />
-          {labels.seen}
-        </li>
-      </ul>
+      <WaveLegend labels={labels} />
 
       {/* Every sentence shares one grid cell and only the current one shows,
           so the cell is as tall as the longest and the slider under it never
@@ -303,44 +387,8 @@ const AliasingFigure = ({ labels }: { labels: AliasingLabels }) => {
       </div>
 
       <div className="mt-10">
-        <p className="mb-2 text-xs text-muted-foreground">
-          <MathText text={labels.symbol.yAxis} />
-        </p>
-        <Measured className={SYMBOL_BOX}>
-          {({ width, height }) => <SymbolPlot cells={cells} width={width} height={height} />}
-        </Measured>
-        <p className="mt-1 text-right text-xs text-muted-foreground">
-          <MathText text={labels.symbol.xAxis} />
-        </p>
+        <SymbolPanel labels={labels.symbol} cells={cells} />
       </div>
-
-      <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-1.5 text-sm text-foreground/80">
-        <li className="flex items-center gap-3">
-          <span aria-hidden="true" className="h-px w-6 shrink-0 bg-muted-foreground" />
-          {labels.symbol.continuous}
-        </li>
-        <li className="flex items-center gap-3">
-          <span aria-hidden="true" className="h-[2.5px] w-6 shrink-0 bg-primary" />
-          {labels.symbol.discrete}
-        </li>
-        <li className="flex items-center gap-3">
-          <span aria-hidden="true" className="flex w-6 shrink-0 justify-center">
-            <span className="size-2.5 rounded-full bg-iris" />
-          </span>
-          {labels.symbol.marker}
-        </li>
-        <li className="flex items-center gap-3">
-          <span aria-hidden="true" className="h-3 w-6 shrink-0 bg-control-border/10" />
-          {labels.symbol.beyond}
-        </li>
-        <li className="flex items-center gap-3">
-          <span
-            aria-hidden="true"
-            className="h-px w-6 shrink-0 bg-[repeating-linear-gradient(90deg,hsl(var(--control-border))_0_2px,transparent_2px_6px)]"
-          />
-          {fillTemplate(labels.symbol.edge, { e: EDGE_PERCENT })}
-        </li>
-      </ul>
 
       <div aria-hidden="true" className="mt-6 grid text-base font-medium text-foreground">
         {(Object.keys(labels.symbol.readings) as SymbolReading[]).map((key) => (
