@@ -102,7 +102,7 @@ W opisanych eksperymentach konstrukcja osiągała założoną dokładność przy
 
 Powód widać w naszej kluczowej formule. Dla bardzo małego czasu dyfuzji odejmujemy dwie niemal identyczne wartości, a następnie dzielimy różnicę przez małą liczbę. Komputer przechowuje liczby ze skończoną precyzją, więc część potrzebnej informacji może zniknąć podczas odejmowania.
 
-Dochodzi do tego koszt rozdzielczości. Krótki opis konstrukcji może wymagać bardzo szczegółowej reprezentacji funkcji, aby rzeczywiście uzyskać gwarantowaną dokładność.
+Inaczej jest z rozdzielczością. Konstrukcja posługuje się wewnątrz bardzo drobnymi skalami, ale siatka nie musi ich rozróżniać. Dla wejść o ograniczonym paśmie schemat wykonuje się dokładnie na siatce, której liczba punktów w każdym kierunku rośnie jak odwrotność żądanej dokładności, z dokładnością do czynnika logarytmicznego.
 
 To ważna lekcja z tych badań: liczba parametrów opisujących model i koszt jego wykonania odpowiadają na dwa różne pytania. Nasz wynik daje matematyczną gwarancję reprezentacji. Praktyczna szybkość, stabilność oraz możliwość skutecznego uczenia wymagają dalszej pracy.
 
@@ -110,7 +110,7 @@ To ważna lekcja z tych badań: liczba parametrów opisujących model i koszt je
 
 Najbardziej przyciąga mnie perspektywa przeniesienia tego mechanizmu na bardziej złożone geometrie. Dyfuzja jest naturalna także na zakrzywionych powierzchniach i w szerszych strukturach matematycznych. Być może pozwoli budować modele korzystające bezpośrednio z geometrii problemu.
 
-W materiałach mamy kandydacki argument dla takiego rozszerzenia, ale wymaga on dalszej weryfikacji. Traktuję go jako otwarty kierunek badań.
+Pierwszy krok jest już w pracy: twierdzenie obowiązuje także w abstrakcyjnych przestrzeniach z dyfuzją, przy założeniach o przerwie spektralnej i dolnym ograniczeniu krzywizny. Otwarte pozostaje przeniesienie konstrukcji na dyskretyzacje takich przestrzeni.
 
 Kolejne pytania są równie konkretne: jak ograniczyć utratę precyzji? Jak dobierać czasy dyfuzji do obliczeń? Czy mechanizm można wykorzystać w uczonym modelu i zachować przy tym użyteczne gwarancje?
 
