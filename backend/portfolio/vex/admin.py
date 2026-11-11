@@ -1,16 +1,43 @@
-from typing import Any
+import logging
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from django import forms
 from django.conf import settings
-from django.contrib import admin
-from django.db.models import QuerySet, Sum
+from django.contrib import admin, messages
+from django.db.models import Count, OuterRef, QuerySet, Subquery, Sum
 from django.http import HttpRequest, HttpResponse
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 
 from vex.ai import spend
+from vex.ai.summary import Unsummarised, needing_summary, summarise
+from vex.choices import Purposes, Roles
 from vex.models import Configuration, Conversation, Document, Message, Usage
 from vex.utils.document_text import UnreadableDocument, extract_text
+
+logger = logging.getLogger(__name__)
+
+# The About column on one line. A table cell grows to fit its text, so the cut needs a width of its own: two fifths of
+# the window leaves room for the admin's sidebar and the other columns, on a laptop and in a narrow window.
+ABOUT_STYLE = (
+    "display: inline-block; max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; "
+    "vertical-align: bottom"
+)
+
+if TYPE_CHECKING:
+    from django_stubs_ext import WithAnnotations
+
+
+class Listed(TypedDict):
+    """What ConversationAdmin.get_queryset adds to each conversation."""
+
+    message_count: int
+    first_question: str | None
+
+
+if TYPE_CHECKING:
+    ListedConversation = WithAnnotations[Conversation, Listed]
 
 
 class MessageInline(admin.TabularInline):
@@ -43,6 +70,7 @@ class UsageInline(admin.TabularInline):
     model = Usage
     fields = (
         "created_at",
+        "purpose",
         "model",
         "outcome",
         "finish_reason",
@@ -66,30 +94,94 @@ class UsageInline(admin.TabularInline):
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
     list_display = (
-        "session",
+        "about",
         "number_of_messages",
         "created_at",
     )
-    search_fields = ("session",)
+    search_fields = ("summary", "messages__content", "session")
     readonly_fields = (
+        "summary",
+        "summary_failed",
         "session",
         "total_cost",
         "created_at",
         "updated_at",
     )
+    actions = ["summarise_conversations"]
     inlines = [
         MessageInline,
         UsageInline,
     ]
 
-    @admin.display(description=_("Number of Messages"))
-    def number_of_messages(self, obj: Conversation) -> int:
-        return obj.messages.count()
+    # How many conversations one run of the action summarises: a call takes a few seconds, and the admin waits for
+    # them all. The rest are left for the next run, which skips those already summarised.
+    SUMMARISE_PER_RUN = 10
+
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Conversation]:
+        first_question = (
+            Message.objects.filter(conversation=OuterRef("pk"), role=Roles.USER)
+            .order_by("created_at", "pk")
+            .values("content")[:1]
+        )
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(message_count=Count("messages", distinct=True), first_question=Subquery(first_question))
+        )
+
+    @admin.display(description=_("About"))
+    def about(self, obj: "ListedConversation") -> str:
+        """The summary, marked when messages have come since; until there is one, the visitor's first question. On one
+        line, cut with an ellipsis where it runs out of room, the whole of it on hover; the mark stays in sight."""
+        text = obj.summary or " ".join((obj.first_question or "").split()) or obj.session
+        behind = bool(obj.summary) and obj.summarised_messages != obj.message_count
+        return format_html(
+            '<span style="white-space: nowrap"><span title="{}" style="{}">{}</span>{}</span>',
+            text,
+            ABOUT_STYLE,
+            text,
+            " (+)" if behind else "",
+        )
+
+    @admin.display(description=_("Number of Messages"), ordering="message_count")
+    def number_of_messages(self, obj: "ListedConversation") -> int:
+        return obj.message_count
 
     @admin.display(description=_("Cost (USD)"))
     def total_cost(self, obj: Conversation) -> str:
-        total = obj.usage.aggregate(total=Sum("cost"))["total"]
+        """What the visitor's answers cost; the summaries written in the admin are listed below, apart."""
+        total = obj.usage.filter(purpose=Purposes.ANSWER).aggregate(total=Sum("cost"))["total"]
         return f"${total or 0:.4f}"
+
+    @admin.action(description=_("Summarise selected conversations"))
+    def summarise_conversations(self, request: HttpRequest, queryset: QuerySet[Conversation]) -> None:
+        """Summarises those with no summary, or one written before their latest messages, up to SUMMARISE_PER_RUN."""
+        selected = Conversation.objects.filter(pk__in=queryset.values("pk"))
+        pending = list(needing_summary(selected))
+        done = failed = 0
+        for conversation in pending[: self.SUMMARISE_PER_RUN]:
+            try:
+                summarise(conversation)
+                done += 1
+            except spend.Resting:
+                self.message_user(
+                    request, _("Today's budget is spent: nothing more is summarised today."), messages.ERROR
+                )
+                break
+            except Unsummarised as error:
+                logger.warning("Vex could not summarise conversation %d: %s", conversation.pk, error)
+                failed += 1
+            except Exception:  # pylint: disable=broad-exception-caught
+                # One conversation's surprise is no reason to lose the rest of the run; it is recorded and marked.
+                logger.exception("Vex failed unexpectedly summarising conversation %d", conversation.pk)
+                failed += 1
+        left = len(pending) - done - failed
+        self.message_user(
+            request,
+            _("Summarised %(done)d, %(failed)d failed, %(left)d left to summarise.")
+            % {"done": done, "failed": failed, "left": left},
+            messages.WARNING if failed or left else messages.SUCCESS,
+        )
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, Any] | None = None) -> HttpResponse:
         """Heads the list with today's spend against the budget, added up from every call, including those of

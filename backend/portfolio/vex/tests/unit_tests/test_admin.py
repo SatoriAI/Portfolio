@@ -1,9 +1,13 @@
+from unittest.mock import patch
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import NoReverseMatch, reverse
 
-from vex.choices import Outcomes, Roles
+from vex.ai import spend
+from vex.ai.summary import Unsummarised
+from vex.choices import Outcomes, Purposes, Roles
 from vex.models import Conversation, Message, Usage
 
 
@@ -68,8 +72,103 @@ class ConversationAdminTestCase(TestCase):
     def test_a_conversation_opens_with_its_messages(self) -> None:
         resp = self.client.get(reverse("admin:vex_conversation_change", args=[self.conversation.pk]))
         self.assertContains(resp, "Hi")
+        self.assertContains(resp, "Summary failed")  # the only sign of a failed summary outside the logs
+        self.assertNotContains(resp, 'name="summary_failed"')  # shown, not set by hand
 
     def test_a_conversation_shows_its_usage_and_what_it_cost(self) -> None:
         resp = self.client.get(reverse("admin:vex_conversation_change", args=[self.conversation.pk]))
         self.assertContains(resp, "claude-opus-5-5")
         self.assertContains(resp, "$0.0125")
+
+    def test_a_summary_written_in_the_admin_is_not_the_visitors_cost(self) -> None:
+        Usage.objects.create(
+            conversation=self.conversation,
+            model="claude-opus-5-5",
+            prompt_version="summary",
+            purpose=Purposes.SUMMARY,
+            outcome=Outcomes.ANSWERED,
+            input_tokens=1000,
+            cached_tokens=0,
+            output_tokens=100,
+            reasoning_tokens=0,
+            estimated=False,
+            cost="0.00600000",
+        )
+        resp = self.client.get(reverse("admin:vex_conversation_change", args=[self.conversation.pk]))
+        self.assertContains(resp, "$0.0125")
+
+
+@override_settings(
+    STORAGES={
+        **settings.STORAGES,
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
+)
+class ConversationSummaryAdminTestCase(TestCase):
+    def setUp(self) -> None:
+        self.client.force_login(get_user_model().objects.create_superuser("admin", "admin@example.com", "pw"))
+        self.url = reverse("admin:vex_conversation_changelist")
+
+    def conversation(self, question: str, **fields: object) -> Conversation:
+        conversation = Conversation.objects.create(session="s" * 32)
+        Message.objects.create(conversation=conversation, role=Roles.USER, content=question)
+        Message.objects.create(conversation=conversation, role=Roles.ASSISTANT, content="An answer")
+        Conversation.objects.filter(pk=conversation.pk).update(**fields)
+        return conversation
+
+    def test_the_list_reads_the_summary_or_the_first_question(self) -> None:
+        self.conversation("Who is   Dawid?")
+        self.conversation("Hi", summary="Recruiter asking about Django roles", summarised_messages=2)
+        self.conversation("Hi", summary="Student asking about teaching", summarised_messages=1)
+        resp = self.client.get(self.url)
+        self.assertContains(resp, ">Who is Dawid?</span><")
+        self.assertContains(resp, ">Recruiter asking about Django roles</span><")
+        self.assertContains(resp, ">Student asking about teaching</span> (+)</span>")  # messages came after it
+
+    def test_a_long_line_is_whole_on_hover_and_escaped(self) -> None:
+        question = 'Can you <b>tell</b> me" onmouseover="alert(1) ' + "about Dawid's research " * 40
+        self.conversation(question)
+        resp = self.client.get(self.url)
+        escaped = (
+            question.strip().replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;").replace("'", "&#x27;")
+        )
+        self.assertContains(resp, f'title="{escaped}"')
+        self.assertContains(resp, "text-overflow: ellipsis")
+        self.assertNotContains(resp, "<b>tell</b>")
+        self.assertNotContains(resp, '" onmouseover="')
+
+    def test_the_list_is_searched_by_what_was_said(self) -> None:
+        self.conversation("Tell me about heat kernels")
+        self.conversation("Who is Dawid?")
+        resp = self.client.get(self.url, {"q": "kernels"})
+        self.assertContains(resp, "heat kernels")
+        self.assertNotContains(resp, "Who is Dawid?")
+
+    def summarise(self, *conversations: Conversation) -> object:
+        return self.client.post(
+            self.url,
+            {"action": "summarise_conversations", "_selected_action": [c.pk for c in conversations]},
+            follow=True,
+        )
+
+    def test_the_action_summarises_those_that_need_it(self) -> None:
+        current = self.conversation("Hi", summary="Current", summarised_messages=2)
+        pending = self.conversation("Who is Dawid?")
+        with patch("vex.admin.summarise") as summarise:
+            resp = self.summarise(current, pending)
+        summarise.assert_called_once_with(pending)
+        self.assertContains(resp, "Summarised 1, 0 failed, 0 left to summarise.")
+
+    def test_the_action_stops_at_its_limit_and_on_a_spent_budget(self) -> None:
+        conversations = [self.conversation(f"Question {i}") for i in range(3)]
+        with patch("vex.admin.ConversationAdmin.SUMMARISE_PER_RUN", 2), patch("vex.admin.summarise") as summarise:
+            summarise.side_effect = [None, Unsummarised("declined")]
+            resp = self.summarise(*conversations)
+        self.assertContains(resp, "Summarised 1, 1 failed, 1 left to summarise.")
+        with patch("vex.admin.summarise", side_effect=[None, RuntimeError("surprise"), None]):
+            resp = self.summarise(*conversations)
+        self.assertContains(resp, "Summarised 2, 1 failed, 0 left to summarise.")  # the run went on past it
+        with patch("vex.admin.summarise", side_effect=spend.Resting("spent")):
+            resp = self.summarise(*conversations)
+        self.assertContains(resp, "budget is spent")
+        self.assertContains(resp, "Summarised 0, 0 failed, 3 left to summarise.")
