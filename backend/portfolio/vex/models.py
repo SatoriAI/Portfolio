@@ -5,11 +5,15 @@ from parler.managers import TranslatableManager
 from parler.models import TranslatableModel, TranslatedFields
 
 from utils.models import TimestampedModel
-from vex.choices import Feedback, Outcomes, Roles
+from vex.choices import Feedback, Outcomes, Purposes, Roles
 
 
 class Conversation(TimestampedModel):
     session = models.CharField(_("Session Key"), max_length=64, db_index=True)
+    # One line on what the conversation is about, written by the model on request in the admin (vex.ai.summary), and
+    # how many messages it had then: once it has more, the summary is behind and is written again on the next request.
+    summary = models.CharField(_("Summary"), max_length=200, blank=True, db_default="")
+    summarised_messages = models.PositiveIntegerField(_("Messages summarised"), db_default=0)
 
     def __str__(self) -> str:
         return f"{_('Conversation')}: {self.session}"
@@ -59,6 +63,9 @@ class Usage(models.Model):
     )
     model = models.CharField(_("Model"), max_length=64)
     prompt_version = models.CharField(_("Prompt version"), max_length=32)
+    # Every call counts towards the day's budget, whatever it was for. A conversation's cost in the admin is its
+    # answers' alone: a summary is spent by the admin reading it, not by the visitor.
+    purpose = models.CharField(_("Purpose"), choices=Purposes, max_length=16, db_default=Purposes.ANSWER)
     outcome = models.CharField(_("Outcome"), choices=Outcomes, max_length=16)
     finish_reason = models.CharField(_("Finish reason"), max_length=32, blank=True)
     input_tokens = models.PositiveIntegerField(_("Input tokens"))

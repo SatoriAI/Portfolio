@@ -16,7 +16,16 @@ from django.conf import settings
 from django.test import SimpleTestCase, override_settings
 
 from vex.ai import provider
-from vex.ai.provider import MAX_RETRIES, TIMEOUT, Attempt, ChatMessage, Refused, Usage, stream_completion
+from vex.ai.provider import (
+    MAX_RETRIES,
+    TIMEOUT,
+    Attempt,
+    ChatMessage,
+    Refused,
+    Usage,
+    complete,
+    stream_completion,
+)
 
 PROMPT_USAGE = {"input_tokens": 200, "cache_read_input_tokens": 1000, "cache_creation_input_tokens": 24}
 
@@ -64,9 +73,33 @@ class FakeClaudeHandler(BaseHTTPRequestHandler):
         self.wfile.write(f"event: {data['type']}\ndata: {json.dumps(data)}\n\n".encode())
         self.wfile.flush()
 
+    def write_message(self) -> None:
+        """The whole reply at once, as a call made without streaming receives it."""
+        refused = self.server.stop_reason == "refusal"
+        body = {
+            "id": "msg_1",
+            "type": "message",
+            "role": "assistant",
+            "model": self.server.model,
+            "content": [{"type": "text", "text": " ".join(f"t{i}" for i in range(self.server.chunks))}],
+            "stop_reason": self.server.stop_reason,
+            "stop_sequence": None,
+            "stop_details": {"type": "refusal", "category": "bio"} if refused else None,
+            "usage": {**PROMPT_USAGE, "output_tokens": 30, "output_tokens_details": {"thinking_tokens": 12}},
+        }
+        data = json.dumps(body).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
     def do_POST(self) -> None:  # pylint: disable=invalid-name
         self.server.request = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         self.server.headers = {name.lower(): value for name, value in self.headers.items()}
+        if not self.server.request.get("stream"):
+            self.write_message()
+            return
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
         self.end_headers()
@@ -257,6 +290,30 @@ class StreamCompletionTestCase(SimpleTestCase):
 
 
 @override_settings(VEX_MODEL="claude-opus-5-5", VEX_PRICES={"claude-opus-5-5": (4.00, 0.20, 5.00, 20.00)})
+@override_settings(VEX_MODEL="claude-opus-5-5", VEX_REASONING_EFFORT="low")
+class CompleteTestCase(SimpleTestCase):
+    def test_returns_the_whole_reply_and_reads_its_usage(self) -> None:
+        usage = Usage()
+        with fake_claude(chunks=3) as server:
+            text = complete("S", "P", usage=usage, max_tokens=500)
+        self.assertEqual(text, "t0 t1 t2")
+        self.assertEqual((usage.input_tokens, usage.cached_tokens, usage.output_tokens), (1224, 1000, 30))
+        self.assertTrue(usage.reported)
+        request = server.request
+        self.assertEqual(request["model"], "claude-opus-5-5")
+        self.assertEqual(request["max_tokens"], 500)
+        self.assertEqual(request["output_config"], {"effort": "low"})
+        self.assertEqual(request["fallbacks"], "default")
+        self.assertEqual(request["messages"], [{"role": "user", "content": "P"}])
+        self.assertIn("server-side-fallback-2026-07-01", server.headers["anthropic-beta"])
+
+    def test_a_declined_reply_raises_once_its_usage_is_read(self) -> None:
+        usage = Usage()
+        with fake_claude(stop_reason="refusal"), self.assertRaises(Refused):
+            complete("S", "P", usage=usage, max_tokens=500)
+        self.assertTrue(usage.reported)
+
+
 class UsageCostTestCase(SimpleTestCase):
     def test_fresh_cached_and_written_input_and_output_each_at_their_price(self) -> None:
         usage = Usage(

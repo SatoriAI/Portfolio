@@ -10,7 +10,7 @@ from django.db import transaction
 from vex.ai import provider, spend
 from vex.ai.history import MessageHistory, Turn
 from vex.ai.prompt import PROMPT_VERSION, build_messages
-from vex.choices import Outcomes
+from vex.choices import Outcomes, Purposes
 from vex.models import Conversation, Message
 from vex.models import Usage as UsageRecord
 
@@ -84,7 +84,14 @@ def stream_answer(question: str, locale: str, session_key: str, asked_from: str 
     return saved
 
 
-def record_usage(conversation: Conversation, usage: provider.Usage, outcome: str) -> None:
+def record_usage(
+    conversation: Conversation,
+    usage: provider.Usage,
+    outcome: str,
+    *,
+    purpose: str = Purposes.ANSWER,
+    prompt_version: str = PROMPT_VERSION,
+) -> None:
     """Writes what one call cost. A call that never opened a stream (a rejected key, a rate limit, an overloaded or
     unreachable API) is not billed, and costs nothing here. On one cut short after it opened, the provider reported
     the prompt's counts as the stream opened, but never the answer's. The model thinks before and between what it
@@ -95,7 +102,8 @@ def record_usage(conversation: Conversation, usage: provider.Usage, outcome: str
     record = UsageRecord.objects.create(
         conversation=conversation,
         model=usage.model or settings.VEX_MODEL,
-        prompt_version=PROMPT_VERSION,
+        prompt_version=prompt_version,
+        purpose=purpose,
         outcome=outcome,
         finish_reason=usage.finish_reason,
         input_tokens=usage.input_tokens,

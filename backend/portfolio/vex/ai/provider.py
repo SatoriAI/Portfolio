@@ -141,6 +141,27 @@ def client() -> Anthropic:
     return Anthropic(api_key=settings.ANTHROPIC_API_KEY or None, timeout=TIMEOUT, max_retries=MAX_RETRIES)
 
 
+def complete(system: str, prompt: str, *, usage: Usage, max_tokens: int) -> str:
+    """The model's reply to one `prompt`, whole, with its token counts and finish reason written to `usage`: for short
+    work nobody watches arrive, at VEX_MODEL and VEX_REASONING_EFFORT like an answer, with the same fallback on a
+    decline. Raises Refused as stream_completion does."""
+    message = client().beta.messages.create(
+        model=settings.VEX_MODEL,
+        max_tokens=max_tokens,
+        system=system,
+        messages=[{"role": "user", "content": prompt}],
+        output_config={"effort": settings.VEX_REASONING_EFFORT},
+        betas=[FALLBACK_BETA],
+        fallbacks="default",
+        timeout=TIMEOUT,
+    )
+    usage.read(message, settings.VEX_MODEL)
+    if usage.finish_reason == "refusal":
+        category = message.stop_details.category if message.stop_details else None
+        raise Refused(f"{usage.model} declined (category: {category or 'none'})")
+    return "".join(block.text for block in message.content if block.type == "text")
+
+
 def stream_completion(messages: Sequence[ChatMessage], *, usage: Usage) -> Generator[str]:
     """The model's reply to `messages`, as text chunks, with its token counts and finish reason written to `usage`.
 
