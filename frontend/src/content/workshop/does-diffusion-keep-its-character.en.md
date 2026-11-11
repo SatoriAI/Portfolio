@@ -1,149 +1,98 @@
 ---
-title: Does diffusion keep its character?
+title: One wave against a theorem
 date: 2026-10-20
 format: proof
-summary: On stability, discretisation and the next step from a mathematical construction to a testable algorithm.
+summary: How a single wave at the limit of the grid's resolution refuted our theorem, and what was left after the repair.
 related: /research
 tags: Mathematics, Science, AI
-figure: averages
+figure: bandedge
 ---
 
-What also fascinates me about Tony Stark is something the films show little of: the reasoning that comes before an experiment. Before the next test, you have to decide which relationships matter, which simplifications you can make and where the model might fail.
+In Tony Stark's workshop, the tests that teach the most are the ones that end against a wall. In mathematics that test is a counterexample. This one hit a theorem that, on 14 October, we took to be the main result of the second paper on models built from diffusion.
 
-In mathematics this stage can take up a whole paper.
+## What we claimed
 
-So it is with the second paper in our series on searching for intelligence in heat. In the [previous piece](/workshop/intelligence-from-heat) I described how diffusion and the multiplication of functions can be built into a construction that approximates the solutions of an equation of physics. Now we ask how its result changes when we change the rule of diffusion, or move from continuous space to a grid.
+In the [previous note](/workshop/intelligence-from-heat) I described a construction that assembles an approximate solution of Darcy's equation from diffusion and the multiplication of functions. It is built in layers: the first layer solves the equation for a homogeneous material, and the later ones correct the result by whatever the real material differs from it.
 
-This is still theoretical research. Its aim is to establish the conditions and limits that will later let us design a computational experiment sensibly.
+The second paper asks what happens to this construction when it is moved from continuous space to a grid with spacing $h$. Functions are replaced by their averages over cells. The operator in the equation, which measures how sharply a function bends, is replaced by its counterpart on the grid, which compares the values in neighbouring cells. The parameters stay as they were.
 
-## Where did the first story end?
+Our working notes held a theorem about this, in any dimension: for every input in $L^2$, that is, with no assumption of smoothness at all, the result on the grid differs from the continuous result, averaged over the same cells, by a quantity of order $h^2$. That is second-order convergence: twice as fine a grid, a quarter of the error. The promise was a strong one, because it covered ragged data too, a noisy measurement, say, or a source with sharp edges.
 
-In the previous piece I described an idea based on two operations.
+We measured the error in the energy norm. It counts not only how far the result is off, but also how far its slope is off.
 
-The first is diffusion: spreading information through space, much as heat spreads. The second is pointwise multiplication of functions, which lets us combine different pieces of information about the problem.
+Before any manuscript was written, the full set of theorems went to a language model for review. It had taken no part in building the proofs and was told to treat every statement as unverified.
 
-We showed that suitable compositions of these operations can approximate the solution operator of Darcy’s equation. Among other things, the equation describes flow through a medium of varying permeability. We supply a description of the material and of the sources, and look for the pressure distribution that follows from them.
+The verdict: the tools of the proof are sound, the main theorem is false.
 
-An interesting mechanism appeared when we compared two orders: multiplying before diffusion and multiplying after it. The difference between the results lets us recover information about how the spatial changes of the two functions interact.
+## A single wave
 
-The first paper gave a mathematical construction and an estimate of its error. The parameters came from the proof, not from training on data.
+The counterexample takes a few lines and one dimension: an interval of length one with periodic ends, divided into $n$ cells of width $h = 1/n$.
 
-One question remained, though: how strongly does the whole construction depend on the operator it is built on?
+Take a homogeneous material. The corrections then have nothing to correct, and all that is left of the construction is its first layer. Solving the equation means inverting the operator, so this layer is its approximate inverse. Feed it a single wave just below the limit of resolution: it has $n/2 − 1$ oscillations, one fewer than the grid can hold.
 
-## The same formula, a different diffusion
+The grid does two things to such a wave.
 
-Behind diffusion stands an operator called the generator. It sets the rule by which information spreads.
+First it averages it. Each cell holds almost half an oscillation, so the average falls short of the crest. Right at the limit of resolution, $2/π$ of the wave's height is left, about 64%.
 
-In the new paper we keep the parameters of the construction, including the diffusion times, the coefficients and the number of iterations. We change the generator and compare the results of the two maps defined in this way.
+![A wave with five oscillations on a periodic interval divided into ten cells, and its averages over the cells](/figure/wave "A wave with five oscillations on ten cells, exactly at the limit of resolution. The thick segments are the cell averages, the dashed line is the wave as the grid sees it: 64% of the height is left. The counterexample takes a wave with one oscillation fewer, so that the grid does not confuse it with its mirror image; on a fine grid that one oscillation makes no difference.")
 
-We consider two cases.
+Then it acts on it with the grid's operator. On a single wave each of the two operators does something simple: it multiplies the wave by a number, the larger the shorter the wave. On long waves the two numbers are almost equal. The shorter the wave, the further the grid's operator falls behind, and at the limit of resolution it gives only $4/π^2$ of what the continuous one gives, about 41%.
 
-In the first, both operators act on the same space. Their rules of diffusion are close in a precisely defined sense. This can correspond to a change of geometry or of weights.
+![How strongly the grid's operator acts on a wave, as a share of the continuous operator, against the number of oscillations; the curve ends at 41%](/figure/symbol "The share of the continuous operator's action that the grid's operator gives on shorter and shorter waves, here on a grid of ten cells. On every grid the curve ends at 41%; that is where the counterexample sits.")
 
-In the second, we compare continuous space with a regular grid. We assign to each function its averages over the cells, and replace the continuous operator with its discrete counterpart, which links neighbouring nodes.
+The whole calculation is made of these two numbers. The continuous operator multiplies our wave by $π^2/h^2$ and the grid's by $4/h^2$. The inverses multiply by the inverses of these numbers, so they differ by $(1/4 − 1/π^2) h^2$, about $0.149 h^2$. That is second order, as the theorem said.
 
-Intuitively, both questions sound alike: does a small change in the description give a small change in the result?
+But the energy norm counts the slope as well, and this wave changes almost as fast as the grid allows. On the grid the slope is measured by the square root of $4/h^2$, that is $2/h$, and the difference has to be multiplied by that. The averaging leaves $2/π$ of the wave. Together
 
-The analysis shows, however, that they need different arguments.
+$$\frac{4}{π}(\frac{1}{4} − \frac{1}{π^2}) h,$$
 
-## Stability has its own requirements
+that is, about $0.189 h$. That is first order: twice as fine a grid, only half the error. And this for an input of norm one, inside the range of parameters where the theorem was supposed to hold.
 
-On the same space we measure the size of the perturbation by comparing the energy (Dirichlet) forms of the two operators. They describe the cost of a function’s spatial changes.
+## Compute it to believe it
 
-For a single diffusion layer we obtain a stability estimate that is uniform in time. This means that passing to a very short time does not make that estimate itself any worse.
+We did not take this on trust. We reproduced the calculation independently, then computed the same quantity with the parameters taken from the first paper at accuracy $ε = 0.01$. The inverting layer is then a sum of 94 diffusions with different times, the shortest of order $10^{−13}$.
 
-The difficulty arises with the operations that combine diffusion and multiplication. In our construction we subtract certain results and then divide the difference by a small time. Estimating each term separately can lose the relationship that keeps the whole expression under control.
+| Grid cells, n | Error divided by h |
+| ------------: | -----------------: |
+|            64 |             0.1870 |
+|           128 |             0.1882 |
+|           256 |             0.1888 |
+|           512 |             0.1890 |
+|          1024 |             0.1892 |
+|          2048 |             0.1892 |
 
-So it has to be analysed as a whole.
+Had the theorem been true, the numbers in the right-hand column would halve with every row. They stay where they are, or more exactly they approach 0.1893 from below, because our wave lies one oscillation under the limit and that one oscillation matters less and less.
 
-Under suitable assumptions we show that stability extends to these operations too, and to the full construction approximating the Darcy solution operator. The dependence of the resulting estimate on the required accuracy grows only logarithmically.
+This is not a simulation with measurement error. For a single wave everything comes down to a sum of 94 terms, which is computed directly.
 
-This is a result about how sensitive the mathematical map is to a perturbation of the generator. It does not yet settle how the computation behaves in finite precision.
+## Where the proof let the wave through
 
-## What does moving to a grid change?
+In two places.
 
-A grid introduces a limitation that no amount of skill in the proof can remove: it does not distinguish all the changes present in a continuous function.
+The first is a parameter. Diffusion over a time $t$ smooths everything finer than the square root of $t$. We assumed that the shortest time in the inverting layer is longer than $h^2$, that is, that each of its diffusions would damp waves near the limit of resolution. The value came from our own summary of the first paper, not from its text. In the text that time is of order $10^{−13}$, six orders of magnitude below $h^2$ on the finest grid in the table. Nothing damps those waves.
 
-Imagine a wave that makes more than half an oscillation between neighbouring nodes. On the grid, some of these oscillations may vanish, and others may look like slower changes. This is related to aliasing.
+The second is a correct argument used one step too early. Everything the construction produces along the way is smooth, because the first layer smooths the data, so there are no fine oscillations there. That is true of everything that happens after the first layer. The first layer itself, however, receives the raw input.
 
-On top of that, the discrete operator acts on oscillations close to the limit of resolution differently from the continuous one.
+The rest came through the review intact, including the product layers, which needed a proof of their own because the average of a product is not the product of the averages. The error sat at the input alone.
 
-![A wave with five oscillations on a periodic interval and its averages over the cells of a grid; below, how strongly the discrete operator acts on each oscillation compared with the continuous one; a slider changes the grid spacing h](/figure/aliasing "A wave with five oscillations on a periodic interval and its averages over cells of width h. As the cells approach the scale of the oscillations, the averages weaken, then line up into a slower wave. At h = 1/5 each cell holds one whole oscillation and every average is zero. Lower plot: the grid feels fast oscillations more weakly; at the limit of resolution the discrete operator acts on them with about 41% of the continuous operator’s strength. The values are exact, not simulated.")
+## What was left after the repair
 
-That is why it is not enough to show that the two operators are close for every fixed, sufficiently regular function. We want to control the error for the whole admissible class of inputs. Such a class may contain functions with ever finer detail.
-
-It is precisely these that reveal the limits of any possible estimate.
-
-## One derivative makes a difference
-
-Let $h$ denote the distance between the nodes of the grid.
-
-An error of order $h$ halves in the estimate when that distance is halved. An error of order $h^2$ falls fourfold.
-
-In the paper we show how this rate depends on the regularity of the input to the first layer of the construction.
-
-If we assume only that the input is in $L^2$, that is, that the square of the function is integrable, we obtain a first-order estimate in the discrete energy norm. For a certain range of parameters we also give examples that attain this order, already in one dimension.
-
-If the input has one weak derivative in $L^2$, we obtain second order. This is a condition that controls spatial changes, and it is much weaker than demanding perfect smoothness.
-
-Between these cases there is an intermediate scale. For regularity described by a parameter $s$, from zero to one, we obtain the rate:
+The repair is one assumption: the input cannot be arbitrarily ragged. Its derivative has to lie in $L^2$ as well (one weak derivative). The energy norm costs a factor of $1/h$, this derivative pays for it, and second order returns. In between lies a whole scale. If the smoothness of the input is measured by a number $s$ from zero (raw data) to one (one derivative), the error falls like
 
 $$h^{1+s}.$$
 
-This result concerns the layer that approximates the inverse of the operator. It explains how the regularity of the data limits the accuracy with which that layer carries over to the grid.
+The counterexample was not thrown away. It is in the paper as a theorem: for raw data no order better than the first can be proved, and one dimension is enough to see it. The proof gives a more cautious constant, $0.08$ instead of $0.189$, because it has to hold on every admissible grid, not only on very fine ones.
 
-## Where do the later layers get their regularity?
+A second round of review found one more hole, in the repair itself. The theorem is meant to hold in every dimension, and our summation over the waves the grid confuses with one another diverged from dimension four upwards. This time it was enough to fix the proof; the statement held.
 
-For the whole construction we still need to analyse the subsequent layers, in which we multiply functions.
+The false theorem lived for one day, in the working notes; it never reached a manuscript. What the paper says today is described under [Research](/research).
 
-Here an important property of the scheme comes in: part of the regularity we need follows from the way it is built.
+## What I take from this
 
-The operation approximating the inverse of the operator smooths the data. We then prove that the states arising during the iteration keep control of two derivatives, in the sense of a suitable Sobolev norm. The estimate does not get worse as the number of iterations grows.
+"For every input" are the most expensive words in a theorem. Convergence on smooth data does not test them; only the worst wave the grid can hold does.
 
-This property lets us apply stronger estimates to the product layers.
+The parameters of an earlier paper are read from its text, even when you wrote it yourself.
 
-Instead of assuming arbitrarily high smoothness of all the intermediate functions, we derive the regularity we need from the construction itself. It is one of the pieces that link the analysis of individual operations to the theorem about their composition.
+A reviewer who did not build the proof has one advantage: it does not know which steps "certainly work". Its counterexample was small enough to check by hand, and only then did we withdraw the theorem.
 
-## Why does multiplication need a proof of its own?
-
-When we pass to cell averages, even multiplication stops behaving in exactly the same way.
-
-The average of a product generally differs from the product of the averages.
-
-Take two sets of values: $1, 3$ and $3, 1$. Each averages $2$, so the product of the averages is $4$. The products of the corresponding values, meanwhile, are $3, 3$, and their average is $3$.
-
-![The values of b, 1 and 3, and of u, 3 and 1, on the two halves of a cell, with their products and averages; a slider changes u](/figure/covariance "The average of the product minus the product of the averages is exactly the covariance: the average of the product of the deviations of b and u from their averages. When u rises where b falls, the difference is negative; when they rise together, positive; when u is constant, it vanishes.")
-
-The difference describes information about the joint changes of the two functions, lost in the averaging.
-
-In the paper we write this error exactly in terms of a covariance. We then combine its estimate with the analysis of the diffusion operators.
-
-Controlling this interaction is an essential part of the new paper. Carrying over the results for the linear layers alone would not be enough to justify the behaviour of the whole scheme.
-
-## What does the main theorem say?
-
-For a fixed accuracy $ε$ of the construction, a suitably regular material coefficient and an input with one derivative, we prove second-order convergence of the grid realisation to the continuous one.
-
-We measure the error in a discrete energy norm, which takes the spatial changes of the result into account.
-
-The main estimate contains the factor:
-
-$$\frac{h^2}{ε}.$$
-
-There is also an explicit condition tying the size of the grid to the scales of the construction. So we cannot raise the required accuracy on its own while leaving the grid as coarse as we like.
-
-Here we compare two realisations of the same mathematical construction. The first paper controlled its distance from the solution operator of the equation. The second controls the additional difference that comes from discretisation.
-
-These are two separate components of the analysis, both needed to assess the algorithm later.
-
-## What brings us closer to the experiment?
-
-On this basis we do not yet know whether the construction will be fast, numerically stable and competitive with classical methods. Theoretical stability under a change of operator is no substitute for an analysis of rounding errors.
-
-The discrete results also concern a specific regular periodic grid and an operator linking nearest neighbours. More general geometries and the practical choice of parameters need further research.
-
-What we do have are better-defined questions for future tests. We know what role the regularity of the input plays, why the product layers need separate control, and how to separate the error of the construction from the error of its discrete realisation.
-
-For me, that is exactly where the value of this stage lies. Before we start measuring computation times and looking at plots, we establish what we should expect, and under what conditions those expectations have a mathematical justification.
-
-There is still some way to go to a testable algorithm. This paper helps to map it more precisely.
+For Stark, a test that ends against a wall is a result too. Our wall now stands in the paper as a theorem about what a grid cannot deliver for raw data.

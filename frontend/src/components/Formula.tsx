@@ -13,11 +13,43 @@ import { cn } from "@/lib/utils";
  */
 
 const FENCES = new Set(["(", ")", "[", "]", "|", "⟨", "⟩", "/"]);
+const CLOSES: Record<string, string> = { "(": ")", "[": "]" };
 
-const render = (node: FormulaNode, key = 0): JSX.Element => {
+const holdsFraction = (node: FormulaNode): boolean =>
+  node.type === "frac" || (node.type === "row" && node.children.some(holdsFraction));
+
+/**
+ * The brackets of a row that enclose a fraction, by position. Those grow to
+ * the fraction's height; every other fence keeps the height of the line.
+ */
+const tallFences = (children: FormulaNode[]): Set<number> => {
+  const tall = new Set<number>();
+  const open: number[] = [];
+  children.forEach((child, index) => {
+    if (child.type !== "op") return;
+    if (child.value in CLOSES) {
+      open.push(index);
+      return;
+    }
+    const from = open[open.length - 1];
+    const opener = from === undefined ? undefined : children[from];
+    if (opener?.type !== "op" || CLOSES[opener.value] !== child.value) return;
+    open.pop();
+    if (children.slice(from + 1, index).some(holdsFraction)) tall.add(from).add(index);
+  });
+  return tall;
+};
+
+const render = (node: FormulaNode, key = 0, tall = false): JSX.Element => {
   switch (node.type) {
-    case "row":
-      return <mrow key={key}>{node.children.map((child, index) => render(child, index))}</mrow>;
+    case "row": {
+      const fences = tallFences(node.children);
+      return (
+        <mrow key={key}>
+          {node.children.map((child, index) => render(child, index, fences.has(index)))}
+        </mrow>
+      );
+    }
     case "id":
       // ∇ is upright, as in print; a single-letter mi is otherwise italic.
       return (
@@ -31,7 +63,7 @@ const render = (node: FormulaNode, key = 0): JSX.Element => {
       // Fences and the solidus set tight; MathML's default operator spacing
       // would put air inside |0⟩ and around 1/π.
       return FENCES.has(node.value) ? (
-        <mo key={key} stretchy="false" lspace="0" rspace="0">
+        <mo key={key} stretchy={tall ? undefined : "false"} lspace="0" rspace="0">
           {node.value}
         </mo>
       ) : (
@@ -97,25 +129,50 @@ type MathTextProps = {
   text: string;
 };
 
-/** Prose that may carry formulas and emphasis; the plain runs are rendered as they are. */
-export const MathText = ({ text }: MathTextProps) => (
-  <>
-    {splitMath(text).map((segment, index) =>
-      segment.math ? (
-        <Formula key={index} tex={segment.value} />
-      ) : (
-        <Fragment key={index}>
-          {splitEmphasis(segment.value).map((run, runIndex) =>
-            run.em ? (
-              <em key={runIndex}>{run.value}</em>
-            ) : (
-              <Fragment key={runIndex}>{run.value}</Fragment>
-            ),
-          )}
-        </Fragment>
-      ),
-    )}
-  </>
-);
+/** The punctuation that closes a clause, at the start of the prose after a formula. */
+const TRAILING = /^[,.;:!?)]+/;
+
+/**
+ * Prose that may carry formulas and emphasis; the plain runs are rendered as
+ * they are. Punctuation straight after a formula stays on the formula's line:
+ * a browser may break between a formula and the text after it, and a comma
+ * would otherwise open the next line.
+ */
+export const MathText = ({ text }: MathTextProps) => {
+  const segments = splitMath(text);
+  return (
+    <>
+      {segments.map((segment, index) => {
+        const trailing = segment.math
+          ? (TRAILING.exec(segments[index + 1]?.value ?? "")?.[0] ?? "")
+          : "";
+        const value =
+          !segment.math && segments[index - 1]?.math
+            ? segment.value.replace(TRAILING, "")
+            : segment.value;
+        return segment.math ? (
+          trailing ? (
+            <span key={index} className="whitespace-nowrap">
+              <Formula tex={segment.value} />
+              {trailing}
+            </span>
+          ) : (
+            <Formula key={index} tex={segment.value} />
+          )
+        ) : (
+          <Fragment key={index}>
+            {splitEmphasis(value).map((run, runIndex) =>
+              run.em ? (
+                <em key={runIndex}>{run.value}</em>
+              ) : (
+                <Fragment key={runIndex}>{run.value}</Fragment>
+              ),
+            )}
+          </Fragment>
+        );
+      })}
+    </>
+  );
+};
 
 export default Formula;

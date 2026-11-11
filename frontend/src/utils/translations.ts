@@ -207,8 +207,12 @@ const copy = {
         falseHits: "FA",
         searchNote: "{n} expected hits · FA = false alarms",
         heatCaption: "Comparing multiplication before and after diffusion recovers the gradients.",
-        averagesCaption:
-          "Averaged over a cell, a product generally differs from the product of the averages.",
+        bandEdge: {
+          slow: "slow waves",
+          limit: "the grid's limit",
+          caption:
+            "At the limit of resolution the grid's operator reproduces 41% of the continuous operator's action.",
+        },
         illustration: "Explanatory example",
         aliasing: {
           wave: "the wave",
@@ -1022,7 +1026,12 @@ const copy = {
         falseHits: "FA",
         searchNote: "{n} oczekiwanych trafień · FA = fałszywe alarmy",
         heatCaption: "Porównując mnożenie przed dyfuzją i po niej, odzyskujemy gradienty.",
-        averagesCaption: "Średnia iloczynu w komórce na ogół różni się od iloczynu średnich.",
+        bandEdge: {
+          slow: "wolne fale",
+          limit: "granica siatki",
+          caption:
+            "Przy granicy rozdzielczości operator na siatce odtwarza 41% działania operatora ciągłego.",
+        },
         illustration: "Przykład objaśniający",
         aliasing: {
           wave: "fala",
