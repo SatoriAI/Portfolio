@@ -251,8 +251,8 @@ class SpendReportTestCase(TestCase):
             "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
         }
     )
-    def test_the_usage_list_is_headed_by_todays_spend(self) -> None:
+    def test_the_conversation_list_is_headed_by_todays_spend(self) -> None:
         admin = get_user_model().objects.create_superuser("admin", "admin@example.com", "pw")
         self.client.force_login(admin)
-        resp = self.client.get(reverse("admin:vex_usage_changelist"))
+        resp = self.client.get(reverse("admin:vex_conversation_changelist"))
         self.assertContains(resp, "Today (UTC): $2.0000 of $5.00, 2 calls, 50% of input cached")
