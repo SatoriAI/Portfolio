@@ -1,10 +1,9 @@
-from collections.abc import Sequence
 from typing import Any
 
 from django import forms
 from django.conf import settings
 from django.contrib import admin
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Sum
 from django.http import HttpRequest, HttpResponse
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
@@ -30,10 +29,37 @@ class MessageInline(admin.TabularInline):
     )
     readonly_fields = fields
     extra = 0
+    can_delete = False  # a message goes only with its conversation, and its visitor's rating with it
 
     def has_add_permission(self, request: HttpRequest, obj: Conversation | None = None) -> bool:
         """Messages come from Vex, not the admin. A blank row to add one would also be rendered from an unsaved
         message, whose db_default fields hold no value yet, and the read-only display of them fails."""
+        return False
+
+
+class UsageInline(admin.TabularInline):
+    """Read-only: each row is a call already paid for, including the ones that left no message."""
+
+    model = Usage
+    fields = (
+        "created_at",
+        "model",
+        "outcome",
+        "finish_reason",
+        "input_tokens",
+        "cached_tokens",
+        "cache_write_tokens",
+        "output_tokens",
+        "reasoning_tokens",
+        "estimated",
+        "cost",
+    )
+    readonly_fields = fields
+    ordering = ("created_at",)
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request: HttpRequest, obj: Conversation | None = None) -> bool:
         return False
 
 
@@ -47,55 +73,35 @@ class ConversationAdmin(admin.ModelAdmin):
     search_fields = ("session",)
     readonly_fields = (
         "session",
+        "total_cost",
         "created_at",
         "updated_at",
     )
     inlines = [
         MessageInline,
+        UsageInline,
     ]
 
     @admin.display(description=_("Number of Messages"))
     def number_of_messages(self, obj: Conversation) -> int:
         return obj.messages.count()
 
-    def get_deleted_objects(
-        self, objs: Sequence[Conversation] | QuerySet[Conversation], request: HttpRequest
-    ) -> tuple[list[str], dict[str, int], set[str], list[str]]:
-        """A conversation takes its messages with it. The message admin, read-only, would otherwise ask for a delete
-        permission on them that nobody has, and no conversation could be deleted."""
-        deleted, counts, perms_needed, protected = super().get_deleted_objects(objs, request)
-        perms_needed.discard(str(Message._meta.verbose_name))
-        return deleted, counts, perms_needed, protected
+    @admin.display(description=_("Cost (USD)"))
+    def total_cost(self, obj: Conversation) -> str:
+        total = obj.usage.aggregate(total=Sum("cost"))["total"]
+        return f"${total or 0:.4f}"
 
-
-@admin.register(Message)
-class MessageAdmin(admin.ModelAdmin):
-    """Read-only, like the conversations it belongs to: the place to see how visitors rated Vex's answers."""
-
-    list_display = (
-        "created_at",
-        "role",
-        "short_content",
-        "feedback",
-        "model",
-        "prompt_version",
-    )
-    list_filter = ("feedback", "truncated", "role", "model", "prompt_version")
-    search_fields = ("content", "conversation__session")
-    date_hierarchy = "created_at"
-
-    @admin.display(description=_("Content"))
-    def short_content(self, obj: Message) -> str:
-        return obj.content if len(obj.content) <= 80 else f"{obj.content[:79]}…"
-
-    def has_add_permission(self, request: HttpRequest) -> bool:
-        return False
-
-    def has_change_permission(self, request: HttpRequest, obj: Message | None = None) -> bool:
-        return False
-
-    def has_delete_permission(self, request: HttpRequest, obj: Message | None = None) -> bool:
-        return False
+    def changelist_view(self, request: HttpRequest, extra_context: dict[str, Any] | None = None) -> HttpResponse:
+        """Heads the list with today's spend against the budget, added up from every call, including those of
+        conversations since deleted."""
+        today = spend.day_spend(spend.today())
+        subtitle = _("Today (UTC): $%(spent).4f of $%(budget)s, %(calls)d calls, %(cached).0f%% of input cached") % {
+            "spent": today.dollars,
+            "budget": settings.VEX_DAILY_BUDGET_USD,
+            "calls": today.calls,
+            "cached": today.cached_share * 100,
+        }
+        return super().changelist_view(request, {**(extra_context or {}), "subtitle": subtitle})
 
 
 class DocumentForm(forms.ModelForm):
@@ -158,47 +164,6 @@ class DocumentAdmin(admin.ModelAdmin):
     @admin.display(description=_("Text for Vex"), boolean=True)
     def has_text(self, obj: Document) -> bool:
         return bool(obj.content)
-
-
-@admin.register(Usage)
-class UsageAdmin(admin.ModelAdmin):
-    """Read-only: each row is a call already paid for."""
-
-    list_display = (
-        "created_at",
-        "model",
-        "outcome",
-        "finish_reason",
-        "input_tokens",
-        "cached_tokens",
-        "cache_write_tokens",
-        "output_tokens",
-        "reasoning_tokens",
-        "estimated",
-        "cost",
-    )
-    list_filter = ("outcome", "model", "estimated")
-    date_hierarchy = "created_at"
-
-    def changelist_view(self, request: HttpRequest, extra_context: dict[str, Any] | None = None) -> HttpResponse:
-        """Heads the list with today's spend against the budget, as the table adds it up."""
-        today = spend.day_spend(spend.today())
-        subtitle = _("Today (UTC): $%(spent).4f of $%(budget)s, %(calls)d calls, %(cached).0f%% of input cached") % {
-            "spent": today.dollars,
-            "budget": settings.VEX_DAILY_BUDGET_USD,
-            "calls": today.calls,
-            "cached": today.cached_share * 100,
-        }
-        return super().changelist_view(request, {**(extra_context or {}), "subtitle": subtitle})
-
-    def has_add_permission(self, request: HttpRequest) -> bool:
-        return False
-
-    def has_change_permission(self, request: HttpRequest, obj: Usage | None = None) -> bool:
-        return False
-
-    def has_delete_permission(self, request: HttpRequest, obj: Usage | None = None) -> bool:
-        return False
 
 
 @admin.register(Configuration)
