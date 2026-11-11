@@ -115,13 +115,22 @@ class ConversationSummaryAdminTestCase(TestCase):
         return conversation
 
     def test_the_list_reads_the_summary_or_the_first_question(self) -> None:
-        self.conversation("Who is Dawid?")
+        self.conversation("Who is   Dawid?")
         self.conversation("Hi", summary="Recruiter asking about Django roles", summarised_messages=2)
         self.conversation("Hi", summary="Student asking about teaching", summarised_messages=1)
         resp = self.client.get(self.url)
-        self.assertContains(resp, "Who is Dawid?")
-        self.assertContains(resp, "Recruiter asking about Django roles<")
-        self.assertContains(resp, "Student asking about teaching (+)")  # messages came after it
+        self.assertContains(resp, ">Who is Dawid?</span><")
+        self.assertContains(resp, ">Recruiter asking about Django roles</span><")
+        self.assertContains(resp, ">Student asking about teaching</span> (+)</span>")  # messages came after it
+
+    def test_a_long_line_is_whole_on_hover_and_escaped(self) -> None:
+        question = "Can you <b>tell</b> me " + "about Dawid's research " * 40
+        self.conversation(question)
+        resp = self.client.get(self.url)
+        escaped = question.strip().replace("<", "&lt;").replace(">", "&gt;").replace("'", "&#x27;")
+        self.assertContains(resp, f'title="{escaped}"')
+        self.assertContains(resp, "text-overflow: ellipsis")
+        self.assertNotContains(resp, "<b>tell</b>")
 
     def test_the_list_is_searched_by_what_was_said(self) -> None:
         self.conversation("Tell me about heat kernels")

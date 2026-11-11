@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.db.models import Count, OuterRef, QuerySet, Subquery, Sum
 from django.http import HttpRequest, HttpResponse
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 
@@ -16,6 +17,13 @@ from vex.models import Configuration, Conversation, Document, Message, Usage
 from vex.utils.document_text import UnreadableDocument, extract_text
 
 logger = logging.getLogger(__name__)
+
+# The About column on one line. A table cell grows to fit its text, so the cut needs a width of its own: two fifths of
+# the window leaves room for the admin's sidebar and the other columns, on a laptop and in a narrow window.
+ABOUT_STYLE = (
+    "display: inline-block; max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; "
+    "vertical-align: bottom"
+)
 
 if TYPE_CHECKING:
     from django_stubs_ext import WithAnnotations
@@ -122,13 +130,17 @@ class ConversationAdmin(admin.ModelAdmin):
 
     @admin.display(description=_("About"))
     def about(self, obj: "ListedConversation") -> str:
-        """The summary, marked when messages have come since; until there is one, the visitor's first question."""
-        if obj.summary:
-            return obj.summary if obj.summarised_messages == obj.message_count else f"{obj.summary} (+)"
-        question = " ".join((obj.first_question or "").split())
-        if not question:
-            return obj.session
-        return question if len(question) <= 100 else f"{question[:99]}…"
+        """The summary, marked when messages have come since; until there is one, the visitor's first question. On one
+        line, cut with an ellipsis where it runs out of room, the whole of it on hover; the mark stays in sight."""
+        text = obj.summary or " ".join((obj.first_question or "").split()) or obj.session
+        behind = bool(obj.summary) and obj.summarised_messages != obj.message_count
+        return format_html(
+            '<span style="white-space: nowrap"><span title="{}" style="{}">{}</span>{}</span>',
+            text,
+            ABOUT_STYLE,
+            text,
+            " (+)" if behind else "",
+        )
 
     @admin.display(description=_("Number of Messages"), ordering="message_count")
     def number_of_messages(self, obj: "ListedConversation") -> int:
