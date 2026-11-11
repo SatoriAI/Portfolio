@@ -137,6 +137,20 @@ class ConversationSummaryAdminTestCase(TestCase):
         self.assertNotContains(resp, "<b>tell</b>")
         self.assertNotContains(resp, '" onmouseover="')
 
+    def test_the_action_and_its_report_speak_polish(self) -> None:
+        pending = self.conversation("Kim jest Dawid?")  # an empty list shows neither the actions nor the columns
+        resp = self.client.get(self.url, headers={"accept-language": "pl"})
+        self.assertContains(resp, "Podsumuj wybrane rozmowy")
+        self.assertContains(resp, "O czym")
+        with patch("vex.admin.summarise"):
+            resp = self.client.post(
+                self.url,
+                {"action": "summarise_conversations", "_selected_action": [pending.pk]},
+                headers={"accept-language": "pl"},
+                follow=True,
+            )
+        self.assertContains(resp, "Podsumowano: 1, nieudane: 0, do podsumowania zostało: 0.")
+
     def test_the_list_is_searched_by_what_was_said(self) -> None:
         self.conversation("Tell me about heat kernels")
         self.conversation("Who is Dawid?")
