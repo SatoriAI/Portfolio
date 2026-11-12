@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 
 from vex.ai import spend
-from vex.ai.summary import Unsummarised, summarise, to_summarise
+from vex.ai.summary import BEHIND, Unsummarised, summarise, to_summarise
 from vex.choices import Purposes, Roles
 from vex.models import Configuration, Conversation, Document, Message, Usage
 from vex.utils.document_text import UnreadableDocument, extract_text
@@ -159,7 +159,8 @@ class ConversationAdmin(admin.ModelAdmin):
         """Writes a fresh summary of each selected conversation, up to SUMMARISE_PER_RUN, whether or not it has one."""
         selected = Conversation.objects.filter(pk__in=queryset.values("pk"))
         pending = list(to_summarise(selected))
-        done = failed = 0
+        done = 0
+        failed: list[int] = []
         for conversation in pending[: self.SUMMARISE_PER_RUN]:
             try:
                 summarise(conversation)
@@ -171,16 +172,17 @@ class ConversationAdmin(admin.ModelAdmin):
                 break
             except Unsummarised as error:
                 logger.warning("Vex could not summarise conversation %d: %s", conversation.pk, error)
-                failed += 1
+                failed.append(conversation.pk)
             except Exception:  # pylint: disable=broad-exception-caught
                 # One conversation's surprise is no reason to lose the rest of the run; it is recorded and marked.
                 logger.exception("Vex failed unexpectedly summarising conversation %d", conversation.pk)
-                failed += 1
-        left = len(pending) - done - failed
+                failed.append(conversation.pk)
+        # Left: still behind once the run is over, apart from those that failed in it, which are counted as failed.
+        left = to_summarise(selected).filter(BEHIND).exclude(pk__in=failed).count()
         self.message_user(
             request,
             _("Summarised %(done)d, %(failed)d failed, %(left)d left to summarise.")
-            % {"done": done, "failed": failed, "left": left},
+            % {"done": done, "failed": len(failed), "left": left},
             messages.WARNING if failed or left else messages.SUCCESS,
         )
 

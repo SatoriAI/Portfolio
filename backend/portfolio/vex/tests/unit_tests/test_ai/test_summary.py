@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import anthropic
 import httpx2
+from django.db import DatabaseError
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
@@ -68,6 +69,24 @@ class SummariseTestCase(TestCase):
         self.assertEqual(usage.conversation, self.conversation)
         self.assertGreater(usage.cost, Decimal(0))
 
+    def test_the_attempt_is_timed_even_when_saving_the_summary_fails(self) -> None:
+        real = Conversation.objects.filter
+        calls = []
+
+        def filter_then_fail(*args: Any, **kwargs: Any) -> Any:
+            calls.append(kwargs)
+            if len(calls) == 2:  # the second write is the summary's own
+                raise DatabaseError("lost the connection")
+            return real(*args, **kwargs)
+
+        with (
+            patch("vex.ai.summary.provider.complete", replying("Recruiter asking about Django roles")),
+            patch("vex.ai.summary.Conversation.objects.filter", side_effect=filter_then_fail),
+            self.assertRaises(DatabaseError),
+        ):
+            summarise(self.conversation)
+        self.assertIsNotNone(Conversation.objects.get(pk=self.conversation.pk).summary_attempted_at)
+
     def test_a_long_reply_is_cut_to_the_field(self) -> None:
         with patch("vex.ai.summary.provider.complete", replying("word " * 100)):
             summary = summarise(self.conversation)
@@ -130,15 +149,25 @@ class SummariseTestCase(TestCase):
 
 
 class ToSummariseTestCase(TestCase):
-    def test_every_conversation_with_messages_untried_first_then_the_longest_ago(self) -> None:
-        recent, untried, current, long_ago = (ConversationFactory() for _ in range(4))
-        ConversationFactory()  # no messages
-        for conversation in (recent, untried, current, long_ago):
-            MessageFactory.create_batch(2, conversation=conversation)
+    def test_behind_first_then_untried_then_the_longest_ago(self) -> None:
         now = timezone.now()
-        Conversation.objects.filter(pk=recent.pk).update(summary_failed=True, summary_attempted_at=now)
-        Conversation.objects.filter(pk=current.pk).update(
-            summary="Current", summarised_messages=2, summary_attempted_at=now - timedelta(hours=1)
-        )
-        Conversation.objects.filter(pk=long_ago.pk).update(summary_attempted_at=now - timedelta(days=1))
-        self.assertEqual(list(to_summarise(Conversation.objects.all())), [untried, long_ago, current, recent])
+        fields = {
+            "untried": {},
+            "failed": {"summary_failed": True, "summary_attempted_at": now - timedelta(minutes=1)},
+            "behind": {"summary": "Old", "summarised_messages": 1, "summary_attempted_at": now},
+            "current, long ago": {
+                "summary": "S",
+                "summarised_messages": 2,
+                "summary_attempted_at": now - timedelta(days=1),
+            },
+            "current, recent": {"summary": "S", "summarised_messages": 2, "summary_attempted_at": now},
+        }
+        made = {}
+        for name, values in fields.items():
+            made[name] = ConversationFactory()
+            MessageFactory.create_batch(2, conversation=made[name])
+            Conversation.objects.filter(pk=made[name].pk).update(**values)
+        ConversationFactory()  # no messages
+        order = list(to_summarise(Conversation.objects.all()))
+        self.assertEqual(order, [made[name] for name in fields])
+        self.assertEqual([c.behind for c in order], [True, True, True, False, False])

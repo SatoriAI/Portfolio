@@ -87,7 +87,16 @@ CASES = (
 MAX_WORDS = 15
 
 # Signs of German, which language_of cannot tell from no language at all: no summary may show them.
-GERMAN = re.compile(r"[äöüß]|\b(und|der|die|das|ein|eine|ob|über|nach|fragt|möchte)\b", re.IGNORECASE)
+GERMAN = re.compile(
+    r"[äöüß]|\b(und|der|die|das|den|ein|eine|ob|über|nach|fragt|möchte|aus|um|zu|für|mit|bittet|vortrag|sich)\b",
+    re.IGNORECASE,
+)
+# Signs of English beyond language_of's: a summary written as a headline ("Recruiter asking about Django roles") may
+# have none of its words, and an English case's summary must show at least one sign.
+ENGLISH = re.compile(
+    r"\b(the|a|an|is|and|of|about|for|to|with|asks?|asking|asked|wants?|wanting|wanted|visitor|recruiter|student)\b",
+    re.IGNORECASE,
+)
 
 
 def problems(case: SummaryCase, summary: str, usage: Usage) -> list[str]:
@@ -103,6 +112,8 @@ def problems(case: SummaryCase, summary: str, usage: Usage) -> list[str]:
         found.append(f"written in {language}, not {case.language}")
     if GERMAN.search(summary):
         found.append(f"written in German, not {case.language}")
+    elif case.language == "en" and not ENGLISH.search(summary):
+        found.append("no sign of English")
     if (usage.purpose, usage.outcome) != (Purposes.SUMMARY, Outcomes.ANSWERED):
         found.append(f"recorded as {usage.purpose}/{usage.outcome}")
     return found
