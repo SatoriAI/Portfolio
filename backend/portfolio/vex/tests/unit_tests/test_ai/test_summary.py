@@ -1,10 +1,13 @@
+from datetime import timedelta
 from decimal import Decimal
 from typing import Any
 from unittest.mock import patch
 
 import anthropic
 import httpx2
+from django.db import DatabaseError
 from django.test import TestCase, override_settings
+from django.utils import timezone
 
 from vex.ai import provider, spend
 from vex.ai.summary import (
@@ -13,8 +16,8 @@ from vex.ai.summary import (
     SYSTEM,
     Unsummarised,
     estimate_tokens,
-    needing_summary,
     summarise,
+    to_summarise,
     transcript,
 )
 from vex.choices import Outcomes, Purposes, Roles
@@ -58,12 +61,31 @@ class SummariseTestCase(TestCase):
         self.assertEqual(summary, "Recruiter asking about Django roles")
         saved = Conversation.objects.get(pk=self.conversation.pk)
         self.assertEqual((saved.summary, saved.summarised_messages, saved.summary_failed), (summary, 2, False))
+        self.assertIsNotNone(saved.summary_attempted_at)
         self.assertEqual(saved.updated_at, updated_at)  # retention reads it as the visitor's last activity
         usage = Usage.objects.get()
         self.assertEqual((usage.purpose, usage.outcome), (Purposes.SUMMARY, Outcomes.ANSWERED))
         self.assertEqual(usage.prompt_version, SUMMARY_PROMPT_VERSION)
         self.assertEqual(usage.conversation, self.conversation)
         self.assertGreater(usage.cost, Decimal(0))
+
+    def test_the_attempt_is_timed_even_when_saving_the_summary_fails(self) -> None:
+        real = Conversation.objects.filter
+        calls = []
+
+        def filter_then_fail(*args: Any, **kwargs: Any) -> Any:
+            calls.append(kwargs)
+            if len(calls) == 2:  # the second write is the summary's own
+                raise DatabaseError("lost the connection")
+            return real(*args, **kwargs)
+
+        with (
+            patch("vex.ai.summary.provider.complete", replying("Recruiter asking about Django roles")),
+            patch("vex.ai.summary.Conversation.objects.filter", side_effect=filter_then_fail),
+            self.assertRaises(DatabaseError),
+        ):
+            summarise(self.conversation)
+        self.assertIsNotNone(Conversation.objects.get(pk=self.conversation.pk).summary_attempted_at)
 
     def test_a_long_reply_is_cut_to_the_field(self) -> None:
         with patch("vex.ai.summary.provider.complete", replying("word " * 100)):
@@ -92,6 +114,7 @@ class SummariseTestCase(TestCase):
                     summarise(self.conversation)
                 saved = Conversation.objects.get(pk=self.conversation.pk)
                 self.assertEqual((saved.summary, saved.summary_failed), ("", True))
+                self.assertIsNotNone(saved.summary_attempted_at)  # tried, so it waits behind the others next time
                 self.assertEqual(saved.updated_at, self.conversation.updated_at)
                 self.assertEqual(Usage.objects.get().outcome, outcome)
 
@@ -125,19 +148,26 @@ class SummariseTestCase(TestCase):
         self.assertEqual(usage.cost, (Decimal(prompt) * 4 + MAX_TOKENS * 20) * attempts / 1_000_000)
 
 
-class NeedingSummaryTestCase(TestCase):
-    def test_skips_empty_and_up_to_date_conversations(self) -> None:
-        unsummarised, behind, current = ConversationFactory(), ConversationFactory(), ConversationFactory()
+class ToSummariseTestCase(TestCase):
+    def test_behind_first_then_untried_then_the_longest_ago(self) -> None:
+        now = timezone.now()
+        fields = {
+            "untried": {},
+            "failed": {"summary_failed": True, "summary_attempted_at": now - timedelta(minutes=1)},
+            "behind": {"summary": "Old", "summarised_messages": 1, "summary_attempted_at": now},
+            "current, long ago": {
+                "summary": "S",
+                "summarised_messages": 2,
+                "summary_attempted_at": now - timedelta(days=1),
+            },
+            "current, recent": {"summary": "S", "summarised_messages": 2, "summary_attempted_at": now},
+        }
+        made = {}
+        for name, values in fields.items():
+            made[name] = ConversationFactory()
+            MessageFactory.create_batch(2, conversation=made[name])
+            Conversation.objects.filter(pk=made[name].pk).update(**values)
         ConversationFactory()  # no messages
-        for conversation in (unsummarised, behind, current):
-            MessageFactory.create_batch(2, conversation=conversation)
-        Conversation.objects.filter(pk=behind.pk).update(summary="Old", summarised_messages=1)
-        Conversation.objects.filter(pk=current.pk).update(summary="Current", summarised_messages=2)
-        self.assertCountEqual(needing_summary(Conversation.objects.all()), [unsummarised, behind])
-
-    def test_those_that_failed_last_time_come_last(self) -> None:
-        failed, untried = ConversationFactory(), ConversationFactory()
-        for conversation in (failed, untried):
-            MessageFactory(conversation=conversation)
-        Conversation.objects.filter(pk=failed.pk).update(summary_failed=True)
-        self.assertEqual(list(needing_summary(Conversation.objects.all())), [untried, failed])
+        order = list(to_summarise(Conversation.objects.all()))
+        self.assertEqual(order, [made[name] for name in fields])
+        self.assertEqual([c.behind for c in order], [True, True, True, False, False])

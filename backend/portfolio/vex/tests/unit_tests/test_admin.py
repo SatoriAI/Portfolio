@@ -9,6 +9,7 @@ from vex.ai import spend
 from vex.ai.summary import Unsummarised
 from vex.choices import Outcomes, Purposes, Roles
 from vex.models import Conversation, Message, Usage
+from vex.tests.unit_tests.test_ai.test_summary import replying
 
 
 # Without DEBUG the admin's CSS is looked up in collectstatic's manifest, which a test run has not built.
@@ -137,6 +138,23 @@ class ConversationSummaryAdminTestCase(TestCase):
         self.assertNotContains(resp, "<b>tell</b>")
         self.assertNotContains(resp, '" onmouseover="')
 
+    def test_the_action_and_its_report_speak_polish(self) -> None:
+        pending = self.conversation("Kim jest Dawid?")  # an empty list shows neither the actions nor the columns
+        resp = self.client.get(self.url, headers={"accept-language": "pl"})
+        self.assertContains(resp, "Podsumuj wybrane rozmowy")
+        self.assertContains(resp, "O czym")
+        with (
+            patch("vex.ai.summary.spend.check_budget"),
+            patch("vex.ai.summary.provider.complete", side_effect=replying("Pytanie o Dawida")),
+        ):
+            resp = self.client.post(
+                self.url,
+                {"action": "summarise_conversations", "_selected_action": [pending.pk]},
+                headers={"accept-language": "pl"},
+                follow=True,
+            )
+        self.assertContains(resp, "Podsumowano: 1, nieudane: 0, do podsumowania zostało: 0.")
+
     def test_the_list_is_searched_by_what_was_said(self) -> None:
         self.conversation("Tell me about heat kernels")
         self.conversation("Who is Dawid?")
@@ -151,23 +169,35 @@ class ConversationSummaryAdminTestCase(TestCase):
             follow=True,
         )
 
-    def test_the_action_summarises_those_that_need_it(self) -> None:
-        current = self.conversation("Hi", summary="Current", summarised_messages=2)
-        pending = self.conversation("Who is Dawid?")
-        with patch("vex.admin.summarise") as summarise:
-            resp = self.summarise(current, pending)
-        summarise.assert_called_once_with(pending)
-        self.assertContains(resp, "Summarised 1, 0 failed, 0 left to summarise.")
+    def test_runs_catch_up_first_then_go_round_every_selected_conversation(self) -> None:
+        # The real summariser behind a fake Claude, so each attempt's time and each summary are written.
+        conversations = [self.conversation(f"Question {i}") for i in range(7)]
+        with (
+            patch("vex.admin.ConversationAdmin.SUMMARISE_PER_RUN", 3),
+            patch("vex.ai.summary.spend.check_budget"),
+            patch("vex.ai.summary.provider.complete", side_effect=replying("Visitor asking a question")),
+        ):
+            reports = [self.summarise(*conversations) for _ in range(4)]
+        for report, expected in zip(reports, ("3, 0 failed, 4 left", "3, 0 failed, 1 left", "3, 0 failed, 0 left")):
+            self.assertContains(report, f"Summarised {expected} to summarise.")
+        self.assertFalse(Conversation.objects.filter(summary="").exists())
+        runs = list(Usage.objects.order_by("pk").values_list("conversation", flat=True))
+        self.assertCountEqual(runs[:7], [c.pk for c in conversations])  # each once before any is redone
+        self.assertEqual(runs[7:], runs[:5])  # then round again, those summarised longest ago first
 
-    def test_the_action_stops_at_its_limit_and_on_a_spent_budget(self) -> None:
+    def test_a_conversation_behind_its_summary_goes_before_current_ones(self) -> None:
+        current = self.conversation("Hi", summary="Current", summarised_messages=2)
+        behind = self.conversation("Who is Dawid?", summary="Old", summarised_messages=1)
+        with patch("vex.admin.ConversationAdmin.SUMMARISE_PER_RUN", 1), patch("vex.admin.summarise") as summarise:
+            self.summarise(current, behind)
+        summarise.assert_called_once_with(behind)
+
+    def test_the_action_reports_failures_apart_and_stops_on_a_spent_budget(self) -> None:
         conversations = [self.conversation(f"Question {i}") for i in range(3)]
-        with patch("vex.admin.ConversationAdmin.SUMMARISE_PER_RUN", 2), patch("vex.admin.summarise") as summarise:
-            summarise.side_effect = [None, Unsummarised("declined")]
+        with patch("vex.admin.summarise", side_effect=[Unsummarised("declined"), RuntimeError("surprise"), None]):
             resp = self.summarise(*conversations)
-        self.assertContains(resp, "Summarised 1, 1 failed, 1 left to summarise.")
-        with patch("vex.admin.summarise", side_effect=[None, RuntimeError("surprise"), None]):
-            resp = self.summarise(*conversations)
-        self.assertContains(resp, "Summarised 2, 1 failed, 0 left to summarise.")  # the run went on past it
+        # The mock writes nothing, so the third is still behind; the two that failed are counted as failed only.
+        self.assertContains(resp, "Summarised 1, 2 failed, 1 left to summarise.")  # the run went on past a surprise
         with patch("vex.admin.summarise", side_effect=spend.Resting("spent")):
             resp = self.summarise(*conversations)
         self.assertContains(resp, "budget is spent")

@@ -581,6 +581,39 @@ msgstr "Doświadczenie"
 msgid "Experiences"
 msgstr "Doświadczenia"
 
+#: vex/admin.py
+msgid "About"
+msgstr "O czym"
+
+#: vex/admin.py
+msgid "Summarise selected conversations"
+msgstr "Podsumuj wybrane rozmowy"
+
+#: vex/admin.py
+msgid "Today's budget is spent: nothing more is summarised today."
+msgstr "Dzisiejszy budżet jest wyczerpany: dziś nic więcej nie zostanie podsumowane."
+
+#: vex/admin.py
+#, python-format
+msgid "Summarised %(done)d, %(failed)d failed, %(left)d left to summarise."
+msgstr "Podsumowano: %(done)d, nieudane: %(failed)d, do podsumowania zostało: %(left)d."
+
+#: vex/models.py
+msgid "Messages summarised"
+msgstr "Podsumowane wiadomości"
+
+#: vex/models.py
+msgid "Summary failed"
+msgstr "Podsumowanie nieudane"
+
+#: vex/models.py
+msgid "Purpose"
+msgstr "Cel"
+
+#: vex/models.py
+msgid "Summary last attempted"
+msgstr "Ostatnia próba podsumowania"
+
 #~ msgid "Inject Document(s) to Vector Database"
 #~ msgstr "Wstrzyknij Dokument(y) do Wektorowej Bazy Danych"
 
